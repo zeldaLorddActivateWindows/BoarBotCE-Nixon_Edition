@@ -1,0 +1,9 @@
+.env
+.idea
+/node_modules
+database/guilds/*.json
+database/users/*.json
+Notes.txt
+package.json
+package-lock.json
+tsconfig.json
