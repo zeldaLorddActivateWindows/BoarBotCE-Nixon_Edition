@@ -63,7 +63,7 @@ module.exports = {
                 const collectionUnderlay = collectionFolder + collectionAssets.underlay;
                 const collectionOverlay = collectionFolder + collectionAssets.overlay;
 
-                const boarUser = new BoarUser(userInput, interaction.guild);
+                const boarUser = new BoarUser(userInput);
 
                 // User information
                 const userScore = boarUser.boarScore;
