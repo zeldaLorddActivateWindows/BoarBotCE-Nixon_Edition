@@ -101,7 +101,7 @@ async function getDaily(
         }
 
         if (isBlacklisted || !guildData.isSBServer && isSB)
-            return;
+            return undefined;
 
         sendDebug(debugStrings.boarGotten
             .replace('%@', interaction.user.tag)

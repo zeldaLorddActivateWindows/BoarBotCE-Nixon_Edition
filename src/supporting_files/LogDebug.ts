@@ -25,7 +25,10 @@ const errorEmbed = new EmbedBuilder()
 
 //***************************************
 
-// [DEBUG] Sends messages to the console
+/**
+ * [DEBUG] Sends messages to the console
+ * @param debugMessage - Message to send to debug
+ */
 function sendDebug(debugMessage: any) {
     const config = getConfigFile();
 
@@ -39,11 +42,15 @@ function sendDebug(debugMessage: any) {
 
 //***************************************
 
-// Handles error responses in console and interactions
+/**
+ * Handles error responses in console and interactions
+ * @param err - Error message
+ * @param interaction - Interaction to reply to
+ */
 async function handleError(err: unknown | string, interaction?: ChatInputCommandInteraction | ModalSubmitInteraction) {
     try {
         let errString = typeof err === 'string' ? err : (err as Error).stack;
-        const prefix = `[${Colors.Green}SAFE${Colors.White}] `;
+        const prefix = `[${Colors.Green}CAUGHT ERROR${Colors.White}] `;
         const time = getPrefixTime();
 
         console.log(prefix + time + errString);
@@ -76,7 +83,10 @@ async function handleError(err: unknown | string, interaction?: ChatInputCommand
 
 //***************************************
 
-// Handles DM reports
+/**
+ * Handles DM reports
+ * @param message - Message from DM
+ */
 async function sendReport(message: Message) {
     const config = getConfigFile();
 
@@ -97,7 +107,10 @@ async function sendReport(message: Message) {
 
 //***************************************
 
-// [DEBUG] Pauses the code for a specified amount of time
+/**
+ * [DEBUG] Pauses the code for a specified amount of time
+ * @param time - Time in ms to sleep
+ */
 async function sleep(time: number) {
     return new Promise(r => setTimeout(r, time));
 }

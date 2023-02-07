@@ -12,7 +12,10 @@ import {handleError, sendDebug} from './LogDebug';
 
 //***************************************
 
-// Gets data from global JSON file
+/**
+ * Gets data from global JSON file
+ * @return globalData - Global data parsed from JSON
+ */
 function getGlobalData() {
     const config = getConfigFile();
 
@@ -23,14 +26,22 @@ function getGlobalData() {
 
 //***************************************
 
-// Gets data from config JSON file
+/**
+ * Gets data from config JSON file
+ * @return configData - Global config data parsed from JSON
+ */
 function getConfigFile() {
     return JSON.parse(fs.readFileSync('config.json', 'utf-8'));
 }
 
 //***************************************
 
-// Gets data from guild JSON file
+/**
+ * Gets data from guild JSON file
+ * @param interaction - Interaction to reply to
+ * @param create - Whether to create the guildData file if it doesn't exist
+ * @return guildData - Guild data parsed from JSON (or undefined if it doesn't exist)
+ */
 async function getGuildData(interaction: ChatInputCommandInteraction, create: boolean = false) {
     const config = getConfigFile();
 
@@ -60,20 +71,27 @@ async function getGuildData(interaction: ChatInputCommandInteraction, create: bo
             ephemeral: true
         });
 
-        return null;
+        return undefined;
     }
 }
 
 //***************************************
 
-// Attempts to remove the guild config file
-async function removeGuildFile(guildDataPath: string, debugStrings: any) {
+/**
+ * Attempts to remove the guild config file
+ * @param guildDataPath - Path of guild data file
+ */
+async function removeGuildFile(guildDataPath: string) {
+    const debugStrings = getConfigFile().strings.debug;
+
     try {
         fs.rmSync(guildDataPath);
     } catch {
         await handleError(debugStrings.deletedFile);
     }
 }
+
+//***************************************
 
 export {
     getGlobalData,
