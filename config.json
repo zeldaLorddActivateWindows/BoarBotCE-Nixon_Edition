@@ -336,48 +336,56 @@
         "normal": {
             "name": "Normal Boar",
             "file": "NormalBoar.png",
+            "description": "The origin of all boars. Quite unremarkable.",
             "isSB": false,
             "blacklisted": false
         },
         "explosionless": {
             "name": "Explosionless Boar",
             "file": "ExplosionlessBoar.png",
+            "description": "Its mind was blown so hard it refuses to ignite anymore. If it ever does, though, it's assumed its explosion would be cataclysmic.",
             "isSB": false,
             "blacklisted": false
         },
         "tiny": {
             "name": "Tiny Boar",
             "file": "TinyBoar.png",
+            "description": "The result of an experiment gone wrong with the Wizard Boar. Has come to terms with its condition by living with ants.",
             "isSB": false,
             "blacklisted": false
         },
         "carrot": {
             "name": "Carrot Boar",
             "file": "CarrotBoar.png",
+            "description": "On the surface, it's indistinguishable from the grass around it. The only one capable of spotting them is Farmer Boar.",
             "isSB": false,
             "blacklisted": false
         },
         "buff": {
             "name": "Buff Boar",
             "file": "BuffBoar.png",
+            "description": "It's said this boar can crush rocks with its bare hands. Had high-school relationship with Coffee Girl Boar that quickly ended when she spent $100 on coffee in one week.",
             "isSB": false,
             "blacklisted": false
         },
         "chocolate": {
             "name": "Chocolate Boar",
             "file": "ChocolateBoar.png",
+            "description": "A discontinued chocolate bar from 1999. It was pulled off shelves after a stampede of boars burst through a grocery store's doors to taste it.",
             "isSB": false,
             "blacklisted": false
         },
         "emo": {
             "name": "Emo Boar",
             "file": "EmoBoar.png",
+            "description": "Is said to be so emotional and sensitive that it can feel the emotions of those around him. His parents say it's a phase, but it most definitely is not.",
             "isSB": false,
             "blacklisted": false
         },
         "matrix": {
             "name": "Matrix Boar",
             "file": "MatrixBoar.png",
+            "description": "Keeps taking Acetaminophen because of its red color. Believes it's his destiny to save humanity from its AI overlords.",
             "isSB": false,
             "blacklisted": false
         },
