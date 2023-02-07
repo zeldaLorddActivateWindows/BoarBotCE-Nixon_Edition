@@ -1,4 +1,4 @@
-# BoarBot (Alpha v0.3.1)
+# BoarBot (Alpha v0.4.0)
 This is a personal project I've set out to create for a Discord community. I've always wanted to make something that makes people happy, and this is it. BoarBot is intended to reach across as many Discord servers as possible, each able to configure BoarBot to however they see fit. The principle of least privilege is in practice with this bot. It will only ask for permissions that it absolutely needs.
 ## Commands
 ### /boar config
