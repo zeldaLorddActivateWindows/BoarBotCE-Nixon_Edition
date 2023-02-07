@@ -23,5 +23,3 @@ This command is used to see what boars you have as well as other information abo
 * Powerups that spawn randomly but at the same time for all servers
 * Leaderboards
 * And more! (It's a secret)
-
-This is a test
