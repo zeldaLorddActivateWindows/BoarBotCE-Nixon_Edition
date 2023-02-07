@@ -72,8 +72,8 @@ module.exports = {
                 const userMultiplier = boarUser.powerups.multiplier;
                 const userGifts = boarUser.powerups.gifts;
                 const userAvatar = interaction.user.displayAvatarURL({ extension: 'png' });
-                const userTag = interaction.user.username.substring(0, generalNums.usernameLength) + '#' +
-                    interaction.user.discriminator;
+                const userTag = userInput.username.substring(0, generalNums.usernameLength) + '#' +
+                    userInput.discriminator;
 
                 // Atypical boar information
                 const lastBoarRarity = findRarity(boarUser.lastBoar);
