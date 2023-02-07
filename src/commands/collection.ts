@@ -71,7 +71,7 @@ module.exports = {
                 const userUniques = Object.keys(boarUser.boarCollection).length;
                 const userMultiplier = boarUser.powerups.multiplier;
                 const userGifts = boarUser.powerups.gifts;
-                const userAvatar = interaction.user.displayAvatarURL({ extension: 'png' });
+                const userAvatar = userInput.displayAvatarURL({ extension: 'png' });
                 const userTag = userInput.username.substring(0, generalNums.usernameLength) + '#' +
                     userInput.discriminator;
 
