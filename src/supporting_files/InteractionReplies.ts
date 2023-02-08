@@ -1,9 +1,10 @@
 /***********************************************
  * InteractionReplies.ts
- * Weslay
- *
  * A collection of replies that are commonly
- * executed
+ * executed.
+ *
+ * Copyright 2023 WeslayCodes
+ * License Info: http://www.apache.org/licenses/
  ***********************************************/
 
 import {ChatInputCommandInteraction} from 'discord.js';

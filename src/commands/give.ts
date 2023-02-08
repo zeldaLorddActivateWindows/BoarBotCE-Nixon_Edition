@@ -1,8 +1,9 @@
 /***********************************************
  * give.ts
- * Weslay
+ * Used to give a user a specific boar.
  *
- * Used to give a user a specific boar
+ * Copyright 2023 WeslayCodes
+ * License Info: http://www.apache.org/licenses/
  ***********************************************/
 
 import {BoarUser} from '../supporting_files/BoarUser';

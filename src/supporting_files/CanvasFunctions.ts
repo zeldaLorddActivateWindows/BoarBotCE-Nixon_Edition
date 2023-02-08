@@ -1,9 +1,10 @@
 /***********************************************
  * CanvasFunctions.ts
- * Weslay
- *
  * A collection of functions to make canvas
- * editing easier/cleaner
+ * editing easier/cleaner.
+ *
+ * Copyright 2023 WeslayCodes
+ * License Info: http://www.apache.org/licenses/
  ***********************************************/
 
 import Canvas from 'canvas';

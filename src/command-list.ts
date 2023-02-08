@@ -1,10 +1,11 @@
 /************************************************
  * commands-list.ts
- * Weslay
- *
  * A collection of all /boar commands. Gives a
  * user their 'daily boar', shows users either
  * their or other's inventories.
+ *
+ * Copyright 2023 WeslayCodes
+ * License Info: http://www.apache.org/licenses/
  ***********************************************/
 
 import {SlashCommandBuilder} from 'discord.js';

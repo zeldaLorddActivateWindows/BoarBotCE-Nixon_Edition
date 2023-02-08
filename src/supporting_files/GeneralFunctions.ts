@@ -1,9 +1,10 @@
 /************************************************
  * GeneralFunctions.ts
- * Weslay
+ * A collection of different functions and vars
+ * needed by several files.
  *
- * A conglomerate of different functions and vars
- * needed by several files
+ * Copyright 2023 WeslayCodes
+ * License Info: http://www.apache.org/licenses/
  ***********************************************/
 
 import {

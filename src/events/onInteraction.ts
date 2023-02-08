@@ -1,10 +1,11 @@
 /***********************************************
-* onInteractions.ts
-* Weslay
-*
-* An event that runs once the bot detects an
-* interaction.
-***********************************************/
+ * onInteractions.ts
+ * An event that runs once the bot detects an
+ * interaction.
+ *
+ * Copyright 2023 WeslayCodes
+ * License Info: http://www.apache.org/licenses/
+ ***********************************************/
 
 import {EmbedBuilder, Events, Interaction} from 'discord.js';
 import {CustomClient} from '../supporting_files/CustomClient';

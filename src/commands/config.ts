@@ -1,8 +1,9 @@
 /************************************************
  * config.ts
- * Weslay
+ * Sets up the bot with style and channels.
  *
- * Sets up the bot with style and channels
+ * Copyright 2023 WeslayCodes
+ * License Info: http://www.apache.org/licenses/
  ***********************************************/
 
 import {

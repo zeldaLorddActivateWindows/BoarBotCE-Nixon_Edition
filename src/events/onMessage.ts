@@ -1,10 +1,11 @@
 /***********************************************
-* onMessage.ts
-* Weslay
-*
-* An event that runs when someone sends a
-* message.
-***********************************************/
+ * onMessage.ts
+ * An event that runs when someone sends a
+ * message.
+ *
+ * Copyright 2023 WeslayCodes
+ * License Info: http://www.apache.org/licenses/
+ ***********************************************/
 
 import {Events, Message} from 'discord.js';
 import {sendReport} from '../supporting_files/LogDebug';

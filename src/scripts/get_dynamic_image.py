@@ -1,3 +1,12 @@
+#***********************************************
+# get_dynamic_image.ts
+# Applies images and text on top of and below
+# GIF files while maintaining animation.
+#
+# Copyright 2023 WeslayCodes
+# License Info: http://www.apache.org/licenses/
+#***********************************************
+
 from PIL import Image, ImageSequence, ImageFont, ImageDraw, ImageChops
 import base64
 from io import BytesIO

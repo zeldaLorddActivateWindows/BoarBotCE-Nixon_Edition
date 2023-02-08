@@ -1,8 +1,9 @@
 /***********************************************
  * FormField.ts
- * Weslay
+ * Handles each field of a linear form.
  *
- * Handles each field of a linear form
+ * Copyright 2023 WeslayCodes
+ * License Info: http://www.apache.org/licenses/
  ***********************************************/
 
 import {

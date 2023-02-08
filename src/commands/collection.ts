@@ -1,9 +1,10 @@
 /************************************************
  * collection.ts
- * Weslay
- *
  * Used to see a collection of boars, powerups,
- * and other information pertaining to a user
+ * and other information pertaining to a user.
+ *
+ * Copyright 2023 WeslayCodes
+ * License Info: http://www.apache.org/licenses/
  ***********************************************/
 
 import {

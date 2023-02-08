@@ -1,9 +1,10 @@
 /************************************************
  * ConfigFunctions.ts
- * Weslay
- *
  * Functions and enums for the /boar config
- * command
+ * command.
+ *
+ * Copyright 2023 WeslayCodes
+ * License Info: http://www.apache.org/licenses/
  ***********************************************/
 
 //***************************************

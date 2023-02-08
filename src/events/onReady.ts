@@ -1,10 +1,11 @@
 /***********************************************
-* ready.ts
-* Weslay
-*
-* An event that runs once the bot is ready and
-* online.
-***********************************************/
+ * ready.ts
+ * An event that runs once the bot is ready and
+ * online.
+ *
+ * Copyright 2023 WeslayCodes
+ * License Info: http://www.apache.org/licenses/
+ ***********************************************/
 
 import {Client, Events, TextChannel} from 'discord.js'
 import fs from 'fs';

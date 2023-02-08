@@ -1,9 +1,10 @@
 /************************************************
  * LogDebug.ts
- * Weslay
- *
  * Handles logging information, debugging, and
- * errors
+ * errors.
+ *
+ * Copyright 2023 WeslayCodes
+ * License Info: http://www.apache.org/licenses/
  ***********************************************/
 
 import {ChatInputCommandInteraction, EmbedBuilder, Message, ModalSubmitInteraction} from 'discord.js';
