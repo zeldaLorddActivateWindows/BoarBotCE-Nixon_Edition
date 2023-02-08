@@ -6,14 +6,21 @@
  * and other information pertaining to a user
  ***********************************************/
 
-import {AttachmentBuilder, ChatInputCommandInteraction, User} from 'discord.js';
+import {
+    AttachmentBuilder,
+    ButtonInteraction,
+    ChatInputCommandInteraction, InteractionCollector,
+    SelectMenuInteraction,
+    User
+} from 'discord.js';
 import {findRarity, handleStart} from '../supporting_files/GeneralFunctions';
 import {BoarUser} from '../supporting_files/BoarUser';
 import Canvas from 'canvas';
 import {addQueue} from '../supporting_files/Queue';
 import {handleError, sendDebug} from '../supporting_files/LogDebug';
-import {getConfigFile} from '../supporting_files/DataHandlers';
+import {getConfigFile, removeGuildFile} from '../supporting_files/DataHandlers';
 import {drawImageCompact, drawLine, drawRect, drawText} from '../supporting_files/CanvasFunctions';
+import {finishImage} from '../supporting_files/command_specific/CollectionFunctions';
 
 //***************************************
 
@@ -187,29 +194,6 @@ module.exports = {
                 drawText(ctx, multiString, nums.multiPos, smallFont, 'center', hexColors.font);
                 drawText(ctx, giftString, nums.giftPos, smallFont, 'center', hexColors.font);
 
-                // Draws boars and rarities
-                for (let i=0; i<currentBoarArray.length; i++) {
-                    const boarImagePos = [
-                        nums.boarStartX + (i % nums.boarCols) * nums.boarSpacingX,
-                        nums.boarStartY + Math.floor(i / nums.boarRows) * nums.boarSpacingY
-                    ];
-
-                    const lineStartPos = [
-                        nums.rarityStartX + (i % nums.boarCols) * nums.boarSpacingX,
-                        nums.rarityStartY + Math.floor(i / nums.boarRows) * nums.boarSpacingY
-                    ];
-
-                    const lineEndPost = [
-                        nums.rarityStartX + nums.rarityEndDiff + (i % nums.boarCols) * nums.boarSpacingX,
-                        nums.rarityStartY - nums.rarityEndDiff + Math.floor(i / nums.boarRows) * nums.boarSpacingY
-                    ];
-
-                    const boarFile = boarsFolder + currentBoarArray[i].file;
-
-                    drawImageCompact(ctx, await Canvas.loadImage(boarFile), boarImagePos, nums.boarSize);
-                    drawLine(ctx, lineStartPos, lineEndPost, nums.rarityWidth, hexColors[currentBoarArray[i].rarity]);
-                }
-
                 // Draws last boar gotten and rarity
                 if (boarUser.lastBoar !== '') {
                     const lastBoarDetails = config.boarIDs[boarUser.lastBoar];
@@ -241,12 +225,44 @@ module.exports = {
                     drawImageCompact(ctx, await Canvas.loadImage(enhancerFile), enhancerPos, nums.enhancerSize);
                 }
 
-                // Draws overlay
-                drawImageCompact(ctx, await Canvas.loadImage(collectionOverlay), origin, imageSize);
+                await finishImage(config, interaction, canvas, currentBoarArray);
 
-                attachment = new AttachmentBuilder(canvas.toBuffer())
+                let curPage: number = 1;
 
-                await interaction.editReply({ files: [attachment] });
+                // Handles fast interactions from overlapping
+                let timeUntilNextCollect = 0;
+                let updateTime: NodeJS.Timer;
+
+                // Only allows button presses from current interaction to affect results
+                const filter = async (btnInt: ButtonInteraction | SelectMenuInteraction) => {
+                    return btnInt.customId.split('|')[1] === interaction.id;
+                };
+
+                const collector = interaction.channel.createMessageComponentCollector({
+                    filter,
+                    idle: 120000
+                }) as InteractionCollector<ButtonInteraction>;
+
+                collector.on('collect', async (inter: ButtonInteraction) => {
+                    // If the collection attempt was too quick, cancel it
+                    if (Date.now() < timeUntilNextCollect) {
+                        await inter.deferUpdate();
+                        return;
+                    }
+
+                    // Updates time to collect every 100ms, preventing
+                    // users from clicking too fast
+                    timeUntilNextCollect = Date.now() + 500;
+                    updateTime = setInterval(() => {
+                        timeUntilNextCollect = Date.now() + 500;
+                    }, 100);
+
+                    sendDebug(debugStrings.formInteraction
+                        .replace('%@', interaction.user.tag)
+                        .replace('%@', inter.customId.split('|')[0])
+                        .replace('%@', curPage)
+                    );
+                });
             } catch (err: unknown) {
                 await handleError(err, interaction);
             }

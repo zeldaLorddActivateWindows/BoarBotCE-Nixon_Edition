@@ -91,7 +91,7 @@ function drawRect(ctx: Canvas.CanvasRenderingContext2D, pos: number[], size: num
  * @param pos - Position of image
  * @param size - Dimensions of image
  */
-function drawImageCompact(ctx: Canvas.CanvasRenderingContext2D, img: Canvas.Image, pos: number[], size: number[]) {
+function drawImageCompact(ctx: Canvas.CanvasRenderingContext2D, img: Canvas.Image | Canvas.Canvas, pos: number[], size: number[]) {
     ctx.drawImage(img, pos[0], pos[1], size[0], size[1]);
 }
 
