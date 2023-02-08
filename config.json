@@ -152,8 +152,8 @@
                         }
                     },
                     "fieldThree": {
-                        "unfinished": "**Is this server part of the Hypixel Skyblock community?**",
-                        "finished": "**Part of the Hypixel Skyblock community: **",
+                        "unfinished": "**Is this server a Hypixel Skyblock community?**",
+                        "finished": "**Hypixel Skyblock community: **",
                         "sbYes": {
                             "id": "CONFIG_SB_YES|",
                             "label": "Yes"
