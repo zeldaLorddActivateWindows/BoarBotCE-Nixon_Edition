@@ -1,10 +1,11 @@
 /***********************************************
  * Queue.ts
- * Weslay
- *
  * Handles the queue that sensitive parts of code
  * must go through to ensure no overwriting
- * occurs
+ * occurs.
+ *
+ * Copyright 2023 WeslayCodes
+ * License Info: http://www.apache.org/licenses/
  ***********************************************/
 
 import {handleError} from './LogDebug';

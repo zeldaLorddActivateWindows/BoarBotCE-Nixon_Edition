@@ -1,3 +1,12 @@
+/***********************************************
+ * deploy-commands.ts
+ * Handles the deployment of application
+ * commands.
+ *
+ * Copyright 2023 WeslayCodes
+ * License Info: http://www.apache.org/licenses/
+ ***********************************************/
+
 import {REST} from '@discordjs/rest';
 import {Routes} from 'discord-api-types/v10';
 import dotenv from 'dotenv';

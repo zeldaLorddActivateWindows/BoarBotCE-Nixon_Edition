@@ -1,10 +1,11 @@
 /***********************************************
-* index.ts
-* Weslay
-*
-* Creates the bot, logs it in, then finds where
-* all event and command handlers are.
-***********************************************/
+ * index.ts
+ * Creates the bot, logs it in, then finds where
+ * all event and command handlers are.
+ *
+ * Copyright 2023 WeslayCodes
+ * License Info: http://www.apache.org/licenses/
+ ***********************************************/
 
 import dotenv from 'dotenv';
 import fs from 'fs';

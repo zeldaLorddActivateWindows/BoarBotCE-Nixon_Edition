@@ -1,9 +1,10 @@
 /************************************************
  * DataHandlers.ts
- * Weslay
- *
  * Handles getting/removing/creating data to/from
- * files
+ * files.
+ *
+ * Copyright 2023 WeslayCodes
+ * License Info: http://www.apache.org/licenses/
  ***********************************************/
 
 import fs from 'fs';

@@ -1,10 +1,11 @@
 /***********************************************
  * CustomClient.ts
- * Weslay
- *
  * A version of the client that can store
  * commands, subcommands, and modals in the
- * client itself
+ * client itself.
+ *
+ * Copyright 2023 WeslayCodes
+ * License Info: http://www.apache.org/licenses/
  ***********************************************/
 
 import {Client, ClientOptions, Collection} from 'discord.js';

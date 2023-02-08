@@ -1,8 +1,9 @@
 /************************************************
  * DailyFunctions.ts
- * Weslay
- *
  * Functions and for the /boar daily command
+ *
+ * Copyright 2023 WeslayCodes
+ * License Info: http://www.apache.org/licenses/
  ***********************************************/
 
 //***************************************

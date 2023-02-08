@@ -1,3 +1,13 @@
+#***********************************************
+# verify_config.ts
+# Verifies that the config file has no potential
+# issues.
+#
+# Copyright 2023 WeslayCodes
+# License Info: http://www.apache.org/licenses/
+#***********************************************
+
+
 import json
 
 with open('config.json') as file:

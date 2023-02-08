@@ -1,8 +1,9 @@
 /************************************************
  * daily.ts
- * Weslay
+ * Used to give users their daily boar.
  *
- * Used to give users their daily boar
+ * Copyright 2023 WeslayCodes
+ * License Info: http://www.apache.org/licenses/
  ***********************************************/
 
 import {BoarUser} from '../supporting_files/BoarUser';

@@ -1,8 +1,9 @@
 /************************************************
  * help.ts
- * Weslay
- *
  * Used to see information about the bot.
+ *
+ * Copyright 2023 WeslayCodes
+ * License Info: http://www.apache.org/licenses/
  ***********************************************/
 
 import fs from 'fs';

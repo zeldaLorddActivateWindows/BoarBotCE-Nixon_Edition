@@ -1,10 +1,11 @@
 /***********************************************
-* onGuildAdd.ts
-* Weslay
-*
-* An event that runs once the bot is added to
-* a server.
-***********************************************/
+ * onGuildAdd.ts
+ * An event that runs once the bot is added to
+ * a server.
+ *
+ * Copyright 2023 WeslayCodes
+ * License Info: http://www.apache.org/licenses/
+ ***********************************************/
 
 import {AttachmentBuilder, AuditLogEvent, Events, Guild} from 'discord.js';
 import fs from 'fs';

@@ -1,10 +1,10 @@
 /***********************************************
  * BoarUser.ts
- * Weslay
+ * Handles the manipulation of a user's profile,
+ * which is stored in JSON.
  *
- * Handles everything regarding a user's profile,
- * which is just information stored in a JSON
- * file
+ * Copyright 2023 WeslayCodes
+ * License Info: http://www.apache.org/licenses/
  ***********************************************/
 
 import Canvas from 'canvas';
