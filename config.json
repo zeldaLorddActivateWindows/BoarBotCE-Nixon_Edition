@@ -113,8 +113,8 @@
                     "expired": ":question: **__You haven't interacted with the form for 2 minutes! Automatically terminating configuration.__**",
                     "noAttachmentPerms": "\n\n:exclamation: **WARNING:** The bot doesn't have attachment permissions, so some (or all) interactive images may not appear.",
                     "fieldOne": {
-                        "unfinished": ":red_circle: **What channel can be used for trading?** \n*(Note: Threads will dynamically be created in this channel.)*",
-                        "finished": ":green_circle: **The channel you're using for trading is: **",
+                        "unfinished": "**What channel can be used for trading?** \n*(Note: Threads will dynamically be created in this channel.)*",
+                        "finished": "**The channel you're using for trading is: **",
                         "selectMenu": {
                             "id": "CONFIG_TRADE_CHANNEL|",
                             "label": "UNSELECTED"
