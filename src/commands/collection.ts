@@ -53,19 +53,17 @@ module.exports = {
                 const configStrings = config.strings;
                 const collectionStrings = configStrings.commands.collection.other;
                 const generalNums = config.numbers.general;
-                const collectionNums = config.numbers.collection;
+                const nums = config.numbers.collection;
                 const hexColors = config.hexColors;
                 const rarities = Object.keys(config.raritiesInfo);
                 const configAssets = config.paths.assets;
                 const collectionAssets = configAssets.collection;
                 const collectionFolder = collectionAssets.basePath;
-                const badgesFolder = configAssets.badges;
                 const boarsFolder = configAssets.boars;
-                const usernameLength = generalNums.usernameLength;
                 const collectionUnderlay = collectionFolder + collectionAssets.underlay;
                 const collectionOverlay = collectionFolder + collectionAssets.overlay;
 
-                const boarUser = new BoarUser(userInput, interaction.guild);
+                const boarUser = new BoarUser(userInput);
 
                 // User information
                 const userScore = boarUser.boarScore;
@@ -73,9 +71,9 @@ module.exports = {
                 const userUniques = Object.keys(boarUser.boarCollection).length;
                 const userMultiplier = boarUser.powerups.multiplier;
                 const userGifts = boarUser.powerups.gifts;
-                const userAvatar = interaction.user.displayAvatarURL({ extension: 'png' });
-                const userTag = interaction.user.username.substring(0, usernameLength) + '#' +
-                    interaction.user.discriminator;
+                const userAvatar = userInput.displayAvatarURL({ extension: 'png' });
+                const userTag = userInput.username.substring(0, generalNums.usernameLength) + '#' +
+                    userInput.discriminator;
 
                 // Atypical boar information
                 const lastBoarRarity = findRarity(boarUser.lastBoar);
@@ -115,58 +113,20 @@ module.exports = {
                 const boarsPerPage = 16;
 
                 // Aliases for information stored in config
-                const maxScore = collectionNums.maxScore;
-                const maxBoars = collectionNums.maxBoars;
-                const maxGifts = collectionNums.maxGifts;
+                const maxScore = nums.maxScore;
+                const maxBoars = nums.maxBoars;
+                const maxGifts = nums.maxGifts;
                 const maxMultiplier = 1 / config.raritiesInfo[rarities[rarities.length - 1]].probability;
                 let maxUniques = Object.keys(config.boarIDs).length;
 
                 // Position and dimension information
                 const origin = generalNums.originPos;
-                const imageSize = collectionNums.imageSize;
-                const avatarPos = collectionNums.userAvatarPos;
-                const avatarSize = collectionNums.userAvatarSize;
-                const userTagPos = collectionNums.userTagPos;
-                const datePos = collectionNums.datePos;
-                const noBadgePos = collectionNums.noBadgePos;
-                const badgeStart = collectionNums.badgeStart;
-                const badgeSpacing = collectionNums.badgeSpacing;
-                const badgeY = collectionNums.badgeY;
-                const badgeSize = collectionNums.badgeSize;
-                const scorePos = collectionNums.scorePos;
-                const totalPos = collectionNums.totalPos;
-                const uniquePos = collectionNums.uniquePos;
-                const multiPos = collectionNums.multiPos;
-                const giftPos = collectionNums.giftPos;
-                const boarStartX = collectionNums.boarStartX;
-                const boarStartY = collectionNums.boarStartY;
-                const boarSpacingX = collectionNums.boarSpacingX;
-                const boarSpacingY = collectionNums.boarSpacingY;
-                const boarCols = collectionNums.boarCols;
-                const boarRows = collectionNums.boarRows;
-                const boarSize = collectionNums.boarSize;
-                const rarityStartX = collectionNums.rarityStartX;
-                const rarityStartY = collectionNums.rarityStartY;
-                const rarityEndDiff = collectionNums.rarityEndDiff;
-                const rarityWidth = collectionNums.rarityWidth;
-                const lastBoarPos = collectionNums.lastBoarPos;
-                const lastBoarSize = collectionNums.lastBoarSize;
-                const lastRarityPos = collectionNums.lastRarityPos;
-                const lastRaritySize = collectionNums.lastRaritySize;
-                const favBoarPos = collectionNums.favBoarPos;
-                const favBoarSize = collectionNums.favBoarSize;
-                const favRarityPos = collectionNums.favRarityPos;
-                const favRaritySize = collectionNums.favRaritySize;
-                const enhancerStartX = collectionNums.enhancerStartX;
-                const enhancerStartY = collectionNums.enhancerStartY;
-                const enhancerSpacingX = collectionNums.enhancerSpacingX;
-                const enhancerCols = collectionNums.enhancerCols;
-                const enhancerSize = collectionNums.enhancerSize;
+                const imageSize = nums.imageSize;
 
                 // Font info
                 const fontName = configStrings.general.fontName;
                 const mediumFont = `${generalNums.fontSizes.medium}px ${fontName}`;
-                const smallFont = `${generalNums.fontSizes.small}px ${fontName}`;
+                const smallFont = `${generalNums.fontSizes.small_medium}px ${fontName}`;
 
                 // Sets stats depending on their size
                 const scoreString = userScore <= maxScore
@@ -204,49 +164,50 @@ module.exports = {
                 drawImageCompact(ctx, await Canvas.loadImage(collectionUnderlay), origin, imageSize);
 
                 // Draws top bar information
-                drawImageCompact(ctx, await Canvas.loadImage(userAvatar), avatarPos, avatarSize);
-                drawText(ctx, userTag, userTagPos, mediumFont, 'left', hexColors.font);
-                drawText(ctx, firstDate, datePos, mediumFont, 'left', hexColors.font);
+                drawImageCompact(ctx, await Canvas.loadImage(userAvatar), nums.userAvatarPos, nums.userAvatarSize);
+                drawText(ctx, userTag, nums.userTagPos, mediumFont, 'left', hexColors.font);
+                drawText(ctx, firstDate, nums.datePos, mediumFont, 'left', hexColors.font);
 
                 // Draws badge information
                 if (boarUser.badges.length === 0)
-                    drawText(ctx, collectionStrings.noBadges, noBadgePos, mediumFont, 'left', hexColors.font);
+                    drawText(ctx, collectionStrings.noBadges, nums.noBadgePos, mediumFont, 'left', hexColors.font);
 
                 for (let i=0; i<boarUser.badges.length; i++) {
-                    const badgeXY = [badgeStart + i * badgeSpacing, badgeY];
+                    const badgesFolder = configAssets.badges;
+                    const badgeXY = [nums.badgeStart + i * nums.badgeSpacing, nums.badgeY];
                     const badgeFile = badgesFolder + config.badgeIDs[boarUser.badges[i]].file;
 
-                    drawImageCompact(ctx, await Canvas.loadImage(badgeFile), badgeXY, badgeSize);
+                    drawImageCompact(ctx, await Canvas.loadImage(badgeFile), badgeXY, nums.badgeSize);
                 }
 
                 // Draws stats information
-                drawText(ctx, scoreString, scorePos, smallFont, 'center', hexColors.font);
-                drawText(ctx, totalString, totalPos, smallFont, 'center', hexColors.font);
-                drawText(ctx, uniqueString, uniquePos, smallFont, 'center', hexColors.font);
-                drawText(ctx, multiString, multiPos, smallFont, 'center', hexColors.font);
-                drawText(ctx, giftString, giftPos, smallFont, 'center', hexColors.font);
+                drawText(ctx, scoreString, nums.scorePos, smallFont, 'center', hexColors.font);
+                drawText(ctx, totalString, nums.totalPos, smallFont, 'center', hexColors.font);
+                drawText(ctx, uniqueString, nums.uniquePos, smallFont, 'center', hexColors.font);
+                drawText(ctx, multiString, nums.multiPos, smallFont, 'center', hexColors.font);
+                drawText(ctx, giftString, nums.giftPos, smallFont, 'center', hexColors.font);
 
                 // Draws boars and rarities
                 for (let i=0; i<currentBoarArray.length; i++) {
                     const boarImagePos = [
-                        boarStartX + (i % boarCols) * boarSpacingX,
-                        boarStartY + Math.floor(i / boarRows) * boarSpacingY
+                        nums.boarStartX + (i % nums.boarCols) * nums.boarSpacingX,
+                        nums.boarStartY + Math.floor(i / nums.boarRows) * nums.boarSpacingY
                     ];
 
                     const lineStartPos = [
-                        rarityStartX + (i % boarCols) * boarSpacingX,
-                        rarityStartY + Math.floor(i / boarRows) * boarSpacingY
+                        nums.rarityStartX + (i % nums.boarCols) * nums.boarSpacingX,
+                        nums.rarityStartY + Math.floor(i / nums.boarRows) * nums.boarSpacingY
                     ];
 
                     const lineEndPost = [
-                        rarityStartX + rarityEndDiff + (i % boarCols) * boarSpacingX,
-                        rarityStartY - rarityEndDiff + Math.floor(i / boarRows) * boarSpacingY
+                        nums.rarityStartX + nums.rarityEndDiff + (i % nums.boarCols) * nums.boarSpacingX,
+                        nums.rarityStartY - nums.rarityEndDiff + Math.floor(i / nums.boarRows) * nums.boarSpacingY
                     ];
 
                     const boarFile = boarsFolder + currentBoarArray[i].file;
 
-                    drawImageCompact(ctx, await Canvas.loadImage(boarFile), boarImagePos, boarSize);
-                    drawLine(ctx, lineStartPos, lineEndPost, rarityWidth, hexColors[currentBoarArray[i].rarity]);
+                    drawImageCompact(ctx, await Canvas.loadImage(boarFile), boarImagePos, nums.boarSize);
+                    drawLine(ctx, lineStartPos, lineEndPost, nums.rarityWidth, hexColors[currentBoarArray[i].rarity]);
                 }
 
                 // Draws last boar gotten and rarity
@@ -254,8 +215,8 @@ module.exports = {
                     const lastBoarDetails = config.boarIDs[boarUser.lastBoar];
                     const boarFile = boarsFolder + lastBoarDetails.file
 
-                    drawImageCompact(ctx, await Canvas.loadImage(boarFile), lastBoarPos, lastBoarSize);
-                    drawRect(ctx, lastRarityPos, lastRaritySize, hexColors[lastBoarRarity]);
+                    drawImageCompact(ctx, await Canvas.loadImage(boarFile), nums.lastBoarPos, nums.lastBoarSize);
+                    drawRect(ctx, nums.lastRarityPos, nums.lastRaritySize, hexColors[lastBoarRarity]);
                 }
 
                 // Draws favorite boar and rarity
@@ -263,19 +224,21 @@ module.exports = {
                     const favoriteBoarDetails = config.boarIDs[boarUser.favoriteBoar];
                     const boarFile = boarsFolder + favoriteBoarDetails.file
 
-                    drawImageCompact(ctx, await Canvas.loadImage(boarFile), favBoarPos, favBoarSize);
-                    drawRect(ctx, favRarityPos, favRaritySize, hexColors[favoriteBoarRarity]);
+                    drawImageCompact(ctx, await Canvas.loadImage(boarFile), nums.favBoarPos, nums.favBoarSize);
+                    drawRect(ctx, nums.favRarityPos, nums.favRaritySize, hexColors[favoriteBoarRarity]);
                 }
 
                 // Draws boar enhancers
-                for (let i=0; i<enhancerCols; i++) {
-                    const enhancerPos = [enhancerStartX + i % enhancerCols * enhancerSpacingX, enhancerStartY];
+                for (let i=0; i<nums.enhancerCols; i++) {
+                    const enhancerPos = [
+                        nums.enhancerStartX + i % nums.enhancerCols * nums.enhancerSpacingX, nums.enhancerStartY
+                    ];
 
                     let enhancerFile = collectionFolder + collectionAssets.enhancerOff;
                     if (i < boarUser.powerups.enhancers)
                         enhancerFile = collectionFolder + collectionAssets.enhancerOn;
 
-                    drawImageCompact(ctx, await Canvas.loadImage(enhancerFile), enhancerPos, enhancerSize);
+                    drawImageCompact(ctx, await Canvas.loadImage(enhancerFile), enhancerPos, nums.enhancerSize);
                 }
 
                 // Draws overlay

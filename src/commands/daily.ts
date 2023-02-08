@@ -44,7 +44,7 @@ module.exports = {
                 const generalStrings = config.strings.general;
 
                 // New boar user object used for easier manipulation of data
-                const boarUser = new BoarUser(interaction.user, interaction.guild);
+                const boarUser = new BoarUser(interaction.user);
 
                 // Midnight of next day
                 const nextBoarTime = Math.floor(

@@ -68,7 +68,7 @@ module.exports = {
                 if (!interaction.guild || !interaction.channel)
                     return;
 
-                const boarUser = new BoarUser(userInput, interaction.guild);
+                const boarUser = new BoarUser(userInput);
 
                 // Gives either a boar or a badge depending on input
                 if (rarityFound !== '')

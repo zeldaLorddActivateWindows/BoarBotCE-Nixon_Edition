@@ -242,13 +242,13 @@ async function updateSelectField(
 ) {
     const config = getConfigFile();
 
-    const configStrings = config.strings.config;
+    const configStrings = config.strings.commands.config.other;
     const generalStrings = config.strings.general;
 
     // Config file aliases
-    const fieldOneStrings = config.strings.config.fieldOne;
-    const fieldTwoStrings = config.strings.config.fieldTwo;
-    const otherButtons = config.strings.config.otherButtons;
+    const fieldOneStrings = configStrings.fieldOne;
+    const fieldTwoStrings = configStrings.fieldTwo;
+    const otherButtons = configStrings.otherButtons;
 
     // Components that need to be changed
     const fieldOneSelectMenu: SelectMenuBuilder =
@@ -311,7 +311,7 @@ async function updateSelectField(
 
         for (const channel of userResponses.boarChannels) {
             if (channel !== '')
-                channelsString += generalStrings.formattedChannel.replace('%@', userResponses.tradeChannelId);
+                channelsString += generalStrings.formattedChannel.replace('%@', channel);
         }
 
         selectMenu.setPlaceholder(placeholder);

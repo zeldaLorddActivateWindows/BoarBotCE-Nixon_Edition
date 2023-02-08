@@ -700,5 +700,5 @@
     },
     "unlimitedBoars": true,
     "debugMode": true,
-    "maintenanceMode": true
+    "maintenanceMode": false
 }

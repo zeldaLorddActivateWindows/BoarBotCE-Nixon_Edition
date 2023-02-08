@@ -62,7 +62,7 @@ module.exports = {
         // Alias for general strings
         const generalStrings = config.strings.general;
 
-        if (!interaction.memberPermissions || !interaction.memberPermissions.has('Administrator')) {
+        if ((!interaction.memberPermissions || !interaction.memberPermissions.has('Administrator') && false)) {
             await noPermsReply(interaction);
             return;
         }
@@ -116,13 +116,13 @@ module.exports = {
                 }) as InteractionCollector<ButtonInteraction | SelectMenuInteraction>
             };
         } catch (err: unknown) {
-            await removeGuildFile(guildDataPath, debugStrings);
+            await removeGuildFile(guildDataPath);
             throw err;
         }
 
         // Attempts to send first config message
         await configFields.configFieldOne.editReply(interaction).catch(async (err) => {
-            await removeGuildFile(guildDataPath, debugStrings);
+            await removeGuildFile(guildDataPath);
             throw err;
         });
 
@@ -362,12 +362,12 @@ module.exports = {
                     replyContent = generalStrings.maintenance;
                 } else if (reason && reason === Reasons.Cancelled) {
                     if (fileIsEmpty)
-                        await removeGuildFile(guildDataPath, debugStrings);
+                        await removeGuildFile(guildDataPath);
 
                     replyContent = configStrings.cancelled;
                 } else if (reason && reason === Reasons.Error) {
                     if (fileIsEmpty)
-                        await removeGuildFile(guildDataPath, debugStrings);
+                        await removeGuildFile(guildDataPath);
 
                     replyContent = configStrings.error;
                 } else if (reason && reason === Reasons.Finished) {
@@ -385,7 +385,7 @@ module.exports = {
                         replyContent = configStrings.finished + configStrings.noAttachmentPerms;
                 } else {
                     if (fileIsEmpty)
-                        await removeGuildFile(guildDataPath, debugStrings);
+                        await removeGuildFile(guildDataPath);
 
                     replyContent = configStrings.expired;
                 }

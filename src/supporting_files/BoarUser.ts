@@ -8,21 +8,19 @@
  ***********************************************/
 
 import Canvas from 'canvas';
-import {AttachmentBuilder, ChatInputCommandInteraction, Guild, GuildMember, User} from 'discord.js';
+import {AttachmentBuilder, ChatInputCommandInteraction, User} from 'discord.js';
 import {Options, PythonShell} from 'python-shell';
 import fs from 'fs';
 import {getConfigFile, getGlobalData} from './DataHandlers';
 import {addQueue} from './Queue';
 import {handleError} from './LogDebug';
-import {drawCircle, drawImageCompact, drawRect, drawText} from './CanvasFunctions';
+import {drawCircleImage, drawImageCompact, drawRect, drawText} from './CanvasFunctions';
 import {findRarity} from './GeneralFunctions';
 
 //***************************************
 
 export class BoarUser {
     public readonly user: User;
-    private readonly guild: Guild;
-    private readonly member: GuildMember | null;
 
     public lastDaily: number;
     public numDailies: number;
@@ -41,10 +39,13 @@ export class BoarUser {
 
     //***************************************
 
-    constructor(user: User, guild: Guild) {
+    /**
+     * Creates a new BoarUser from data file.
+     * If it doesn't exist, create empty BoarUser object
+     * @param user - User to base BoarUser off of
+     */
+    constructor(user: User) {
         this.user = user;
-        this.guild = guild;
-        this.member = this.guild.members.cache.get(this.user.id) as GuildMember | null;
 
         const userData = this.getUserData();
 
@@ -68,7 +69,11 @@ export class BoarUser {
 
     //***************************************
 
-    // Returns user data from JSON file
+    /**
+     * Returns user data from JSON file
+     * @return userData - User's parsed JSON data
+     * @private
+     */
     private getUserData() {
         let userDataJSON: string;
         const config = getConfigFile();
@@ -86,7 +91,9 @@ export class BoarUser {
 
     //***************************************
 
-    // Updates user data in JSON file and in this object
+    /**
+     * Updates user data in JSON file and in this object
+     */
     public updateUserData() {
         let userData = this.getUserData();
 
@@ -110,7 +117,11 @@ export class BoarUser {
 
     //***************************************
 
-    // Fixes any potential issues with user data
+    /**
+     * Fixes any potential issues with user data
+     * @param userData - User's parsed JSON data
+     * @private
+     */
     private fixUserData(userData: any) {
         const config = getConfigFile();
         const userFile = config.paths.data.userFolder + this.user.id + '.json';
@@ -141,7 +152,13 @@ export class BoarUser {
 
     //***************************************
 
-    // Add a boar to a user's collection and send an image
+    /**
+     * Add a boar to a user's collection and send an image
+     * @param config - Global config data parsed from JSON
+     * @param boarID - ID of boar to add
+     * @param interaction - Interaction to reply to with image
+     * @return success - The function fully executed
+     */
     public async addBoar(config: any, boarID: string, interaction: ChatInputCommandInteraction) {
         // Config aliases
         const configPaths = config.paths;
@@ -237,11 +254,19 @@ export class BoarUser {
 
         this.updateUserData();
         await this.orderBoars(config, interaction);
+
+        return true;
     }
 
     //***************************************
 
-    // Add a badge to a user's profile and send an image
+    /**
+     * Add a badge to a user's profile and send an image
+     * @param config - Global config data parsed from JSON
+     * @param badgeID - ID of badge to add
+     * @param interaction - Interaction to reply to with image
+     * @return success - The function fully executed
+     */
     public async addBadge(config: any, badgeID: string, interaction: ChatInputCommandInteraction) {
         const configStrings = config.strings;
         const giveStrings = configStrings.commands.give.other;
@@ -251,11 +276,11 @@ export class BoarUser {
 
         if (hasBadge && wasGiven) {
             await interaction.editReply(giveStrings.alreadyHas);
-            return;
+            return false;
         }
 
         if (hasBadge && !wasGiven)
-            return;
+            return false;
 
         const attachmentTitle = wasGiven
             ? giveStrings.badgeTitleGiven
@@ -275,11 +300,20 @@ export class BoarUser {
         this.badges.push(badgeID);
 
         this.updateUserData();
+
+        return true;
     }
 
     //***************************************
 
-    // Creates the image to be sent on boar/badge add
+    /**
+     * Creates the image to be sent on boar/badge add
+     * @param config - Global config data parsed from JSON
+     * @param id - ID of boar/badge to create image for
+     * @param attachmentTitle - Title of the image attachment
+     * @return attachment - AttachmentBuilder object containing image
+     * @private
+     */
     private async handleImageCreate(config: any, id: any, attachmentTitle: string) {
         const configStrings = config.strings;
 
@@ -354,29 +388,20 @@ export class BoarUser {
             const nameplate = announceAddFolder + announceAddAssets.nameplate;
 
             // Positioning and dimension info
-            const announceAddNums = config.numbers.announceAdd;
+            const nums = config.numbers.announceAdd;
             const origin = generalNums.originPos;
-            const imageSize = announceAddNums.imageSize;
+            const imageSize = nums.imageSize;
 
             let mainPos: number[];
             let mainSize: number[];
 
             if (!isBoar) {
-                mainPos = announceAddNums.badgePos;
-                mainSize = announceAddNums.badgeSize;
+                mainPos = nums.badgePos;
+                mainSize = nums.badgeSize;
             } else {
-                mainPos = announceAddNums.boarPos;
-                mainSize = announceAddNums.boarSize;
+                mainPos = nums.boarPos;
+                mainSize = nums.boarSize;
             }
-
-            const titlePos = announceAddNums.titlePos;
-            const namePos = announceAddNums.namePos;
-            const nameplatePos = announceAddNums.nameplatePos;
-            const nameplatePadding = announceAddNums.nameplatePadding;
-            const nameplateHeight = announceAddNums.nameplateHeight;
-            const userTagPos = announceAddNums.userTagPos;
-            const userAvatarPos = announceAddNums.userAvatarPos;
-            const userAvatarWidth = announceAddNums.userAvatarWidth;
 
             // Font info
             const fontName = configStrings.general.fontName;
@@ -398,16 +423,16 @@ export class BoarUser {
             drawImageCompact(ctx, await Canvas.loadImage(overlay), origin, imageSize);
 
             // Draws method of delivery and name of badge
-            drawText(ctx, attachmentTitle, titlePos, bigFont, 'center', hexColors.font);
-            drawText(ctx, info.name, namePos, mediumFont, 'center', hexColors.font);
+            drawText(ctx, attachmentTitle, nums.titlePos, bigFont, 'center', hexColors.font);
+            drawText(ctx, info.name, nums.namePos, mediumFont, 'center', hexColors.font);
 
             // Draws user information
             drawImageCompact(
-                ctx, await Canvas.loadImage(nameplate), nameplatePos,
-                [ctx.measureText(userTag).width + nameplatePadding, nameplateHeight]
+                ctx, await Canvas.loadImage(nameplate), nums.nameplatePos,
+                [ctx.measureText(userTag).width + nums.nameplatePadding, nums.nameplateHeight]
             );
-            drawText(ctx, userTag, userTagPos, mediumFont, 'left', hexColors.font);
-            drawCircle(ctx, await Canvas.loadImage(userAvatar), userAvatarPos, userAvatarWidth);
+            drawText(ctx, userTag, nums.userTagPos, mediumFont, 'left', hexColors.font);
+            drawCircleImage(ctx, await Canvas.loadImage(userAvatar), nums.userAvatarPos, nums.userAvatarWidth);
 
             buffer = canvas.toBuffer();
         }
@@ -417,8 +442,11 @@ export class BoarUser {
 
     //***************************************
 
-    // Reorder a user's boars to appear in order when viewing
-    // collection
+    /**
+     * Reorder a user's boars to appear in order when viewing collection
+     * @param config - Global config data parsed from JSON
+     * @param interaction - Used to give badge if user has max uniques
+     */
     public async orderBoars(config: any, interaction: ChatInputCommandInteraction) {
         const raritiesInfo = config.raritiesInfo;
         const rarities = Object.keys(raritiesInfo);

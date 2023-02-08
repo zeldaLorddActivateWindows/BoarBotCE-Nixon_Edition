@@ -19,7 +19,11 @@ let queueRunning = [false, false, false, false, false, false, false, false, fals
 
 //***************************************
 
-// Adds a function to a queue based on its ID number
+/**
+ * Adds a function to a queue based on its ID number
+ * @param func - Function to add to queue
+ * @param id - ID of queue item
+ */
 async function addQueue(func: () => void, id: string) {
     const config = getConfigFile();
     const generalStrings = config.strings.general;
@@ -46,7 +50,10 @@ async function addQueue(func: () => void, id: string) {
 
 //***************************************
 
-// Runs the queue while there are items in it
+/**
+ * Runs the queue while there are items in it
+ * @param queueIndex - Which of all the queues to run
+ */
 async function runQueue(queueIndex: number) {
     if (Object.keys(queue[queueIndex]).length === 0) {
         queueRunning[queueIndex] = false

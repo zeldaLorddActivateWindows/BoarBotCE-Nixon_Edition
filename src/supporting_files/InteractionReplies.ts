@@ -12,8 +12,10 @@ import {sendDebug} from './LogDebug';
 
 //***************************************
 
-// Handles when user sends command when config file is actively being configured
-// for the first time
+/**
+ * Handles when user sends command when config file is actively being configured for the first time
+ * @param interaction - Interaction to reply to
+ */
 async function currentConfigReply(interaction: ChatInputCommandInteraction) {
     const config = getConfigFile();
 
@@ -30,7 +32,12 @@ async function currentConfigReply(interaction: ChatInputCommandInteraction) {
 
 //***************************************
 
-// Handles when user sends command in channel not chosen in config
+/**
+ * Handles when user sends command in channel not chosen in config
+ * @param interaction - Interaction to reply to
+ * @param guildData -
+ * @param includeTrade
+ */
 async function wrongChannelReply(interaction: ChatInputCommandInteraction, guildData: any, includeTrade: boolean = false) {
     const config = getConfigFile();
 
@@ -58,7 +65,10 @@ async function wrongChannelReply(interaction: ChatInputCommandInteraction, guild
 
 //***************************************
 
-// Handles when user sends command they don't have permission for
+/**
+ * Handles when user sends command they don't have permission for
+ * @param interaction - Interaction to reply to
+ */
 async function noPermsReply(interaction: ChatInputCommandInteraction) {
     const config = getConfigFile();
 
@@ -75,7 +85,10 @@ async function noPermsReply(interaction: ChatInputCommandInteraction) {
 
 //***************************************
 
-// Handles when user sends command that has a cooldown too fast
+/**
+ * Handles when user sends command that has a cooldown too fast
+ * @param interaction - Interaction to reply to
+ */
 async function onCooldownReply(interaction: ChatInputCommandInteraction) {
     const config = getConfigFile();
 
@@ -92,7 +105,11 @@ async function onCooldownReply(interaction: ChatInputCommandInteraction) {
 
 //***************************************
 
-// Handles reply to all types of interaction states
+/**
+ * Handles reply to all types of interaction states
+ * @param interaction - Interaction to reply to
+ * @param content - Content of the reply
+ */
 async function handleReply(interaction: ChatInputCommandInteraction, content: string) {
     if (interaction.replied) {
         await interaction.followUp({

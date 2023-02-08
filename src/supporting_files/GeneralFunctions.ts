@@ -22,6 +22,11 @@ const cooldowns: any = {};
 
 //***************************************
 
+/**
+ * Gets whether bot has attachment perms
+ * @param interaction - Gets information from guild
+ * @return attachmentPerms - Whether bot has attachment perms
+ */
 function hasAttachmentPerms(interaction: ChatInputCommandInteraction | ButtonInteraction | SelectMenuInteraction | ModalSubmitInteraction) {
     if (!interaction.guild || !interaction.guild.members.me)
         return false;
@@ -31,7 +36,11 @@ function hasAttachmentPerms(interaction: ChatInputCommandInteraction | ButtonInt
 
 //***************************************
 
-// Finds the rarity from a given boar ID
+/**
+ * Finds the rarity from a given boar ID
+ * @param boarID - Boar ID to get rarity for
+ * @return rarity - Rarity of the boar
+ */
 function findRarity(boarID: string) {
     const config = getConfigFile();
 
@@ -52,7 +61,12 @@ function findRarity(boarID: string) {
 
 //***************************************
 
-// Handles the beginning of most command interactions to prevent duplicate code
+/**
+ * Handles the beginning of most command interactions to prevent duplicate code
+ * @param interaction - Interaction to reply to
+ * @param includeTrade - Whether to include trade menu when deciding usable channels
+ * @return guildData - Guild data parsed from JSON
+ */
 async function handleStart(interaction: ChatInputCommandInteraction, includeTrade: boolean = false) {
     if (!interaction.guild || !interaction.channel)
         return undefined;
@@ -68,7 +82,6 @@ async function handleStart(interaction: ChatInputCommandInteraction, includeTrad
     );
 
     const guildData = await getGuildData(interaction);
-    const acceptableChannels: string[] = guildData.channels;
 
     if (!guildData)
         return undefined;
@@ -77,6 +90,8 @@ async function handleStart(interaction: ChatInputCommandInteraction, includeTrad
         await currentConfigReply(interaction);
         return undefined;
     }
+
+    const acceptableChannels: string[] = guildData.channels;
 
     if (includeTrade)
         acceptableChannels.push(guildData.tradeChannel)
@@ -91,6 +106,11 @@ async function handleStart(interaction: ChatInputCommandInteraction, includeTrad
 
 //***************************************
 
+/**
+ * Handles cooldowns for users on certain commands
+ * @param interaction - Interaction to reply to
+ * @return onCooldown - Whether user is on cooldown or not
+ */
 async function handleCooldown(interaction: ChatInputCommandInteraction) {
     const commandName = interaction.options.getSubcommand();
     const userID = interaction.user.id;

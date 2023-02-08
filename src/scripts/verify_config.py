@@ -12,12 +12,12 @@ paths = config['paths']
 assetsFolder = paths['assets']
 boarFolder = assetsFolder['boars']
 badgeFolder = assetsFolder['badges']
-dailyFolder = assetsFolder['daily']['basePath']
+dailyFolder = assetsFolder['announceAdd']['basePath']
 collectionFolder = assetsFolder['collection']['basePath']
 otherFolder = assetsFolder['other']['basePath']
 scriptsFolder = paths['scripts']['basePath']
 
-dailyAssets = assetsFolder['daily']
+dailyAssets = assetsFolder['announceAdd']
 collectionAssets = assetsFolder['collection']
 otherAssets = assetsFolder['other']
 scripts = paths['scripts']
@@ -60,7 +60,7 @@ for badge in badgeIDs:
     except:
         print(f'Badge \'{badge}\' references an invalid file path')
 
-if 'badge-hunter' not in badgeIDs.keys():
+if 'badge_hunter' not in badgeIDs.keys():
     print(f'Hunter badge ID is wrong!')
 
 for asset in dailyAssets.keys():

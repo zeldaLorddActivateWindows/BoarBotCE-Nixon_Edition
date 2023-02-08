@@ -20,6 +20,11 @@ export class FormField {
 
     //***************************************
 
+    /**
+     * Create a field in a form
+     * @param content - Message content in the form
+     * @param components - Components (Buttons, Select Menus) in the form
+     */
     constructor(content: string, components: ActionRowBuilder<ButtonBuilder | SelectMenuBuilder>[]) {
         this.defaultContent = content;
 
@@ -29,7 +34,10 @@ export class FormField {
 
     //***************************************
 
-    // Edits the reply to be this field
+    /**
+     * Edits the reply to be this field
+     * @param interaction - Interaction to be edited
+     */
     public async editReply(interaction: ChatInputCommandInteraction | SelectMenuInteraction | ModalSubmitInteraction) {
         await interaction.editReply({
             content: this.content,
@@ -39,7 +47,9 @@ export class FormField {
 
     //***************************************
 
-    // Resets the field back to its original contents
+    /**
+     * Resets the field back to its original contents
+     */
     public reset() {
         this.content = this.defaultContent;
     }

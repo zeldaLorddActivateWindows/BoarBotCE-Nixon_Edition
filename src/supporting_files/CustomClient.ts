@@ -18,6 +18,10 @@ export class CustomClient extends Client {
 
     //***************************************
 
+    /**
+     * Creates a client with commands and modals attached as collections
+     * @param options
+     */
     constructor(options: ClientOptions) {
         super(options);
         this.commandList = new Collection<string, any>();
