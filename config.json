@@ -103,13 +103,16 @@
             },
             "config": {
                 "name": "config",
-                "description": "Configure the bot togured! Do `/boar daily` in one of the boar channels you chose to get started.__**\",\n                    \"expired\": \":question: **__You haven't interacted with the form for 2 minutes! Automatically terminating configuration.__**\",\n                    \"noAttachmentPerms\": \"\\n\\n:exclamation: **WARNING:** The bot doesn't have attachment permissions, so some (or all) interactive images may not appear.\",\n                    \"fieldOne\": { your liking [ADMIN-ONLY]",
+                "description": "Configure the bot to your liking [ADMIN-ONLY]",
                 "cooldown": true,
                 "args": {},
                 "other": {
                     "cancelled": ":x: **__Configuration was cancelled!__**",
                     "error": ":exclamation: **__An error occurred while getting information! Try again later.__**",
-                    "finished": ":white_check_mark: **__Boar Bot has successfully been confi
+                    "finished": ":white_check_mark: **__Boar Bot has successfully been configured! Do `/boar daily` in one of the boar channels you chose to get started.__**",
+                    "expired": ":question: **__You haven't interacted with the form for 2 minutes! Automatically terminating configuration.__**",
+                    "noAttachmentPerms": "\n\n:exclamation: **WARNING:** The bot doesn't have attachment permissions, so some (or all) interactive images may not appear.",
+                    "fieldOne": {
                         "unfinished": "**What channel can be used for trading?** \n*(Note: Threads will dynamically be created in this channel.)*",
                         "finished": "**The channel you're using for trading is: **",
                         "selectMenu": {
@@ -153,7 +156,7 @@
                     },
                     "fieldThree": {
                         "unfinished": "**Is this server a Hypixel Skyblock community?**",
-                        "finished": "**Hypixel Skyblock community: **",
+                        "finished": ":**Hypixel Skyblock community: **",
                         "sbYes": {
                             "id": "CONFIG_SB_YES|",
                             "label": "Yes"
