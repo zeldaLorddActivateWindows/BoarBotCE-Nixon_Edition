@@ -103,16 +103,13 @@
             },
             "config": {
                 "name": "config",
-                "description": "Configure the bot to your liking [ADMIN-ONLY]",
+                "description": "Configure the bot togured! Do `/boar daily` in one of the boar channels you chose to get started.__**\",\n                    \"expired\": \":question: **__You haven't interacted with the form for 2 minutes! Automatically terminating configuration.__**\",\n                    \"noAttachmentPerms\": \"\\n\\n:exclamation: **WARNING:** The bot doesn't have attachment permissions, so some (or all) interactive images may not appear.\",\n                    \"fieldOne\": { your liking [ADMIN-ONLY]",
                 "cooldown": true,
                 "args": {},
                 "other": {
                     "cancelled": ":x: **__Configuration was cancelled!__**",
                     "error": ":exclamation: **__An error occurred while getting information! Try again later.__**",
-                    "finished": ":white_check_mark: **__Boar Bot has successfully been configured! Do `/boar daily` in one of the boar channels you chose to get started.__**",
-                    "expired": ":question: **__You haven't interacted with the form for 2 minutes! Automatically terminating configuration.__**",
-                    "noAttachmentPerms": "\n\n:exclamation: **WARNING:** The bot doesn't have attachment permissions, so some (or all) interactive images may not appear.",
-                    "fieldOne": {
+                    "finished": ":white_check_mark: **__Boar Bot has successfully been confi
                         "unfinished": "**What channel can be used for trading?** \n*(Note: Threads will dynamically be created in this channel.)*",
                         "finished": "**The channel you're using for trading is: **",
                         "selectMenu": {
@@ -130,8 +127,8 @@
                         }
                     },
                     "fieldTwo": {
-                        "unfinished": ":red_circle: **What channels can BoarBot commands be used in? [Max 3]** \n*(Note: If you have a lot of server members, these channels may get flooded.)*",
-                        "finished": ":green_circle: **These are the channels you've selected for Boar Bot to work in: **",
+                        "unfinished": "**What channels can BoarBot commands be used in? [Max 3]** \n*(Note: If you have a lot of server members, these channels may get flooded.)*",
+                        "finished": "**These are the channels you've selected for Boar Bot to work in: **",
                         "selectMenuOne": {
                             "id": "CONFIG_BOAR_CHANNEL_1|",
                             "label": "UNSELECTED"
