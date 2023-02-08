@@ -19,59 +19,67 @@ const maintenanceEmbed = new EmbedBuilder()
 
 //***************************************
 
-module.exports = {
-	name: Events.InteractionCreate,
-	async execute(interaction: Interaction) {
-        if (!interaction.isChatInputCommand() && !interaction.isModalSubmit()) return;
+/**
+ * Handles all interaction and interaction filtering
+ * @param interaction - Interaction that executed this function
+ */
+async function execute(interaction: Interaction) {
+    if (!interaction.isChatInputCommand() && !interaction.isModalSubmit()) return;
 
-        const config = getConfigFile();
+    const config = getConfigFile();
 
-        const generalStrings = config.strings.general;
+    const generalStrings = config.strings.general;
 
+    try {
+        if (interaction.channel && interaction.channel.isDMBased()) {
+            await interaction.reply(generalStrings.noGuild);
+            return;
+        }
+
+        if (config.maintenanceMode && interaction.isChatInputCommand() &&
+            !config.developers.includes(interaction.user.id)
+        ) {
+            await interaction.reply({
+                embeds: [maintenanceEmbed.setTitle(generalStrings.maintenance)],
+                ephemeral: true
+            });
+            return;
+        }
+    } catch (err: unknown) {
+        await handleError(err, interaction);
+        return;
+    }
+
+    let command;
+    let modal;
+
+    if (interaction.isChatInputCommand())
+        command = (interaction.client as CustomClient).commandList.get(interaction.commandName);
+    else if (interaction.isModalSubmit())
+        modal = (interaction.client as CustomClient).modals.get(interaction.customId);
+
+    if (command) {
         try {
-            if (interaction.channel && interaction.channel.isDMBased()) {
-                await interaction.reply(generalStrings.noGuild);
-                return;
-            }
-
-            if (config.maintenanceMode && interaction.isChatInputCommand() &&
-                !config.developers.includes(interaction.user.id)
-            ) {
-                await interaction.reply({
-                    embeds: [maintenanceEmbed.setTitle(generalStrings.maintenance)],
-                    ephemeral: true
-                });
-                return;
-            }
+            await command.execute(interaction);
         } catch (err: unknown) {
             await handleError(err, interaction);
             return;
         }
+    }
 
-        let command;
-        let modal;
-
-        if (interaction.isChatInputCommand())
-            command = (interaction.client as CustomClient).commandList.get(interaction.commandName);
-        else if (interaction.isModalSubmit())
-            modal = (interaction.client as CustomClient).modals.get(interaction.customId);
-
-        if (command) {
-            try {
-                await command.execute(interaction);
-            } catch (err: unknown) {
-                await handleError(err, interaction);
-                return;
-            }
-        }
-
-        if (modal) {
-            try {
-                await modal.execute(interaction);
-            } catch (err: unknown) {
-                await handleError(err, interaction);
-                return;
-            }
+    if (modal) {
+        try {
+            await modal.execute(interaction);
+        } catch (err: unknown) {
+            await handleError(err, interaction);
+            return;
         }
     }
+}
+
+//***************************************
+
+module.exports = {
+	name: Events.InteractionCreate,
+    execute
 };

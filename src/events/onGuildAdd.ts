@@ -12,40 +12,48 @@ import fs from 'fs';
 
 //***************************************
 
-module.exports = {
-	name: Events.GuildCreate,
-	async execute(guild: Guild) {
-        if (!guild.members.me || !guild.members.me.permissions.has('ViewAuditLog'))
+/**
+ * Handles when bot is added to a new server
+ * @param guild - Guild bot was added to
+ */
+async function execute(guild: Guild) {
+    if (!guild.members.me || !guild.members.me.permissions.has('ViewAuditLog'))
+        return;
+
+    guild.fetchAuditLogs({ type: AuditLogEvent.BotAdd, limit: 1 }).then(log => {
+        const firstEntry = log.entries.first();
+
+        if (!firstEntry)
             return;
 
-        guild.fetchAuditLogs({ type: AuditLogEvent.BotAdd, limit: 1 }).then(log => {
-            const firstEntry = log.entries.first();
+        const userAdded = firstEntry.executor;
 
-            if (!firstEntry)
-                return;
+        if (!userAdded)
+            return;
 
-            const userAdded = firstEntry.executor;
+        const config = JSON.parse(fs.readFileSync('config.json', 'utf-8'));
 
-            if (!userAdded)
-                return;
+        // Aliases for config
+        const configStrings = config.strings;
+        const otherAssetsPath = config.paths.assets.other;
 
-            const config = JSON.parse(fs.readFileSync('config.json', 'utf-8'));
+        // DM information to be sent
+        const thankYouImage = otherAssetsPath.basePath + otherAssetsPath.thankYou;
+        const thankYouMessage = configStrings.general.guildAdd
+            .replace('%@', userAdded.username)
+            .replace('%@', guild.name)
+            .replace('%@', configStrings.commands.config.name);
 
-            // Aliases for config
-            const configStrings = config.strings;
-            const otherAssetsPath = config.paths.assets.other;
-
-            // DM information to be sent
-            const thankYouImage = otherAssetsPath.basePath + otherAssetsPath.thankYou;
-            const thankYouMessage = configStrings.general.guildAdd
-                .replace('%@', userAdded.username)
-                .replace('%@', guild.name)
-                .replace('%@', configStrings.commands.config.name);
-
-            userAdded.send({
-                content: thankYouMessage,
-                files: [new AttachmentBuilder(fs.readFileSync(thankYouImage))]
-            });
+        userAdded.send({
+            content: thankYouMessage,
+            files: [new AttachmentBuilder(fs.readFileSync(thankYouImage))]
         });
-    }
+    });
+}
+
+//***************************************
+
+module.exports = {
+	name: Events.GuildCreate,
+    execute
 };

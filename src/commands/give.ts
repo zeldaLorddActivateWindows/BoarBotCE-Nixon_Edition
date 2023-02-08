@@ -25,65 +25,73 @@ const arg2 = commandStrings.give.args.arg2.name;
 
 //***************************************
 
+/**
+ * Code that run on /boar give
+ * @param interaction - Interaction that executed this function
+ */
+async function execute(interaction: ChatInputCommandInteraction) {
+    const config = getConfigFile();
+
+    const guildData = await handleStart(interaction);
+
+    if (!guildData)
+        return;
+
+    if (!config.developers.includes(interaction.user.id)) {
+        await noPermsReply(interaction);
+        return;
+    }
+
+    await interaction.deferReply({ ephemeral: true });
+
+    const debugStrings = config.strings.debug;
+    const generalStrings = config.strings.general;
+    const badgeIDs = Object.keys(config.badgeIDs);
+
+    const userInput = interaction.options.getUser(arg1);
+    const idInput = interaction.options.getString(arg2);
+    let rarityFound: string = '';
+
+    if (!userInput || !idInput) {
+        await interaction.editReply(generalStrings.nullValues);
+        return;
+    }
+
+    // Gets the rarity of boar gotten
+    rarityFound = findRarity(idInput);
+
+    // Returns if ID doesn't exist in boars or badges
+    if (rarityFound === '' && !badgeIDs.includes(idInput)) {
+        await interaction.editReply(generalStrings.invalidID);
+        return;
+    }
+
+    await addQueue(async function() {
+        try {
+            if (!interaction.guild || !interaction.channel)
+                return;
+
+            const boarUser = new BoarUser(userInput);
+
+            // Gives either a boar or a badge depending on input
+            if (rarityFound !== '')
+                await boarUser.addBoar(config, idInput, interaction);
+            else
+                await boarUser.addBadge(config, idInput, interaction);
+        } catch (err: unknown) {
+            await handleError(err, interaction);
+        }
+    }, interaction.id + userInput.id);
+
+    sendDebug(debugStrings.endCommand
+        .replace('%@', interaction.user.tag)
+        .replace('%@', interaction.options.getSubcommand())
+    );
+}
+
+//***************************************
+
 module.exports = {
     data: { name: commandName },
-    async execute(interaction: ChatInputCommandInteraction) {
-        const config = getConfigFile();
-
-        const guildData = await handleStart(interaction);
-
-        if (!guildData)
-            return;
-
-        if (!config.developers.includes(interaction.user.id)) {
-            await noPermsReply(interaction);
-            return;
-        }
-
-        await interaction.deferReply({ ephemeral: true });
-
-        const debugStrings = config.strings.debug;
-        const generalStrings = config.strings.general;
-        const badgeIDs = Object.keys(config.badgeIDs);
-
-        const userInput = interaction.options.getUser(arg1);
-        const idInput = interaction.options.getString(arg2);
-        let rarityFound: string = '';
-
-        if (!userInput || !idInput) {
-            await interaction.editReply(generalStrings.nullValues);
-            return;
-        }
-
-        // Gets the rarity of boar gotten
-        rarityFound = findRarity(idInput);
-
-        // Returns if ID doesn't exist in boars or badges
-        if (rarityFound === '' && !badgeIDs.includes(idInput)) {
-            await interaction.editReply(generalStrings.invalidID);
-            return;
-        }
-
-        await addQueue(async function() {
-            try {
-                if (!interaction.guild || !interaction.channel)
-                    return;
-
-                const boarUser = new BoarUser(userInput);
-
-                // Gives either a boar or a badge depending on input
-                if (rarityFound !== '')
-                    await boarUser.addBoar(config, idInput, interaction);
-                else
-                    await boarUser.addBadge(config, idInput, interaction);
-            } catch (err: unknown) {
-                await handleError(err, interaction);
-            }
-        }, interaction.id + userInput.id);
-
-        sendDebug(debugStrings.endCommand
-            .replace('%@', interaction.user.tag)
-            .replace('%@', interaction.options.getSubcommand())
-        );
-    }
+    execute
 };

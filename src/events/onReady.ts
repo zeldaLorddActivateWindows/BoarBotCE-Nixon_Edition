@@ -13,23 +13,31 @@ import {handleError, sendDebug} from '../supporting_files/LogDebug';
 
 //***************************************
 
+/**
+ * Handles when bot comes online
+ * @param client - The bot itself
+ */
+async function execute(client: Client) {
+	const config = JSON.parse(fs.readFileSync('config.json', 'utf-8'));
+
+	sendDebug(config.strings.general.botOnline);
+
+	try {
+		const botStatusChannel = await client.channels.fetch(config.channels.botStatus) as TextChannel;
+
+		await botStatusChannel.send(
+			config.strings.general.botStatus.replace('%@', Math.round(Date.now() / 1000))
+		);
+	} catch (err: unknown) {
+		await handleError(err);
+		return;
+	}
+}
+
+//***************************************
+
 module.exports = {
 	name: Events.ClientReady,
 	once: true,
-	async execute (client: Client) {
-		const config = JSON.parse(fs.readFileSync('config.json', 'utf-8'));
-
-		sendDebug(config.strings.general.botOnline);
-
-		try {
-			const botStatusChannel = await client.channels.fetch(config.channels.botStatus) as TextChannel;
-
-			await botStatusChannel.send(
-				config.strings.general.botStatus.replace('%@', Math.round(Date.now() / 1000))
-			);
-		} catch (err: unknown) {
-			await handleError(err);
-			return;
-		}
-  	}
+	execute
 }

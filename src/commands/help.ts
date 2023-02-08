@@ -19,35 +19,43 @@ const commandName = initConfig.strings.commands.help.name;
 
 //***************************************
 
+/**
+ * Code that run on /boar help
+ * @param interaction - Interaction that executed this function
+ */
+async function execute(interaction: ChatInputCommandInteraction) {
+    const config = getConfigFile();
+
+    const guildData = await handleStart(interaction, true);
+
+    if (!guildData)
+        return;
+
+    await interaction.deferReply({ ephemeral: true });
+
+    const debugStrings = config.strings.debug;
+
+    sendDebug(debugStrings.usedCommand
+        .replace('%@', interaction.user.tag)
+        .replace('%@', interaction.options.getSubcommand())
+    );
+
+    const otherAssets = config.paths.assets.other;
+    const helpImagePath = otherAssets.basePath + otherAssets.help;
+
+    await interaction.editReply({
+        files: [fs.readFileSync(helpImagePath)]
+    });
+
+    sendDebug(debugStrings.endCommand
+        .replace('%@', interaction.user.tag)
+        .replace('%@', interaction.options.getSubcommand())
+    );
+}
+
+//***************************************
+
 module.exports = {
     data: { name: commandName },
-    async execute(interaction: ChatInputCommandInteraction) {
-        const config = getConfigFile();
-
-        const guildData = await handleStart(interaction, true);
-
-        if (!guildData)
-            return;
-
-        await interaction.deferReply({ ephemeral: true });
-
-        const debugStrings = config.strings.debug;
-
-        sendDebug(debugStrings.usedCommand
-            .replace('%@', interaction.user.tag)
-            .replace('%@', interaction.options.getSubcommand())
-        );
-
-        const otherAssets = config.paths.assets.other;
-        const helpImagePath = otherAssets.basePath + otherAssets.help;
-
-        await interaction.editReply({
-            files: [fs.readFileSync(helpImagePath)]
-        });
-
-        sendDebug(debugStrings.endCommand
-            .replace('%@', interaction.user.tag)
-            .replace('%@', interaction.options.getSubcommand())
-        );
-    }
+    execute
 };
