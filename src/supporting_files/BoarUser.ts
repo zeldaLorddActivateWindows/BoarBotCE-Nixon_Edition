@@ -232,19 +232,19 @@ export class BoarUser {
 
         // Updating user data
         if (!wasGiven && this.firstDaily === 0)
-            this.firstDaily = Math.round(Date.now() / 1000);
+            this.firstDaily = Date.now();
 
         if (!this.boarCollection[boarID]) {
             this.boarCollection[boarID] = config.emptyBoar;
-            this.boarCollection[boarID].firstObtained = Math.round(Date.now() / 1000);
+            this.boarCollection[boarID].firstObtained = Date.now();
         }
 
         this.boarCollection[boarID].num++;
-        this.boarCollection[boarID].lastObtained = Math.round(Date.now() / 1000);
+        this.boarCollection[boarID].lastObtained = Date.now();
 
         if (boarEdition <= trackedEditions || !rarityInfo.fromDaily) {
             this.boarCollection[boarID].editions.push(boarEdition);
-            this.boarCollection[boarID].editionDates.push(Math.round(Date.now() / 1000));
+            this.boarCollection[boarID].editionDates.push(Date.now());
         }
 
         this.lastBoar = boarID;

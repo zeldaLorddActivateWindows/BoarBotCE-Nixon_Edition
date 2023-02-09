@@ -71,7 +71,7 @@ async function handleError(err: unknown | string, interaction?: ChatInputCommand
             await interaction.editReply({
                 embeds: [errorEmbed.setTitle(errResponse)]
             });
-        } else {
+        } else if (Date.now() - interaction.createdTimestamp < 3000) {
             await interaction.reply({
                 embeds: [errorEmbed.setTitle(errResponse)],
                 ephemeral: true

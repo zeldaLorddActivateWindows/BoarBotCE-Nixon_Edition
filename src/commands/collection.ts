@@ -23,6 +23,7 @@ import {handleError, sendDebug} from '../supporting_files/LogDebug';
 import {getConfigFile} from '../supporting_files/DataHandlers';
 import {drawImageCompact, drawRect, drawText} from '../supporting_files/CanvasFunctions';
 import {finishImage} from '../supporting_files/command_specific/CollectionFunctions';
+import moment from 'moment';
 
 //***************************************
 
@@ -80,7 +81,8 @@ async function execute(interaction: ChatInputCommandInteraction) {
             const userTotal = boarUser.totalBoars;
             const userUniques = Object.keys(boarUser.boarCollection).length;
             const userMultiplier = boarUser.powerups.multiplier;
-            const userGifts = boarUser.powerups.gifts;
+            const userStreak = boarUser.boarStreak;
+            const userLastDaily = boarUser.lastDaily;
             const userAvatar = userInput.displayAvatarURL({ extension: 'png' });
             const userTag = userInput.username.substring(0, generalNums.usernameLength) + '#' +
                 userInput.discriminator;
@@ -123,7 +125,7 @@ async function execute(interaction: ChatInputCommandInteraction) {
             // Aliases for information stored in config
             const maxScore = nums.maxScore;
             const maxBoars = nums.maxBoars;
-            const maxGifts = nums.maxGifts;
+            const maxStreak = nums.maxStreak;
             const maxMultiplier = 1 / config.raritiesInfo[rarities[rarities.length - 1]].probability;
             let maxUniques = Object.keys(config.boarIDs).length;
 
@@ -133,6 +135,7 @@ async function execute(interaction: ChatInputCommandInteraction) {
 
             // Font info
             const fontName = configStrings.general.fontName;
+            const bigFont = `${generalNums.fontSizes.big}px ${fontName}`;
             const mediumFont = `${generalNums.fontSizes.medium}px ${fontName}`;
             const smallFont = `${generalNums.fontSizes.small_medium}px ${fontName}`;
 
@@ -149,9 +152,10 @@ async function execute(interaction: ChatInputCommandInteraction) {
             const multiString = userMultiplier <= maxMultiplier
                 ? `${userMultiplier.toFixed(2)}x`
                 : `${maxMultiplier.toFixed(2)}x`;
-            const giftString = userGifts <= maxGifts
-                ? userGifts.toLocaleString()
-                : `${maxGifts.toLocaleString()}+`;
+            const streakString = userStreak <= maxStreak
+                ? userStreak.toLocaleString()
+                : `${maxStreak.toLocaleString()}+`;
+            const lastDailyString = moment(userLastDaily).fromNow();
 
             // Gets the day a user first started using the bot
             let firstDate: string;
@@ -165,43 +169,44 @@ async function execute(interaction: ChatInputCommandInteraction) {
             currentBoarArray = boarArray.slice(0, boarsPerPage);
 
             // Creating image
-            const canvas = Canvas.createCanvas(imageSize[0], imageSize[1]);
-            const ctx = canvas.getContext('2d');
+            const mainCanvas = Canvas.createCanvas(imageSize[0], imageSize[1]);
+            const mainCtx = mainCanvas.getContext('2d');
 
             // Draws underlay
-            drawImageCompact(ctx, await Canvas.loadImage(collectionUnderlay), origin, imageSize);
+            drawImageCompact(mainCtx, await Canvas.loadImage(collectionUnderlay), origin, imageSize);
 
             // Draws top bar information
-            drawImageCompact(ctx, await Canvas.loadImage(userAvatar), nums.userAvatarPos, nums.userAvatarSize);
-            drawText(ctx, userTag, nums.userTagPos, mediumFont, 'left', hexColors.font);
-            drawText(ctx, firstDate, nums.datePos, mediumFont, 'left', hexColors.font);
+            drawImageCompact(mainCtx, await Canvas.loadImage(userAvatar), nums.userAvatarPos, nums.userAvatarSize);
+            drawText(mainCtx, userTag, nums.userTagPos, mediumFont, 'left', hexColors.font);
+            drawText(mainCtx, firstDate, nums.datePos, mediumFont, 'left', hexColors.font);
 
             // Draws badge information
             if (boarUser.badges.length === 0)
-                drawText(ctx, collectionStrings.noBadges, nums.noBadgePos, mediumFont, 'left', hexColors.font);
+                drawText(mainCtx, collectionStrings.noBadges, nums.noBadgePos, mediumFont, 'left', hexColors.font);
 
             for (let i=0; i<boarUser.badges.length; i++) {
                 const badgesFolder = configAssets.badges;
                 const badgeXY = [nums.badgeStart + i * nums.badgeSpacing, nums.badgeY];
                 const badgeFile = badgesFolder + config.badgeIDs[boarUser.badges[i]].file;
 
-                drawImageCompact(ctx, await Canvas.loadImage(badgeFile), badgeXY, nums.badgeSize);
+                drawImageCompact(mainCtx, await Canvas.loadImage(badgeFile), badgeXY, nums.badgeSize);
             }
 
             // Draws stats information
-            drawText(ctx, scoreString, nums.scorePos, smallFont, 'center', hexColors.font);
-            drawText(ctx, totalString, nums.totalPos, smallFont, 'center', hexColors.font);
-            drawText(ctx, uniqueString, nums.uniquePos, smallFont, 'center', hexColors.font);
-            drawText(ctx, multiString, nums.multiPos, smallFont, 'center', hexColors.font);
-            drawText(ctx, giftString, nums.giftPos, smallFont, 'center', hexColors.font);
+            drawText(mainCtx, scoreString, nums.scorePos, smallFont, 'center', hexColors.font);
+            drawText(mainCtx, totalString, nums.totalPos, smallFont, 'center', hexColors.font);
+            drawText(mainCtx, uniqueString, nums.uniquePos, smallFont, 'center', hexColors.font);
+            drawText(mainCtx, multiString, nums.multiPos, smallFont, 'center', hexColors.font);
+            drawText(mainCtx, streakString, nums.streakPos, smallFont, 'center', hexColors.font);
+            drawText(mainCtx, lastDailyString, nums.lastDailyPos, bigFont, 'center', hexColors.font);
 
             // Draws last boar gotten and rarity
             if (boarUser.lastBoar !== '') {
                 const lastBoarDetails = config.boarIDs[boarUser.lastBoar];
                 const boarFile = boarsFolder + lastBoarDetails.file
 
-                drawImageCompact(ctx, await Canvas.loadImage(boarFile), nums.lastBoarPos, nums.lastBoarSize);
-                drawRect(ctx, nums.lastRarityPos, nums.lastRaritySize, hexColors[lastBoarRarity]);
+                drawImageCompact(mainCtx, await Canvas.loadImage(boarFile), nums.lastBoarPos, nums.lastBoarSize);
+                drawRect(mainCtx, nums.lastRarityPos, nums.lastRaritySize, hexColors[lastBoarRarity]);
             }
 
             // Draws favorite boar and rarity
@@ -209,48 +214,63 @@ async function execute(interaction: ChatInputCommandInteraction) {
                 const favoriteBoarDetails = config.boarIDs[boarUser.favoriteBoar];
                 const boarFile = boarsFolder + favoriteBoarDetails.file
 
-                drawImageCompact(ctx, await Canvas.loadImage(boarFile), nums.favBoarPos, nums.favBoarSize);
-                drawRect(ctx, nums.favRarityPos, nums.favRaritySize, hexColors[favoriteBoarRarity]);
+                drawImageCompact(mainCtx, await Canvas.loadImage(boarFile), nums.favBoarPos, nums.favBoarSize);
+                drawRect(mainCtx, nums.favRarityPos, nums.favRaritySize, hexColors[favoriteBoarRarity]);
             }
 
-            // Draws boar enhancers
-            for (let i=0; i<nums.enhancerCols; i++) {
-                const enhancerPos = [
-                    nums.enhancerStartX + i % nums.enhancerCols * nums.enhancerSpacingX, nums.enhancerStartY
-                ];
-
-                let enhancerFile = collectionFolder + collectionAssets.enhancerOff;
-                if (i < boarUser.powerups.enhancers)
-                    enhancerFile = collectionFolder + collectionAssets.enhancerOn;
-
-                drawImageCompact(ctx, await Canvas.loadImage(enhancerFile), enhancerPos, nums.enhancerSize);
-            }
-
-            const fastBackButton = new ButtonBuilder()
-                .setCustomId('fast_back')
-                .setEmoji('<:fast_backward:1073082581635059824>')
-                .setStyle(ButtonStyle.Secondary)
-                .setDisabled(true)
+            // Row 1 buttons (Navigation)
             const backButton = new ButtonBuilder()
                 .setCustomId('back')
                 .setEmoji('<:back:1073072529507369072>')
                 .setStyle(ButtonStyle.Secondary)
-                .setDisabled(true)
+                .setDisabled(true);
+            const pageButton = new ButtonBuilder()
+                .setCustomId('page')
+                .setEmoji('📝')
+                .setStyle(ButtonStyle.Secondary)
+                .setDisabled(true);
             const forwardButton = new ButtonBuilder()
                 .setCustomId('forward')
                 .setEmoji('<:forward:1073071982096175184>')
                 .setStyle(ButtonStyle.Secondary)
-                .setDisabled(true)
-            const fastForwardButton = new ButtonBuilder()
-                .setCustomId('fast_forward')
-                .setEmoji('<:fast_forward:1073082583853834340>')
-                .setStyle(ButtonStyle.Secondary)
-                .setDisabled(true)
+                .setDisabled(true);
 
-            const row = new ActionRowBuilder<ButtonBuilder | SelectMenuBuilder>()
-                .setComponents(fastBackButton, backButton, forwardButton, fastForwardButton);
+            // Row 2 buttons (Views)
+            const normalViewButton = new ButtonBuilder()
+                .setCustomId('normal_view')
+                .setLabel('Normal')
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(true);
+            const detailedViewButton = new ButtonBuilder()
+                .setCustomId('detailed_view')
+                .setLabel('Detailed')
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(true);
+            const powerupViewButton = new ButtonBuilder()
+                .setCustomId('powerup_view')
+                .setLabel('Powerups')
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(true);
 
-            await finishImage(config, interaction, canvas, currentBoarArray, [row]);
+            // Row 3 buttons (Specific for each view)
+            const favoriteButton = new ButtonBuilder()
+                .setCustomId('favorite')
+                .setEmoji('🌟')
+                .setStyle(ButtonStyle.Success)
+                .setDisabled(true);
+            const giftButton = new ButtonBuilder()
+                .setCustomId('gift')
+                .setEmoji('🎁')
+                .setStyle(ButtonStyle.Success)
+                .setDisabled(true);
+
+            const row1 = new ActionRowBuilder<ButtonBuilder | SelectMenuBuilder>()
+                .setComponents(backButton, pageButton, forwardButton);
+            const row2 = new ActionRowBuilder<ButtonBuilder | SelectMenuBuilder>()
+                .setComponents(normalViewButton, detailedViewButton, powerupViewButton);
+            const row3 = new ActionRowBuilder<ButtonBuilder | SelectMenuBuilder>();
+
+            await finishImage(config, interaction, mainCanvas, currentBoarArray, [row1, row2]);
 
             let curPage: number = 1;
 
@@ -265,7 +285,7 @@ async function execute(interaction: ChatInputCommandInteraction) {
 
             const collector = interaction.channel.createMessageComponentCollector({
                 filter,
-                idle: 120000
+                idle: 1000 * 60 * 2
             }) as InteractionCollector<ButtonInteraction>;
 
             collector.on('collect', async (inter: ButtonInteraction) => {

@@ -14,6 +14,7 @@ import {GatewayIntentBits, Partials} from 'discord.js';
 import {CustomClient} from './src/supporting_files/CustomClient';
 import {registerFont} from 'canvas';
 import {getConfigFile} from './src/supporting_files/DataHandlers';
+import moment from 'moment';
 
 dotenv.config();
 
@@ -38,6 +39,32 @@ const config = getConfigFile();
 
 const minecraftFont = config.paths.assets.other.basePath + config.paths.assets.other.font;
 registerFont(minecraftFont, { family: config.strings.general.fontName });
+
+moment.relativeTimeThreshold('s', 60);
+moment.relativeTimeThreshold('ss', 1);
+moment.relativeTimeThreshold('m', 60);
+moment.relativeTimeThreshold('h', 24);
+moment.relativeTimeThreshold('d', 30.437);
+moment.relativeTimeThreshold('M', 12);
+
+moment.updateLocale('en', {
+	relativeTime : {
+		future: "in %s",
+		past:   "%s ago",
+		s  : '%d second',
+		ss : '%d seconds',
+		m:  "%d minute",
+		mm: "%d minutes",
+		h:  "%d hour",
+		hh: "%d hours",
+		d:  "%d day",
+		dd: "%d days",
+		M:  "%d month",
+		MM: "%d months",
+		y:  "%d year",
+		yy: "%d years"
+	}
+});
 
 // Registers list of subcommands
 const commandList = require(config.paths.commandList);

@@ -288,9 +288,9 @@
             "userAvatarWidth": 150
         },
         "collection": {
-            "maxScore": 999999999999999,
-            "maxBoars": 9999999999,
-            "maxGifts": 999999999,
+            "maxScore": 100000000000000000,
+            "maxBoars": 1000000000,
+            "maxStreak": 100000000,
             "imageSize": [1920, 1388],
             "userAvatarPos": [24, 24],
             "userAvatarSize": [156, 156],
@@ -301,11 +301,11 @@
             "badgeSpacing": 70,
             "badgeY": 105,
             "badgeSize": [55, 55],
-            "scorePos": [365, 365],
-            "totalPos": [227, 562],
+            "scorePos": [365, 359],
+            "totalPos": [227, 561],
             "uniquePos": [568, 562],
-            "multiPos": [185, 736],
-            "giftPos": [533, 736],
+            "multiPos": [185, 745],
+            "streakPos": [533, 745],
             "boarStartX": 740,
             "boarStartY": 210,
             "boarSpacingX": 296,
@@ -313,6 +313,7 @@
             "boarCols": 4,
             "boarRows": 4,
             "boarSize": [268, 268],
+            "lastDailyPos": [370, 946],
             "rarityStartX": 730,
             "rarityStartY": 253,
             "rarityEndDiff": 53,
@@ -324,12 +325,7 @@
             "favBoarPos": [26, 1037],
             "favBoarSize": [329, 329],
             "favRarityPos": [26, 1037],
-            "favRaritySize": [200, 40],
-            "enhancerStartX": 83,
-            "enhancerStartY": 885,
-            "enhancerSpacingX": 71,
-            "enhancerCols": 8,
-            "enhancerSize": [70, 70]
+            "favRaritySize": [200, 40]
         }
     },
     "boarIDs": {

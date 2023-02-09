@@ -51,13 +51,13 @@ async function execute(interaction: ChatInputCommandInteraction) {
 
             // Midnight of next day
             const nextBoarTime = Math.floor(
-                new Date().setUTCHours(24,0,0,0) / 1000
+                new Date().setUTCHours(24,0,0,0)
             );
 
             // Returns if user has already used their daily boar
-            if (boarUser.lastDaily >= nextBoarTime - 86400 && !config.unlimitedBoars) {
+            if (boarUser.lastDaily >= nextBoarTime - (1000 * 60 * 60 * 24) && !config.unlimitedBoars) {
                 await interaction.editReply(dailyStrings.usedDaily + generalStrings.formattedTime
-                    .replace('%@', nextBoarTime)
+                    .replace('%@', nextBoarTime / 1000)
                 );
                 return;
             }
@@ -78,7 +78,7 @@ async function execute(interaction: ChatInputCommandInteraction) {
                 probabilities.push(rarityProbability)
             }
 
-            boarUser.lastDaily = Math.round(Date.now() / 1000);
+            boarUser.lastDaily = Date.now();
 
             applyMultiplier(userMultiplier, probabilities);
             boarUser.powerups.multiplier = 1;
