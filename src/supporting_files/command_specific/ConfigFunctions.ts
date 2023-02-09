@@ -379,7 +379,7 @@ function getConfigFields(
                     new ButtonBuilder()
                         .setCustomId(fieldOneStrings.refresh.id + interaction.id)
                         .setLabel(fieldOneStrings.refresh.label)
-                        .setStyle(ButtonStyle.Primary)
+                        .setStyle(ButtonStyle.Secondary)
                         .setDisabled(false),
                     new ButtonBuilder()
                         .setCustomId(otherButtons.findChannel.id + interaction.id)
@@ -389,7 +389,7 @@ function getConfigFields(
                     new ButtonBuilder()
                         .setCustomId(fieldOneStrings.info.id + interaction.id)
                         .setEmoji(fieldOneStrings.info.label)
-                        .setStyle(ButtonStyle.Primary)
+                        .setStyle(ButtonStyle.Secondary)
                         .setDisabled(false)
                 ),
                 staticRow
@@ -421,7 +421,7 @@ function getConfigFields(
                 new ButtonBuilder()
                     .setCustomId(fieldTwoStrings.refresh.id + interaction.id)
                     .setLabel(fieldTwoStrings.refresh.label)
-                    .setStyle(ButtonStyle.Primary)
+                    .setStyle(ButtonStyle.Secondary)
                     .setDisabled(false),
                 new ButtonBuilder()
                     .setCustomId(otherButtons.findChannel.id + interaction.id)
@@ -431,7 +431,7 @@ function getConfigFields(
                 new ButtonBuilder()
                     .setCustomId(fieldTwoStrings.info.id + interaction.id)
                     .setEmoji(fieldTwoStrings.info.label)
-                    .setStyle(ButtonStyle.Primary)
+                    .setStyle(ButtonStyle.Secondary)
                     .setDisabled(false)
                 ),
                 staticRow
@@ -445,17 +445,17 @@ function getConfigFields(
                 new ButtonBuilder()
                     .setCustomId(fieldThreeStrings.sbYes.id + interaction.id)
                     .setLabel(fieldThreeStrings.sbYes.label)
-                    .setStyle(ButtonStyle.Success)
+                    .setStyle(ButtonStyle.Primary)
                     .setDisabled(false),
                 new ButtonBuilder()
                     .setCustomId(fieldThreeStrings.sbNo.id + interaction.id)
                     .setLabel(fieldThreeStrings.sbNo.label)
-                    .setStyle(ButtonStyle.Danger)
+                    .setStyle(ButtonStyle.Primary)
                     .setDisabled(false),
                 new ButtonBuilder()
                     .setCustomId(fieldThreeStrings.info.id + interaction.id)
                     .setEmoji(fieldThreeStrings.info.label)
-                    .setStyle(ButtonStyle.Primary)
+                    .setStyle(ButtonStyle.Secondary)
                     .setDisabled(false)
                 ),
                 staticRow

@@ -8,8 +8,10 @@
  ***********************************************/
 
 import {
-    ButtonInteraction,
-    ChatInputCommandInteraction, InteractionCollector,
+    ActionRowBuilder,
+    ButtonBuilder,
+    ButtonInteraction, ButtonStyle,
+    ChatInputCommandInteraction, InteractionCollector, SelectMenuBuilder,
     SelectMenuInteraction,
     User
 } from 'discord.js';
@@ -224,7 +226,31 @@ async function execute(interaction: ChatInputCommandInteraction) {
                 drawImageCompact(ctx, await Canvas.loadImage(enhancerFile), enhancerPos, nums.enhancerSize);
             }
 
-            await finishImage(config, interaction, canvas, currentBoarArray);
+            const fastBackButton = new ButtonBuilder()
+                .setCustomId('fast_back')
+                .setEmoji('<:fast_backward:1073082581635059824>')
+                .setStyle(ButtonStyle.Secondary)
+                .setDisabled(true)
+            const backButton = new ButtonBuilder()
+                .setCustomId('back')
+                .setEmoji('<:back:1073072529507369072>')
+                .setStyle(ButtonStyle.Secondary)
+                .setDisabled(true)
+            const forwardButton = new ButtonBuilder()
+                .setCustomId('forward')
+                .setEmoji('<:forward:1073071982096175184>')
+                .setStyle(ButtonStyle.Secondary)
+                .setDisabled(true)
+            const fastForwardButton = new ButtonBuilder()
+                .setCustomId('fast_forward')
+                .setEmoji('<:fast_forward:1073082583853834340>')
+                .setStyle(ButtonStyle.Secondary)
+                .setDisabled(true)
+
+            const row = new ActionRowBuilder<ButtonBuilder | SelectMenuBuilder>()
+                .setComponents(fastBackButton, backButton, forwardButton, fastForwardButton);
+
+            await finishImage(config, interaction, canvas, currentBoarArray, [row]);
 
             let curPage: number = 1;
 
@@ -234,7 +260,7 @@ async function execute(interaction: ChatInputCommandInteraction) {
 
             // Only allows button presses from current interaction to affect results
             const filter = async (btnInt: ButtonInteraction | SelectMenuInteraction) => {
-                return btnInt.customId.split('|')[1] === interaction.id;
+                return btnInt.customId.split('|')[1] === interaction.id + btnInt.user.id;
             };
 
             const collector = interaction.channel.createMessageComponentCollector({

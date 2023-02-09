@@ -92,7 +92,7 @@ async function handleStart(interaction: ChatInputCommandInteraction, includeTrad
         return undefined;
     }
 
-    const acceptableChannels: string[] = guildData.channels;
+    const acceptableChannels: string[] = [].concat(guildData.channels);
 
     if (includeTrade)
         acceptableChannels.push(guildData.tradeChannel)

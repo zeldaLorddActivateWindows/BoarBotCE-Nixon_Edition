@@ -109,7 +109,7 @@
                 "other": {
                     "cancelled": ":x: **__Configuration was cancelled!__**",
                     "error": ":exclamation: **__An error occurred while getting information! Try again later.__**",
-                    "finished": ":white_check_mark: **__Boar Bot has successfully been configured! Do `/boar daily` in one of the boar channels you chose to get started.__**",
+                    "finished": ":white_check_mark: **__BoarBot has successfully been configured! Do `/boar daily` in one of the boar channels you chose to get started.__**",
                     "expired": ":question: **__You haven't interacted with the form for 2 minutes! Automatically terminating configuration.__**",
                     "noAttachmentPerms": "\n\n:exclamation: **WARNING:** The bot doesn't have attachment permissions, so some (or all) interactive images may not appear.",
                     "fieldOne": {
@@ -125,13 +125,13 @@
                         },
                         "info": {
                             "id": "CONFIG_TRADE_INFO|",
-                            "label": "ℹ",
+                            "label": "\u2754",
                             "response": "**__TRADE CHANNEL__**\n\nThis bot has a trading system! In order for the trading system to work properly, it needs its own channel. Threads will dynamically be created and deleted in this channel unless the bot doesn't have permission to do so. If this is the case, trading will unfortunately be automatically disabled.\n > *This channel can be changed at any time using* `/boar config`*.*\n > *Use :pencil: to enter a channel ID (right-click channel name, Copy ID) that isn't shown in the select box.*"
                         }
                     },
                     "fieldTwo": {
                         "unfinished": "**What channels can BoarBot commands be used in? [Max 3]** \n*(Note: If you have a lot of server members, these channels may get flooded.)*",
-                        "finished": "**These are the channels you've selected for Boar Bot to work in: **",
+                        "finished": "**These are the channels you've selected for BoarBot to work in: **",
                         "selectMenuOne": {
                             "id": "CONFIG_BOAR_CHANNEL_1|",
                             "label": "UNSELECTED"
@@ -150,13 +150,13 @@
                         },
                         "info": {
                             "id": "CONFIG_BOAR_INFO|",
-                            "label": "ℹ",
+                            "label": "\u2754",
                             "response": "**__BOAR CHANNELS__**\n\nObviously, this bot has slash commands. Slash commands can produce spammy content depending on how large your server is, so you'll need to decide which channels the bot is enabled in.\n > *These channels can be changed at any time using* `/boar config`*.*\n > *Use :pencil: to enter a channel ID (right-click channel name, Copy ID) that isn't shown in the select box.*"
                         }
                     },
                     "fieldThree": {
                         "unfinished": "**Is this server a Hypixel Skyblock community?**",
-                        "finished": ":**Hypixel Skyblock community: **",
+                        "finished": "**Hypixel Skyblock community: **",
                         "sbYes": {
                             "id": "CONFIG_SB_YES|",
                             "label": "Yes"
@@ -167,7 +167,7 @@
                         },
                         "info": {
                             "id": "CONFIG_SB_INFO|",
-                            "label": "ℹ",
+                            "label": "\u2754",
                             "response": "**__SKYBLOCK COMMUNITY__**\n\nThis bot originated on a Discord server dedicated to Hypixel Skyblock. If you don't know what that is, no sweat! Just click \"No\". If you do and you're part of the community, I recommend you click \"Yes\".\n > *This can be changed at any time using* `/boar config`*.*"
                         }
                     },

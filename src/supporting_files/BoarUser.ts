@@ -213,7 +213,7 @@ export class BoarUser {
             await interaction.editReply({ files: [attachment] });
         } else {
             await interaction.editReply(giveStrings.gaveBoar);
-            await interaction.channel?.send({ files: [attachment] });
+            await interaction.followUp({ files: [attachment] });
         }
 
         let boarEdition: number = 0;
@@ -294,7 +294,7 @@ export class BoarUser {
             await interaction.followUp({ files: [attachment] });
         } else {
             await interaction.editReply(giveStrings.gaveBadge);
-            await interaction.channel?.send({ files: [attachment] });
+            await interaction.followUp({ files: [attachment] });
         }
 
         this.badges.push(badgeID);

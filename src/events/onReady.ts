@@ -25,9 +25,14 @@ async function execute(client: Client) {
 	try {
 		const botStatusChannel = await client.channels.fetch(config.channels.botStatus) as TextChannel;
 
-		await botStatusChannel.send(
-			config.strings.general.botStatus.replace('%@', Math.round(Date.now() / 1000))
-		);
+		if (botStatusChannel.guild.members.me &&
+			botStatusChannel.guild.members.me.permissions.has('ViewChannel') &&
+			botStatusChannel.guild.members.me.permissions.has('SendMessages')
+		) {
+			await botStatusChannel.send(
+				config.strings.general.botStatus.replace('%@', Math.round(Date.now() / 1000))
+			);
+		}
 	} catch (err: unknown) {
 		await handleError(err);
 		return;

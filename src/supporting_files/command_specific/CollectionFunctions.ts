@@ -10,12 +10,13 @@
 //***************************************
 
 import {
+    ActionRowBuilder,
     APISelectMenuOption,
-    AttachmentBuilder,
+    AttachmentBuilder, ButtonBuilder,
     ButtonInteraction,
     ButtonStyle,
     ChannelType,
-    ChatInputCommandInteraction,
+    ChatInputCommandInteraction, SelectMenuBuilder,
     TextInputStyle
 } from "discord.js";
 import {drawImageCompact, drawLine} from '../CanvasFunctions';
@@ -28,7 +29,8 @@ async function finishImage(
     config: any,
     interaction: ChatInputCommandInteraction | ButtonInteraction,
     canvasBase: Canvas.Canvas,
-    currentBoarArray: any[]
+    currentBoarArray: any[],
+    components: ActionRowBuilder<ButtonBuilder | SelectMenuBuilder>[]
 ) {
     const origin = config.numbers.general.originPos;
     const nums = config.numbers.collection;
@@ -73,7 +75,7 @@ async function finishImage(
 
     attachment = new AttachmentBuilder(canvas.toBuffer())
 
-    await interaction.editReply({ files: [attachment] });
+    await interaction.editReply({ files: [attachment], components: components });
 }
 
 //***************************************
