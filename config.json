@@ -255,7 +255,7 @@
                     }
                 },
                 "other": {
-                    "noDailies": "N/A",
+                    "dateUnavailable": "N/A",
                     "noBadges": "No Badges!"
                 }
             }

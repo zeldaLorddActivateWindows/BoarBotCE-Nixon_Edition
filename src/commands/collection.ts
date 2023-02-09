@@ -119,7 +119,6 @@ async function execute(interaction: ChatInputCommandInteraction) {
             }
 
             // Constants with context
-            const msPerSec = 1000;
             const boarsPerPage = 16;
 
             // Aliases for information stored in config
@@ -155,15 +154,17 @@ async function execute(interaction: ChatInputCommandInteraction) {
             const streakString = userStreak <= maxStreak
                 ? userStreak.toLocaleString()
                 : `${maxStreak.toLocaleString()}+`;
-            const lastDailyString = moment(userLastDaily).fromNow();
+            const lastDailyString = userLastDaily > 1
+                ? moment(userLastDaily).fromNow()
+                : collectionStrings.dateUnavailable;
 
             // Gets the day a user first started using the bot
             let firstDate: string;
             if (boarUser.firstDaily > 0) {
-                firstDate = new Date(boarUser.firstDaily * msPerSec)
+                firstDate = new Date(boarUser.firstDaily)
                     .toLocaleString('default', { month: 'long', day: '2-digit', year: 'numeric' })
             } else {
-                firstDate = collectionStrings.noDailies;
+                firstDate = collectionStrings.dateUnavailable;
             }
 
             currentBoarArray = boarArray.slice(0, boarsPerPage);
