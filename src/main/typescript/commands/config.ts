@@ -20,7 +20,7 @@ import {
 import fs from 'fs';
 import {handleCooldown, hasAttachmentPerms} from '../supporting_files/GeneralFunctions';
 import {getConfigFile, getGuildData, removeGuildFile} from '../supporting_files/DataHandlers';
-import {handleError, sendDebug} from '../supporting_files/LogDebug';
+import {handleError, sendDebug} from '../logging/LogDebug';
 import {
     getConfigFields,
     getStaticRow,

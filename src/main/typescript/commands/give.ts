@@ -8,7 +8,7 @@
 
 import {BoarUser} from '../supporting_files/BoarUser';
 import {addQueue} from '../supporting_files/Queue';
-import {handleError, sendDebug} from '../supporting_files/LogDebug';
+import {handleError, sendDebug} from '../logging/LogDebug';
 import {getConfigFile} from '../supporting_files/DataHandlers';
 import {findRarity, handleStart} from '../supporting_files/GeneralFunctions';
 import {ChatInputCommandInteraction} from 'discord.js';

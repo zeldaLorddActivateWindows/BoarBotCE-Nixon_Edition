@@ -9,7 +9,7 @@
 
 import fs from 'fs';
 import {ChatInputCommandInteraction} from 'discord.js';
-import {handleError, sendDebug} from './LogDebug';
+import {handleError, sendDebug} from '../logging/LogDebug';
 
 //***************************************
 

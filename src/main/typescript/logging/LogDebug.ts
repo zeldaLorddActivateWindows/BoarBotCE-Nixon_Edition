@@ -8,7 +8,7 @@
  ***********************************************/
 
 import {ChatInputCommandInteraction, EmbedBuilder, Message, ModalSubmitInteraction} from 'discord.js';
-import {getConfigFile} from './DataHandlers';
+import {getConfigFile} from '../supporting_files/DataHandlers';
 
 //***************************************
 

@@ -9,7 +9,7 @@
 
 import {ChatInputCommandInteraction} from 'discord.js';
 import {getConfigFile} from './DataHandlers';
-import {sendDebug} from './LogDebug';
+import {sendDebug} from '../logging/LogDebug';
 
 //***************************************
 

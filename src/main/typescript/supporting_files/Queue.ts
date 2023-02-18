@@ -8,7 +8,7 @@
  * License Info: http://www.apache.org/licenses/
  ***********************************************/
 
-import {handleError} from './LogDebug';
+import {handleError} from '../logging/LogDebug';
 import {getConfigFile} from "./DataHandlers";
 
 //***************************************

@@ -1,5 +1,5 @@
 /***********************************************
- * deploy-commands.ts
+ * DeployCommands.ts
  * Handles the deployment of application
  * commands.
  *
@@ -10,8 +10,8 @@
 import {REST} from '@discordjs/rest';
 import {Routes} from 'discord-api-types/v10';
 import dotenv from 'dotenv';
-import {getConfigFile} from './src/supporting_files/DataHandlers';
-import {sendDebug} from './src/supporting_files/LogDebug';
+import {getConfigFile} from '../supporting_files/DataHandlers';
+import {sendDebug} from '../logging/LogDebug';
 
 dotenv.config();
 

@@ -19,7 +19,7 @@ import {findRarity, handleStart} from '../supporting_files/GeneralFunctions';
 import {BoarUser} from '../supporting_files/BoarUser';
 import Canvas from 'canvas';
 import {addQueue} from '../supporting_files/Queue';
-import {handleError, sendDebug} from '../supporting_files/LogDebug';
+import {handleError, sendDebug} from '../logging/LogDebug';
 import {getConfigFile} from '../supporting_files/DataHandlers';
 import {drawImageCompact, drawRect, drawText} from '../supporting_files/CanvasFunctions';
 import {finishImage} from '../supporting_files/command_specific/CollectionFunctions';
@@ -138,8 +138,6 @@ async function execute(interaction: ChatInputCommandInteraction) {
         }
     }, interaction.id + userInput.id);
 
-    if (!)
-
     // Constants with context
     const boarsPerPage = 16;
 
@@ -180,66 +178,66 @@ async function execute(interaction: ChatInputCommandInteraction) {
         ? moment(userLastDaily).fromNow()
         : collectionStrings.dateUnavailable;
 
-    // Gets the day a user first started using the bot
-    let firstDate: string;
-    if (boarUser.firstDaily > 0) {
-        firstDate = new Date(boarUser.firstDaily)
-            .toLocaleString('default', { month: 'long', day: '2-digit', year: 'numeric' })
-    } else {
-        firstDate = collectionStrings.dateUnavailable;
-    }
-
-    currentBoarArray = boarArray.slice(0, boarsPerPage);
-
-    // Creating image
-    const mainCanvas = Canvas.createCanvas(imageSize[0], imageSize[1]);
-    const mainCtx = mainCanvas.getContext('2d');
-
-    // Draws underlay
-    drawImageCompact(mainCtx, await Canvas.loadImage(collectionUnderlay), origin, imageSize);
-
-    // Draws top bar information
-    drawImageCompact(mainCtx, await Canvas.loadImage(userAvatar), nums.userAvatarPos, nums.userAvatarSize);
-    drawText(mainCtx, userTag, nums.userTagPos, mediumFont, 'left', hexColors.font);
-    drawText(mainCtx, firstDate, nums.datePos, mediumFont, 'left', hexColors.font);
-
-    // Draws badge information
-    if (boarUser.badges.length === 0)
-        drawText(mainCtx, collectionStrings.noBadges, nums.noBadgePos, mediumFont, 'left', hexColors.font);
-
-    for (let i=0; i<boarUser.badges.length; i++) {
-        const badgesFolder = configAssets.badges;
-        const badgeXY = [nums.badgeStart + i * nums.badgeSpacing, nums.badgeY];
-        const badgeFile = badgesFolder + config.badgeIDs[boarUser.badges[i]].file;
-
-        drawImageCompact(mainCtx, await Canvas.loadImage(badgeFile), badgeXY, nums.badgeSize);
-    }
-
-    // Draws stats information
-    drawText(mainCtx, scoreString, nums.scorePos, smallFont, 'center', hexColors.font);
-    drawText(mainCtx, totalString, nums.totalPos, smallFont, 'center', hexColors.font);
-    drawText(mainCtx, uniqueString, nums.uniquePos, smallFont, 'center', hexColors.font);
-    drawText(mainCtx, multiString, nums.multiPos, smallFont, 'center', hexColors.font);
-    drawText(mainCtx, streakString, nums.streakPos, smallFont, 'center', hexColors.font);
-    drawText(mainCtx, lastDailyString, nums.lastDailyPos, bigFont, 'center', hexColors.font);
-
-    // Draws last boar gotten and rarity
-    if (boarUser.lastBoar !== '') {
-        const lastBoarDetails = config.boarIDs[boarUser.lastBoar];
-        const boarFile = boarsFolder + lastBoarDetails.file
-
-        drawImageCompact(mainCtx, await Canvas.loadImage(boarFile), nums.lastBoarPos, nums.lastBoarSize);
-        drawRect(mainCtx, nums.lastRarityPos, nums.lastRaritySize, hexColors[lastBoarRarity]);
-    }
-
-    // Draws favorite boar and rarity
-    if (boarUser.favoriteBoar !== '') {
-        const favoriteBoarDetails = config.boarIDs[boarUser.favoriteBoar];
-        const boarFile = boarsFolder + favoriteBoarDetails.file
-
-        drawImageCompact(mainCtx, await Canvas.loadImage(boarFile), nums.favBoarPos, nums.favBoarSize);
-        drawRect(mainCtx, nums.favRarityPos, nums.favRaritySize, hexColors[favoriteBoarRarity]);
-    }
+    // // Gets the day a user first started using the bot
+    // let firstDate: string;
+    // if (boarUser.firstDaily > 0) {
+    //     firstDate = new Date(boarUser.firstDaily)
+    //         .toLocaleString('default', { month: 'long', day: '2-digit', year: 'numeric' })
+    // } else {
+    //     firstDate = collectionStrings.dateUnavailable;
+    // }
+    //
+    // currentBoarArray = boarArray.slice(0, boarsPerPage);
+    //
+    // // Creating image
+    // const mainCanvas = Canvas.createCanvas(imageSize[0], imageSize[1]);
+    // const mainCtx = mainCanvas.getContext('2d');
+    //
+    // // Draws underlay
+    // drawImageCompact(mainCtx, await Canvas.loadImage(collectionUnderlay), origin, imageSize);
+    //
+    // // Draws top bar information
+    // drawImageCompact(mainCtx, await Canvas.loadImage(userAvatar), nums.userAvatarPos, nums.userAvatarSize);
+    // drawText(mainCtx, userTag, nums.userTagPos, mediumFont, 'left', hexColors.font);
+    // drawText(mainCtx, firstDate, nums.datePos, mediumFont, 'left', hexColors.font);
+    //
+    // // Draws badge information
+    // if (boarUser.badges.length === 0)
+    //     drawText(mainCtx, collectionStrings.noBadges, nums.noBadgePos, mediumFont, 'left', hexColors.font);
+    //
+    // for (let i=0; i<boarUser.badges.length; i++) {
+    //     const badgesFolder = configAssets.badges;
+    //     const badgeXY = [nums.badgeStart + i * nums.badgeSpacing, nums.badgeY];
+    //     const badgeFile = badgesFolder + config.badgeIDs[boarUser.badges[i]].file;
+    //
+    //     drawImageCompact(mainCtx, await Canvas.loadImage(badgeFile), badgeXY, nums.badgeSize);
+    // }
+    //
+    // // Draws stats information
+    // drawText(mainCtx, scoreString, nums.scorePos, smallFont, 'center', hexColors.font);
+    // drawText(mainCtx, totalString, nums.totalPos, smallFont, 'center', hexColors.font);
+    // drawText(mainCtx, uniqueString, nums.uniquePos, smallFont, 'center', hexColors.font);
+    // drawText(mainCtx, multiString, nums.multiPos, smallFont, 'center', hexColors.font);
+    // drawText(mainCtx, streakString, nums.streakPos, smallFont, 'center', hexColors.font);
+    // drawText(mainCtx, lastDailyString, nums.lastDailyPos, bigFont, 'center', hexColors.font);
+    //
+    // // Draws last boar gotten and rarity
+    // if (boarUser.lastBoar !== '') {
+    //     const lastBoarDetails = config.boarIDs[boarUser.lastBoar];
+    //     const boarFile = boarsFolder + lastBoarDetails.file
+    //
+    //     drawImageCompact(mainCtx, await Canvas.loadImage(boarFile), nums.lastBoarPos, nums.lastBoarSize);
+    //     drawRect(mainCtx, nums.lastRarityPos, nums.lastRaritySize, hexColors[lastBoarRarity]);
+    // }
+    //
+    // // Draws favorite boar and rarity
+    // if (boarUser.favoriteBoar !== '') {
+    //     const favoriteBoarDetails = config.boarIDs[boarUser.favoriteBoar];
+    //     const boarFile = boarsFolder + favoriteBoarDetails.file
+    //
+    //     drawImageCompact(mainCtx, await Canvas.loadImage(boarFile), nums.favBoarPos, nums.favBoarSize);
+    //     drawRect(mainCtx, nums.favRarityPos, nums.favRaritySize, hexColors[favoriteBoarRarity]);
+    // }
 
     // Row 1 buttons (Navigation)
     const backButton = new ButtonBuilder()
@@ -293,7 +291,7 @@ async function execute(interaction: ChatInputCommandInteraction) {
         .setComponents(normalViewButton, detailedViewButton, powerupViewButton);
     const row3 = new ActionRowBuilder<ButtonBuilder | SelectMenuBuilder>();
 
-    await finishImage(config, interaction, mainCanvas, currentBoarArray, [row1, row2]);
+    // await finishImage(config, interaction, mainCanvas, currentBoarArray, [row1, row2]);
 
     let curPage: number = 1;
 

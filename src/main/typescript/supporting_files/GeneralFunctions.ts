@@ -14,7 +14,7 @@ import {
     SelectMenuInteraction
 } from 'discord.js';
 import {getConfigFile, getGuildData} from './DataHandlers';
-import {sendDebug} from './LogDebug';
+import {sendDebug} from '../logging/LogDebug';
 import {currentConfigReply, onCooldownReply, wrongChannelReply} from './InteractionReplies';
 
 //***************************************

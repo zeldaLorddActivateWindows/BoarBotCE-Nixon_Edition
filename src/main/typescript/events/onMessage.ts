@@ -8,7 +8,7 @@
  ***********************************************/
 
 import {Events, Message} from 'discord.js';
-import {sendReport} from '../supporting_files/LogDebug';
+import {sendReport} from '../logging/LogDebug';
 
 //***************************************
 

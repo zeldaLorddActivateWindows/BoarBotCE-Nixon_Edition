@@ -13,7 +13,7 @@ import {Options, PythonShell} from 'python-shell';
 import fs from 'fs';
 import {getConfigFile, getGlobalData} from './DataHandlers';
 import {addQueue} from './Queue';
-import {handleError} from './LogDebug';
+import {handleError} from '../logging/LogDebug';
 import {drawCircleImage, drawImageCompact, drawRect, drawText} from './CanvasFunctions';
 import {findRarity} from './GeneralFunctions';
 

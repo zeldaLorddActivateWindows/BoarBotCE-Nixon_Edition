@@ -9,7 +9,7 @@
 //***************************************
 
 import {APISelectMenuOption, ButtonStyle, ChannelType, ChatInputCommandInteraction, TextInputStyle} from "discord.js";
-import {handleError, sendDebug} from "../LogDebug";
+import {sendDebug} from "../../logging/LogDebug";
 import {BoarUser} from "../BoarUser";
 
 //***************************************

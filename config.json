@@ -2,10 +2,8 @@
     "developers": [
         "184439280980983808"
     ],
-    "channels": {
-        "botStatus": "1042624481044209735"
-    },
-    "paths": {
+    "botStatusChannel": "1042624481044209735",
+    "pathConfig": {
         "commandList": "./src/command-list.ts",
         "events": "./src/events",
         "commands": "./src/commands",
@@ -14,11 +12,11 @@
             "userFolder": "database/users/",
             "globalFile": "database/GlobalData.json"
         },
-        "assets": {
-            "boars": "assets/boars/",
-            "badges": "assets/badges/",
+        "resources": {
+            "boars": "src/main/resources/boars/",
+            "badges": "src/main/resources/badges/",
             "announceAdd": {
-                "basePath": "assets/daily/",
+                "basePath": "src/main/resources/daily/",
                 "overlay": "DailyOverlay.png",
                 "underlay": "DailyUnderlay.png",
                 "circleMask": "CircleMask.png",
@@ -26,27 +24,27 @@
                 "nameplate": "DailyNameplate.png"
             },
             "collection": {
-                "basePath": "assets/collection/",
+                "basePath": "src/main/resources/collection/",
                 "overlay": "BoarCollectionOverlay.png",
                 "underlay": "BoarCollectionUnderlay.png",
                 "enhancerOn": "EnhancerActive.png",
                 "enhancerOff": "EnhancerInactive.png"
             },
             "other": {
-                "basePath": "assets/other/",
+                "basePath": "src/main/resources/other/",
                 "thankYou": "BoarBotThanks.png",
                 "font": "MinecraftFont.ttf",
                 "help": "Help.png"
             }
         },
         "scripts": {
-            "basePath": "src/scripts/",
+            "basePath": "src/main/python/",
             "dynamicImage": "get_dynamic_image.py"
         }
     },
-    "strings": {
+    "stringConfig": {
         "general": {
-            "botOnline": "Bot successfully logged in!",
+            "botOnline": "Successfully logged in. Bot online.",
             "guildAdd": "Hey, %@! Thanks for adding me to your server **%@**!\n> To get started, run the command `/boar %@` in your server!",
             "botStatus": "> Bot went online <t:%@:R>",
             "noPermission": "You don't have permission to use this command.",
@@ -261,7 +259,7 @@
             }
         }
     },
-    "numbers": {
+    "numberConfig": {
         "general": {
             "originPos": [0, 0],
             "fontSizes": {
@@ -328,7 +326,7 @@
             "favRaritySize": [200, 40]
         }
     },
-    "boarIDs": {
+    "boarCollectibles": {
         "normal": {
             "name": "Normal Boar",
             "file": "NormalBoar.png",
@@ -568,7 +566,7 @@
             "blacklisted": false
         }
     },
-    "badgeIDs": {
+    "badgeCollectibles": {
         "badge_early_supporter": {
             "name": "Early Subboarter",
             "file": "EarlySupporter.png",
@@ -590,7 +588,7 @@
             "description": "Only those that are #1 on any leaderboard receive this badge!"
         }
     },
-    "raritiesInfo": {
+    "rarityConfig": {
         "rarity1": {
             "name": "Common",
             "probability": -1,

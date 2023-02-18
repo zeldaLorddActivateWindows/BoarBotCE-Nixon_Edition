@@ -9,7 +9,7 @@
 
 import {EmbedBuilder, Events, Interaction} from 'discord.js';
 import {CustomClient} from '../supporting_files/CustomClient';
-import {handleError} from '../supporting_files/LogDebug';
+import {handleError} from '../logging/LogDebug';
 import {getConfigFile} from '../supporting_files/DataHandlers';
 
 //***************************************

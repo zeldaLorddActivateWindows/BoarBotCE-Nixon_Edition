@@ -9,7 +9,7 @@
  ***********************************************/
 
 import {SlashCommandBuilder} from 'discord.js';
-import {handleError} from './supporting_files/LogDebug';
+import {handleError} from './logging/LogDebug';
 import {getConfigFile} from './supporting_files/DataHandlers';
 
 //***************************************

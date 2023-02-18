@@ -18,7 +18,7 @@ import {
 } from "discord.js";
 import {getConfigFile} from "../DataHandlers";
 import {FormField} from "../FormField";
-import {handleError} from "../LogDebug";
+import {handleError} from "../../logging/LogDebug";
 
 //***************************************
 

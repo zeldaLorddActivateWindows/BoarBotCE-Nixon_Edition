@@ -9,7 +9,7 @@
 import {BoarUser} from '../supporting_files/BoarUser';
 import {getConfigFile} from '../supporting_files/DataHandlers';
 import {addQueue} from '../supporting_files/Queue';
-import {handleError, sendDebug} from '../supporting_files/LogDebug';
+import {handleError, sendDebug} from '../logging/LogDebug';
 import {applyMultiplier, getDaily} from '../supporting_files/command_specific/DailyFunctions';
 import {handleStart} from '../supporting_files/GeneralFunctions';
 import {ChatInputCommandInteraction} from 'discord.js';

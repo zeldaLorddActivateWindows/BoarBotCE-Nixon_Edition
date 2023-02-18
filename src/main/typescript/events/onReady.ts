@@ -9,7 +9,7 @@
 
 import {Client, Events, TextChannel} from 'discord.js'
 import fs from 'fs';
-import {handleError, sendDebug} from '../supporting_files/LogDebug';
+import {handleError, sendDebug} from '../logging/LogDebug';
 
 //***************************************
 

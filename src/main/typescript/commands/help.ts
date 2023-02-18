@@ -8,7 +8,7 @@
 
 import fs from 'fs';
 import {getConfigFile} from '../supporting_files/DataHandlers';
-import {sendDebug} from '../supporting_files/LogDebug';
+import {sendDebug} from '../logging/LogDebug';
 import {handleStart} from '../supporting_files/GeneralFunctions';
 import {ChatInputCommandInteraction} from 'discord.js';
 
