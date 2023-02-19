@@ -10,19 +10,28 @@
 import dotenv from 'dotenv';
 import {BoarBot} from './bot/BoarBot';
 import {handleError} from './logging/LogDebug';
+import {Bot} from './api/bot/Bot';
 
 dotenv.config();
 
 //***************************************
 
-class BoarBotApp {
-    main(): void { new BoarBot(); }
+export class BoarBotApp {
+    private static bot: Bot;
+
+    public static main(): void {
+        this.bot = new BoarBot();
+    }
+
+    public static getBot(): Bot {
+        return this.bot;
+    }
 }
 
 //***************************************
 
 try {
-    new BoarBotApp().main();
+    BoarBotApp.main();
 } catch {
     handleError('Failed to log bot in!');
 }

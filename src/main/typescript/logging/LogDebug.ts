@@ -92,8 +92,8 @@ async function sendReport(message: Message) {
     const config = getConfigFile();
 
     // Config aliases
-    const debugStrings = config.strings.debug;
-    const generalStrings = config.strings.general;
+    const debugStrings = config.stringConfig.debug;
+    const generalStrings = config.stringConfig.general;
 
     const prefix = `[${Colors.Blue}DM REPORT${Colors.White}] `;
     const time = getPrefixTime();

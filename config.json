@@ -5,8 +5,8 @@
     "botStatusChannel": "1042624481044209735",
     "pathConfig": {
         "commandList": "./src/command-list.ts",
-        "events": "./src/events",
-        "commands": "./src/commands",
+        "listeners": "src\\main\\typescript\\listeners\\",
+        "commands": "./src/commands/",
         "data": {
             "guildFolder": "database/guilds/",
             "userFolder": "database/users/",

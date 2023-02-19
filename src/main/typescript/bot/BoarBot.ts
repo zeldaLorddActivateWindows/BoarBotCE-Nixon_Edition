@@ -22,7 +22,7 @@ dotenv.config();
 
 export class BoarBot implements Bot {
 	private client: Client | null = null;
-	private config: BotConfig | null = null;
+	private config: BotConfig = {} as BotConfig;
 
 	constructor() {
 		this.buildClient();
@@ -30,6 +30,8 @@ export class BoarBot implements Bot {
 		this.loadConfig();
 		this.loadFonts();
 		this.setRelativeTime();
+
+		this.registerListeners();
 
 		this.login();
 	}
@@ -66,9 +68,15 @@ export class BoarBot implements Bot {
 		sendDebug('Config successfully loaded: ' + JSON.stringify(this.config));
 	}
 
-	public loadFonts() {
+	private verifyConfig(): void {}
+
+	public getConfig(): BotConfig {
+		return this.config;
+	}
+
+	public loadFonts(): void {
 		if (!this.config) {
-			handleError('Config file does not exist!');
+			handleError('Config file not loaded!');
 			return;
 		}
 
@@ -84,7 +92,7 @@ export class BoarBot implements Bot {
 		sendDebug('Fonts successfully loaded!');
 	}
 
-	public setRelativeTime() {
+	public setRelativeTime(): void {
 		moment.relativeTimeThreshold('s', 60);
 		moment.relativeTimeThreshold('ss', 1);
 		moment.relativeTimeThreshold('m', 60);
@@ -114,7 +122,29 @@ export class BoarBot implements Bot {
 		sendDebug('Relative time information set!');
 	}
 
-	public async login() {
+	public registerListeners() {
+		if (!this.client) {
+			handleError('Client was never built!');
+			return;
+		}
+
+		if (!this.config) {
+			handleError('Config file not loaded!');
+			return;
+		}
+
+		const listenersPath = this.config.pathConfig.listeners;
+		const listenerFiles = fs.readdirSync(listenersPath);
+
+		for (const listenerFile of listenerFiles) {
+			const listenerFileExports = require('../listeners/' + listenerFile);
+			const listenerClass = new listenerFileExports.default();
+			this.client.on(listenerClass.eventName, (...args: any[]) => listenerClass.execute(...args));
+			sendDebug(`Successfully registered event '${listenerClass.eventName}'`);
+		}
+	}
+
+	public async login(): Promise<void> {
 		if (!this.client) {
 			handleError('Client was never built!');
 			return;
@@ -131,9 +161,9 @@ export class BoarBot implements Bot {
 		this.onStart();
 	}
 
-	public async onStart() {
+	public async onStart(): Promise<void> {
 		if (!this.config) {
-			handleError('Config file does not exist!');
+			handleError('Config file does not loaded!');
 			process.exit(-1);
 		}
 
