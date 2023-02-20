@@ -7,6 +7,7 @@
  ***********************************************/
 
 import {BotConfig} from '../../bot/config/BotConfig';
+import {Command} from '../commands/Command';
 
 //***************************************
 
@@ -14,11 +15,10 @@ export interface Bot {
     buildClient(): void;
     loadConfig(): void;
     getConfig(): BotConfig;
-    loadFonts(): void;
-    setRelativeTime(): void;
-    // registerCommands(): void;
+    setCommands(): void;
+    getCommands(): Map<string, Command>;
+    deployCommands(): void;
     registerListeners(): void;
-    // fixGuildData(): void;
     onStart(): void;
     login(): void;
 }

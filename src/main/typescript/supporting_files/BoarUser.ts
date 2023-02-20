@@ -16,6 +16,9 @@ import {addQueue} from './Queue';
 import {handleError} from '../logging/LogDebug';
 import {drawCircleImage, drawImageCompact, drawRect, drawText} from './CanvasFunctions';
 import {findRarity} from './GeneralFunctions';
+import {BoarBotApp} from '../BoarBotApp';
+import {BotConfig} from '../bot/config/BotConfig';
+import {Bot} from '../api/bot/Bot';
 
 //***************************************
 
@@ -76,8 +79,8 @@ export class BoarUser {
      */
     private getUserData() {
         let userDataJSON: string;
-        const config = getConfigFile();
-        const userFile = config.paths.data.userFolder + this.user.id + '.json';
+        const config = BoarBotApp.getBot().getConfig();
+        const userFile = config.pathConfig.data.userFolder + this.user.id + '.json';
 
         try {
             userDataJSON = fs.readFileSync(userFile, 'utf-8');
@@ -123,13 +126,13 @@ export class BoarUser {
      * @private
      */
     private fixUserData(userData: any) {
-        const config = getConfigFile();
-        const userFile = config.paths.data.userFolder + this.user.id + '.json';
+        const config = BoarBotApp.getBot().getConfig();
+        const userFile = config.pathConfig.data.userFolder + this.user.id + '.json';
 
         const boarsGottenIDs = Object.keys(this.boarCollection);
 
         for (const boarID of boarsGottenIDs) {
-            if (config.boarIDs[boarID])
+            if (config.boarCollectibles[boarID])
                 continue;
 
             this.totalBoars -= this.boarCollection[boarID].num;
@@ -159,21 +162,21 @@ export class BoarUser {
      * @param interaction - Interaction to reply to with image
      * @return success - The function fully executed
      */
-    public async addBoar(config: any, boarID: string, interaction: ChatInputCommandInteraction) {
+    public async addBoar(config: BotConfig, boarID: string, interaction: ChatInputCommandInteraction) {
         // Config aliases
-        const configPaths = config.paths;
-        const dailyStrings = config.strings.commands.daily.other;
-        const giveStrings = config.strings.commands.give.other;
-        const configStrings = config.strings;
+        const configPaths = config.pathConfig;
+        const dailyStrings = config.stringConfig.commands.daily.other;
+        const giveStrings = config.stringConfig.commands.give.other;
+        const configStrings = config.stringConfig;
         const generalStrings = configStrings.general;
         const debugStrings = configStrings.debug;
 
         // Number info
-        const numsGeneral = config.numbers.general;
+        const numsGeneral = config.numberConfig.general;
         const trackedEditions = numsGeneral.trackedEditions;
 
         // Rarity information
-        const raritiesInfo = config.raritiesInfo;
+        const raritiesInfo = config.rarityConfig;
         const rarities = Object.keys(raritiesInfo);
         let rarity = '';
 
@@ -192,7 +195,7 @@ export class BoarUser {
         const rarityInfo = raritiesInfo[rarity];
 
         // Information about interaction
-        const wasGiven = interaction.options.getSubcommand() === configStrings.commands.give.name;
+        const wasGiven = interaction.commandName === configStrings.commands.give.name;
 
         // Image elements to be combined into one final image
         let attachmentTitle = dailyStrings.dailyTitle;
@@ -248,7 +251,7 @@ export class BoarUser {
         }
 
         this.lastBoar = boarID;
-        this.boarScore += config.raritiesInfo[rarity].score;
+        this.boarScore += config.rarityConfig[rarity].score;
         this.totalBoars++;
         this.numDailies++;
 
@@ -267,12 +270,12 @@ export class BoarUser {
      * @param interaction - Interaction to reply to with image
      * @return success - The function fully executed
      */
-    public async addBadge(config: any, badgeID: string, interaction: ChatInputCommandInteraction) {
-        const configStrings = config.strings;
+    public async addBadge(config: BotConfig, badgeID: string, interaction: ChatInputCommandInteraction) {
+        const configStrings = config.stringConfig;
         const giveStrings = configStrings.commands.give.other;
 
         const hasBadge = this.badges.includes(badgeID);
-        const wasGiven = interaction.options.getSubcommand() === configStrings.commands.give.name;
+        const wasGiven = interaction.commandName === configStrings.commands.give.name;
 
         if (hasBadge && wasGiven) {
             await interaction.editReply(giveStrings.alreadyHas);
@@ -314,22 +317,22 @@ export class BoarUser {
      * @return attachment - AttachmentBuilder object containing image
      * @private
      */
-    private async handleImageCreate(config: any, id: any, attachmentTitle: string) {
-        const configStrings = config.strings;
+    private async handleImageCreate(config: BotConfig, id: any, attachmentTitle: string) {
+        const configStrings = config.stringConfig;
 
-        const isBoar: boolean = config.boarIDs[id];
+        const isBoar: boolean = config.boarCollectibles[id];
         let info: any;
         let folderPath: string;
-        const hexColors = config.hexColors;
+        const hexColors = config.hexValues;
         let backgroundColor: string;
 
         if (!isBoar) {
-            info = config.badgeIDs[id];
-            folderPath = config.paths.assets.badges;
+            info = config.badgeCollectibles[id];
+            folderPath = config.pathConfig.resources.badges;
             backgroundColor = hexColors.badge;
         } else {
-            info = config.boarIDs[id]
-            folderPath = config.paths.assets.boars;
+            info = config.boarCollectibles[id]
+            folderPath = config.pathConfig.resources.boars;
             backgroundColor = hexColors[findRarity(id)];
         }
 
@@ -338,7 +341,7 @@ export class BoarUser {
         const isAnimated = imageExtension === 'gif';
 
         const generalStrings = configStrings.general;
-        const generalNums = config.numbers.general;
+        const generalNums = config.numberConfig.general;
         const usernameLength = generalNums.usernameLength;
 
         const userAvatar = this.user.displayAvatarURL({ extension: 'png' });
@@ -349,8 +352,8 @@ export class BoarUser {
 
         // Creates a dynamic response attachment depending on the boar's image type
         if (isAnimated) {
-            const scriptPath = config.paths.scripts.basePath;
-            const scriptPaths = config.paths.scripts;
+            const scriptPath = config.pathConfig.scripts.basePath;
+            const scriptPaths = config.pathConfig.scripts;
 
             // Waits for python code to execute before continuing
             await new Promise((resolve, reject) => {
@@ -380,15 +383,15 @@ export class BoarUser {
                 });
             });
         } else {
-            const announceAddFolder = config.paths.assets.announceAdd.basePath;
-            const announceAddAssets = config.paths.assets.announceAdd
+            const announceAddFolder = config.pathConfig.resources.announceAdd.basePath;
+            const announceAddAssets = config.pathConfig.resources.announceAdd
             const underlayPath = announceAddFolder + announceAddAssets.underlay;
             const backplatePath = announceAddFolder + announceAddAssets.backplate;
             const overlay = announceAddFolder + announceAddAssets.overlay;
             const nameplate = announceAddFolder + announceAddAssets.nameplate;
 
             // Positioning and dimension info
-            const nums = config.numbers.announceAdd;
+            const nums = config.numberConfig.announceAdd;
             const origin = generalNums.originPos;
             const imageSize = nums.imageSize;
 
@@ -447,8 +450,8 @@ export class BoarUser {
      * @param config - Global config data parsed from JSON
      * @param interaction - Used to give badge if user has max uniques
      */
-    public async orderBoars(config: any, interaction: ChatInputCommandInteraction) {
-        const raritiesInfo = config.raritiesInfo;
+    public async orderBoars(config: BotConfig, interaction: ChatInputCommandInteraction) {
+        const raritiesInfo = config.rarityConfig;
         const rarities = Object.keys(raritiesInfo);
         const obtainedBoars = Object.keys(this.boarCollection);
 

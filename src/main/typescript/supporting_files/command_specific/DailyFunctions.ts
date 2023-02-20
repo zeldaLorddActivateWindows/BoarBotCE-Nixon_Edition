@@ -11,6 +11,7 @@
 import {APISelectMenuOption, ButtonStyle, ChannelType, ChatInputCommandInteraction, TextInputStyle} from "discord.js";
 import {sendDebug} from "../../logging/LogDebug";
 import {BoarUser} from "../BoarUser";
+import {BotConfig} from '../../bot/config/BotConfig';
 
 //***************************************
 
@@ -52,16 +53,16 @@ function applyMultiplier(userMultiplier: number, probabilities: number[]) {
 //***************************************
 
 async function getDaily(
-    config: any,
+    config: BotConfig,
     guildData: any,
     interaction: ChatInputCommandInteraction,
     boarUser: BoarUser,
     probabilities: number[],
     rarities: string[]
 ) {
-    const debugStrings = config.strings.debug;
-    const raritiesInfo = config.raritiesInfo;
-    const boarIDs: any = config.boarIDs;
+    const debugStrings = config.stringConfig.debug;
+    const raritiesInfo = config.rarityConfig;
+    const boarIDs: any = config.boarCollectibles;
 
     const randomRarity: number = Math.random();
     let randomBoar: number = Math.random();

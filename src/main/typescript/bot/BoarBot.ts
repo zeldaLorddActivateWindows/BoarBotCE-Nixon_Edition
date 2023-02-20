@@ -9,31 +9,37 @@
 
 import dotenv from 'dotenv';
 import fs from 'fs';
-import {Client, GatewayIntentBits, Partials, TextChannel} from 'discord.js';
+import {ActivityType, Client, GatewayIntentBits, Partials, TextChannel} from 'discord.js';
+import {Routes} from 'discord-api-types/v10';
 import {registerFont} from 'canvas';
 import moment from 'moment';
 import {Bot} from '../api/bot/Bot';
 import {handleError, sendDebug} from '../logging/LogDebug';
 import {BotConfig} from './config/BotConfig';
+import {Command} from '../api/commands/Command';
+import {REST} from '@discordjs/rest';
 
 dotenv.config();
 
 //***************************************
 
 export class BoarBot implements Bot {
-	private client: Client | null = null;
+	private client: Client = {} as Client;
 	private config: BotConfig = {} as BotConfig;
+	private commands: Map<string, Command> = new Map<string, Command>();
 
-	constructor() {
+	public async create(): Promise<void> {
 		this.buildClient();
 
-		this.loadConfig();
+		await this.loadConfig();
+		this.setCommands();
+		this.registerListeners();
+
 		this.loadFonts();
 		this.setRelativeTime();
 
-		this.registerListeners();
-
-		this.login();
+		await this.login()
+		await this.onStart();
 	}
 
 	public buildClient() {
@@ -53,7 +59,7 @@ export class BoarBot implements Bot {
 		});
 	}
 
-	public loadConfig(): void {
+	public async loadConfig(): Promise<void> {
 		let parsedConfig: any;
 
 		try {
@@ -65,28 +71,71 @@ export class BoarBot implements Bot {
 
 		this.config = parsedConfig as BotConfig;
 
-		sendDebug('Config successfully loaded: ' + JSON.stringify(this.config));
+		sendDebug('Config successfully loaded!');
 	}
 
 	private verifyConfig(): void {}
 
-	public getConfig(): BotConfig {
-		return this.config;
+	public getConfig(): BotConfig { return this.config; }
+
+	public setCommands() {
+		if (!this.instanceVarsSet()) process.exit(-1);
+
+		const commandFiles = fs.readdirSync(this.config.pathConfig.commands);
+
+		for (const commandFile of commandFiles) {
+			const exports = require('../commands/' + commandFile);
+			const commandClass = new exports.default();
+
+			this.commands.set(commandClass.data.name, commandClass);
+
+			sendDebug(`Successfully registered command '${commandClass.data.name}'`);
+		}
+	}
+
+	public getCommands() { return this.commands; }
+
+	public async deployCommands() {
+		const commandData = [];
+
+		for (const command of this.commands.values())
+			commandData.push(command.data);
+
+		const rest = new REST({ version: '10' }).setToken(process.env.TOKEN as string);
+		try {
+			await rest.put(Routes.applicationCommands(process.env.CLIENT_ID as string), { body: commandData });
+			sendDebug(this.config.stringConfig.general.registeredCommands);
+		} catch (err: unknown) {
+			handleError(err);
+		}
+	}
+
+	public registerListeners() {
+		if (!this.instanceVarsSet()) process.exit(-1);
+
+		const listenerFiles = fs.readdirSync(this.config.pathConfig.listeners);
+
+		for (const listenerFile of listenerFiles) {
+			const exports = require('../listeners/' + listenerFile);
+			const listenClass = new exports.default();
+
+			this.client.on(listenClass.eventName, (...args: any[]) => listenClass.execute(...args));
+
+			sendDebug(`Successfully registered listener for event '${listenClass.eventName}'`);
+		}
 	}
 
 	public loadFonts(): void {
-		if (!this.config) {
-			handleError('Config file not loaded!');
-			return;
-		}
+		if (!this.instanceVarsSet()) process.exit(-1);
 
 		try {
-			const mcFont =
-				this.config.pathConfig.resources.other.basePath + this.config.pathConfig.resources.other.font;
+			const mcFont = this.config.pathConfig.resources.other.basePath +
+				this.config.pathConfig.resources.other.font;
 
 			registerFont(mcFont, {family: this.config?.stringConfig.general.fontName});
 		} catch {
 			handleError('Unable to load font. Verify its path in \'config.json\'.');
+			return;
 		}
 
 		sendDebug('Fonts successfully loaded!');
@@ -122,80 +171,26 @@ export class BoarBot implements Bot {
 		sendDebug('Relative time information set!');
 	}
 
-	public registerListeners() {
-		if (!this.client) {
-			handleError('Client was never built!');
-			return;
-		}
-
-		if (!this.config) {
-			handleError('Config file not loaded!');
-			return;
-		}
-
-		const listenersPath = this.config.pathConfig.listeners;
-		const listenerFiles = fs.readdirSync(listenersPath);
-
-		for (const listenerFile of listenerFiles) {
-			const listenerFileExports = require('../listeners/' + listenerFile);
-			const listenerClass = new listenerFileExports.default();
-			this.client.on(listenerClass.eventName, (...args: any[]) => listenerClass.execute(...args));
-			sendDebug(`Successfully registered event '${listenerClass.eventName}'`);
-		}
-	}
-
 	public async login(): Promise<void> {
-		if (!this.client) {
-			handleError('Client was never built!');
-			return;
-		}
+		if (!await this.instanceVarsSet()) process.exit(-1);
 
 		try {
 			sendDebug('Logging in...');
 			await this.client.login(process.env.TOKEN);
 		} catch {
-			handleError('Invalid token!');
+			await handleError('Invalid token!');
 			process.exit(-1);
 		}
-
-		this.onStart();
 	}
 
 	public async onStart(): Promise<void> {
-		if (!this.config) {
-			handleError('Config file does not loaded!');
-			process.exit(-1);
-		}
-
-		if (!this.client) {
-			handleError('Client was never built!');
-			return;
-		}
+		if (!await this.instanceVarsSet()) process.exit(-1);
 
 		sendDebug(this.config.stringConfig.general.botOnline);
 
-		let botStatusChannel: TextChannel | null = null;
+		const botStatusChannel = await this.getStatusChannel();
 
-		try {
-			botStatusChannel = await this.client.channels.fetch(this.config.botStatusChannel) as TextChannel;
-		} catch {
-			handleError('Bot cannot find status channel. Status message not sent.');
-			return;
-		}
-
-		const memberMe = botStatusChannel.guild.members.me;
-
-		if (!memberMe) {
-			handleError('Bot doesn\'t exist in testing server. Status message not sent.');
-			return;
-		}
-
-		const memberMePerms = memberMe.permissions.toArray();
-
-		if (!memberMePerms.includes('SendMessages')) {
-			handleError('Bot doesn\'t have permission to send status message. Status message not sent.');
-			return;
-		}
+		if (!botStatusChannel) { return; }
 
 		try {
 			await botStatusChannel.send(
@@ -203,8 +198,48 @@ export class BoarBot implements Bot {
 			);
 		} catch (err: unknown) {
 			await handleError(err);
-			return;
 		}
+
+		sendDebug('Successfully sent status message!');
+	}
+
+	private async getStatusChannel(): Promise<TextChannel | undefined> {
+		let botStatusChannel: TextChannel;
+
+		try {
+			botStatusChannel = await this.client.channels.fetch(this.config.botStatusChannel) as TextChannel;
+		} catch {
+			await handleError('Bot cannot find status channel. Status message not sent.');
+			return undefined;
+		}
+
+		const memberMe = botStatusChannel.guild.members.me;
+		if (!memberMe) {
+			await handleError('Bot doesn\'t exist in testing server. Status message not sent.');
+			return undefined;
+		}
+
+		const memberMePerms = memberMe.permissions.toArray();
+		if (!memberMePerms.includes('SendMessages')) {
+			await handleError('Bot doesn\'t have permission to send status message. Status message not sent.');
+			return undefined;
+		}
+
+		return botStatusChannel;
+	}
+
+	private async instanceVarsSet(): Promise<boolean> {
+		let allSet = true;
+
+		if (Object.keys(this.client).length === 0) {
+			await handleError('Client was never built!');
+			allSet = false;
+		} else if (Object.keys(this.config).length === 0) {
+			await handleError('Client was never built!');
+			allSet = false;
+		}
+
+		return allSet;
 	}
 }
 
@@ -232,19 +267,6 @@ export class BoarBot implements Bot {
 // 	const filePath = path.join(modalsPath, file);
 // 	const modal = require(filePath);
 // 	client.modals.set(modal.data.name, modal);
-// }
-
-// Registers event handlers
-// const eventsPath = path.join(__dirname, config.paths.events);
-// const eventFiles = fs.readdirSync('src/events').filter((file: string) => file.endsWith('.ts'));
-//
-// for (const file of eventFiles) {
-// 	const filePath = path.join(eventsPath, file);
-// 	const event = require(filePath);
-// 	if (event.once)
-// 		client.once(event.name, (...args: string[]) => event.execute(...args));
-// 	else
-// 		client.on(event.name, (...args: string[]) => event.execute(...args));
 // }
 
 // Gets rid of empty data files on restart

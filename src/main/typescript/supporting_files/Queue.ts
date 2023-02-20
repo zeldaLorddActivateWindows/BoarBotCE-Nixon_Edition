@@ -10,6 +10,7 @@
 
 import {handleError} from '../logging/LogDebug';
 import {getConfigFile} from "./DataHandlers";
+import {BoarBotApp} from '../BoarBotApp';
 
 //***************************************
 
@@ -26,8 +27,8 @@ let queueRunning = [false, false, false, false, false, false, false, false, fals
  * @param id - ID of queue item
  */
 async function addQueue(func: () => void, id: string) {
-    const config = getConfigFile();
-    const generalStrings = config.strings.general;
+    const config = BoarBotApp.getBot().getConfig();
+    const generalStrings = config.stringConfig.general;
 
     const queueIndex = id.endsWith(generalStrings.globalQueueID) ? 0 : parseInt(id[id.length-1]) + 1;
     queue[queueIndex][id] = func;

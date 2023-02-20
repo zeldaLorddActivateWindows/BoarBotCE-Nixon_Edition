@@ -25,7 +25,7 @@ async function currentConfigReply(interaction: ChatInputCommandInteraction) {
 
     sendDebug(debugStrings.duringConfig
         .replace('%@', interaction.user.tag)
-        .replace('%@', interaction.options.getSubcommand())
+        .replace('%@', interaction.commandName)
     );
 
     await handleReply(interaction, generalStrings.currentConfig);
@@ -47,7 +47,7 @@ async function wrongChannelReply(interaction: ChatInputCommandInteraction, guild
 
     sendDebug(debugStrings.wrongChannel
         .replace('%@', interaction.user.tag)
-        .replace('%@', interaction.options.getSubcommand())
+        .replace('%@', interaction.commandName)
     );
 
     let strChannels = '\n';
@@ -78,7 +78,7 @@ async function noPermsReply(interaction: ChatInputCommandInteraction) {
 
     sendDebug(debugStrings.notDev
         .replace('%@', interaction.user.tag)
-        .replace('%@', interaction.options.getSubcommand())
+        .replace('%@', interaction.commandName)
     );
 
     await handleReply(interaction, generalStrings.noPermission);
@@ -98,7 +98,7 @@ async function onCooldownReply(interaction: ChatInputCommandInteraction) {
 
     sendDebug(debugStrings.onCooldown
         .replace('%@', interaction.user.tag)
-        .replace('%@', interaction.options.getSubcommand())
+        .replace('%@', interaction.commandName)
     );
 
     await handleReply(interaction, generalStrings.onCooldown);

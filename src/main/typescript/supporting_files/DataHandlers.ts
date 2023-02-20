@@ -10,6 +10,7 @@
 import fs from 'fs';
 import {ChatInputCommandInteraction} from 'discord.js';
 import {handleError, sendDebug} from '../logging/LogDebug';
+import {BoarBotApp} from '../BoarBotApp';
 
 //***************************************
 
@@ -18,9 +19,9 @@ import {handleError, sendDebug} from '../logging/LogDebug';
  * @return globalData - Global data parsed from JSON
  */
 function getGlobalData() {
-    const config = getConfigFile();
+    const config = BoarBotApp.getBot().getConfig();
 
-    const globalFile = config.paths.data.globalFile;
+    const globalFile = config.pathConfig.data.globalFile;
 
     return JSON.parse(fs.readFileSync(globalFile, 'utf-8'));
 }
@@ -44,13 +45,13 @@ function getConfigFile() {
  * @return guildData - Guild data parsed from JSON (or undefined if it doesn't exist)
  */
 async function getGuildData(interaction: ChatInputCommandInteraction, create: boolean = false) {
-    const config = getConfigFile();
+    const config = BoarBotApp.getBot().getConfig();
 
     // Config aliases
-    const debugStrings = config.strings.debug;
-    const generalStrings = config.strings.general;
+    const debugStrings = config.stringConfig.debug;
+    const generalStrings = config.stringConfig.general;
 
-    const guildDataPath = config.paths.data.guildFolder + interaction.guild?.id + '.json';
+    const guildDataPath = config.pathConfig.data.guildFolder + interaction.guild?.id + '.json';
     let guildData: any;
 
     try {

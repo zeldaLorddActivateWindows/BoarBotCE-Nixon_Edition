@@ -16,6 +16,7 @@ import {
 import {getConfigFile, getGuildData} from './DataHandlers';
 import {sendDebug} from '../logging/LogDebug';
 import {currentConfigReply, onCooldownReply, wrongChannelReply} from './InteractionReplies';
+import {BoarBotApp} from '../BoarBotApp';
 
 //***************************************
 
@@ -43,13 +44,13 @@ function hasAttachmentPerms(interaction: ChatInputCommandInteraction | ButtonInt
  * @return rarity - Rarity of the boar
  */
 function findRarity(boarID: string) {
-    const config = getConfigFile();
+    const config = BoarBotApp.getBot().getConfig();
 
-    const rarityArray = Object.keys(config.raritiesInfo);
+    const rarityArray = Object.keys(config.rarityConfig);
     let finalRarity: string = '';
 
     for (const rarity of rarityArray) {
-        const boarExists: boolean = config.raritiesInfo[rarity].boars.includes(boarID);
+        const boarExists: boolean = config.rarityConfig[rarity].boars.includes(boarID);
 
         if (boarExists) {
             finalRarity = rarity;
@@ -72,14 +73,14 @@ async function handleStart(interaction: ChatInputCommandInteraction, includeTrad
     if (!interaction.guild || !interaction.channel)
         return undefined;
 
-    const config = getConfigFile();
+    const config = BoarBotApp.getBot().getConfig();
 
     // Alias for debug strings
-    const debugStrings = config.strings.debug;
+    const debugStrings = config.stringConfig.debug;
 
     sendDebug(debugStrings.usedCommand
         .replace('%@', interaction.user.tag)
-        .replace('%@', interaction.options.getSubcommand())
+        .replace('%@', interaction.commandName)
     );
 
     const guildData = await getGuildData(interaction);
@@ -113,7 +114,7 @@ async function handleStart(interaction: ChatInputCommandInteraction, includeTrad
  * @return onCooldown - Whether user is on cooldown or not
  */
 async function handleCooldown(interaction: ChatInputCommandInteraction) {
-    const commandName = interaction.options.getSubcommand();
+    const commandName = interaction.commandName;
     const userID = interaction.user.id;
 
     if (!cooldowns[commandName])

@@ -60,7 +60,7 @@ async function handleError(err: unknown | string, interaction?: ChatInputCommand
 
         const config = getConfigFile();
 
-        const errResponse = config.strings.general.error;
+        const errResponse = config.stringConfig.general.error;
 
         if (interaction.replied) {
             await interaction.followUp({

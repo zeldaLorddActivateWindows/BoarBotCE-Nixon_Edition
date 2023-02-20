@@ -9,7 +9,7 @@
 
 import dotenv from 'dotenv';
 import {BoarBot} from './bot/BoarBot';
-import {handleError} from './logging/LogDebug';
+import {handleError, sendDebug} from './logging/LogDebug';
 import {Bot} from './api/bot/Bot';
 
 dotenv.config();
@@ -19,8 +19,14 @@ dotenv.config();
 export class BoarBotApp {
     private static bot: Bot;
 
-    public static main(): void {
-        this.bot = new BoarBot();
+    public static async main(): Promise<void> {
+        const boarBot = new BoarBot();
+        this.bot = boarBot;
+
+        await boarBot.create();
+
+        if (process.argv[2] === 'deploy')
+            await boarBot.deployCommands();
     }
 
     public static getBot(): Bot {
@@ -32,6 +38,6 @@ export class BoarBotApp {
 
 try {
     BoarBotApp.main();
-} catch {
-    handleError('Failed to log bot in!');
+} catch (err: unknown) {
+    handleError(err);
 }

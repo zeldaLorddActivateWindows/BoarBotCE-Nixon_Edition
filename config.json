@@ -4,9 +4,8 @@
     ],
     "botStatusChannel": "1042624481044209735",
     "pathConfig": {
-        "commandList": "./src/command-list.ts",
-        "listeners": "src\\main\\typescript\\listeners\\",
-        "commands": "./src/commands/",
+        "listeners": "src/main/typescript/listeners/",
+        "commands": "src/main/typescript/commands/",
         "data": {
             "guildFolder": "database/guilds/",
             "userFolder": "database/users/",
@@ -44,12 +43,12 @@
     },
     "stringConfig": {
         "general": {
-            "botOnline": "Successfully logged in. Bot online.",
+            "botOnline": "Successfully logged in! Bot online!",
             "guildAdd": "Hey, %@! Thanks for adding me to your server **%@**!\n> To get started, run the command `/boar %@` in your server!",
             "botStatus": "> Bot went online <t:%@:R>",
             "noPermission": "You don't have permission to use this command.",
-            "noConfig": "To use this command you must first do `/boar config`!",
-            "currentConfig": "BoarBot is currently being configured! Please wait!",
+            "noSetup": "To use this command an admin must first do `/boar setup`!",
+            "currentSetup": "BoarBot is currently being set up! Please wait!",
             "wrongChannel": "Cannot use that command here! Please use it in the following channel(s):",
             "noGuild": "This can only be used in a server!",
             "error": ":anger: Something went wrong! Please try again in a few minutes. If the issue persists, DM the bot with the issue!",
@@ -73,10 +72,10 @@
             "sentDM": "%@ | Sent the following DM Report:\n%@",
             "formInteraction": "%@ | %@ on Field %@",
             "endCollection": "%@ | Ended collection with reason '%@'",
-            "noConfig": "%@ | No config set up",
+            "noSetup": "%@ | No setup file for guild",
             "usedCommand": "%@ | Used /boar %@",
             "endCommand": "%@ | End of /boar %@",
-            "duringConfig": "%@ | Used /boar %@ during configuration",
+            "duringSetup": "%@ | Used /boar %@ during setup",
             "wrongChannel": "%@ | Used /boar %@ in the wrong channel",
             "boarGotten": "%@ | Got boar: %@",
             "notDev": "%@ | Used /boar %@ as a non-developer",
@@ -85,88 +84,83 @@
             "noBoarFound": "Failed to find a valid boar"
         },
         "commands": {
-            "boar": {
-                "name": "boar",
-                "description": "BoarBot commands",
-                "cooldown": false,
-                "args": {},
-                "other": {}
-            },
             "help": {
-                "name": "help",
+                "name": "boar-help",
                 "description": "See all boar commands",
-                "cooldown": false,
                 "args": {},
+                "adminOnly": false,
+                "cooldown": false,
                 "other": {}
             },
-            "config": {
-                "name": "config",
-                "description": "Configure the bot to your liking [ADMIN-ONLY]",
-                "cooldown": true,
+            "setup": {
+                "name": "boar-setup",
+                "description": "Set the bot up to your liking",
                 "args": {},
+                "adminOnly": true,
+                "cooldown": true,
                 "other": {
-                    "cancelled": ":x: **__Configuration was cancelled!__**",
+                    "cancelled": ":x: **__Setup was cancelled!__**",
                     "error": ":exclamation: **__An error occurred while getting information! Try again later.__**",
-                    "finished": ":white_check_mark: **__BoarBot has successfully been configured! Do `/boar daily` in one of the boar channels you chose to get started.__**",
-                    "expired": ":question: **__You haven't interacted with the form for 2 minutes! Automatically terminating configuration.__**",
+                    "finished": ":white_check_mark: **__BoarBot has successfully been set up! Do `/boar daily` in one of the boar channels you chose to get started.__**",
+                    "expired": ":question: **__You haven't interacted with the form for 2 minutes! Automatically terminating setup.__**",
                     "noAttachmentPerms": "\n\n:exclamation: **WARNING:** The bot doesn't have attachment permissions, so some (or all) interactive images may not appear.",
                     "fieldOne": {
                         "unfinished": "**What channel can be used for trading?** \n*(Note: Threads will dynamically be created in this channel.)*",
                         "finished": "**The channel you're using for trading is: **",
                         "selectMenu": {
-                            "id": "CONFIG_TRADE_CHANNEL|",
+                            "id": "SETUP_TRADE_CHANNEL|",
                             "label": "UNSELECTED"
                         },
                         "refresh": {
-                            "id": "CONFIG_REFRESH_TRADE|",
+                            "id": "SETUP_REFRESH_TRADE|",
                             "label": "Refresh"
                         },
                         "info": {
-                            "id": "CONFIG_TRADE_INFO|",
+                            "id": "SETUP_TRADE_INFO|",
                             "label": "\u2754",
-                            "response": "**__TRADE CHANNEL__**\n\nThis bot has a trading system! In order for the trading system to work properly, it needs its own channel. Threads will dynamically be created and deleted in this channel unless the bot doesn't have permission to do so. If this is the case, trading will unfortunately be automatically disabled.\n > *This channel can be changed at any time using* `/boar config`*.*\n > *Use :pencil: to enter a channel ID (right-click channel name, Copy ID) that isn't shown in the select box.*"
+                            "response": "**__TRADE CHANNEL__**\n\nThis bot has a trading system! In order for the trading system to work properly, it needs its own channel. Threads will dynamically be created and deleted in this channel unless the bot doesn't have permission to do so. If this is the case, trading will unfortunately be automatically disabled.\n > *This channel can be changed at any time using* `/boar setup`*.*\n > *Use :pencil: to enter a channel ID (right-click channel name, Copy ID) that isn't shown in the select box.*"
                         }
                     },
                     "fieldTwo": {
                         "unfinished": "**What channels can BoarBot commands be used in? [Max 3]** \n*(Note: If you have a lot of server members, these channels may get flooded.)*",
                         "finished": "**These are the channels you've selected for BoarBot to work in: **",
                         "selectMenuOne": {
-                            "id": "CONFIG_BOAR_CHANNEL_1|",
+                            "id": "SETUP_BOAR_CHANNEL_1|",
                             "label": "UNSELECTED"
                         },
                         "selectMenuTwo": {
-                            "id": "CONFIG_BOAR_CHANNEL_2|",
+                            "id": "SETUP_BOAR_CHANNEL_2|",
                             "label": "UNSELECTED"
                         },
                         "selectMenuThree": {
-                            "id": "CONFIG_BOAR_CHANNEL_3|",
+                            "id": "SETUP_BOAR_CHANNEL_3|",
                             "label": "UNSELECTED"
                         },
                         "refresh": {
-                            "id": "CONFIG_REFRESH_BOAR|",
+                            "id": "SETUP_REFRESH_BOAR|",
                             "label": "Refresh"
                         },
                         "info": {
-                            "id": "CONFIG_BOAR_INFO|",
+                            "id": "SETUP_BOAR_INFO|",
                             "label": "\u2754",
-                            "response": "**__BOAR CHANNELS__**\n\nObviously, this bot has slash commands. Slash commands can produce spammy content depending on how large your server is, so you'll need to decide which channels the bot is enabled in.\n > *These channels can be changed at any time using* `/boar config`*.*\n > *Use :pencil: to enter a channel ID (right-click channel name, Copy ID) that isn't shown in the select box.*"
+                            "response": "**__BOAR CHANNELS__**\n\nObviously, this bot has slash commands. Slash commands can produce spammy content depending on how large your server is, so you'll need to decide which channels the bot is enabled in.\n > *These channels can be changed at any time using* `/boar setup`*.*\n > *Use :pencil: to enter a channel ID (right-click channel name, Copy ID) that isn't shown in the select box.*"
                         }
                     },
                     "fieldThree": {
                         "unfinished": "**Is this server a Hypixel Skyblock community?**",
                         "finished": "**Hypixel Skyblock community: **",
                         "sbYes": {
-                            "id": "CONFIG_SB_YES|",
+                            "id": "SETUP_SB_YES|",
                             "label": "Yes"
                         },
                         "sbNo": {
-                            "id": "CONFIG_SB_NO|",
+                            "id": "SETUP_SB_NO|",
                             "label": "No"
                         },
                         "info": {
-                            "id": "CONFIG_SB_INFO|",
+                            "id": "SETUP_SB_INFO|",
                             "label": "\u2754",
-                            "response": "**__SKYBLOCK COMMUNITY__**\n\nThis bot originated on a Discord server dedicated to Hypixel Skyblock. If you don't know what that is, no sweat! Just click \"No\". If you do and you're part of the community, I recommend you click \"Yes\".\n > *This can be changed at any time using* `/boar config`*.*"
+                            "response": "**__SKYBLOCK COMMUNITY__**\n\nThis bot originated on a Discord server dedicated to Hypixel Skyblock. If you don't know what that is, no sweat! Just click \"No\". If you do and you're part of the community, I recommend you click \"Yes\".\n > *This can be changed at any time using* `/boar setup`*.*"
                         }
                     },
                     "modal": {
@@ -179,19 +173,19 @@
                     },
                     "otherButtons": {
                         "findChannel": {
-                            "id": "CONFIG_FIND|",
+                            "id": "SETUP_FIND|",
                             "label": "\uD83D\uDCDD"
                         },
                         "cancel": {
-                            "id": "CONFIG_CANCEL|",
+                            "id": "SETUP_CANCEL|",
                             "label": "Cancel"
                         },
                         "restart": {
-                            "id": "CONFIG_RESTART|",
+                            "id": "SETUP_RESTART|",
                             "label": "Restart"
                         },
                         "next": {
-                            "id": "CONFIG_NEXT|",
+                            "id": "SETUP_NEXT|",
                             "label": "Next",
                             "labelLast": "Finish"
                         }
@@ -209,29 +203,33 @@
                 }
             },
             "daily": {
-                "name": "daily",
+                "name": "boar-daily",
                 "description": "Get your daily boar",
-                "cooldown": false,
                 "args": {},
+                "adminOnly": false,
+                "cooldown": false,
                 "other": {
                     "usedDaily": "You've already used your daily boar! The next time you can use the command is ",
                     "dailyTitle": "Daily Boar!"
                 }
             },
             "give": {
-                "name": "give",
+                "name": "boar-give",
                 "description": "Give a user a boar/badge [DEV]",
-                "cooldown": false,
                 "args": {
                     "arg1": {
                         "name": "user",
-                        "description": "User you'd like to give the boar/badge to"
+                        "description": "User you'd like to give the boar/badge to",
+                        "required": true
                     },
                     "arg2": {
                         "name": "id",
-                        "description": "ID of boar/badge to give"
+                        "description": "ID of boar/badge to give",
+                        "required": true
                     }
                 },
+                "adminOnly": true,
+                "cooldown": false,
                 "other": {
                     "gaveBoar": "Successfully given boar (If it didn't show, make sure perms are correct!)",
                     "givenTitle": "Boar Given!",
@@ -243,15 +241,17 @@
                 }
             },
             "collection": {
-                "name": "collection",
+                "name": "boar-collection",
                 "description": "View your collection of daily boars",
-                "cooldown": false,
                 "args": {
                     "arg1": {
                         "name": "user",
-                        "description": "Check someone else's collection of boars"
+                        "description": "Check someone else's collection of boars",
+                        "required": false
                     }
                 },
+                "adminOnly": false,
+                "cooldown": false,
                 "other": {
                     "dateUnavailable": "N/A",
                     "noBadges": "No Badges!"
@@ -707,7 +707,7 @@
         "firstObtained": 0,
         "lastObtained": 0
     },
-    "hexColors": {
+    "hexValues": {
         "foregroundGray": "#151518",
         "font": "#DEDEDE",
         "badge": "#4D4278",
