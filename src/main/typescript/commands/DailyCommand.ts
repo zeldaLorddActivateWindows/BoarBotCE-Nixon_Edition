@@ -8,11 +8,11 @@
 
 import {ChatInputCommandInteraction, SlashCommandBuilder} from 'discord.js';
 import {PermissionFlagsBits} from 'discord-api-types/v10';
-import {BoarUser} from '../supporting_files/BoarUser';
-import {addQueue} from '../supporting_files/Queue';
+import {BoarUser} from '../util/BoarUser';
+import {addQueue} from '../util/Queue';
 import {handleError, sendDebug} from '../logging/LogDebug';
-import {applyMultiplier, getDaily} from '../supporting_files/command_specific/DailyFunctions';
-import {handleStart} from '../supporting_files/GeneralFunctions';
+import {applyMultiplier, getDaily} from '../util/command_specific/DailyFunctions';
+import {handleStart} from '../util/GeneralFunctions';
 import {Command} from '../api/commands/Command';
 import {BoarBotApp} from '../BoarBotApp';
 

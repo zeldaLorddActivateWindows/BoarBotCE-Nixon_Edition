@@ -19,6 +19,9 @@ import {
 import {getConfigFile} from "../DataHandlers";
 import {FormField} from "../FormField";
 import {handleError} from "../../logging/LogDebug";
+import {BotConfig} from '../../bot/config/BotConfig';
+import {Bot} from '../../api/bot/Bot';
+import {BoarBotApp} from '../../BoarBotApp';
 
 //***************************************
 
@@ -39,9 +42,9 @@ function getTextChannels(
         ModalSubmitInteraction,
     blackList?: string[]
 ) {
-    const config = getConfigFile();
+    const config = BoarBotApp.getBot().getConfig();
 
-    const configStrings = config.strings.commands.config.other;
+    const configStrings = config.stringConfig.commands.setup.other;
 
     const channelOptions: APISelectMenuOption[] = [];
     const noChannelOptions = configStrings.noChannelOptions;
@@ -328,8 +331,8 @@ async function updateSelectField(
 //***************************************
 
 // Gets the static row that goes at the bottom of every field
-function getStaticRow(interaction: ChatInputCommandInteraction, config: any) {
-    const configStrings = config.strings.commands.config.other;
+function getStaticRow(interaction: ChatInputCommandInteraction, config: BotConfig) {
+    const configStrings = config.stringConfig.commands.setup.other;
     const otherButtons = configStrings.otherButtons;
 
     return new ActionRowBuilder<ButtonBuilder | SelectMenuBuilder>().setComponents(
@@ -356,9 +359,9 @@ function getStaticRow(interaction: ChatInputCommandInteraction, config: any) {
 function getConfigFields(
     interaction: ChatInputCommandInteraction,
     staticRow: ActionRowBuilder<ButtonBuilder | SelectMenuBuilder>,
-    config: any
+    config: BotConfig
 ) {
-    const configStrings = config.strings.commands.config.other;
+    const configStrings = config.stringConfig.commands.setup.other;
     const fieldOneStrings = configStrings.fieldOne;
     const fieldTwoStrings = configStrings.fieldTwo;
     const fieldThreeStrings = configStrings.fieldThree;

@@ -11,14 +11,13 @@ import Canvas from 'canvas';
 import {AttachmentBuilder, ChatInputCommandInteraction, User} from 'discord.js';
 import {Options, PythonShell} from 'python-shell';
 import fs from 'fs';
-import {getConfigFile, getGlobalData} from './DataHandlers';
+import {getGlobalData} from './DataHandlers';
 import {addQueue} from './Queue';
 import {handleError} from '../logging/LogDebug';
 import {drawCircleImage, drawImageCompact, drawRect, drawText} from './CanvasFunctions';
 import {findRarity} from './GeneralFunctions';
 import {BoarBotApp} from '../BoarBotApp';
 import {BotConfig} from '../bot/config/BotConfig';
-import {Bot} from '../api/bot/Bot';
 
 //***************************************
 
@@ -34,8 +33,8 @@ export class BoarUser {
     public firstDaily: number;
     public powerupsWon: number;
     public boarStreak: number;
-    public boarCollection: any;
-    public powerups: any;
+    public boarCollection: any; // update to own class, array of CollectedBoar
+    public powerups: any;       // update to own class
     public theme: string;
     public themes: string[];
     public badges: string[];

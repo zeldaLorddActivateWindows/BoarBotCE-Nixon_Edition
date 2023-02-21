@@ -6,7 +6,15 @@
  * License Info: http://www.apache.org/licenses/
  ***********************************************/
 
-import {User, TextChannel} from 'discord.js';
+import {
+    User,
+    TextChannel,
+    SelectMenuOptionBuilder,
+    RestOrArray,
+    APISelectMenuOption,
+    SelectMenuComponentOptionData
+} from 'discord.js';
+import {PathConfig} from './PathConfig';
 
 //***************************************
 
@@ -24,25 +32,25 @@ export class BotConfig {
     /**
      * The paths of all files/folders the bot accesses
      */
-    public pathConfig: any;
+    public pathConfig: PathConfig = {} as PathConfig;
 
     /**
-     * String constants that may need to be configured
+     * String constants the bot uses for responses
      */
     public stringConfig: any;
 
     /**
-     * Number constants that may need to be configured
+     * Non-intuitive number constants the bot uses
      */
     public numberConfig: any;
 
     /**
-     * All {@link BoarCollectible Boar Collectibles}
+     * All {@link BoarItem Boar Items}
      */
     public boarCollectibles: any;
 
     /**
-     * All {@link BadgeCollectible Boar Collectibles}
+     * All {@link BadgeItem Badge Items}
      */
     public badgeCollectibles: any;
 
@@ -60,6 +68,11 @@ export class BotConfig {
      * Object storing initial boar data in collection
      */
     public emptyBoar: any;
+
+    /**
+     * Option that's left when select menu empty
+     */
+    public emptySelectMenu: RestOrArray<SelectMenuComponentOptionData> = [{ label: '', value: '' }];
 
     /**
      * {@link Color Colors} used by the bot

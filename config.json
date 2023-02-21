@@ -6,256 +6,202 @@
     "pathConfig": {
         "listeners": "src/main/typescript/listeners/",
         "commands": "src/main/typescript/commands/",
-        "data": {
-            "guildFolder": "database/guilds/",
-            "userFolder": "database/users/",
-            "globalFile": "database/GlobalData.json"
-        },
-        "resources": {
-            "boars": "src/main/resources/boars/",
-            "badges": "src/main/resources/badges/",
-            "announceAdd": {
-                "basePath": "src/main/resources/daily/",
-                "overlay": "DailyOverlay.png",
-                "underlay": "DailyUnderlay.png",
-                "circleMask": "CircleMask.png",
-                "backplate": "DailyBackplate.png",
-                "nameplate": "DailyNameplate.png"
-            },
-            "collection": {
-                "basePath": "src/main/resources/collection/",
-                "overlay": "BoarCollectionOverlay.png",
-                "underlay": "BoarCollectionUnderlay.png",
-                "enhancerOn": "EnhancerActive.png",
-                "enhancerOff": "EnhancerInactive.png"
-            },
-            "other": {
-                "basePath": "src/main/resources/other/",
-                "thankYou": "BoarBotThanks.png",
-                "font": "MinecraftFont.ttf",
-                "help": "Help.png"
-            }
-        },
-        "scripts": {
-            "basePath": "src/main/python/",
-            "dynamicImage": "get_dynamic_image.py"
-        }
+        "guildDataFolder": "database/guilds/",
+        "userDataFolder": "database/users/",
+        "globalDataFile": "database/GlobalData.json",
+        "boarImages": "src/main/resources/boars/",
+        "badgeImages": "src/main/resources/badges/",
+        "itemAssets": "src/main/resources/items/",
+        "collAssets": "src/main/resources/collection/",
+        "otherAssets": "src/main/resources/other/",
+        "itemOverlay": "DailyOverlay.png",
+        "itemUnderlay": "DailyUnderlay.png",
+        "itemBackplate": "DailyBackplate.png",
+        "itemNameplate": "DailyNameplate.png",
+        "collOverlay": "BoarCollectionOverlay.png",
+        "collUnderlay": "BoarCollectionUnderlay.png",
+        "enhancerOn": "EnhancerActive.png",
+        "enhancerOff": "EnhancerInactive.png",
+        "thankYouImage": "BoarBotThanks.png",
+        "mainFont": "MinecraftFont.ttf",
+        "helpBackground": "other/Help.png",
+        "circleMask": "CircleMask.png",
+        "dynamicImageScript": "src/main/python/get_dynamic_image.py"
     },
     "stringConfig": {
-        "general": {
-            "botOnline": "Successfully logged in! Bot online!",
-            "guildAdd": "Hey, %@! Thanks for adding me to your server **%@**!\n> To get started, run the command `/boar %@` in your server!",
-            "botStatus": "> Bot went online <t:%@:R>",
-            "noPermission": "You don't have permission to use this command.",
-            "noSetup": "To use this command an admin must first do `/boar setup`!",
-            "currentSetup": "BoarBot is currently being set up! Please wait!",
-            "wrongChannel": "Cannot use that command here! Please use it in the following channel(s):",
-            "noGuild": "This can only be used in a server!",
-            "error": ":anger: Something went wrong! Please try again in a few minutes. If the issue persists, DM the bot with the issue!",
-            "nullFound": "One or more inputs are `null`!",
-            "invalidID": "Invalid ID.",
-            "dmReceived": "Thanks for the DM! Your complaint/issue/feedback has been logged!",
-            "formattedChannel": "<#%@> ",
-            "formattedTime": "<t:%@:R>",
-            "onCooldown": "You're using this command too fast! Please wait 5 seconds!",
-            "maintenance": ":warning: BoarBot is currently in maintenance mode!",
-            "imageName": "unknown",
-            "globalQueueID": "global",
-            "rejectQueue": "Took too long",
-            "rejectScript": "Python Error",
-            "resolve": "Processed",
-            "fontName": "Minecraft",
-            "registeredCommands": "Application commands have successfully been registered."
+        "guildAdd": "Hey, %@! Thanks for adding me to your server **%@**!\n> To get started, run the command `/%@` in your server!",
+        "botStatus": "> Bot went online ",
+        "noPermission": "You don't have permission to use this command.",
+        "noSetup": "To use this command, an admin must first do `/boar setup`!",
+        "doingSetup": "BoarBot is currently being set up! Please wait!",
+        "wrongChannel": "Cannot use that command here! Please use it in the following channel(s):",
+        "noGuild": "This can only be used in a server!",
+        "error": ":anger: Something went wrong! Please try again in a few minutes. If the issue persists, DM the bot with the issue!",
+        "nullFound": "One or more inputs are `null`!",
+        "invalidID": "Invalid ID input!",
+        "dmReceived": "Thanks for the DM! Your complaint/issue/feedback has been logged!",
+        "onCooldown": "You're using this command too fast! Please wait 5 seconds!",
+        "maintenance": ":warning: BoarBot is currently in maintenance mode!",
+        "imageName": "unknown",
+        "fontName": "Minecraft",
+        "commandDebugPrefix": "%@ [%@] | "
+    },
+    "commandConfig": {
+        "help": {
+            "name": "boar-help",
+            "description": "See all boar commands",
+            "args": {},
+            "adminOnly": false,
+            "cooldown": false,
+            "other": {}
         },
-        "debug": {
-            "deletedFile": "Tried to delete file but it was already deleted",
-            "sentDM": "%@ | Sent the following DM Report:\n%@",
-            "formInteraction": "%@ | %@ on Field %@",
-            "endCollection": "%@ | Ended collection with reason '%@'",
-            "noSetup": "%@ | No setup file for guild",
-            "usedCommand": "%@ | Used /boar %@",
-            "endCommand": "%@ | End of /boar %@",
-            "duringSetup": "%@ | Used /boar %@ during setup",
-            "wrongChannel": "%@ | Used /boar %@ in the wrong channel",
-            "boarGotten": "%@ | Got boar: %@",
-            "notDev": "%@ | Used /boar %@ as a non-developer",
-            "noGuild": "%@ | Used /boar %@ as a non-developer",
-            "onCooldown": "%@ | Used /boar %@ too quickly",
-            "noBoarFound": "Failed to find a valid boar"
-        },
-        "commands": {
-            "help": {
-                "name": "boar-help",
-                "description": "See all boar commands",
-                "args": {},
-                "adminOnly": false,
-                "cooldown": false,
-                "other": {}
-            },
-            "setup": {
-                "name": "boar-setup",
-                "description": "Set the bot up to your liking",
-                "args": {},
-                "adminOnly": true,
-                "cooldown": true,
-                "other": {
-                    "cancelled": ":x: **__Setup was cancelled!__**",
-                    "error": ":exclamation: **__An error occurred while getting information! Try again later.__**",
-                    "finished": ":white_check_mark: **__BoarBot has successfully been set up! Do `/boar daily` in one of the boar channels you chose to get started.__**",
-                    "expired": ":question: **__You haven't interacted with the form for 2 minutes! Automatically terminating setup.__**",
-                    "noAttachmentPerms": "\n\n:exclamation: **WARNING:** The bot doesn't have attachment permissions, so some (or all) interactive images may not appear.",
-                    "fieldOne": {
-                        "unfinished": "**What channel can be used for trading?** \n*(Note: Threads will dynamically be created in this channel.)*",
-                        "finished": "**The channel you're using for trading is: **",
-                        "selectMenu": {
-                            "id": "SETUP_TRADE_CHANNEL|",
-                            "label": "UNSELECTED"
-                        },
-                        "refresh": {
-                            "id": "SETUP_REFRESH_TRADE|",
-                            "label": "Refresh"
-                        },
-                        "info": {
-                            "id": "SETUP_TRADE_INFO|",
-                            "label": "\u2754",
-                            "response": "**__TRADE CHANNEL__**\n\nThis bot has a trading system! In order for the trading system to work properly, it needs its own channel. Threads will dynamically be created and deleted in this channel unless the bot doesn't have permission to do so. If this is the case, trading will unfortunately be automatically disabled.\n > *This channel can be changed at any time using* `/boar setup`*.*\n > *Use :pencil: to enter a channel ID (right-click channel name, Copy ID) that isn't shown in the select box.*"
-                        }
+        "setup": {
+            "name": "boar-setup",
+            "description": "Set the bot up to your liking",
+            "args": {},
+            "adminOnly": true,
+            "cooldown": true,
+            "other": {
+                "cancelled": ":x: **__Setup was cancelled!__**",
+                "error": ":exclamation: **__An error occurred while getting information! Try again later.__**",
+                "finished": ":white_check_mark: **__BoarBot has successfully been set up! Do `/boar daily` in one of the boar channels you chose to get started.__**",
+                "expired": ":question: **__You haven't interacted with the form for 2 minutes! Automatically terminating setup.__**",
+                "noAttachmentPerms": "\n\n:exclamation: **WARNING:** The bot doesn't have attachment permissions, so some (or all) interactive images may not appear.",
+                "fieldOneUnfinished": "**What channel can be used for trading?** \n*(Note: Threads will dynamically be created in this channel.)*",
+                "fieldOneFinished": "**The channel you're using for trading is: **",
+                "fieldOneSelectMenuID": "SETUP_TRADE_CHANNEL|",
+                "fieldOneSelectMenuLabel": "UNSELECTED",
+                "fieldOneRefreshID": "SETUP_REFRESH_TRADE|",
+                "fieldOneRefreshLabel": "Refresh",
+                "fieldOneInfoID": "SETUP_TRADE_INFO|",
+                "fieldOneInfoLabel": "\u2754",
+                "fieldOneInfoResponse": "**__TRADE CHANNEL__**\n\nThis bot has a trading system! In order for the trading system to work properly, it needs its own channel. Threads will dynamically be created and deleted in this channel unless the bot doesn't have permission to do so. If this is the case, trading will unfortunately be automatically disabled.\n > *This channel can be changed at any time using* `/boar setup`*.*\n > *Use :pencil: to enter a channel ID (right-click channel name, Copy ID) that isn't shown in the select box.*",
+                "fieldTwo": {
+                    "unfinished": "**What channels can BoarBot commands be used in? [Max 3]** \n*(Note: If you have a lot of server members, these channels may get flooded.)*",
+                    "finished": "**These are the channels you've selected for BoarBot to work in: **",
+                    "selectMenuOne": {
+                        "id": "SETUP_BOAR_CHANNEL_1|",
+                        "label": "UNSELECTED"
                     },
-                    "fieldTwo": {
-                        "unfinished": "**What channels can BoarBot commands be used in? [Max 3]** \n*(Note: If you have a lot of server members, these channels may get flooded.)*",
-                        "finished": "**These are the channels you've selected for BoarBot to work in: **",
-                        "selectMenuOne": {
-                            "id": "SETUP_BOAR_CHANNEL_1|",
-                            "label": "UNSELECTED"
-                        },
-                        "selectMenuTwo": {
-                            "id": "SETUP_BOAR_CHANNEL_2|",
-                            "label": "UNSELECTED"
-                        },
-                        "selectMenuThree": {
-                            "id": "SETUP_BOAR_CHANNEL_3|",
-                            "label": "UNSELECTED"
-                        },
-                        "refresh": {
-                            "id": "SETUP_REFRESH_BOAR|",
-                            "label": "Refresh"
-                        },
-                        "info": {
-                            "id": "SETUP_BOAR_INFO|",
-                            "label": "\u2754",
-                            "response": "**__BOAR CHANNELS__**\n\nObviously, this bot has slash commands. Slash commands can produce spammy content depending on how large your server is, so you'll need to decide which channels the bot is enabled in.\n > *These channels can be changed at any time using* `/boar setup`*.*\n > *Use :pencil: to enter a channel ID (right-click channel name, Copy ID) that isn't shown in the select box.*"
-                        }
+                    "selectMenuTwo": {
+                        "id": "SETUP_BOAR_CHANNEL_2|",
+                        "label": "UNSELECTED"
                     },
-                    "fieldThree": {
-                        "unfinished": "**Is this server a Hypixel Skyblock community?**",
-                        "finished": "**Hypixel Skyblock community: **",
-                        "sbYes": {
-                            "id": "SETUP_SB_YES|",
-                            "label": "Yes"
-                        },
-                        "sbNo": {
-                            "id": "SETUP_SB_NO|",
-                            "label": "No"
-                        },
-                        "info": {
-                            "id": "SETUP_SB_INFO|",
-                            "label": "\u2754",
-                            "response": "**__SKYBLOCK COMMUNITY__**\n\nThis bot originated on a Discord server dedicated to Hypixel Skyblock. If you don't know what that is, no sweat! Just click \"No\". If you do and you're part of the community, I recommend you click \"Yes\".\n > *This can be changed at any time using* `/boar setup`*.*"
-                        }
+                    "selectMenuThree": {
+                        "id": "SETUP_BOAR_CHANNEL_3|",
+                        "label": "UNSELECTED"
                     },
-                    "modal": {
-                        "title": "Input Channel ID",
-                        "tradeID": "TRADE_MODAL|",
-                        "boarID": "BOAR_MODAL|",
-                        "inputID": "CHANNEL_INPUT",
-                        "inputLabel": "ID",
-                        "inputPlaceholder": "012345678901234567"
+                    "refresh": {
+                        "id": "SETUP_REFRESH_BOAR|",
+                        "label": "Refresh"
                     },
-                    "otherButtons": {
-                        "findChannel": {
-                            "id": "SETUP_FIND|",
-                            "label": "\uD83D\uDCDD"
-                        },
-                        "cancel": {
-                            "id": "SETUP_CANCEL|",
-                            "label": "Cancel"
-                        },
-                        "restart": {
-                            "id": "SETUP_RESTART|",
-                            "label": "Restart"
-                        },
-                        "next": {
-                            "id": "SETUP_NEXT|",
-                            "label": "Next",
-                            "labelLast": "Finish"
-                        }
-                    },
-                    "defaultPlaceholder": "UNSELECTED",
-                    "noChannelOptions": [
-                        {
-                            "label": "None",
-                            "value": "none"
-                        }
-                    ],
-                    "noParent": "NO CATEGORY",
-                    "notValidChannel": "This channel isn't valid! Try a different one! The channel should be:\n- A text channel\n- Not already chosen\n- Exists in this server",
-                    "channelOptionLabel": "#%@ [%@]"
-                }
-            },
-            "daily": {
-                "name": "boar-daily",
-                "description": "Get your daily boar",
-                "args": {},
-                "adminOnly": false,
-                "cooldown": false,
-                "other": {
-                    "usedDaily": "You've already used your daily boar! The next time you can use the command is ",
-                    "dailyTitle": "Daily Boar!"
-                }
-            },
-            "give": {
-                "name": "boar-give",
-                "description": "Give a user a boar/badge [DEV]",
-                "args": {
-                    "arg1": {
-                        "name": "user",
-                        "description": "User you'd like to give the boar/badge to",
-                        "required": true
-                    },
-                    "arg2": {
-                        "name": "id",
-                        "description": "ID of boar/badge to give",
-                        "required": true
+                    "info": {
+                        "id": "SETUP_BOAR_INFO|",
+                        "label": "\u2754",
+                        "response": "**__BOAR CHANNELS__**\n\nObviously, this bot has slash commands. Slash commands can produce spammy content depending on how large your server is, so you'll need to decide which channels the bot is enabled in.\n > *These channels can be changed at any time using* `/boar setup`*.*\n > *Use :pencil: to enter a channel ID (right-click channel name, Copy ID) that isn't shown in the select box.*"
                     }
                 },
-                "adminOnly": true,
-                "cooldown": false,
-                "other": {
-                    "gaveBoar": "Successfully given boar (If it didn't show, make sure perms are correct!)",
-                    "givenTitle": "Boar Given!",
-                    "specialGivenTitle": "SPECIAL BOAR GIVEN!",
-                    "gaveBadge": "Successfully given badge (If it didn't show, make sure perms are correct!)",
-                    "badgeTitleGiven": "Badge Given!",
-                    "badgeTitleObtained": "Badge Obtained!",
-                    "alreadyHas": "This user already has this badge!"
-                }
-            },
-            "collection": {
-                "name": "boar-collection",
-                "description": "View your collection of daily boars",
-                "args": {
-                    "arg1": {
-                        "name": "user",
-                        "description": "Check someone else's collection of boars",
-                        "required": false
+                "fieldThree": {
+                    "unfinished": "**Is this server a Hypixel Skyblock community?**",
+                    "finished": "**Hypixel Skyblock community: **",
+                    "sbYes": {
+                        "id": "SETUP_SB_YES|",
+                        "label": "Yes"
+                    },
+                    "sbNo": {
+                        "id": "SETUP_SB_NO|",
+                        "label": "No"
+                    },
+                    "info": {
+                        "id": "SETUP_SB_INFO|",
+                        "label": "\u2754",
+                        "response": "**__SKYBLOCK COMMUNITY__**\n\nThis bot originated on a Discord server dedicated to Hypixel Skyblock. If you don't know what that is, no sweat! Just click \"No\". If you do and you're part of the community, I recommend you click \"Yes\".\n > *This can be changed at any time using* `/boar setup`*.*"
                     }
                 },
-                "adminOnly": false,
-                "cooldown": false,
-                "other": {
-                    "dateUnavailable": "N/A",
-                    "noBadges": "No Badges!"
+                "modalTitle": "Input Channel ID",
+                "modalfieldOneID": "FIELD_ONE_MODAL|",
+                "modalfieldTwoID": "FIELD_TWO_MODAL|",
+                "modalInputID": "CHANNEL_INPUT",
+                "modelInputLabel": "ID",
+                "modalInputPlaceholder": "012345678901234567",
+                "otherButtons": {
+                    "findChannel": {
+                        "id": "SETUP_FIND|",
+                        "label": "\uD83D\uDCDD"
+                    },
+                    "cancel": {
+                        "id": "SETUP_CANCEL|",
+                        "label": "Cancel"
+                    },
+                    "restart": {
+                        "id": "SETUP_RESTART|",
+                        "label": "Restart"
+                    },
+                    "next": {
+                        "id": "SETUP_NEXT|",
+                        "label": "Next",
+                        "labelLast": "Finish"
+                    }
+                },
+                "defaultPlaceholder": "UNSELECTED",
+                "noParent": "NO CATEGORY",
+                "notValidChannel": "This channel isn't valid! Try a different one! The channel should be:\n- A text channel\n- Not already chosen\n- Exists in this server",
+                "channelOptionLabel": "#%@ [%@]"
+            }
+        },
+        "daily": {
+            "name": "boar-daily",
+            "description": "Get your daily boar",
+            "args": {},
+            "adminOnly": false,
+            "cooldown": false,
+            "other": {
+                "usedDaily": "You've already used your daily boar! The next time you can use the command is ",
+                "dailyTitle": "Daily Boar!"
+            }
+        },
+        "give": {
+            "name": "boar-give",
+            "description": "Give a user a boar/badge [DEV]",
+            "args": {
+                "arg1": {
+                    "name": "user",
+                    "description": "User you'd like to give the boar/badge to",
+                    "required": true
+                },
+                "arg2": {
+                    "name": "id",
+                    "description": "ID of boar/badge to give",
+                    "required": true
                 }
+            },
+            "adminOnly": true,
+            "cooldown": false,
+            "other": {
+                "gaveBoar": "Successfully given boar (If it didn't show, make sure perms are correct!)",
+                "givenTitle": "Boar Given!",
+                "specialGivenTitle": "SPECIAL BOAR GIVEN!",
+                "gaveBadge": "Successfully given badge (If it didn't show, make sure perms are correct!)",
+                "badgeTitleGiven": "Badge Given!",
+                "badgeTitleObtained": "Badge Obtained!",
+                "alreadyHas": "This user already has this badge!"
+            }
+        },
+        "collection": {
+            "name": "boar-collection",
+            "description": "View your collection of daily boars",
+            "args": {
+                "arg1": {
+                    "name": "user",
+                    "description": "Check someone else's collection of boars",
+                    "required": false
+                }
+            },
+            "adminOnly": false,
+            "cooldown": false,
+            "other": {
+                "dateUnavailable": "N/A",
+                "noBadges": "No Badges!"
             }
         }
     },
@@ -707,6 +653,12 @@
         "firstObtained": 0,
         "lastObtained": 0
     },
+    "emptySelectMenu": [
+        {
+            "label": "None",
+            "value": "none"
+        }
+    ],
     "hexValues": {
         "foregroundGray": "#151518",
         "font": "#DEDEDE",

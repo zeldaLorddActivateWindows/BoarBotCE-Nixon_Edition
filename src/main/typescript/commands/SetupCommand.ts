@@ -19,8 +19,8 @@ import {
 } from 'discord.js';
 import {PermissionFlagsBits} from 'discord-api-types/v10';
 import fs from 'fs';
-import {handleCooldown, hasAttachmentPerms} from '../supporting_files/GeneralFunctions';
-import {getConfigFile, getGuildData, removeGuildFile} from '../supporting_files/DataHandlers';
+import {handleCooldown, hasAttachmentPerms} from '../util/GeneralFunctions';
+import {getConfigFile, getGuildData, removeGuildFile} from '../util/DataHandlers';
 import {handleError, sendDebug} from '../logging/LogDebug';
 import {
     getConfigFields,
@@ -28,8 +28,8 @@ import {
     modalHandle,
     Reasons,
     updateSelectField
-} from "../supporting_files/command_specific/ConfigFunctions";
-import {noPermsReply} from '../supporting_files/InteractionReplies';
+} from "../util/command_specific/ConfigFunctions";
+import {noPermsReply} from '../util/InteractionReplies';
 import {BoarBotApp} from '../BoarBotApp';
 import {Command} from '../api/commands/Command';
 
@@ -55,10 +55,10 @@ export default class SetupCommand implements Command {
         if (onCooldown)
             return;
 
-        const config = getConfigFile();
+        const config = BoarBotApp.getBot().getConfig();
 
         // Alias for debug strings
-        const debugStrings = config.strings.debug;
+        const debugStrings = config.stringConfig.debug;
 
         sendDebug(debugStrings.usedCommand
             .replace('%@', interaction.user.tag)
@@ -66,10 +66,10 @@ export default class SetupCommand implements Command {
         );
 
         // Alias for general strings
-        const generalStrings = config.strings.general;
+        const generalStrings = config.stringConfig.general;
 
         // Aliases specific for /boar config
-        const configStrings = config.strings.commands.config.other;
+        const configStrings = config.stringConfig.commands.setup.other;
         const otherButtons = configStrings.otherButtons;
         const fieldOneStrings = configStrings.fieldOne;
         const fieldTwoStrings = configStrings.fieldTwo;
@@ -80,7 +80,7 @@ export default class SetupCommand implements Command {
         const configFields = getConfigFields(interaction, staticRow, config);
 
         // Alias for guild data file
-        const guildFolderPath = config.paths.data.guildFolder;
+        const guildFolderPath = config.pathConfig.data.guildFolder;
 
         const guildID = interaction.guild.id;
         const guildDataPath = guildFolderPath + guildID + '.json';
@@ -149,7 +149,7 @@ export default class SetupCommand implements Command {
                 );
 
                 // Terminates interaction when in maintenance mode
-                if (getConfigFile().maintenanceMode && !config.developers.includes(inter.user.id)) {
+                if (getConfigFile().maintenanceMode && !config.devs.includes(inter.user.id)) {
                     collectorObj.collector.stop(Reasons.Maintenance);
                     return;
                 }

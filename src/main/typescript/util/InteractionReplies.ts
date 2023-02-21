@@ -10,6 +10,7 @@
 import {ChatInputCommandInteraction} from 'discord.js';
 import {getConfigFile} from './DataHandlers';
 import {sendDebug} from '../logging/LogDebug';
+import {BoarBotApp} from '../BoarBotApp';
 
 //***************************************
 
@@ -91,10 +92,10 @@ async function noPermsReply(interaction: ChatInputCommandInteraction) {
  * @param interaction - Interaction to reply to
  */
 async function onCooldownReply(interaction: ChatInputCommandInteraction) {
-    const config = getConfigFile();
+    const config = BoarBotApp.getBot().getConfig();
 
-    const debugStrings = config.strings.debug;
-    const generalStrings = config.strings.general;
+    const debugStrings = config.stringConfig.debug;
+    const generalStrings = config.stringConfig.general;
 
     sendDebug(debugStrings.onCooldown
         .replace('%@', interaction.user.tag)

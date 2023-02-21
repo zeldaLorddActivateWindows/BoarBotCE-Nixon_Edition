@@ -9,9 +9,9 @@
 import {ChatInputCommandInteraction, SlashCommandBuilder} from 'discord.js';
 import {PermissionFlagsBits} from 'discord-api-types/v10';
 import fs from 'fs';
-import {getConfigFile} from '../supporting_files/DataHandlers';
+import {getConfigFile} from '../util/DataHandlers';
 import {sendDebug} from '../logging/LogDebug';
-import {handleStart} from '../supporting_files/GeneralFunctions';
+import {handleStart} from '../util/GeneralFunctions';
 import {BoarBotApp} from '../BoarBotApp';
 import {Command} from '../api/commands/Command';
 

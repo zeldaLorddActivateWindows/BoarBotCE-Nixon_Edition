@@ -9,7 +9,7 @@
 
 import {ChatInputCommandInteraction, EmbedBuilder, Events, Interaction, ModalSubmitInteraction} from 'discord.js';
 import {handleError, sendDebug} from '../logging/LogDebug';
-import {getConfigFile} from '../supporting_files/DataHandlers';
+import {getConfigFile} from '../util/DataHandlers';
 import {Listener} from '../api/listeners/Listener';
 import {BotConfig} from '../bot/config/BotConfig';
 import {BoarBotApp} from '../BoarBotApp';

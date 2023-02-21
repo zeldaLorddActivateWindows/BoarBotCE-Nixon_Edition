@@ -9,7 +9,7 @@
 
 import dotenv from 'dotenv';
 import fs from 'fs';
-import {ActivityType, Client, GatewayIntentBits, Partials, TextChannel} from 'discord.js';
+import {ActivityType, Client, GatewayIntentBits, TextChannel} from 'discord.js';
 import {Routes} from 'discord-api-types/v10';
 import {registerFont} from 'canvas';
 import moment from 'moment';
@@ -28,6 +28,9 @@ export class BoarBot implements Bot {
 	private config: BotConfig = {} as BotConfig;
 	private commands: Map<string, Command> = new Map<string, Command>();
 
+	/**
+	 * Creates the bot by loading and registering global information
+	 */
 	public async create(): Promise<void> {
 		this.buildClient();
 
@@ -37,16 +40,17 @@ export class BoarBot implements Bot {
 
 		this.loadFonts();
 		this.setRelativeTime();
+		this.fixGuildData();
 
 		await this.login()
 		await this.onStart();
 	}
 
-	public buildClient() {
+	/**
+	 * Builds the {@link Client} object with chosen options
+	 */
+	public buildClient(): void {
 		this.client = new Client({
-			partials: [
-				Partials.Channel,
-			],
 			intents: [
 				GatewayIntentBits.Guilds,
 				GatewayIntentBits.GuildMessages,
@@ -59,6 +63,9 @@ export class BoarBot implements Bot {
 		});
 	}
 
+	/**
+	 * Loads config data from configuration file in project root
+	 */
 	public async loadConfig(): Promise<void> {
 		let parsedConfig: any;
 
@@ -74,11 +81,21 @@ export class BoarBot implements Bot {
 		sendDebug('Config successfully loaded!');
 	}
 
+	/**
+	 * Verifies the contents of the data in the configuration file
+	 * @private
+	 */
 	private verifyConfig(): void {}
 
+	/**
+	 * Grabs {@link BotConfig config} data the bot uses
+	 */
 	public getConfig(): BotConfig { return this.config; }
 
-	public setCommands() {
+	/**
+	 * Sets up all the {@link Command commands} the bot can use
+	 */
+	public setCommands(): void {
 		if (!this.instanceVarsSet()) process.exit(-1);
 
 		const commandFiles = fs.readdirSync(this.config.pathConfig.commands);
@@ -89,13 +106,19 @@ export class BoarBot implements Bot {
 
 			this.commands.set(commandClass.data.name, commandClass);
 
-			sendDebug(`Successfully registered command '${commandClass.data.name}'`);
+			sendDebug('Successfully found and set command: ' + commandClass.data.name);
 		}
 	}
 
-	public getCommands() { return this.commands; }
+	/**
+	 * Grabs the {@link Map} storing {@link Command} data
+	 */
+	public getCommands(): Map<string, Command> { return this.commands; }
 
-	public async deployCommands() {
+	/**
+	 * Deploys application commands to Discord API
+	 */
+	public async deployCommands(): Promise<void> {
 		const commandData = [];
 
 		for (const command of this.commands.values())
@@ -104,13 +127,16 @@ export class BoarBot implements Bot {
 		const rest = new REST({ version: '10' }).setToken(process.env.TOKEN as string);
 		try {
 			await rest.put(Routes.applicationCommands(process.env.CLIENT_ID as string), { body: commandData });
-			sendDebug(this.config.stringConfig.general.registeredCommands);
+			sendDebug('Application commands have successfully been registered!');
 		} catch (err: unknown) {
 			handleError(err);
 		}
 	}
 
-	public registerListeners() {
+	/**
+	 * Registers {@link Listener event listeners} for the bot
+	 */
+	public registerListeners(): void {
 		if (!this.instanceVarsSet()) process.exit(-1);
 
 		const listenerFiles = fs.readdirSync(this.config.pathConfig.listeners);
@@ -121,10 +147,13 @@ export class BoarBot implements Bot {
 
 			this.client.on(listenClass.eventName, (...args: any[]) => listenClass.execute(...args));
 
-			sendDebug(`Successfully registered listener for event '${listenClass.eventName}'`);
+			sendDebug('Successfully registered listener for event: ' + listenClass.eventName);
 		}
 	}
 
+	/**
+	 * Grabs the font file and loads it for Canvas if it exists
+	 */
 	public loadFonts(): void {
 		if (!this.instanceVarsSet()) process.exit(-1);
 
@@ -132,7 +161,7 @@ export class BoarBot implements Bot {
 			const mcFont = this.config.pathConfig.resources.other.basePath +
 				this.config.pathConfig.resources.other.font;
 
-			registerFont(mcFont, {family: this.config?.stringConfig.general.fontName});
+			registerFont(mcFont, {family: this.config.stringConfig.general.fontName});
 		} catch {
 			handleError('Unable to load font. Verify its path in \'config.json\'.');
 			return;
@@ -141,6 +170,9 @@ export class BoarBot implements Bot {
 		sendDebug('Fonts successfully loaded!');
 	}
 
+	/**
+	 * Sets relative time information like cutoffs and locales
+	 */
 	public setRelativeTime(): void {
 		moment.relativeTimeThreshold('s', 60);
 		moment.relativeTimeThreshold('ss', 1);
@@ -171,6 +203,31 @@ export class BoarBot implements Bot {
 		sendDebug('Relative time information set!');
 	}
 
+	/**
+	 * Deletes guild files that were in the process of setting the bot up
+	 */
+	public fixGuildData(): void {
+		if (!this.instanceVarsSet()) process.exit(-1);
+
+		const guildDataFolder = this.config.pathConfig.data.guildFolder;
+		const guildDataFiles = fs.readdirSync(guildDataFolder);
+
+		for (const guildData of guildDataFiles) {
+			const data = JSON.parse(fs.readFileSync(guildDataFolder + guildData, 'utf-8'));
+
+			if (Object.keys(data).length !== 0) continue;
+
+			fs.rmSync(guildDataFolder + guildData);
+
+			sendDebug('Deleted empty guild file: ' + guildData);
+		}
+
+		sendDebug('Guild data fixed!')
+	}
+
+	/**
+	 * Logs the bot in
+	 */
 	public async login(): Promise<void> {
 		if (!await this.instanceVarsSet()) process.exit(-1);
 
@@ -183,10 +240,13 @@ export class BoarBot implements Bot {
 		}
 	}
 
+	/**
+	 * What the bot should do once it's fully logged in
+	 */
 	public async onStart(): Promise<void> {
 		if (!await this.instanceVarsSet()) process.exit(-1);
 
-		sendDebug(this.config.stringConfig.general.botOnline);
+		sendDebug('Successfully logged in! Bot online!');
 
 		const botStatusChannel = await this.getStatusChannel();
 
@@ -203,6 +263,10 @@ export class BoarBot implements Bot {
 		sendDebug('Successfully sent status message!');
 	}
 
+	/**
+	 * Finds the {@link TextChannel} to send status messages to
+	 * @private
+	 */
 	private async getStatusChannel(): Promise<TextChannel | undefined> {
 		let botStatusChannel: TextChannel;
 
@@ -228,6 +292,11 @@ export class BoarBot implements Bot {
 		return botStatusChannel;
 	}
 
+	/**
+	 * Used to prevent the usage of instance variables before they were set
+	 * @return allSet - Whether instance variables were set
+	 * @private
+	 */
 	private async instanceVarsSet(): Promise<boolean> {
 		let allSet = true;
 
@@ -242,41 +311,3 @@ export class BoarBot implements Bot {
 		return allSet;
 	}
 }
-
-
-
-// Registers list of subcommands
-// const commandList = require(config.paths.commandList);
-// client.commandList.set(commandList.data.name, commandList);
-//
-// // Registers subcommand file locations
-// const subcommandsPath = path.join(__dirname, config.paths.commands);
-// const subcommandFiles = fs.readdirSync(subcommandsPath).filter((file: string) => file.endsWith('.ts'));
-//
-// for (const file of subcommandFiles) {
-// 	const filePath = path.join(subcommandsPath, file);
-// 	const subcommand = require(filePath);
-// 	client.subcommands.set(subcommand.data.name, subcommand);
-// }
-
-// Registers modal file locations
-// const modalsPath = path.join(__dirname, './src/modals');
-// const modalFiles = fs.readdirSync(modalsPath).filter((file: string) => file.endsWith('.ts'));
-//
-// for (const file of modalFiles) {
-// 	const filePath = path.join(modalsPath, file);
-// 	const modal = require(filePath);
-// 	client.modals.set(modal.data.name, modal);
-// }
-
-// Gets rid of empty data files on restart
-// const guildDataPath = config.paths.data.guildFolder;
-// const guildFolders = fs.readdirSync(guildDataPath);
-//
-// for (const guild of guildFolders) {
-// 	const filePath = guildDataPath + guild;
-// 	const data = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
-//
-// 	if (Object.keys(data).length === 0)
-// 		fs.rmSync(guildDataPath + guild);
-// }
