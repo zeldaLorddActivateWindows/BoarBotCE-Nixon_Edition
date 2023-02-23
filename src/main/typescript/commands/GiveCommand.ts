@@ -19,21 +19,23 @@ import {Command} from '../api/commands/Command';
 
 //***************************************
 
+// ADD ARGUMENT TO CHOOSE IF BADGE OR BOAR
+
 export default class GiveCommand implements Command {
     private initConfig = BoarBotApp.getBot().getConfig();
-    private commandInfo = this.initConfig.stringConfig.commands.give;
+    private commandInfo = this.initConfig.commandConfigs.give;
     public readonly data = new SlashCommandBuilder()
         .setName(this.commandInfo.name)
         .setDescription(this.commandInfo.description)
         .setDMPermission(false)
         .setDefaultMemberPermissions(this.commandInfo.adminOnly ? PermissionFlagsBits.Administrator : undefined)
-        .addUserOption(option => option.setName(this.commandInfo.args.arg1.name)
-            .setDescription(this.commandInfo.args.arg1.description)
-            .setRequired(this.commandInfo.args.arg1.required)
+        .addUserOption(option => option.setName(this.commandInfo.args[0].name)
+            .setDescription(this.commandInfo.args[0].description)
+            .setRequired(this.commandInfo.args[0].required)
         )
-        .addStringOption(option => option.setName(this.commandInfo.args.arg2.name)
-            .setDescription(this.commandInfo.args.arg2.description)
-            .setRequired(this.commandInfo.args.arg2.required)
+        .addStringOption(option => option.setName(this.commandInfo.args[1].name)
+            .setDescription(this.commandInfo.args[1].description)
+            .setRequired(this.commandInfo.args[1].required)
         ) as SlashCommandBuilder;
 
     public async execute(interaction: ChatInputCommandInteraction) {
@@ -55,9 +57,9 @@ export default class GiveCommand implements Command {
         const generalStrings = config.strings.general;
         const badgeIDs = Object.keys(config.badgeIDs);
 
-        const userInput = interaction.options.getUser(this.commandInfo.args.arg1.name);
-        const idInput = interaction.options.getString(this.commandInfo.args.arg2.name);
-        let rarityFound: string = '';
+        const userInput = interaction.options.getUser(this.commandInfo.args[0].name);
+        const idInput = interaction.options.getString(this.commandInfo.args[1].name);
+        let rarityFound: number = -1;
 
         if (!userInput || !idInput) {
             await interaction.editReply(generalStrings.nullValues);
@@ -68,7 +70,7 @@ export default class GiveCommand implements Command {
         rarityFound = findRarity(idInput);
 
         // Returns if ID doesn't exist in boars or badges
-        if (rarityFound === '' && !badgeIDs.includes(idInput)) {
+        if (rarityFound === -1 && !badgeIDs.includes(idInput)) {
             await interaction.editReply(generalStrings.invalidID);
             return;
         }
@@ -81,7 +83,7 @@ export default class GiveCommand implements Command {
                 const boarUser = new BoarUser(userInput);
 
                 // Gives either a boar or a badge depending on input
-                if (rarityFound !== '')
+                if (rarityFound !== -1)
                     await boarUser.addBoar(config, idInput, interaction);
                 else
                     await boarUser.addBadge(config, idInput, interaction);

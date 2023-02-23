@@ -17,6 +17,7 @@ import {getConfigFile, getGuildData} from './DataHandlers';
 import {sendDebug} from '../logging/LogDebug';
 import {currentConfigReply, onCooldownReply, wrongChannelReply} from './InteractionReplies';
 import {BoarBotApp} from '../BoarBotApp';
+import {RarityConfig} from '../bot/config/items/RarityConfig';
 
 //***************************************
 
@@ -46,19 +47,20 @@ function hasAttachmentPerms(interaction: ChatInputCommandInteraction | ButtonInt
 function findRarity(boarID: string) {
     const config = BoarBotApp.getBot().getConfig();
 
-    const rarityArray = Object.keys(config.rarityConfig);
-    let finalRarity: string = '';
+    const orderedRarities: RarityConfig[] = [...config.rarityConfigs]
+        .sort((rarity1, rarity2) => { return rarity2.weight - rarity1.weight; });
+    let foundRarity: number = 0;
 
-    for (const rarity of rarityArray) {
-        const boarExists: boolean = config.rarityConfig[rarity].boars.includes(boarID);
+    for (let i=0; i<orderedRarities.length; i++) {
+        const boarExists: boolean = orderedRarities[i].boars.includes(boarID);
 
         if (boarExists) {
-            finalRarity = rarity;
+            foundRarity = i + 1;
             break;
         }
     }
 
-    return finalRarity;
+    return foundRarity;
 }
 
 //***************************************
@@ -75,10 +77,9 @@ async function handleStart(interaction: ChatInputCommandInteraction, includeTrad
 
     const config = BoarBotApp.getBot().getConfig();
 
-    // Alias for debug strings
-    const debugStrings = config.stringConfig.debug;
+    const strConfig = config.stringConfig;
 
-    sendDebug(debugStrings.usedCommand
+    sendDebug(strConfig.commandDebugPrefix
         .replace('%@', interaction.user.tag)
         .replace('%@', interaction.commandName)
     );

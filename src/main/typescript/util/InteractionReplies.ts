@@ -94,15 +94,14 @@ async function noPermsReply(interaction: ChatInputCommandInteraction) {
 async function onCooldownReply(interaction: ChatInputCommandInteraction) {
     const config = BoarBotApp.getBot().getConfig();
 
-    const debugStrings = config.stringConfig.debug;
-    const generalStrings = config.stringConfig.general;
+    const strConfig = config.stringConfig;
 
-    sendDebug(debugStrings.onCooldown
+    sendDebug(strConfig.onCooldown
         .replace('%@', interaction.user.tag)
         .replace('%@', interaction.commandName)
     );
 
-    await handleReply(interaction, generalStrings.onCooldown);
+    await handleReply(interaction, strConfig.onCooldown);
 }
 
 //***************************************

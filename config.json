@@ -29,250 +29,254 @@
         "dynamicImageScript": "src/main/python/get_dynamic_image.py"
     },
     "stringConfig": {
-        "guildAdd": "Hey, %@! Thanks for adding me to your server **%@**!\n> To get started, run the command `/%@` in your server!",
         "botStatus": "> Bot went online ",
+        "guildAdd": "Hey, %@! Thanks for adding me to your server **%@**!\n> To get started, run the command `/%@` in your server!",
+        "dmReceived": "Thanks for the DM! Your complaint/issue/feedback has been logged!",
         "noPermission": "You don't have permission to use this command.",
         "noSetup": "To use this command, an admin must first do `/boar setup`!",
         "doingSetup": "BoarBot is currently being set up! Please wait!",
         "wrongChannel": "Cannot use that command here! Please use it in the following channel(s):",
         "noGuild": "This can only be used in a server!",
-        "error": ":anger: Something went wrong! Please try again in a few minutes. If the issue persists, DM the bot with the issue!",
         "nullFound": "One or more inputs are `null`!",
         "invalidID": "Invalid ID input!",
-        "dmReceived": "Thanks for the DM! Your complaint/issue/feedback has been logged!",
         "onCooldown": "You're using this command too fast! Please wait 5 seconds!",
+        "noAttachmentPerms": ":exclamation: **WARNING:** The bot doesn't have attachment permissions, so some interactive images may not appear.",
+        "error": ":anger: Something went wrong! Please try again in a few minutes. If the issue persists, DM the bot with the issue!",
         "maintenance": ":warning: BoarBot is currently in maintenance mode!",
+        "setupCancelled": ":x: **__Setup was cancelled!__**",
+        "setupError": ":exclamation: **__An error occurred while getting information! Try again later.__**",
+        "setupFinishedAll": ":white_check_mark: **__BoarBot has successfully been set up! Do `/boar daily` in one of the boar channels you chose to get started.__**",
+        "setupExpired": ":question: **__You haven't interacted with the form for 2 minutes! Automatically terminating setup.__**",
+        "setupUnfinished1": "**What channel can be used for trading?** \n*(Note: Threads will dynamically be created in this channel.)*",
+        "setupUnfinished2": "**What channels can BoarBot commands be used in? [Max 3]** \n*(Note: If you have a lot of server members, these channels may get flooded.)*",
+        "setupUnfinished3": "**Is this server a Hypixel Skyblock community?**",
+        "setupFinished1": "**The channel you're using for trading is: **",
+        "setupFinished2": "**These are the channels you've selected for BoarBot to work in: **",
+        "setupFinished3": "**Hypixel Skyblock community: **",
+        "setupInfoResponse1": "**__TRADE CHANNEL__**\n\nThis bot has a trading system! In order for the trading system to work properly, it needs its own channel. Threads will dynamically be created and deleted in this channel unless the bot doesn't have permission to do so. If this is the case, trading will unfortunately be automatically disabled.\n > *This channel can be changed at any time using* `/boar setup`*.*\n > *Use :pencil: to enter a channel ID (right-click channel name, Copy ID) that isn't shown in the select box.*",
+        "setupInfoResponse2": "**__BOAR CHANNELS__**\n\nObviously, this bot has slash commands. Slash commands can produce spammy content depending on how large your server is, so you'll need to decide which channels the bot is enabled in.\n > *These channels can be changed at any time using* `/boar setup`*.*\n > *Use :pencil: to enter a channel ID (right-click channel name, Copy ID) that isn't shown in the select box.*",
+        "setupInfoResponse3": "**__SKYBLOCK COMMUNITY__**\n\nThis bot originated on a Discord server dedicated to Hypixel Skyblock. If you don't know what that is, no sweat! Just click \"No\". If you do and you're part of the community, I recommend you click \"Yes\".\n > *This can be changed at any time using* `/boar setup`*.*",
+        "dailyUsed": "You've already used your daily boar! The next time you can use the command is ",
+        "dailyTitle": "Daily Boar!",
+        "dailyNoBoarFound": "Failed to find a valid boar!",
+        "giveBoar": "Successfully given boar (If it didn't show, make sure perms are correct!)",
+        "giveTitle": "Boar Given!",
+        "giveSpecialTitle": "SPECIAL BOAR GIVEN!",
+        "giveBadge": "Successfully given badge (If it didn't show, make sure perms are correct!)",
+        "giveBadgeTitle": "Badge Given!",
+        "giveBadgeHas": "This user already has this badge!",
+        "obtainedBadgeTitle": "Badge Obtained!",
+        "collNoBadges": "No Badges!",
+        "noParentChannel": "NO CATEGORY",
+        "notValidChannel": "This channel isn't valid! Try a different one! The channel should be:\n- A text channel\n- Not already chosen\n- Exists in this server",
+        "defaultSelectPlaceholder": "UNSELECTED",
+        "channelOptionLabel": "#%@ [%@]",
+        "unavailable": "N/A",
         "imageName": "unknown",
         "fontName": "Minecraft",
         "commandDebugPrefix": "%@ [%@] | "
     },
-    "commandConfig": {
+    "commandConfigs": {
         "help": {
             "name": "boar-help",
             "description": "See all boar commands",
-            "args": {},
+            "args": [],
             "adminOnly": false,
             "cooldown": false,
-            "other": {}
+            "components": {},
+            "modals": {}
         },
         "setup": {
             "name": "boar-setup",
             "description": "Set the bot up to your liking",
-            "args": {},
+            "args": [],
             "adminOnly": true,
             "cooldown": true,
-            "other": {
-                "cancelled": ":x: **__Setup was cancelled!__**",
-                "error": ":exclamation: **__An error occurred while getting information! Try again later.__**",
-                "finished": ":white_check_mark: **__BoarBot has successfully been set up! Do `/boar daily` in one of the boar channels you chose to get started.__**",
-                "expired": ":question: **__You haven't interacted with the form for 2 minutes! Automatically terminating setup.__**",
-                "noAttachmentPerms": "\n\n:exclamation: **WARNING:** The bot doesn't have attachment permissions, so some (or all) interactive images may not appear.",
-                "fieldOneUnfinished": "**What channel can be used for trading?** \n*(Note: Threads will dynamically be created in this channel.)*",
-                "fieldOneFinished": "**The channel you're using for trading is: **",
-                "fieldOneSelectMenuID": "SETUP_TRADE_CHANNEL|",
-                "fieldOneSelectMenuLabel": "UNSELECTED",
-                "fieldOneRefreshID": "SETUP_REFRESH_TRADE|",
-                "fieldOneRefreshLabel": "Refresh",
-                "fieldOneInfoID": "SETUP_TRADE_INFO|",
-                "fieldOneInfoLabel": "\u2754",
-                "fieldOneInfoResponse": "**__TRADE CHANNEL__**\n\nThis bot has a trading system! In order for the trading system to work properly, it needs its own channel. Threads will dynamically be created and deleted in this channel unless the bot doesn't have permission to do so. If this is the case, trading will unfortunately be automatically disabled.\n > *This channel can be changed at any time using* `/boar setup`*.*\n > *Use :pencil: to enter a channel ID (right-click channel name, Copy ID) that isn't shown in the select box.*",
-                "fieldTwo": {
-                    "unfinished": "**What channels can BoarBot commands be used in? [Max 3]** \n*(Note: If you have a lot of server members, these channels may get flooded.)*",
-                    "finished": "**These are the channels you've selected for BoarBot to work in: **",
-                    "selectMenuOne": {
-                        "id": "SETUP_BOAR_CHANNEL_1|",
-                        "label": "UNSELECTED"
-                    },
-                    "selectMenuTwo": {
-                        "id": "SETUP_BOAR_CHANNEL_2|",
-                        "label": "UNSELECTED"
-                    },
-                    "selectMenuThree": {
-                        "id": "SETUP_BOAR_CHANNEL_3|",
-                        "label": "UNSELECTED"
-                    },
-                    "refresh": {
-                        "id": "SETUP_REFRESH_BOAR|",
-                        "label": "Refresh"
-                    },
-                    "info": {
-                        "id": "SETUP_BOAR_INFO|",
-                        "label": "\u2754",
-                        "response": "**__BOAR CHANNELS__**\n\nObviously, this bot has slash commands. Slash commands can produce spammy content depending on how large your server is, so you'll need to decide which channels the bot is enabled in.\n > *These channels can be changed at any time using* `/boar setup`*.*\n > *Use :pencil: to enter a channel ID (right-click channel name, Copy ID) that isn't shown in the select box.*"
-                    }
+            "components": {
+                "selectMenu1": {
+                    "id": "SETUP_TRADE_CHANNEL_SELECT",
+                    "label": "UNSELECTED"
                 },
-                "fieldThree": {
-                    "unfinished": "**Is this server a Hypixel Skyblock community?**",
-                    "finished": "**Hypixel Skyblock community: **",
-                    "sbYes": {
-                        "id": "SETUP_SB_YES|",
-                        "label": "Yes"
-                    },
-                    "sbNo": {
-                        "id": "SETUP_SB_NO|",
-                        "label": "No"
-                    },
-                    "info": {
-                        "id": "SETUP_SB_INFO|",
-                        "label": "\u2754",
-                        "response": "**__SKYBLOCK COMMUNITY__**\n\nThis bot originated on a Discord server dedicated to Hypixel Skyblock. If you don't know what that is, no sweat! Just click \"No\". If you do and you're part of the community, I recommend you click \"Yes\".\n > *This can be changed at any time using* `/boar setup`*.*"
-                    }
+                "selectMenu2_1": {
+                    "id": "SETUP_BOAR_CHANNEL_SELECT_1",
+                    "label": "UNSELECTED"
                 },
-                "modalTitle": "Input Channel ID",
-                "modalfieldOneID": "FIELD_ONE_MODAL|",
-                "modalfieldTwoID": "FIELD_TWO_MODAL|",
-                "modalInputID": "CHANNEL_INPUT",
-                "modelInputLabel": "ID",
-                "modalInputPlaceholder": "012345678901234567",
-                "otherButtons": {
-                    "findChannel": {
-                        "id": "SETUP_FIND|",
-                        "label": "\uD83D\uDCDD"
-                    },
-                    "cancel": {
-                        "id": "SETUP_CANCEL|",
-                        "label": "Cancel"
-                    },
-                    "restart": {
-                        "id": "SETUP_RESTART|",
-                        "label": "Restart"
-                    },
-                    "next": {
-                        "id": "SETUP_NEXT|",
-                        "label": "Next",
-                        "labelLast": "Finish"
-                    }
+                "selectMenu2_2": {
+                    "id": "SETUP_BOAR_CHANNEL_SELECT_2",
+                    "label": "UNSELECTED"
                 },
-                "defaultPlaceholder": "UNSELECTED",
-                "noParent": "NO CATEGORY",
-                "notValidChannel": "This channel isn't valid! Try a different one! The channel should be:\n- A text channel\n- Not already chosen\n- Exists in this server",
-                "channelOptionLabel": "#%@ [%@]"
+                "selectMenu2_3": {
+                    "id": "SETUP_BOAR_CHANNEL_SELECT_3",
+                    "label": "UNSELECTED"
+                },
+                "refresh1": {
+                    "id": "SETUP_REFRESH_TRADE_CHANNEL",
+                    "label": "Refresh"
+                },
+                "refresh2": {
+                    "id": "SETUP_REFRESH_BOAR_CHANNELS",
+                    "label": "Refresh"
+                },
+                "info1": {
+                    "id": "SETUP_INFO_TRADE_CHANNEL",
+                    "label": "❔"
+                },
+                "info2": {
+                    "id": "SETUP_INFO_BOAR_CHANNELS",
+                    "label": "❔"
+                },
+                "info3": {
+                    "id": "SETUP_INFO_SB",
+                    "label": "❔"
+                },
+                "sbYes": {
+                    "id": "SETUP_SB_YES",
+                    "label": "Yes"
+                },
+                "sbNo": {
+                    "id": "SETUP_SB_NO",
+                    "label": "No"
+                },
+                "findChannel": {
+                    "id": "SETUP_FIND",
+                    "label": "\uD83D\uDCDD"
+                },
+                "cancel": {
+                    "id": "SETUP_CANCEL",
+                    "label": "Cancel"
+                },
+                "restart": {
+                    "id": "SETUP_RESTART",
+                    "label": "Restart"
+                },
+                "next": {
+                    "id": "SETUP_NEXT",
+                    "label": "Next",
+                    "altLabel": "Finish"
+                }
+            },
+            "modals": {
+                "modal1": {
+                    "title": "Input Channel ID",
+                    "id": "FIELD_ONE_MODAL",
+                    "inputIDs": ["CHANNEL_INPUT"],
+                    "inputLabels": ["ID"],
+                    "inputPlaceholders": ["012345678901234567"]
+                },
+                "modal2": {
+                    "title": "Input Channel ID",
+                    "id": "FIELD_TWO_MODAL",
+                    "inputIDs": ["CHANNEL_INPUT"],
+                    "inputLabels": ["ID"],
+                    "inputPlaceholders": ["012345678901234567"]
+                }
             }
         },
         "daily": {
             "name": "boar-daily",
             "description": "Get your daily boar",
-            "args": {},
+            "args": [],
             "adminOnly": false,
             "cooldown": false,
-            "other": {
-                "usedDaily": "You've already used your daily boar! The next time you can use the command is ",
-                "dailyTitle": "Daily Boar!"
-            }
+            "components": {},
+            "modals": {}
         },
         "give": {
             "name": "boar-give",
             "description": "Give a user a boar/badge [DEV]",
-            "args": {
-                "arg1": {
+            "args": [
+                {
                     "name": "user",
                     "description": "User you'd like to give the boar/badge to",
                     "required": true
                 },
-                "arg2": {
+                {
                     "name": "id",
                     "description": "ID of boar/badge to give",
                     "required": true
                 }
-            },
+            ],
             "adminOnly": true,
             "cooldown": false,
-            "other": {
-                "gaveBoar": "Successfully given boar (If it didn't show, make sure perms are correct!)",
-                "givenTitle": "Boar Given!",
-                "specialGivenTitle": "SPECIAL BOAR GIVEN!",
-                "gaveBadge": "Successfully given badge (If it didn't show, make sure perms are correct!)",
-                "badgeTitleGiven": "Badge Given!",
-                "badgeTitleObtained": "Badge Obtained!",
-                "alreadyHas": "This user already has this badge!"
-            }
+            "components": {},
+            "modals": {}
         },
         "collection": {
             "name": "boar-collection",
             "description": "View your collection of daily boars",
-            "args": {
-                "arg1": {
+            "args": [
+                {
                     "name": "user",
                     "description": "Check someone else's collection of boars",
                     "required": false
                 }
-            },
+            ],
             "adminOnly": false,
             "cooldown": false,
-            "other": {
-                "dateUnavailable": "N/A",
-                "noBadges": "No Badges!"
-            }
+            "components": {},
+            "modals": {}
         }
     },
     "numberConfig": {
-        "general": {
-            "originPos": [0, 0],
-            "fontSizes": {
-                "big": 60,
-                "medium": 45,
-                "small_medium": 40
-            },
-            "usernameLength": 16,
-            "trackedEditions": 10
-        },
-        "announceAdd": {
-            "imageSize": [930, 1080],
-            "boarPos": [27, 169],
-            "boarSize": [886, 886],
-            "badgePos": [120, 250],
-            "badgeSize": [700, 700],
-            "titlePos": [464, 82],
-            "namePos": [464, 138],
-            "nameplatePos": [102, 964],
-            "nameplatePadding": 120,
-            "nameplateHeight": 80,
-            "userTagPos": [200, 1022],
-            "userAvatarPos": [36, 894],
-            "userAvatarWidth": 150
-        },
-        "collection": {
-            "maxScore": 100000000000000000,
-            "maxBoars": 1000000000,
-            "maxStreak": 100000000,
-            "imageSize": [1920, 1388],
-            "userAvatarPos": [24, 24],
-            "userAvatarSize": [156, 156],
-            "userTagPos": [225, 80],
-            "datePos": [991, 150],
-            "noBadgePos": [240, 150],
-            "badgeStart": 240,
-            "badgeSpacing": 70,
-            "badgeY": 105,
-            "badgeSize": [55, 55],
-            "scorePos": [365, 359],
-            "totalPos": [227, 561],
-            "uniquePos": [568, 562],
-            "multiPos": [185, 745],
-            "streakPos": [533, 745],
-            "boarStartX": 740,
-            "boarStartY": 210,
-            "boarSpacingX": 296,
-            "boarSpacingY": 295,
-            "boarCols": 4,
-            "boarRows": 4,
-            "boarSize": [268, 268],
-            "lastDailyPos": [370, 946],
-            "rarityStartX": 730,
-            "rarityStartY": 253,
-            "rarityEndDiff": 53,
-            "rarityWidth": 20,
-            "lastBoarPos": [382, 1037],
-            "lastBoarSize": [329, 329],
-            "lastRarityPos": [382, 1037],
-            "lastRaritySize": [200, 40],
-            "favBoarPos": [26, 1037],
-            "favBoarSize": [329, 329],
-            "favRarityPos": [26, 1037],
-            "favRaritySize": [200, 40]
-        }
+        "originPos": [0, 0],
+        "fontBig": 60,
+        "fontMedium": 45,
+        "fontSmallMedium": 40,
+        "maxUsernameLength": 16,
+        "maxTrackedEditions": 10,
+        "maxScore": 100000000000000000,
+        "maxBoars": 1000000000,
+        "maxStreak": 100000000,
+        "itemImageSize": [930, 1080],
+        "itemBoarPos": [27, 169],
+        "itemBoarSize": [886, 886],
+        "itemBadgePos": [120, 250],
+        "itemBadgeSize": [700, 700],
+        "itemTitlePos": [464, 82],
+        "itemNamePos": [464, 138],
+        "itemNameplatePos": [102, 964],
+        "itemNameplatePadding": 120,
+        "itemNameplateHeight": 80,
+        "itemUserTagPos": [200, 1022],
+        "itemUserAvatarPos": [36, 894],
+        "itemUserAvatarWidth": 150,
+        "collImageSize": [1920, 1388],
+        "collUserAvatarPos": [24, 24],
+        "collUserAvatarSize": [156, 156],
+        "collUserTagPos": [225, 80],
+        "collDatePos": [991, 150],
+        "collNoBadgePos": [240, 150],
+        "collBadgeStart": 240,
+        "collBadgeSpacing": 70,
+        "collBadgeY": 105,
+        "collBadgeSize": [55, 55],
+        "collScorePos": [365, 359],
+        "collTotalPos": [227, 561],
+        "collUniquePos": [568, 562],
+        "collMultiplierPos": [185, 745],
+        "collStreakPos": [533, 745],
+        "collBoarStartX": 740,
+        "collBoarStartY": 210,
+        "collBoarSpacingX": 296,
+        "collBoarSpacingY": 295,
+        "collBoarCols": 4,
+        "collBoarRows": 4,
+        "collBoarSize": [268, 268],
+        "collLastDailyPos": [370, 946],
+        "collRarityStartX": 730,
+        "collRarityStartY": 253,
+        "collRarityEndDiff": 53,
+        "collRarityWidth": 20,
+        "collLastBoarPos": [382, 1037],
+        "collLastBoarSize": [329, 329],
+        "collLastRarityPos": [382, 1037],
+        "collLastRaritySize": [200, 40],
+        "collFavBoarPos": [26, 1037],
+        "collFavBoarSize": [329, 329],
+        "collFavRarityPos": [26, 1037],
+        "collFavRaritySize": [200, 40]
     },
-    "boarCollectibles": {
+    "boarItemConfigs": {
         "normal": {
             "name": "Normal Boar",
             "file": "NormalBoar.png",
@@ -285,7 +289,8 @@
             "file": "ExplosionlessBoar.png",
             "description": "Its mind was blown so hard it refuses to ignite anymore. If it ever does, though, it's assumed its explosion would be cataclysmic.",
             "isSB": false,
-            "blacklisted": false
+            "blacklisted": false,
+            "rarity": {"$ref":  "#/rarityConfigs/rarity1"}
         },
         "tiny": {
             "name": "Tiny Boar",
@@ -512,32 +517,32 @@
             "blacklisted": false
         }
     },
-    "badgeCollectibles": {
-        "badge_early_supporter": {
+    "badgeItemConfigs": {
+        "early_supporter": {
             "name": "Early Subboarter",
             "file": "EarlySupporter.png",
             "description": "Anyone with this badge boosted in the server BoarBot originated in!"
         },
-        "badge_hunter": {
+        "hunter": {
             "name": "Boar Hunter",
             "file": "Hunter.png",
             "description": "Those that obtain ALL unique boars get this badge!"
         },
-        "badge_artist": {
+        "artist": {
             "name": "Boartist",
             "file": "Artist.png",
             "description": "If you made your own boar and it made it into BoarBot, you get this badge!"
         },
-        "badge_athlete": {
+        "athlete": {
             "name": "Boarthlete",
             "file": "Athlete.png",
             "description": "Only those that are #1 on any leaderboard receive this badge!"
         }
     },
-    "rarityConfig": {
-        "rarity1": {
+    "rarityConfigs": [
+        {
             "name": "Common",
-            "probability": -1,
+            "weight": 825,
             "score": 1,
             "fromDaily": true,
             "boars": [
@@ -546,9 +551,9 @@
                 "tiny"
             ]
         },
-        "rarity2": {
+        {
             "name": "Uncommon",
-            "probability": 0.1,
+            "weight": 100,
             "score": 10,
             "fromDaily": true,
             "boars": [
@@ -560,9 +565,9 @@
                 "soda"
             ]
         },
-        "rarity3": {
+        {
             "name": "Rare",
-            "probability": 0.1,
+            "weight": 40,
             "score": 25,
             "fromDaily": true,
             "boars": [
@@ -575,9 +580,9 @@
                 "golden"
             ]
         },
-        "rarity4": {
+        {
             "name": "Epic",
-            "probability": 0.1,
+            "weight": 20,
             "score": 50,
             "fromDaily": true,
             "boars": [
@@ -590,9 +595,9 @@
                 "aurora"
             ]
         },
-        "rarity5": {
+        {
             "name": "Legendary",
-            "probability": 0.1,
+            "weight": 10,
             "score": 100,
             "fromDaily": true,
             "boars": [
@@ -601,9 +606,9 @@
                 "jumpscare"
             ]
         },
-        "rarity6": {
+        {
             "name": "Mythic",
-            "probability": 0.1,
+            "weight": 4,
             "score": 250,
             "fromDaily": true,
             "boars": [
@@ -612,9 +617,9 @@
                 "farmer"
             ]
         },
-        "rarity7": {
+        {
             "name": "Divine",
-            "probability": 0.1,
+            "weight": 1,
             "score": 1000,
             "fromDaily": true,
             "boars": [
@@ -625,7 +630,7 @@
                 "curious"
             ]
         }
-    },
+    ],
     "emptyUser": {
         "lastDaily": 0,
         "numDailies": 0,
@@ -659,7 +664,7 @@
             "value": "none"
         }
     ],
-    "hexValues": {
+    "colorConfig": {
         "foregroundGray": "#151518",
         "font": "#DEDEDE",
         "badge": "#4D4278",
@@ -671,7 +676,7 @@
         "rarity6": "#F300FF",
         "rarity7": "#00FFFB"
     },
-    "unlimitedBoars": true,
+    "unlimitedBoars": false,
     "debugMode": true,
     "maintenanceMode": false
 }

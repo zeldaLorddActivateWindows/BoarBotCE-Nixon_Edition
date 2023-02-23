@@ -1,11 +1,3 @@
-/***********************************************
- * BotConfig.ts
- * Stores configurations for a bot instance
- *
- * Copyright 2023 WeslayCodes
- * License Info: http://www.apache.org/licenses/
- ***********************************************/
-
 import {
     User,
     TextChannel,
@@ -15,9 +7,23 @@ import {
     SelectMenuComponentOptionData
 } from 'discord.js';
 import {PathConfig} from './PathConfig';
+import {StringConfig} from './StringConfig';
+import {CommandConfig} from './commands/CommandConfig';
+import {NumberConfig} from './NumberConfig';
+import {CommandConfigs} from './commands/CommandConfigs';
+import {BoarItemConfigs} from './items/BoarItemConfigs';
+import {BadgeItemConfigs} from './items/BadgeItemConfigs';
+import {RarityConfig} from './items/RarityConfig';
+import {ColorConfig} from './ColorConfig';
 
-//***************************************
-
+/**
+ * {@link BotConfig BotConfig.ts}
+ *
+ * Stores configurations for a bot instance.
+ *
+ * @license {@link http://www.apache.org/licenses/ Apache-2.0}
+ * @copyright WeslayCodes 2023
+ */
 export class BotConfig {
     /**
      * All {@link User} IDs associated with developers
@@ -25,39 +31,44 @@ export class BotConfig {
     public devs: string[] = [];
 
     /**
-     * The {@link TextChannel} ID the bot sends status messages
+     * The {@link TextChannel} ID the bot sends status messages to
      */
     public botStatusChannel: string = '';
 
     /**
-     * The paths of all files/folders the bot accesses
+     * The {@link PathConfig paths} of all files/folders the bot accesses
      */
-    public pathConfig: PathConfig = {} as PathConfig;
+    public pathConfig: PathConfig = new PathConfig;
 
     /**
-     * String constants the bot uses for responses
+     * {@link StringConfig String constants} the bot uses for responses and more
      */
-    public stringConfig: any;
+    public stringConfig: StringConfig = new StringConfig;
+
+    /**
+     * Collection of {@link CommandConfig command configurations} the bot uses
+     */
+    public commandConfigs: CommandConfigs = new CommandConfigs;
 
     /**
      * Non-intuitive number constants the bot uses
      */
-    public numberConfig: any;
+    public numberConfig: NumberConfig = new NumberConfig;
 
     /**
-     * All {@link BoarItem Boar Items}
+     * Collection of {@link BoarItemConfig boar item configurations}
      */
-    public boarCollectibles: any;
+    public boarItemConfigs: BoarItemConfigs = new BoarItemConfigs;
 
     /**
-     * All {@link BadgeItem Badge Items}
+     * Collection of {@link BadgeItemConfig badge item configurations}
      */
-    public badgeCollectibles: any;
+    public badgeItemConfigs: BadgeItemConfigs = new BadgeItemConfigs;
 
     /**
-     * All {@link Rarity Rarities}
+     * Array of {@link RarityConfig rarity configurations}
      */
-    public rarityConfig: any;
+    public rarityConfigs: RarityConfig[] = [];
 
     /**
      * Object storing initial user data
@@ -72,12 +83,12 @@ export class BotConfig {
     /**
      * Option that's left when select menu empty
      */
-    public emptySelectMenu: RestOrArray<SelectMenuComponentOptionData> = [{ label: '', value: '' }];
+    public emptySelectMenu: APISelectMenuOption[] = [{ label: '', value: '' }];
 
     /**
-     * {@link Color Colors} used by the bot
+     * {@link ColorConfig Color configurations} used by the bot
      */
-    public hexValues: any;
+    public colorConfig: ColorConfig = new ColorConfig;
 
     /**
      * If boars can be obtained without waiting for the next day

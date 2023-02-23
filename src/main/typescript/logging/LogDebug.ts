@@ -9,6 +9,7 @@
 
 import {ChatInputCommandInteraction, EmbedBuilder, Message, ModalSubmitInteraction} from 'discord.js';
 import {getConfigFile} from '../util/DataHandlers';
+import {BoarBotApp} from '../BoarBotApp';
 
 //***************************************
 
@@ -58,9 +59,8 @@ async function handleError(err: unknown | string, interaction?: ChatInputCommand
 
         if (!interaction) return;
 
-        const config = getConfigFile();
-
-        const errResponse = config.stringConfig.general.error;
+        const config = BoarBotApp.getBot().getConfig();
+        const errResponse = config.stringConfig.error;
 
         if (interaction.replied) {
             await interaction.followUp({

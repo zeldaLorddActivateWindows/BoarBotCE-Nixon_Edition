@@ -13,11 +13,15 @@ import {Options, PythonShell} from 'python-shell';
 import fs from 'fs';
 import {getGlobalData} from './DataHandlers';
 import {addQueue} from './Queue';
-import {handleError} from '../logging/LogDebug';
+import {handleError, sendDebug} from '../logging/LogDebug';
 import {drawCircleImage, drawImageCompact, drawRect, drawText} from './CanvasFunctions';
 import {findRarity} from './GeneralFunctions';
 import {BoarBotApp} from '../BoarBotApp';
 import {BotConfig} from '../bot/config/BotConfig';
+import * as path from 'path';
+import {BoarItemConfig} from '../bot/config/items/BoarItemConfig';
+import {BadgeItemConfig} from '../bot/config/items/BadgeItemConfig';
+import {RarityConfig} from '../bot/config/items/RarityConfig';
 
 //***************************************
 
@@ -79,7 +83,7 @@ export class BoarUser {
     private getUserData() {
         let userDataJSON: string;
         const config = BoarBotApp.getBot().getConfig();
-        const userFile = config.pathConfig.data.userFolder + this.user.id + '.json';
+        const userFile = config.pathConfig.userDataFolder + this.user.id + '.json';
 
         try {
             userDataJSON = fs.readFileSync(userFile, 'utf-8');
@@ -126,13 +130,12 @@ export class BoarUser {
      */
     private fixUserData(userData: any) {
         const config = BoarBotApp.getBot().getConfig();
-        const userFile = config.pathConfig.data.userFolder + this.user.id + '.json';
+        const userFile = config.pathConfig.userDataFolder + this.user.id + '.json';
 
         const boarsGottenIDs = Object.keys(this.boarCollection);
 
         for (const boarID of boarsGottenIDs) {
-            if (config.boarCollectibles[boarID])
-                continue;
+            if (boarID !in config.boarItemConfigs) continue;
 
             this.totalBoars -= this.boarCollection[boarID].num;
             delete this.boarCollection[boarID];
@@ -163,47 +166,40 @@ export class BoarUser {
      */
     public async addBoar(config: BotConfig, boarID: string, interaction: ChatInputCommandInteraction) {
         // Config aliases
-        const configPaths = config.pathConfig;
-        const dailyStrings = config.stringConfig.commands.daily.other;
-        const giveStrings = config.stringConfig.commands.give.other;
-        const configStrings = config.stringConfig;
-        const generalStrings = configStrings.general;
-        const debugStrings = configStrings.debug;
-
-        // Number info
-        const numsGeneral = config.numberConfig.general;
-        const trackedEditions = numsGeneral.trackedEditions;
+        const pathConfig = config.pathConfig;
+        const strConfig = config.stringConfig;
+        const numConfig = config.numberConfig;
+        const giveCommandConfig = config.commandConfigs.give;
 
         // Rarity information
-        const raritiesInfo = config.rarityConfig;
-        const rarities = Object.keys(raritiesInfo);
-        let rarity = '';
+        const rarities = config.rarityConfigs;
+        let rarityIndex: number = -1;
 
-        for (const r of rarities) {
-            if (raritiesInfo[r].boars.includes(boarID)) {
-                rarity = r;
+        for (let i=0; i<rarities.length; i++) {
+            if (rarities[i].boars.includes(boarID)) {
+                rarityIndex = i;
                 break;
             }
         }
 
-        if (rarity === '') {
-            await handleError(debugStrings.noBoarFound, interaction);
+        if (rarityIndex === -1) {
+            await handleError(strConfig.dailyNoBoarFound, interaction);
             return false;
         }
 
-        const rarityInfo = raritiesInfo[rarity];
+        const rarityInfo = rarities[rarityIndex];
 
         // Information about interaction
-        const wasGiven = interaction.commandName === configStrings.commands.give.name;
+        const wasGiven = interaction.commandName === giveCommandConfig.name;
 
         // Image elements to be combined into one final image
-        let attachmentTitle = dailyStrings.dailyTitle;
+        let attachmentTitle = strConfig.dailyTitle;
 
         // If the boar being added is a special boar (Not from daily), change the title to reflect it
         if (!rarityInfo.fromDaily) {
-            attachmentTitle = giveStrings.specialGivenTitle;
+            attachmentTitle = strConfig.giveSpecialTitle;
         } else if (wasGiven) {
-            attachmentTitle = giveStrings.givenTitle;
+            attachmentTitle = strConfig.giveTitle;
         }
 
         // Get the image attachment from ID
@@ -214,7 +210,7 @@ export class BoarUser {
         if (!wasGiven) {
             await interaction.editReply({ files: [attachment] });
         } else {
-            await interaction.editReply(giveStrings.gaveBoar);
+            await interaction.editReply(strConfig.giveBoar);
             await interaction.followUp({ files: [attachment] });
         }
 
@@ -229,8 +225,8 @@ export class BoarUser {
                 globalData.editions[boarID] = 0;
             boarEdition = ++globalData.editions[boarID];
 
-            fs.writeFileSync(configPaths.data.globalFile, JSON.stringify(globalData));
-        }, interaction.id + generalStrings.globalQueueID);
+            fs.writeFileSync(pathConfig.globalDataFile, JSON.stringify(globalData));
+        }, interaction.id + 'global');
 
         // Updating user data
         if (!wasGiven && this.firstDaily === 0)
@@ -244,13 +240,13 @@ export class BoarUser {
         this.boarCollection[boarID].num++;
         this.boarCollection[boarID].lastObtained = Date.now();
 
-        if (boarEdition <= trackedEditions || !rarityInfo.fromDaily) {
+        if (boarEdition <= numConfig.maxTrackedEditions || !rarityInfo.fromDaily) {
             this.boarCollection[boarID].editions.push(boarEdition);
             this.boarCollection[boarID].editionDates.push(Date.now());
         }
 
         this.lastBoar = boarID;
-        this.boarScore += config.rarityConfig[rarity].score;
+        this.boarScore += config.rarityConfigs[rarityIndex].score;
         this.totalBoars++;
         this.numDailies++;
 
@@ -270,14 +266,14 @@ export class BoarUser {
      * @return success - The function fully executed
      */
     public async addBadge(config: BotConfig, badgeID: string, interaction: ChatInputCommandInteraction) {
-        const configStrings = config.stringConfig;
-        const giveStrings = configStrings.commands.give.other;
+        const strConfig = config.stringConfig;
+        const giveCommandConfig = config.commandConfigs.give;
 
         const hasBadge = this.badges.includes(badgeID);
-        const wasGiven = interaction.commandName === configStrings.commands.give.name;
+        const wasGiven = interaction.commandName === giveCommandConfig.name;
 
         if (hasBadge && wasGiven) {
-            await interaction.editReply(giveStrings.alreadyHas);
+            await interaction.editReply(strConfig.giveBadgeHas);
             return false;
         }
 
@@ -285,8 +281,8 @@ export class BoarUser {
             return false;
 
         const attachmentTitle = wasGiven
-            ? giveStrings.badgeTitleGiven
-            : giveStrings.badgeTitleObtained;
+            ? strConfig.giveBadgeTitle
+            : strConfig.obtainedBadgeTitle;
 
         const attachment = await this.handleImageCreate(config, badgeID, attachmentTitle);
 
@@ -295,7 +291,7 @@ export class BoarUser {
         if (!wasGiven) {
             await interaction.followUp({ files: [attachment] });
         } else {
-            await interaction.editReply(giveStrings.gaveBadge);
+            await interaction.editReply(strConfig.giveBadge);
             await interaction.followUp({ files: [attachment] });
         }
 
@@ -316,32 +312,32 @@ export class BoarUser {
      * @return attachment - AttachmentBuilder object containing image
      * @private
      */
-    private async handleImageCreate(config: BotConfig, id: any, attachmentTitle: string) {
-        const configStrings = config.stringConfig;
+    private async handleImageCreate(config: BotConfig, id: string, attachmentTitle: string) {
+        const strConfig = config.stringConfig;
+        const colorConfig = config.colorConfig;
+        const pathConfig = config.pathConfig;
+        const numConfig = config.numberConfig;
 
-        const isBoar: boolean = config.boarCollectibles[id];
-        let info: any;
+        const isBoar: boolean = id in config.boarItemConfigs;
+        let info: BoarItemConfig | BadgeItemConfig;
         let folderPath: string;
-        const hexColors = config.hexValues;
         let backgroundColor: string;
 
         if (!isBoar) {
-            info = config.badgeCollectibles[id];
-            folderPath = config.pathConfig.resources.badges;
-            backgroundColor = hexColors.badge;
+            info = config.badgeItemConfigs[id];
+            folderPath = pathConfig.badgeImages;
+            backgroundColor = colorConfig.badge;
         } else {
-            info = config.boarCollectibles[id]
-            folderPath = config.pathConfig.resources.boars;
-            backgroundColor = hexColors[findRarity(id)];
+            info = config.boarItemConfigs[id];
+            folderPath = pathConfig.boarImages;
+            backgroundColor = config.colorConfig['rarity' + findRarity(id)];
         }
 
         const imageFilePath = folderPath + info.file;
         const imageExtension = imageFilePath.split('.')[1];
         const isAnimated = imageExtension === 'gif';
 
-        const generalStrings = configStrings.general;
-        const generalNums = config.numberConfig.general;
-        const usernameLength = generalNums.usernameLength;
+        const usernameLength = numConfig.maxUsernameLength;
 
         const userAvatar = this.user.displayAvatarURL({ extension: 'png' });
         const userTag = this.user.username.substring(0, usernameLength) + '#' + this.user.discriminator;
@@ -351,8 +347,7 @@ export class BoarUser {
 
         // Creates a dynamic response attachment depending on the boar's image type
         if (isAnimated) {
-            const scriptPath = config.pathConfig.scripts.basePath;
-            const scriptPaths = config.pathConfig.scripts;
+            const script = pathConfig.dynamicImageScript;
 
             // Waits for python code to execute before continuing
             await new Promise((resolve, reject) => {
@@ -364,51 +359,49 @@ export class BoarUser {
                         userTag,
                         attachmentTitle,
                         info.name,
-                        isBoar
+                        isBoar.toString()
                     ]
                 };
 
                 // Sends python all dynamic image data and receives final animated image
-                PythonShell.run(scriptPath + scriptPaths.dynamicImage, scriptOptions, (err, data) => {
+                PythonShell.run(script, scriptOptions, (err, data) => {
                     if (!data) {
                         handleError(err);
 
-                        reject(generalStrings.rejectScript);
+                        reject('Python Error!');
                         return;
                     }
 
                     buffer = Buffer.from(data[0], 'base64');
-                    resolve(generalStrings.resolve);
+                    resolve('Script ran successfully!');
                 });
             });
         } else {
-            const announceAddFolder = config.pathConfig.resources.announceAdd.basePath;
-            const announceAddAssets = config.pathConfig.resources.announceAdd
-            const underlayPath = announceAddFolder + announceAddAssets.underlay;
-            const backplatePath = announceAddFolder + announceAddAssets.backplate;
-            const overlay = announceAddFolder + announceAddAssets.overlay;
-            const nameplate = announceAddFolder + announceAddAssets.nameplate;
+            const itemAssetsFolder = pathConfig.itemAssets;
+            const underlayPath = pathConfig.itemAssets + pathConfig.itemUnderlay;
+            const backplatePath = pathConfig.itemAssets + pathConfig.itemBackplate;
+            const overlay = pathConfig.itemAssets + pathConfig.itemOverlay;
+            const nameplate = pathConfig.itemAssets + pathConfig.itemNameplate;
 
             // Positioning and dimension info
-            const nums = config.numberConfig.announceAdd;
-            const origin = generalNums.originPos;
-            const imageSize = nums.imageSize;
+            const origin = numConfig.originPos;
+            const imageSize = numConfig.itemImageSize;
 
             let mainPos: number[];
             let mainSize: number[];
 
             if (!isBoar) {
-                mainPos = nums.badgePos;
-                mainSize = nums.badgeSize;
+                mainPos = numConfig.itemBadgePos;
+                mainSize = numConfig.itemBadgeSize;
             } else {
-                mainPos = nums.boarPos;
-                mainSize = nums.boarSize;
+                mainPos = numConfig.itemBoarPos;
+                mainSize = numConfig.itemBoarSize;
             }
 
             // Font info
-            const fontName = configStrings.general.fontName;
-            const bigFont = `${generalNums.fontSizes.big}px ${fontName}`;
-            const mediumFont = `${generalNums.fontSizes.medium}px ${fontName}`;
+            const fontName = strConfig.fontName;
+            const bigFont = `${numConfig.fontBig}px ${fontName}`;
+            const mediumFont = `${numConfig.fontMedium}px ${fontName}`;
 
             const canvas = Canvas.createCanvas(imageSize[0], imageSize[1]);
             const ctx = canvas.getContext('2d');
@@ -425,21 +418,23 @@ export class BoarUser {
             drawImageCompact(ctx, await Canvas.loadImage(overlay), origin, imageSize);
 
             // Draws method of delivery and name of badge
-            drawText(ctx, attachmentTitle, nums.titlePos, bigFont, 'center', hexColors.font);
-            drawText(ctx, info.name, nums.namePos, mediumFont, 'center', hexColors.font);
+            drawText(ctx, attachmentTitle, numConfig.itemTitlePos, bigFont, 'center', colorConfig.font);
+            drawText(ctx, info.name, numConfig.itemNamePos, mediumFont, 'center', colorConfig.font);
 
             // Draws user information
             drawImageCompact(
-                ctx, await Canvas.loadImage(nameplate), nums.nameplatePos,
-                [ctx.measureText(userTag).width + nums.nameplatePadding, nums.nameplateHeight]
+                ctx, await Canvas.loadImage(nameplate), numConfig.itemNameplatePos,
+                [ctx.measureText(userTag).width + numConfig.itemNameplatePadding, numConfig.itemNameplateHeight]
             );
-            drawText(ctx, userTag, nums.userTagPos, mediumFont, 'left', hexColors.font);
-            drawCircleImage(ctx, await Canvas.loadImage(userAvatar), nums.userAvatarPos, nums.userAvatarWidth);
+            drawText(ctx, userTag, numConfig.itemUserTagPos, mediumFont, 'left', colorConfig.font);
+            drawCircleImage(
+                ctx, await Canvas.loadImage(userAvatar), numConfig.itemUserAvatarPos, numConfig.itemUserAvatarWidth
+            );
 
             buffer = canvas.toBuffer();
         }
 
-        return new AttachmentBuilder(buffer, { name:`${generalStrings.imageName}.${imageExtension}` });
+        return new AttachmentBuilder(buffer, { name:`${strConfig.imageName}.${imageExtension}` });
     }
 
     //***************************************
@@ -450,19 +445,20 @@ export class BoarUser {
      * @param interaction - Used to give badge if user has max uniques
      */
     public async orderBoars(config: BotConfig, interaction: ChatInputCommandInteraction) {
-        const raritiesInfo = config.rarityConfig;
-        const rarities = Object.keys(raritiesInfo);
+        const orderedRarities: RarityConfig[] = [...config.rarityConfigs]
+            .sort((rarity1, rarity2) => { return rarity1.weight - rarity2.weight; });
         const obtainedBoars = Object.keys(this.boarCollection);
 
         let maxUniques = 0;
 
-        for (const rarity of rarities)
-            maxUniques += raritiesInfo[rarity].boars.length;
+        for (const rarity of orderedRarities)
+            maxUniques += rarity.boars.length;
 
         // Looping through all boar classes (Common -> Very Special)
-        for (const rarity of rarities.reverse()) {
+        // FIX THIS, CREATE AND SORT MAP BASED ON WEIGHT INSTEAD OF REVERSING
+        for (const rarity of orderedRarities) {
             const orderedBoars: string[] = [];
-            const boarsOfRarity = raritiesInfo[rarity].boars;
+            const boarsOfRarity = rarity.boars;
 
             // Looping through user's boar collection
             for (let j=0; j<obtainedBoars.length; j++) {

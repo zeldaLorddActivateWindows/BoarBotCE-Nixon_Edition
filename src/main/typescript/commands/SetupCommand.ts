@@ -37,7 +37,7 @@ import {Command} from '../api/commands/Command';
 
 export default class SetupCommand implements Command {
     private initConfig = BoarBotApp.getBot().getConfig();
-    private commandInfo = this.initConfig.stringConfig.commands.setup;
+    private commandInfo = this.initConfig.commandConfigs.setup;
     public readonly data = new SlashCommandBuilder()
         .setName(this.commandInfo.name)
         .setDescription(this.commandInfo.description)
@@ -57,30 +57,20 @@ export default class SetupCommand implements Command {
 
         const config = BoarBotApp.getBot().getConfig();
 
-        // Alias for debug strings
-        const debugStrings = config.stringConfig.debug;
+        const strConfig = config.stringConfig;
+        const setupComponentsConfig = config.commandConfigs.setup.components;
 
-        sendDebug(debugStrings.usedCommand
+        sendDebug(strConfig.commandDebugPrefix
             .replace('%@', interaction.user.tag)
             .replace('%@', interaction.commandName)
         );
-
-        // Alias for general strings
-        const generalStrings = config.stringConfig.general;
-
-        // Aliases specific for /boar config
-        const configStrings = config.stringConfig.commands.setup.other;
-        const otherButtons = configStrings.otherButtons;
-        const fieldOneStrings = configStrings.fieldOne;
-        const fieldTwoStrings = configStrings.fieldTwo;
-        const fieldThreeStrings = configStrings.fieldThree;
 
         // Action rows and fields
         const staticRow = getStaticRow(interaction, config);
         const configFields = getConfigFields(interaction, staticRow, config);
 
         // Alias for guild data file
-        const guildFolderPath = config.pathConfig.data.guildFolder;
+        const guildFolderPath = config.pathConfig.guildDataFolder;
 
         const guildID = interaction.guild.id;
         const guildDataPath = guildFolderPath + guildID + '.json';
@@ -104,7 +94,7 @@ export default class SetupCommand implements Command {
 
         // Only allows button presses from current interaction to affect results
         const filter = async (btnInt: ButtonInteraction | SelectMenuInteraction) => {
-            return btnInt.customId.split('|')[1] === interaction.id;
+            return btnInt.customId.endsWith(interaction.id);
         };
 
         let collectorObj: { collector: InteractionCollector<ButtonInteraction | SelectMenuInteraction> };
@@ -142,10 +132,9 @@ export default class SetupCommand implements Command {
                     timerVars.timeUntilNextCollect = Date.now() + 500;
                 }, 100);
 
-                sendDebug(debugStrings.formInteraction
+                sendDebug(strConfig.commandDebugPrefix
                     .replace('%@', interaction.user.tag)
-                    .replace('%@', inter.customId.split('|')[0])
-                    .replace('%@', curField)
+                    .replace('%@', inter.customId)
                 );
 
                 // Terminates interaction when in maintenance mode
@@ -155,7 +144,7 @@ export default class SetupCommand implements Command {
                 }
 
                 // User wants to input a channel via ID
-                if (inter.customId === otherButtons.findChannel.id + interaction.id) {
+                if (inter.customId.startsWith(setupComponentsConfig.findChannel.id)) {
                     if (curField !== 1 && curField !== 2) {
                         clearInterval(timerVars.updateTime);
                         return;
@@ -178,28 +167,28 @@ export default class SetupCommand implements Command {
                 await inter.deferUpdate();
 
                 // End collector with reason Finished on finish
-                if (inter.customId === otherButtons.next.id + interaction.id && curField === 3) {
+                if (inter.customId.startsWith(setupComponentsConfig.next.id) && curField === 3) {
                     collectorObj.collector.stop(Reasons.Finished);
                     return
                 }
 
                 // End collector with reason Cancelled on cancel
-                if (inter.customId === otherButtons.cancel.id + interaction.id) {
+                if (inter.customId.startsWith(setupComponentsConfig.cancel.id)) {
                     collectorObj.collector.stop(Reasons.Cancelled);
                     return;
                 }
 
                 // Go to the next field (can only go forward)
-                if (inter.customId === otherButtons.next.id + interaction.id && curField !== 3) {
+                if (inter.customId.startsWith(setupComponentsConfig.next.id) && curField !== 3) {
                     const nextButton: ButtonBuilder = staticRow.components[2] as ButtonBuilder;
 
-                    nextButton.setDisabled(true)
+                    nextButton.setDisabled(true);
 
                     if (curField === 1) {
                         await configFields.configFieldTwo.editReply(inter);
                     } else if (curField === 2) {
-                        nextButton.setLabel(otherButtons.next.labelLast)
-                            .setStyle(ButtonStyle.Success)
+                        nextButton.setLabel(setupComponentsConfig.next.altLabel)
+                            .setStyle(ButtonStyle.Success);
 
                         await configFields.configFieldThree.editReply(inter);
                     }
@@ -208,7 +197,7 @@ export default class SetupCommand implements Command {
                 }
 
                 // User wants to refresh available channels for trade field
-                if (inter.customId === fieldOneStrings.selectMenu.id + interaction.id) {
+                if (inter.customId.startsWith(setupComponentsConfig.selectMenu1.id)) {
                     userResponses.tradeChannelId = inter.values[0];
 
                     // Gets the label of the chosen option
@@ -227,12 +216,12 @@ export default class SetupCommand implements Command {
                 }
 
                 // User wants to refresh available channels for boar channels field
-                if (inter.customId === fieldTwoStrings.selectMenuOne.id + interaction.id ||
-                    inter.customId === fieldTwoStrings.selectMenuTwo.id + interaction.id ||
-                    inter.customId === fieldTwoStrings.selectMenuThree.id + interaction.id
+                if (inter.customId.startsWith(setupComponentsConfig.selectMenu2_1.id) ||
+                    inter.customId.startsWith(setupComponentsConfig.selectMenu2_2.id) ||
+                    inter.customId.startsWith(setupComponentsConfig.selectMenu2_3.id)
                 ) {
                     // Gets index to change based on ending number in select menu ID
-                    const selectIndex: number = parseInt(inter.customId.charAt(inter.customId.indexOf('|') - 1)) - 1;
+                    const selectIndex: number = parseInt(inter.customId.charAt(inter.customId.lastIndexOf('_') + 1)) - 1;
                     userResponses.boarChannels[selectIndex] = inter.values[0];
 
                     // Gets the label of the chosen option
@@ -252,11 +241,11 @@ export default class SetupCommand implements Command {
                 }
 
                 // User wants to refresh/restart
-                if (inter.customId === fieldOneStrings.refresh.id + interaction.id ||
-                    inter.customId === fieldTwoStrings.refresh.id + interaction.id ||
-                    inter.customId === otherButtons.restart.id + interaction.id
+                if (inter.customId.startsWith(setupComponentsConfig.refresh1.id) ||
+                    inter.customId.startsWith(setupComponentsConfig.refresh2.id) ||
+                    inter.customId.startsWith(setupComponentsConfig.restart.id)
                 ) {
-                    const isRestart = inter.customId.startsWith(otherButtons.restart.id);
+                    const isRestart = inter.customId.startsWith(setupComponentsConfig.restart.id);
 
                     if (isRestart || curField === 1)
                         userResponses.tradeChannelId = '';
@@ -267,7 +256,7 @@ export default class SetupCommand implements Command {
                     // opens up channels that were added in the middle of configuring
                     await updateSelectField(
                         curField,
-                        configStrings.defaultPlaceholder,
+                        strConfig.channelOptionLabel,
                         inter,
                         configFields,
                         userResponses
@@ -292,7 +281,7 @@ export default class SetupCommand implements Command {
                     curField = 1;
 
                     // Reverts next button back to original state
-                    nextButton.setLabel(otherButtons.next.label)
+                    nextButton.setLabel(setupComponentsConfig.next.label)
                         .setStyle(ButtonStyle.Primary)
                         .setDisabled(true)
 
@@ -301,16 +290,16 @@ export default class SetupCommand implements Command {
                 }
 
                 // User chose if they want skyblock boars or not
-                if (inter.customId === fieldThreeStrings.sbYes.id + interaction.id ||
-                    inter.customId === fieldThreeStrings.sbNo.id + interaction.id
+                if (inter.customId.startsWith(setupComponentsConfig.sbYes.id) ||
+                    inter.customId.startsWith(setupComponentsConfig.sbNo.id)
                 ) {
                     // Handling updating boar style
-                    userResponses.isSBServer = inter.customId.startsWith(fieldThreeStrings.sbYes.id);
+                    userResponses.isSBServer = inter.customId.startsWith(setupComponentsConfig.sbYes.id);
 
                     // Tells user what button they pressed
-                    configFields.configFieldThree.content = fieldThreeStrings.finished + (userResponses.isSBServer
-                        ? fieldThreeStrings.sbYes.label
-                        : fieldThreeStrings.sbNo.label);
+                    configFields.configFieldThree.content = strConfig.setupFinished3 + (userResponses.isSBServer
+                        ? setupComponentsConfig.sbYes.label
+                        : setupComponentsConfig.sbNo.label);
 
                     // Enables finish button
                     configFields.configFieldThree.components[1].components[2].setDisabled(false);
@@ -319,25 +308,25 @@ export default class SetupCommand implements Command {
                 }
 
                 // Info for the trade channel section
-                if (inter.customId === fieldOneStrings.info.id + interaction.id) {
+                if (inter.customId.startsWith(setupComponentsConfig.info1.id)) {
                     await inter.followUp({
-                        content: fieldOneStrings.info.response,
+                        content: strConfig.setupInfoResponse1,
                         ephemeral: true
                     });
                 }
 
                 // Info for the boar channels section
-                if (inter.customId === fieldTwoStrings.info.id + interaction.id) {
+                if (inter.customId.startsWith(setupComponentsConfig.info2.id)) {
                     await inter.followUp({
-                        content: fieldTwoStrings.info.response,
+                        content: strConfig.setupInfoResponse2,
                         ephemeral: true
                     });
                 }
 
                 // Info for the skyblock section
-                if (inter.customId === fieldThreeStrings.info.id + interaction.id) {
+                if (inter.customId.startsWith(setupComponentsConfig.info3.id)) {
                     await inter.followUp({
-                        content: fieldThreeStrings.info.response,
+                        content: strConfig.setupInfoResponse3,
                         ephemeral: true
                     });
                 }
@@ -350,9 +339,9 @@ export default class SetupCommand implements Command {
         });
 
         collectorObj.collector.once('end', async (collected, reason) => {
-            sendDebug(debugStrings.endCollection
+            sendDebug(strConfig.commandDebugPrefix
                 .replace('%@', interaction.user.tag)
-                .replace('%@', reason)
+                .replace('%@', interaction.commandName)
             );
 
             try {
@@ -360,17 +349,17 @@ export default class SetupCommand implements Command {
                 let replyContent: string;
 
                 if (reason && reason === Reasons.Maintenance) {
-                    replyContent = generalStrings.maintenance;
+                    replyContent = strConfig.maintenance;
                 } else if (reason && reason === Reasons.Cancelled) {
                     if (fileIsEmpty)
                         await removeGuildFile(guildDataPath);
 
-                    replyContent = configStrings.cancelled;
+                    replyContent = strConfig.setupCancelled;
                 } else if (reason && reason === Reasons.Error) {
                     if (fileIsEmpty)
                         await removeGuildFile(guildDataPath);
 
-                    replyContent = configStrings.error;
+                    replyContent = strConfig.error;
                 } else if (reason && reason === Reasons.Finished) {
                     guildData = {
                         isSBServer: userResponses.isSBServer,
@@ -381,14 +370,14 @@ export default class SetupCommand implements Command {
                     fs.writeFileSync(guildDataPath, JSON.stringify(guildData));
 
                     if (hasAttachmentPerms(interaction))
-                        replyContent = configStrings.finished;
+                        replyContent = strConfig.setupFinishedAll;
                     else
-                        replyContent = configStrings.finished + configStrings.noAttachmentPerms;
+                        replyContent = strConfig.setupFinishedAll + '\n\n' + strConfig.noAttachmentPerms;
                 } else {
                     if (fileIsEmpty)
                         await removeGuildFile(guildDataPath);
 
-                    replyContent = configStrings.expired;
+                    replyContent = strConfig.setupExpired;
                 }
 
                 await interaction.editReply({

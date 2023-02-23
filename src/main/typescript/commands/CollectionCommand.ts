@@ -32,15 +32,15 @@ import {BoarBotApp} from '../BoarBotApp';
 
 export default class CollectionCommand implements Command {
     private initConfig = BoarBotApp.getBot().getConfig();
-    private commandInfo = this.initConfig.stringConfig.commands.collection;
+    private commandInfo = this.initConfig.commandConfigs.collection;
     public readonly data = new SlashCommandBuilder()
         .setName(this.commandInfo.name)
         .setDescription(this.commandInfo.description)
         .setDMPermission(false)
         .setDefaultMemberPermissions(this.commandInfo.adminOnly ? PermissionFlagsBits.Administrator : undefined)
-        .addUserOption(option => option.setName(this.commandInfo.args.arg1.name)
-            .setDescription(this.commandInfo.args.arg1.description)
-            .setRequired(this.commandInfo.args.arg1.required)
+        .addUserOption(option => option.setName(this.commandInfo.args[0].name)
+            .setDescription(this.commandInfo.args[0].description)
+            .setRequired(this.commandInfo.args[0].required)
         ) as SlashCommandBuilder;
 
     public async execute(interaction: ChatInputCommandInteraction) {
@@ -56,8 +56,8 @@ export default class CollectionCommand implements Command {
         const debugStrings = config.strings.debug;
 
         // Gets user to interact with
-        const userInput = (interaction.options.getUser(this.commandInfo.args.arg1.name)
-            ? interaction.options.getUser(this.commandInfo.args.arg1.name)
+        const userInput = (interaction.options.getUser(this.commandInfo.args[0].name)
+            ? interaction.options.getUser(this.commandInfo.args[0].name)
             : interaction.user) as User;
 
         // Config aliases
@@ -91,8 +91,8 @@ export default class CollectionCommand implements Command {
         let userTag= '';
 
         // Atypical boar information
-        let lastBoarRarity = '';
-        let favoriteBoarRarity = '';
+        let lastBoarRarity: number;
+        let favoriteBoarRarity: number;
 
         await addQueue(async () => {
             try {
@@ -120,7 +120,7 @@ export default class CollectionCommand implements Command {
                 for (const boarID of Object.keys(boarUser.boarCollection)) {
                     // Local boar information
                     const boarInfo = boarUser.boarCollection[boarID];
-                    const rarity: string = findRarity(boarID);
+                    const rarity: number = findRarity(boarID);
 
                     // Global boar information
                     const boarDetails = config.boarIDs[boarID];

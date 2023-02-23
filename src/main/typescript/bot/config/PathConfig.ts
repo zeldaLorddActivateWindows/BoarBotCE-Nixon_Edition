@@ -1,15 +1,11 @@
-/***********************************************
- * PathConfig.ts
- * Stores path configurations for a bot instance
+/**
+ * {@link PathConfig PathConfig.ts}
  *
- * Copyright 2023 WeslayCodes
- * License Info: http://www.apache.org/licenses/
- ***********************************************/
-
-import {User, TextChannel} from 'discord.js';
-
-//***************************************
-
+ * Stores path configurations for a bot instance.
+ *
+ * @license {@link http://www.apache.org/licenses/ Apache-2.0}
+ * @copyright WeslayCodes 2023
+ */
 export class PathConfig {
     /**
      * Path of folder storing all {@link Listener listeners}

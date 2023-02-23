@@ -1,12 +1,3 @@
-/***********************************************
- * BoarBot.ts
- * Creates the bot, logs it in, then finds where
- * all event and command handlers are.
- *
- * Copyright 2023 WeslayCodes
- * License Info: http://www.apache.org/licenses/
- ***********************************************/
-
 import dotenv from 'dotenv';
 import fs from 'fs';
 import {ActivityType, Client, GatewayIntentBits, TextChannel} from 'discord.js';
@@ -18,15 +9,24 @@ import {handleError, sendDebug} from '../logging/LogDebug';
 import {BotConfig} from './config/BotConfig';
 import {Command} from '../api/commands/Command';
 import {REST} from '@discordjs/rest';
+import {FormatStrings} from '../util/discord/FormatStrings';
 
 dotenv.config();
 
-//***************************************
-
+/**
+ * {@link BoarBot BoarBot.ts}
+ *
+ * Creates a {@link Bot bot}, logs it in, then finds where
+ * all event and command handlers are. Loads
+ * other configurations as well.
+ *
+ * @license {@link http://www.apache.org/licenses/ Apache-2.0}
+ * @copyright WeslayCodes 2023
+ */
 export class BoarBot implements Bot {
-	private client: Client = {} as Client;
-	private config: BotConfig = {} as BotConfig;
-	private commands: Map<string, Command> = new Map<string, Command>();
+	private client: Client = new Client({ intents:[] });
+	private config: BotConfig = new BotConfig;
+	private commands: Map<string, Command> = new Map();
 
 	/**
 	 * Creates the bot by loading and registering global information
@@ -42,7 +42,7 @@ export class BoarBot implements Bot {
 		this.setRelativeTime();
 		this.fixGuildData();
 
-		await this.login()
+		await this.login();
 		await this.onStart();
 	}
 
@@ -158,10 +158,10 @@ export class BoarBot implements Bot {
 		if (!this.instanceVarsSet()) process.exit(-1);
 
 		try {
-			const mcFont = this.config.pathConfig.resources.other.basePath +
-				this.config.pathConfig.resources.other.font;
+			const mcFont = this.config.pathConfig.otherAssets +
+				this.config.pathConfig.mainFont;
 
-			registerFont(mcFont, {family: this.config.stringConfig.general.fontName});
+			registerFont(mcFont, {family: this.config.stringConfig.fontName});
 		} catch {
 			handleError('Unable to load font. Verify its path in \'config.json\'.');
 			return;
@@ -209,7 +209,7 @@ export class BoarBot implements Bot {
 	public fixGuildData(): void {
 		if (!this.instanceVarsSet()) process.exit(-1);
 
-		const guildDataFolder = this.config.pathConfig.data.guildFolder;
+		const guildDataFolder = this.config.pathConfig.guildDataFolder;
 		const guildDataFiles = fs.readdirSync(guildDataFolder);
 
 		for (const guildData of guildDataFiles) {
@@ -235,7 +235,7 @@ export class BoarBot implements Bot {
 			sendDebug('Logging in...');
 			await this.client.login(process.env.TOKEN);
 		} catch {
-			await handleError('Invalid token!');
+			handleError('Invalid token!');
 			process.exit(-1);
 		}
 	}
@@ -250,14 +250,15 @@ export class BoarBot implements Bot {
 
 		const botStatusChannel = await this.getStatusChannel();
 
-		if (!botStatusChannel) { return; }
+		if (!botStatusChannel) return;
 
 		try {
 			await botStatusChannel.send(
-				this.config.stringConfig.general.botStatus.replace('%@', Math.round(Date.now() / 1000))
+				this.config.stringConfig.botStatus +
+				FormatStrings.toRelTime(Math.round(Date.now() / 1000))
 			);
 		} catch (err: unknown) {
-			await handleError(err);
+			handleError(err);
 		}
 
 		sendDebug('Successfully sent status message!');
@@ -273,19 +274,19 @@ export class BoarBot implements Bot {
 		try {
 			botStatusChannel = await this.client.channels.fetch(this.config.botStatusChannel) as TextChannel;
 		} catch {
-			await handleError('Bot cannot find status channel. Status message not sent.');
+			handleError('Bot cannot find status channel. Status message not sent.');
 			return undefined;
 		}
 
 		const memberMe = botStatusChannel.guild.members.me;
 		if (!memberMe) {
-			await handleError('Bot doesn\'t exist in testing server. Status message not sent.');
+			handleError('Bot doesn\'t exist in testing server. Status message not sent.');
 			return undefined;
 		}
 
 		const memberMePerms = memberMe.permissions.toArray();
 		if (!memberMePerms.includes('SendMessages')) {
-			await handleError('Bot doesn\'t have permission to send status message. Status message not sent.');
+			handleError('Bot doesn\'t have permission to send status message. Status message not sent.');
 			return undefined;
 		}
 
@@ -301,10 +302,10 @@ export class BoarBot implements Bot {
 		let allSet = true;
 
 		if (Object.keys(this.client).length === 0) {
-			await handleError('Client was never built!');
+			handleError('Client was never built!');
 			allSet = false;
 		} else if (Object.keys(this.config).length === 0) {
-			await handleError('Client was never built!');
+			handleError('Client was never built!');
 			allSet = false;
 		}
 

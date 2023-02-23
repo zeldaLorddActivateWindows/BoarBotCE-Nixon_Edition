@@ -19,7 +19,7 @@ import {Command} from '../api/commands/Command';
 
 export default class HelpCommand implements Command {
     private initConfig = BoarBotApp.getBot().getConfig();
-    private commandInfo = this.initConfig.stringConfig.commands.help;
+    private commandInfo = this.initConfig.commandConfigs.help;
     public readonly data = new SlashCommandBuilder()
         .setName(this.commandInfo.name)
         .setDescription(this.commandInfo.description)

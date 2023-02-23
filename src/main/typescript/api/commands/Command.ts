@@ -1,15 +1,13 @@
-/***********************************************
- * Command.ts
+import {ChatInputCommandInteraction,SlashCommandBuilder} from 'discord.js';
+
+/**
+ * {@link Command Command.ts}
+ *
  * An interface used to create new commands.
  *
- * Copyright 2023 WeslayCodes
- * License Info: http://www.apache.org/licenses/
- ***********************************************/
-
-import {ChatInputCommandInteraction, Events, SlashCommandBuilder} from 'discord.js';
-
-//***************************************
-
+ * @license {@link http://www.apache.org/licenses/ Apache-2.0}
+ * @copyright WeslayCodes 2023
+ */
 export interface Command {
     data: SlashCommandBuilder;
     execute(interaction: ChatInputCommandInteraction): void;

@@ -54,13 +54,13 @@ export default class InteractionListener implements Listener {
     private async handleMaintenance(): Promise<boolean> {
         if (!this.interaction || !this.config) return false;
 
-        const generalStrings = this.config.stringConfig.general;
+        const strConfig = this.config.stringConfig;
 
         if (this.config.maintenanceMode && this.interaction.isChatInputCommand() &&
             !this.config.devs.includes(this.interaction.user.id)
         ) {
             await this.interaction.reply({
-                embeds: [InteractionListener.maintenanceEmbed.setTitle(generalStrings.maintenance)],
+                embeds: [InteractionListener.maintenanceEmbed.setTitle(strConfig.maintenance)],
                 ephemeral: true
             });
             return false;

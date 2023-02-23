@@ -22,6 +22,7 @@ import {handleError} from "../../logging/LogDebug";
 import {BotConfig} from '../../bot/config/BotConfig';
 import {Bot} from '../../api/bot/Bot';
 import {BoarBotApp} from '../../BoarBotApp';
+import {FormatStrings} from '../discord/FormatStrings';
 
 //***************************************
 
@@ -44,10 +45,10 @@ function getTextChannels(
 ) {
     const config = BoarBotApp.getBot().getConfig();
 
-    const configStrings = config.stringConfig.commands.setup.other;
+    const strConfig = config.stringConfig;
 
     const channelOptions: APISelectMenuOption[] = [];
-    const noChannelOptions = configStrings.noChannelOptions;
+    const noChannelOptions = config.emptySelectMenu;
 
     if (!interaction.guild)
         return noChannelOptions;
@@ -66,10 +67,10 @@ function getTextChannels(
         if (txtCh.parent)
             parentName = txtCh.parent.name.toUpperCase();
         else
-            parentName = configStrings.noParent;
+            parentName = strConfig.noParentChannel;
 
         channelOptions.push({
-            label: configStrings.channelOptionLabel
+            label: strConfig.channelOptionLabel
                 .replace('%@', txtCh.name)
                 .replace('%@', parentName)
                 .substring(0, 100),
@@ -244,15 +245,10 @@ async function updateSelectField(
     userResponses: {isSBServer: boolean, tradeChannelId: string, boarChannels: string[]},
     selectIndex: number = 0
 ) {
-    const config = getConfigFile();
+    const config = BoarBotApp.getBot().getConfig();
 
-    const configStrings = config.strings.commands.config.other;
-    const generalStrings = config.strings.general;
-
-    // Config file aliases
-    const fieldOneStrings = configStrings.fieldOne;
-    const fieldTwoStrings = configStrings.fieldTwo;
-    const otherButtons = configStrings.otherButtons;
+    const strConfig = config.stringConfig;
+    const setupComponentsConfig = config.commandConfigs.setup.components;
 
     // Components that need to be changed
     const fieldOneSelectMenu: SelectMenuBuilder =
@@ -265,9 +261,9 @@ async function updateSelectField(
     // Information about the state of the interaction
     const chosenChannels: string[] =
         userResponses.boarChannels.concat(userResponses.tradeChannelId);
-    const isRefresh = interaction.customId.startsWith(fieldOneStrings.refresh.id) ||
-        interaction.customId.startsWith(fieldTwoStrings.refresh.id) ||
-        interaction.customId.startsWith(otherButtons.restart.id);
+    const isRefresh = interaction.customId.startsWith(setupComponentsConfig.refresh1.id) ||
+        interaction.customId.startsWith(setupComponentsConfig.refresh2.id) ||
+        interaction.customId.startsWith(setupComponentsConfig.restart.id);
 
     // Disables next button on refresh as it empties all select menus
     nextButton.setDisabled(isRefresh);
@@ -278,16 +274,16 @@ async function updateSelectField(
         .setOptions(...getTextChannels(interaction, chosenChannels))
         .setPlaceholder(placeholder)
         .setDisabled(getTextChannels(interaction, chosenChannels)[0].label ===
-            configStrings.noChannelOptions[0].label
+            config.emptySelectMenu[0].label
         );
 
     // Edit trade field content based on if it's a refresh or not
     if (!isRefresh && field === 1) {
-        configFields.configFieldOne.content = fieldOneStrings.finished + generalStrings.formattedChannel
-            .replace('%@', userResponses.tradeChannelId);
+        configFields.configFieldOne.content = strConfig.setupFinished1 +
+            FormatStrings.toBasicChannel(userResponses.tradeChannelId);
         await configFields.configFieldOne.editReply(interaction);
     } else if (isRefresh && field === 1) {
-        configFields.configFieldOne.content = fieldOneStrings.unfinished;
+        configFields.configFieldOne.content = strConfig.setupUnfinished1;
         await configFields.configFieldOne.editReply(interaction);
     }
 
@@ -299,7 +295,7 @@ async function updateSelectField(
         fieldTwoSelectMenu
             .setOptions(...getTextChannels(interaction, chosenChannels))
             .setDisabled(getTextChannels(interaction, chosenChannels)[0].label ===
-                configStrings.noChannelOptions[0].label
+                config.emptySelectMenu[0].label
             );
 
         if (isRefresh)
@@ -315,15 +311,15 @@ async function updateSelectField(
 
         for (const channel of userResponses.boarChannels) {
             if (channel !== '')
-                channelsString += generalStrings.formattedChannel.replace('%@', channel);
+                channelsString += FormatStrings.toBasicChannel(channel);
         }
 
         selectMenu.setPlaceholder(placeholder);
-        configFields.configFieldTwo.content = fieldTwoStrings.finished + channelsString;
+        configFields.configFieldTwo.content = strConfig.setupFinished2 + channelsString;
 
         await configFields.configFieldTwo.editReply(interaction);
     } else if (isRefresh && field === 2) {
-        configFields.configFieldTwo.content = fieldTwoStrings.unfinished;
+        configFields.configFieldTwo.content = strConfig.setupUnfinished2;
         await configFields.configFieldTwo.editReply(interaction);
     }
 }
@@ -332,23 +328,22 @@ async function updateSelectField(
 
 // Gets the static row that goes at the bottom of every field
 function getStaticRow(interaction: ChatInputCommandInteraction, config: BotConfig) {
-    const configStrings = config.stringConfig.commands.setup.other;
-    const otherButtons = configStrings.otherButtons;
+    const setupComponentConfigs = config.commandConfigs.setup.components;
 
     return new ActionRowBuilder<ButtonBuilder | SelectMenuBuilder>().setComponents(
         new ButtonBuilder()
-            .setCustomId(otherButtons.cancel.id + interaction.id)
-            .setLabel(otherButtons.cancel.label)
+            .setCustomId(setupComponentConfigs.cancel.id + '|' + interaction.id)
+            .setLabel(setupComponentConfigs.cancel.label)
             .setStyle(ButtonStyle.Danger)
             .setDisabled(false),
         new ButtonBuilder()
-            .setCustomId(otherButtons.restart.id + interaction.id)
-            .setLabel(otherButtons.restart.label)
+            .setCustomId(setupComponentConfigs.restart.id + '|' + interaction.id)
+            .setLabel(setupComponentConfigs.restart.label)
             .setStyle(ButtonStyle.Secondary)
             .setDisabled(false),
         new ButtonBuilder()
-            .setCustomId(otherButtons.next.id + interaction.id)
-            .setLabel(otherButtons.next.label)
+            .setCustomId(setupComponentConfigs.next.id + '|' + interaction.id)
+            .setLabel(setupComponentConfigs.next.label)
             .setStyle(ButtonStyle.Primary)
             .setDisabled(true)
     );
@@ -361,37 +356,34 @@ function getConfigFields(
     staticRow: ActionRowBuilder<ButtonBuilder | SelectMenuBuilder>,
     config: BotConfig
 ) {
-    const configStrings = config.stringConfig.commands.setup.other;
-    const fieldOneStrings = configStrings.fieldOne;
-    const fieldTwoStrings = configStrings.fieldTwo;
-    const fieldThreeStrings = configStrings.fieldThree;
-    const otherButtons = configStrings.otherButtons;
+    const strConfig = config.stringConfig;
+    const setupComponentConfigs = config.commandConfigs.setup.components;
 
     return {
         // Field that gets trade channel
         configFieldOne: new FormField(
-            fieldOneStrings.unfinished,
+            strConfig.setupUnfinished1,
             [
                 new ActionRowBuilder<ButtonBuilder | SelectMenuBuilder>().setComponents(
                     new SelectMenuBuilder()
-                        .setCustomId(fieldOneStrings.selectMenu.id + interaction.id)
-                        .setPlaceholder(fieldOneStrings.selectMenu.label)
+                        .setCustomId(setupComponentConfigs.selectMenu1.id + interaction.id)
+                        .setPlaceholder(setupComponentConfigs.selectMenu1.label)
                         .setOptions(...getTextChannels(interaction))
                 ),
                 new ActionRowBuilder<ButtonBuilder | SelectMenuBuilder>().setComponents(
                     new ButtonBuilder()
-                        .setCustomId(fieldOneStrings.refresh.id + interaction.id)
-                        .setLabel(fieldOneStrings.refresh.label)
+                        .setCustomId(setupComponentConfigs.refresh1.id + interaction.id)
+                        .setLabel(setupComponentConfigs.refresh1.label)
                         .setStyle(ButtonStyle.Secondary)
                         .setDisabled(false),
                     new ButtonBuilder()
-                        .setCustomId(otherButtons.findChannel.id + interaction.id)
-                        .setEmoji(otherButtons.findChannel.label)
+                        .setCustomId(setupComponentConfigs.findChannel.id + interaction.id)
+                        .setEmoji(setupComponentConfigs.findChannel.label)
                         .setStyle(ButtonStyle.Secondary)
                         .setDisabled(false),
                     new ButtonBuilder()
-                        .setCustomId(fieldOneStrings.info.id + interaction.id)
-                        .setEmoji(fieldOneStrings.info.label)
+                        .setCustomId(setupComponentConfigs.info1.id + interaction.id)
+                        .setEmoji(setupComponentConfigs.info1.label)
                         .setStyle(ButtonStyle.Secondary)
                         .setDisabled(false)
                 ),
@@ -400,40 +392,40 @@ function getConfigFields(
         ),
         // Field that gets boar channels
         configFieldTwo: new FormField(
-        fieldTwoStrings.unfinished,
+        strConfig.setupUnfinished2,
         [
             new ActionRowBuilder<ButtonBuilder | SelectMenuBuilder>().setComponents(
                 new SelectMenuBuilder()
-                    .setCustomId(fieldTwoStrings.selectMenuOne.id + interaction.id)
-                    .setPlaceholder(fieldTwoStrings.selectMenuOne.label)
+                    .setCustomId(setupComponentConfigs.selectMenu2_1.id + interaction.id)
+                    .setPlaceholder(setupComponentConfigs.selectMenu2_1.label)
                     .setOptions(...getTextChannels(interaction))
             ),
             new ActionRowBuilder<ButtonBuilder | SelectMenuBuilder>().setComponents(
                 new SelectMenuBuilder()
-                    .setCustomId(fieldTwoStrings.selectMenuTwo.id + interaction.id)
-                    .setPlaceholder(fieldTwoStrings.selectMenuTwo.label)
+                    .setCustomId(setupComponentConfigs.selectMenu2_2.id + interaction.id)
+                    .setPlaceholder(setupComponentConfigs.selectMenu2_2.label)
                     .setOptions(...getTextChannels(interaction))
             ),
             new ActionRowBuilder<ButtonBuilder | SelectMenuBuilder>().setComponents(
                 new SelectMenuBuilder()
-                    .setCustomId(fieldTwoStrings.selectMenuThree.id + interaction.id)
-                    .setPlaceholder(fieldTwoStrings.selectMenuThree.label)
+                    .setCustomId(setupComponentConfigs.selectMenu2_3.id + interaction.id)
+                    .setPlaceholder(setupComponentConfigs.selectMenu2_3.label)
                     .setOptions(...getTextChannels(interaction))
             ),
             new ActionRowBuilder<ButtonBuilder | SelectMenuBuilder>().setComponents(
                 new ButtonBuilder()
-                    .setCustomId(fieldTwoStrings.refresh.id + interaction.id)
-                    .setLabel(fieldTwoStrings.refresh.label)
+                    .setCustomId(setupComponentConfigs.refresh2.id + interaction.id)
+                    .setLabel(setupComponentConfigs.refresh2.label)
                     .setStyle(ButtonStyle.Secondary)
                     .setDisabled(false),
                 new ButtonBuilder()
-                    .setCustomId(otherButtons.findChannel.id + interaction.id)
-                    .setEmoji(otherButtons.findChannel.label)
+                    .setCustomId(setupComponentConfigs.findChannel.id + interaction.id)
+                    .setEmoji(setupComponentConfigs.findChannel.label)
                     .setStyle(ButtonStyle.Secondary)
                     .setDisabled(false),
                 new ButtonBuilder()
-                    .setCustomId(fieldTwoStrings.info.id + interaction.id)
-                    .setEmoji(fieldTwoStrings.info.label)
+                    .setCustomId(setupComponentConfigs.info2.id + interaction.id)
+                    .setEmoji(setupComponentConfigs.info2.label)
                     .setStyle(ButtonStyle.Secondary)
                     .setDisabled(false)
                 ),
@@ -442,22 +434,22 @@ function getConfigFields(
         ),
         // Field that gets if server is SB server or not
         configFieldThree: new FormField(
-        fieldThreeStrings.unfinished,
+        strConfig.setupUnfinished3,
         [
             new ActionRowBuilder<ButtonBuilder | SelectMenuBuilder>().setComponents(
                 new ButtonBuilder()
-                    .setCustomId(fieldThreeStrings.sbYes.id + interaction.id)
-                    .setLabel(fieldThreeStrings.sbYes.label)
+                    .setCustomId(setupComponentConfigs.sbYes.id + interaction.id)
+                    .setLabel(setupComponentConfigs.sbYes.label)
                     .setStyle(ButtonStyle.Primary)
                     .setDisabled(false),
                 new ButtonBuilder()
-                    .setCustomId(fieldThreeStrings.sbNo.id + interaction.id)
-                    .setLabel(fieldThreeStrings.sbNo.label)
+                    .setCustomId(setupComponentConfigs.sbNo.id + interaction.id)
+                    .setLabel(setupComponentConfigs.sbNo.label)
                     .setStyle(ButtonStyle.Primary)
                     .setDisabled(false),
                 new ButtonBuilder()
-                    .setCustomId(fieldThreeStrings.info.id + interaction.id)
-                    .setEmoji(fieldThreeStrings.info.label)
+                    .setCustomId(setupComponentConfigs.info3.id + interaction.id)
+                    .setEmoji(setupComponentConfigs.info3.label)
                     .setStyle(ButtonStyle.Secondary)
                     .setDisabled(false)
                 ),

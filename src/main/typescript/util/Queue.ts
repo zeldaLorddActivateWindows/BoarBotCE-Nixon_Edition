@@ -9,8 +9,6 @@
  ***********************************************/
 
 import {handleError} from '../logging/LogDebug';
-import {getConfigFile} from "./DataHandlers";
-import {BoarBotApp} from '../BoarBotApp';
 
 //***************************************
 
@@ -27,10 +25,7 @@ let queueRunning = [false, false, false, false, false, false, false, false, fals
  * @param id - ID of queue item
  */
 async function addQueue(func: () => void, id: string) {
-    const config = BoarBotApp.getBot().getConfig();
-    const generalStrings = config.stringConfig.general;
-
-    const queueIndex = id.endsWith(generalStrings.globalQueueID) ? 0 : parseInt(id[id.length-1]) + 1;
+    const queueIndex = id.endsWith('global') ? 0 : parseInt(id[id.length-1]) + 1;
     queue[queueIndex][id] = func;
 
     if (!queueRunning[queueIndex]) {
@@ -40,12 +35,12 @@ async function addQueue(func: () => void, id: string) {
 
     return new Promise((resolve, reject) => {
         setTimeout(() => {
-            reject(generalStrings.rejectQueue);
+            reject('Took too long to run queue item.');
         }, 30000);
 
         setInterval(() => {
             if (!queue[queueIndex][id])
-                resolve(generalStrings.resolve);
+                resolve('Queue item successfully processed.');
         }, 100);
     })
 }

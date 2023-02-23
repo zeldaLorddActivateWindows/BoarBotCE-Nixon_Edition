@@ -21,7 +21,7 @@ import {BoarBotApp} from '../BoarBotApp';
 function getGlobalData() {
     const config = BoarBotApp.getBot().getConfig();
 
-    const globalFile = config.pathConfig.data.globalFile;
+    const globalFile = config.pathConfig.globalDataFile;
 
     return JSON.parse(fs.readFileSync(globalFile, 'utf-8'));
 }
@@ -47,11 +47,9 @@ function getConfigFile() {
 async function getGuildData(interaction: ChatInputCommandInteraction, create: boolean = false) {
     const config = BoarBotApp.getBot().getConfig();
 
-    // Config aliases
-    const debugStrings = config.stringConfig.debug;
-    const generalStrings = config.stringConfig.general;
+    const strConfig = config.stringConfig;
 
-    const guildDataPath = config.pathConfig.data.guildFolder + interaction.guild?.id + '.json';
+    const guildDataPath = config.pathConfig.guildDataFolder + interaction.guild?.id + '.json';
     let guildData: any;
 
     try {
@@ -64,12 +62,12 @@ async function getGuildData(interaction: ChatInputCommandInteraction, create: bo
             return guildData;
         }
 
-        sendDebug(debugStrings.noConfig
+        sendDebug(strConfig.noSetup
             .replace('%@', interaction.user.tag)
         );
 
         await interaction.reply({
-            content: generalStrings.noConfig,
+            content: strConfig.noSetup,
             ephemeral: true
         });
 
@@ -84,12 +82,12 @@ async function getGuildData(interaction: ChatInputCommandInteraction, create: bo
  * @param guildDataPath - Path of guild data file
  */
 async function removeGuildFile(guildDataPath: string) {
-    const debugStrings = getConfigFile().strings.debug;
+    const strConfig = BoarBotApp.getBot().getConfig().stringConfig;
 
     try {
         fs.rmSync(guildDataPath);
     } catch {
-        await handleError(debugStrings.deletedFile);
+        await handleError('Already deleted this file!');
     }
 }
 

@@ -15,39 +15,23 @@ import {BotConfig} from '../../bot/config/BotConfig';
 
 //***************************************
 
-// Sends modals and receives information on modal submission
-function applyMultiplier(userMultiplier: number, probabilities: number[]) {
-    if (userMultiplier === 1)
-        return;
+function applyMultiplier(userMultiplier: number, rarityWeights: Map<number, number>) {
+    // Sorts from the highest weight to the lowest weight
+    const newWeights = new Map(
+        [...rarityWeights.entries()].sort((a,b) => { return b[1] - a[1]; })
+    );
 
-    // Used to prevent total probability from going over 100%
-    let probabilityTotal: number = 0;
-
-    // Limits for multipliers
-    const highestMultiplier = 1 / probabilities[probabilities.length - 1];
-    const noCommonMultiplier = 1 / probabilities[0];
-
-    // Multiplies each probability from least common to most common by multiplier,
-    // If it results in a total probability over 100%, decrease multiplier slowly until a value is found
-    for (let i=probabilities.length-1; i>=0; i--) {
-        for (let j=userMultiplier > highestMultiplier ? highestMultiplier : userMultiplier; j>=0; j--) {
-            if (probabilityTotal + j * probabilities[i] > 1)
-                continue;
-
-            probabilities[i] = j * probabilities[i];
-            probabilityTotal += probabilities[i];
-
-            break;
-        }
+    // Gives more weight to lower weights and less weight to higher weights
+    let i = 0;
+    for (const weight of newWeights) {
+        newWeights.set(weight[0], weight[1] * Math.pow(userMultiplier, i));
+        i++;
     }
 
-    // Prevents user from getting commons once the multiplier hits a threshold
-    for (let i=0; i<probabilities.length-1 && userMultiplier > noCommonMultiplier; i++) {
-        if (probabilities[i] !== 0) {
-            probabilities[i] += 1 - probabilityTotal;
-            break;
-        }
-    }
+    // Restores the original order of the Map
+    return new Map(
+        [...newWeights.entries()].sort((a,b) => { return a[0] - b[0]; })
+    );
 }
 
 //***************************************
@@ -57,30 +41,32 @@ async function getDaily(
     guildData: any,
     interaction: ChatInputCommandInteraction,
     boarUser: BoarUser,
-    probabilities: number[],
-    rarities: string[]
+    rarityWeights: Map<number, number>
 ) {
-    const debugStrings = config.stringConfig.debug;
-    const raritiesInfo = config.rarityConfig;
-    const boarIDs: any = config.boarCollectibles;
+    const strConfig = config.stringConfig;
+    const rarities = config.rarityConfigs;
+    const boarIDs: any = config.boarItemConfigs;
 
     const randomRarity: number = Math.random();
     let randomBoar: number = Math.random();
 
-    // Stores the rarity that's currently being checked based on probability
-    let rarityChecking = 1 - probabilities.reduce((a, b) => { return a + b });
+    // Sorts from the lowest weight to the highest weight
+    rarityWeights = new Map(
+        [...rarityWeights.entries()].sort((a,b) => { return a[1] - b[1]; })
+    );
+
+    const weightTotal = [...rarityWeights.values()].reduce((curSum, x) => curSum + x);
+    const probabilities = new Map([...rarityWeights.entries()].map(x => [x[0], x[1] / weightTotal]));
 
     // Finds the rarity that was rolled and adds a random boar from that rarity to user profile
-    for (const rarity of rarities) {
-        // If the value gotten is lower than the rarity being checked,
-        // go to next highest rarity
-        if (randomRarity >= rarityChecking) {
-            rarityChecking += probabilities[rarities.indexOf(rarity)];
+    for (const probability of probabilities) {
+        // Goes to next probability if randomRarity is higher
+        // Keeps going if it's the rarity with the highest probability
+        if (randomRarity > probability[1] && Math.max(...[...probabilities.values()]) !== probability[1])
             continue;
-        }
 
         // Stores the IDs of the current rarity being checked
-        const rarityBoars: string[] = raritiesInfo[rarity].boars;
+        const rarityBoars: string[] = rarities[probability[0]].boars;
 
         // Stores the ID that was chosen
         let boarID = rarityBoars[Math.floor(randomBoar * rarityBoars.length)];
@@ -105,9 +91,9 @@ async function getDaily(
         if (isBlacklisted || !guildData.isSBServer && isSB)
             return undefined;
 
-        sendDebug(debugStrings.boarGotten
+        sendDebug(strConfig.commandDebugPrefix
             .replace('%@', interaction.user.tag)
-            .replace('%@', boarID)
+            .replace('%@', interaction.commandName)
         );
 
         return boarID;

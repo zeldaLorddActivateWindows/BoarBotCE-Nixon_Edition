@@ -48,15 +48,16 @@ export default class GuildAddListener implements Listener {
         if (!this.guild || !this.userToThank || !this.config) return;
 
         // Aliases for config
-        const configStrings = this.config.stringConfig;
-        const otherAssetsPath = this.config.pathConfig.resources.other;
+        const strConfig = this.config.stringConfig;
+        const pathConfig = this.config.pathConfig;
+        const setupCommandConfig = this.config.commandConfigs.setup;
 
         // DM information to be sent
-        const thankYouImage = otherAssetsPath.basePath + otherAssetsPath.thankYou;
-        const thankYouMessage = configStrings.general.guildAdd
+        const thankYouImage = pathConfig.otherAssets + pathConfig.thankYouImage;
+        const thankYouMessage = strConfig.guildAdd
             .replace('%@', this.userToThank.username)
             .replace('%@', this.guild.name)
-            .replace('%@', configStrings.commands.config.name);
+            .replace('%@', setupCommandConfig.name);
 
         await this.userToThank.send({
             content: thankYouMessage,

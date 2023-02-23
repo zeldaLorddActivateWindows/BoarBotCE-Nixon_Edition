@@ -15,12 +15,13 @@ import {applyMultiplier, getDaily} from '../util/command_specific/DailyFunctions
 import {handleStart} from '../util/GeneralFunctions';
 import {Command} from '../api/commands/Command';
 import {BoarBotApp} from '../BoarBotApp';
+import {FormatStrings} from '../util/discord/FormatStrings';
 
 //***************************************
 
 export default class DailyCommand implements Command {
     private initConfig = BoarBotApp.getBot().getConfig();
-    private commandInfo = this.initConfig.stringConfig.commands.daily;
+    private commandInfo = this.initConfig.commandConfigs.daily;
     public readonly data = new SlashCommandBuilder()
         .setName(this.commandInfo.name)
         .setDescription(this.commandInfo.description)
@@ -37,16 +38,12 @@ export default class DailyCommand implements Command {
 
         await interaction.deferReply();
 
-        const debugStrings = config.stringConfig.debug;
+        const strConfig = config.stringConfig;
 
         await addQueue(async function() {
             try {
                 if (!interaction.guild || !interaction.channel)
                     return;
-
-                // Alias for strings
-                const dailyStrings = config.stringConfig.daily;
-                const generalStrings = config.stringConfig.general;
 
                 // New boar user object used for easier manipulation of data
                 const boarUser = new BoarUser(interaction.user);
@@ -58,37 +55,39 @@ export default class DailyCommand implements Command {
 
                 // Returns if user has already used their daily boar
                 if (boarUser.lastDaily >= nextBoarTime - (1000 * 60 * 60 * 24) && !config.unlimitedBoars) {
-                    await interaction.editReply(dailyStrings.usedDaily + generalStrings.formattedTime
-                        .replace('%@', nextBoarTime / 1000)
+                    await interaction.editReply(strConfig.dailyUsed +
+                        FormatStrings.toRelTime(nextBoarTime / 1000)
                     );
                     return;
                 }
 
-                // Stores rarity and probability information
-                const probabilities: number[] = [];
-                const raritiesInfo = config.rarityConfig;
-                const rarities: string[] = Object.keys(raritiesInfo);
+                // Map of rarity index keys and weight values
+                let rarityWeights: Map<number, number> = new Map();
+
+                const rarities = config.rarityConfigs;
                 const userMultiplier: number = boarUser.powerups.multiplier;
 
-                // Gets probabilities of each rarity
-                for (let i=1; i<rarities.length; i++) {
-                    let rarityProbability: number = raritiesInfo[rarities[i]].probability;
+                // Gets weight of each rarity
+                for (let i=0; i<rarities.length; i++) {
+                    let weight: number = rarities[i].weight;
 
-                    if (!raritiesInfo[rarities[i]].fromDaily)
-                        rarityProbability = 0;
+                    if (!rarities[i].fromDaily)
+                        weight = 0;
 
-                    probabilities.push(rarityProbability)
+                    rarityWeights.set(i, weight);
                 }
+
+                rarityWeights = applyMultiplier(userMultiplier, rarityWeights);
+                boarUser.powerups.multiplier = 1;
 
                 boarUser.lastDaily = Date.now();
 
-                applyMultiplier(userMultiplier, probabilities);
-                boarUser.powerups.multiplier = 1;
+                sendDebug([...rarityWeights.entries()]);
 
-                const boarID = await getDaily(config, guildData, interaction, boarUser, probabilities, rarities);
+                const boarID = await getDaily(config, guildData, interaction, boarUser, rarityWeights);
 
                 if (!boarID) {
-                    await handleError(debugStrings.noBoarFound, interaction);
+                    await handleError(strConfig.dailyNoBoarFound, interaction);
                     return;
                 }
 
@@ -98,7 +97,7 @@ export default class DailyCommand implements Command {
             }
         }, interaction.id + interaction.user.id);
 
-        sendDebug(debugStrings.endCommand
+        sendDebug(strConfig.commandDebugPrefix
             .replace('%@', interaction.user.tag)
             .replace('%@', interaction.commandName)
         );
