@@ -676,7 +676,7 @@
         "rarity6": "#F300FF",
         "rarity7": "#00FFFB"
     },
-    "unlimitedBoars": false,
+    "unlimitedBoars": true,
     "debugMode": true,
     "maintenanceMode": false
 }

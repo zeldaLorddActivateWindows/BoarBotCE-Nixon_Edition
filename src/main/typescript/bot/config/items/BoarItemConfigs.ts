@@ -15,56 +15,56 @@ export class BoarItemConfigs {
 
     // Common boar items
 
-    public normal: BoarItemConfig = new BoarItemConfig;
-    public explosionless: BoarItemConfig = new BoarItemConfig;
-    public tiny: BoarItemConfig = new BoarItemConfig;
+    public readonly normal: BoarItemConfig = new BoarItemConfig;
+    public readonly explosionless: BoarItemConfig = new BoarItemConfig;
+    public readonly tiny: BoarItemConfig = new BoarItemConfig;
 
     // Uncommon boar items
 
-    public carrot: BoarItemConfig = new BoarItemConfig;
-    public buff: BoarItemConfig = new BoarItemConfig;
-    public chocolate: BoarItemConfig = new BoarItemConfig;
-    public emo: BoarItemConfig = new BoarItemConfig;
-    public matrix: BoarItemConfig = new BoarItemConfig;
-    public soda: BoarItemConfig = new BoarItemConfig;
+    public readonly carrot: BoarItemConfig = new BoarItemConfig;
+    public readonly buff: BoarItemConfig = new BoarItemConfig;
+    public readonly chocolate: BoarItemConfig = new BoarItemConfig;
+    public readonly emo: BoarItemConfig = new BoarItemConfig;
+    public readonly matrix: BoarItemConfig = new BoarItemConfig;
+    public readonly soda: BoarItemConfig = new BoarItemConfig;
 
     // Rare boar items
 
-    public clown: BoarItemConfig = new BoarItemConfig;
-    public sphere: BoarItemConfig = new BoarItemConfig;
-    public killer: BoarItemConfig = new BoarItemConfig;
-    public fish: BoarItemConfig = new BoarItemConfig;
-    public fruit: BoarItemConfig = new BoarItemConfig;
-    public rainy: BoarItemConfig = new BoarItemConfig;
-    public golden: BoarItemConfig = new BoarItemConfig;
+    public readonly clown: BoarItemConfig = new BoarItemConfig;
+    public readonly sphere: BoarItemConfig = new BoarItemConfig;
+    public readonly killer: BoarItemConfig = new BoarItemConfig;
+    public readonly fish: BoarItemConfig = new BoarItemConfig;
+    public readonly fruit: BoarItemConfig = new BoarItemConfig;
+    public readonly rainy: BoarItemConfig = new BoarItemConfig;
+    public readonly golden: BoarItemConfig = new BoarItemConfig;
 
     // Epic boar items
 
-    public creepy: BoarItemConfig = new BoarItemConfig;
-    public robot: BoarItemConfig = new BoarItemConfig;
-    public coffee: BoarItemConfig = new BoarItemConfig;
-    public moon: BoarItemConfig = new BoarItemConfig;
-    public necron: BoarItemConfig = new BoarItemConfig;
-    public wizard: BoarItemConfig = new BoarItemConfig;
-    public aurora: BoarItemConfig = new BoarItemConfig;
+    public readonly creepy: BoarItemConfig = new BoarItemConfig;
+    public readonly robot: BoarItemConfig = new BoarItemConfig;
+    public readonly coffee: BoarItemConfig = new BoarItemConfig;
+    public readonly moon: BoarItemConfig = new BoarItemConfig;
+    public readonly necron: BoarItemConfig = new BoarItemConfig;
+    public readonly wizard: BoarItemConfig = new BoarItemConfig;
+    public readonly aurora: BoarItemConfig = new BoarItemConfig;
 
     // Legendary boar items
 
-    public minimumwage: BoarItemConfig = new BoarItemConfig;
-    public backrooms: BoarItemConfig = new BoarItemConfig;
-    public jumpscare: BoarItemConfig = new BoarItemConfig;
+    public readonly minimumwage: BoarItemConfig = new BoarItemConfig;
+    public readonly backrooms: BoarItemConfig = new BoarItemConfig;
+    public readonly jumpscare: BoarItemConfig = new BoarItemConfig;
 
     // Mythic boar items
 
-    public cowboy: BoarItemConfig = new BoarItemConfig;
-    public realistic: BoarItemConfig = new BoarItemConfig;
-    public farmer: BoarItemConfig = new BoarItemConfig;
+    public readonly cowboy: BoarItemConfig = new BoarItemConfig;
+    public readonly realistic: BoarItemConfig = new BoarItemConfig;
+    public readonly farmer: BoarItemConfig = new BoarItemConfig;
 
     // Divine boar items
 
-    public rickroll: BoarItemConfig = new BoarItemConfig;
-    public morbius: BoarItemConfig = new BoarItemConfig;
-    public god: BoarItemConfig = new BoarItemConfig;
-    public imposter: BoarItemConfig = new BoarItemConfig;
-    public curious: BoarItemConfig = new BoarItemConfig;
+    public readonly rickroll: BoarItemConfig = new BoarItemConfig;
+    public readonly morbius: BoarItemConfig = new BoarItemConfig;
+    public readonly god: BoarItemConfig = new BoarItemConfig;
+    public readonly imposter: BoarItemConfig = new BoarItemConfig;
+    public readonly curious: BoarItemConfig = new BoarItemConfig;
 }

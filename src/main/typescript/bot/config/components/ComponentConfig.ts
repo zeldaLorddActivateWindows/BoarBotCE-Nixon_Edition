@@ -8,7 +8,7 @@
  * @copyright WeslayCodes 2023
  */
 export class ComponentConfig {
-    public id: string = '';
-    public label: string = '';
-    public altLabel: string = '';
+    public readonly id: string = '';
+    public readonly label: string = '';
+    public readonly altLabel: string = '';
 }

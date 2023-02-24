@@ -8,9 +8,9 @@
  * @copyright WeslayCodes 2023
  */
 export class BoarItemConfig {
-    public name: string = '';
-    public file: string = '';
-    public description: string = '';
-    public isSB: boolean = false;
-    public blacklisted: boolean = false;
+    public readonly name: string = '';
+    public readonly file: string = '';
+    public readonly description: string = '';
+    public readonly isSB: boolean = false;
+    public readonly blacklisted: boolean = false;
 }

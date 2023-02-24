@@ -8,7 +8,7 @@
  * @copyright WeslayCodes 2023
  */
 export class BadgeItemConfig {
-    public name: string = '';
-    public file: string = '';
-    public description: string = '';
+    public readonly name: string = '';
+    public readonly file: string = '';
+    public readonly description: string = '';
 }

@@ -8,62 +8,69 @@
  */
 export class StringConfig {
     // Non-interaction messages
-    public botStatus: string = '';
-    public guildAdd: string = '';
-    public dmReceived: string = '';
+
+    public readonly botStatus: string = '';
+    public readonly guildAdd: string = '';
+    public readonly dmReceived: string = '';
 
     // General interaction responses
-    public noPermission: string = '';
-    public noSetup: string = '';
-    public doingSetup: string = '';
-    public wrongChannel: string = '';
-    public noGuild: string = '';
-    public nullFound: string = '';
-    public invalidID: string = '';
-    public onCooldown: string = '';
-    public noAttachmentPerms: string = '';
-    public error: string = '';
-    public maintenance: string = '';
+
+    public readonly noPermission: string = '';
+    public readonly noSetup: string = '';
+    public readonly doingSetup: string = '';
+    public readonly wrongChannel: string = '';
+    public readonly noGuild: string = '';
+    public readonly nullFound: string = '';
+    public readonly invalidID: string = '';
+    public readonly onCooldown: string = '';
+    public readonly noAttachmentPerms: string = '';
+    public readonly error: string = '';
+    public readonly maintenance: string = '';
 
     // Setup command messages
-    public setupCancelled: string = '';
-    public setupError: string = '';
-    public setupFinishedAll: string = '';
-    public setupExpired: string = '';
-    public setupUnfinished1: string = '';
-    public setupUnfinished2: string = '';
-    public setupUnfinished3: string = '';
-    public setupFinished1: string = '';
-    public setupFinished2: string = '';
-    public setupFinished3: string = '';
-    public setupInfoResponse1: string = '';
-    public setupInfoResponse2: string = '';
-    public setupInfoResponse3: string = '';
+
+    public readonly setupCancelled: string = '';
+    public readonly setupError: string = '';
+    public readonly setupFinishedAll: string = '';
+    public readonly setupExpired: string = '';
+    public readonly setupUnfinished1: string = '';
+    public readonly setupUnfinished2: string = '';
+    public readonly setupUnfinished3: string = '';
+    public readonly setupFinished1: string = '';
+    public readonly setupFinished2: string = '';
+    public readonly setupFinished3: string = '';
+    public readonly setupInfoResponse1: string = '';
+    public readonly setupInfoResponse2: string = '';
+    public readonly setupInfoResponse3: string = '';
 
     // Daily command messages/strings
-    public dailyUsed: string = '';
-    public dailyTitle: string = '';
-    public dailyNoBoarFound: string = '';
+
+    public readonly dailyUsed: string = '';
+    public readonly dailyTitle: string = '';
+    public readonly dailyNoBoarFound: string = '';
 
     // Give command messages/strings (also badges)
-    public giveBoar: string = '';
-    public giveTitle: string = '';
-    public giveSpecialTitle: string = '';
-    public giveBadge: string = '';
-    public giveBadgeTitle: string = '';
-    public giveBadgeHas: string = '';
-    public obtainedBadgeTitle: string = '';
+
+    public readonly giveBoar: string = '';
+    public readonly giveTitle: string = '';
+    public readonly giveSpecialTitle: string = '';
+    public readonly giveBadge: string = '';
+    public readonly giveBadgeTitle: string = '';
+    public readonly giveBadgeHas: string = '';
+    public readonly obtainedBadgeTitle: string = '';
 
     // Collection command strings
-    public collNoBadges: string = '';
+
+    public readonly collNoBadges: string = '';
 
     // Miscellaneous strings
-    public noParentChannel: string = '';
-    public notValidChannel: string = '';
-    public defaultSelectPlaceholder: string = '';
-    public channelOptionLabel: string = '';
-    public unavailable: string = '';
-    public imageName: string = '';
-    public fontName: string = '';
-    public commandDebugPrefix: string = '';
+
+    public readonly noParentChannel: string = '';
+    public readonly notValidChannel: string = '';
+    public readonly defaultSelectPlaceholder: string = '';
+    public readonly channelOptionLabel: string = '';
+    public readonly unavailable: string = '';
+    public readonly imageName: string = '';
+    public readonly fontName: string = '';
+    public readonly commandDebugPrefix: string = '';
 }

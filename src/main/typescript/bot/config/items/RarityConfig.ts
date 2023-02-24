@@ -8,9 +8,9 @@
  * @copyright WeslayCodes 2023
  */
 export class RarityConfig {
-    public name: string = '';
-    public weight: number = 0;
-    public score: number = 0;
-    public fromDaily: boolean = false;
-    public boars: string[] = [];
+    public readonly name: string = '';
+    public readonly weight: number = 0;
+    public readonly score: number = 0;
+    public readonly fromDaily: boolean = false;
+    public readonly boars: string[] = [];
 }

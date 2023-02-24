@@ -10,6 +10,6 @@ import {ModalConfig} from './ModalConfig';
  * @copyright WeslayCodes 2023
  */
 export class SetupModalConfigs {
-    public modal1: ModalConfig = new ModalConfig;
-    public modal2: ModalConfig = new ModalConfig;
+    public readonly modal1: ModalConfig = new ModalConfig;
+    public readonly modal2: ModalConfig = new ModalConfig;
 }

@@ -9,73 +9,73 @@
 export class NumberConfig {
     // First pixel of an image location
 
-    public originPos: number[] = [];
+    public readonly originPos: number[] = [];
 
     // Font sizes
 
-    public fontBig: number = 0;
-    public fontMedium: number = 0;
-    public fontSmallMedium: number = 0;
+    public readonly fontBig: number = 0;
+    public readonly fontMedium: number = 0;
+    public readonly fontSmallMedium: number = 0;
 
     // Maximum values
 
-    public maxUsernameLength: number = 0;
-    public maxTrackedEditions: number = 0;
-    public maxScore: number = 0;
-    public maxBoars: number = 0;
-    public maxStreak: number = 0;
+    public readonly maxUsernameLength: number = 0;
+    public readonly maxTrackedEditions: number = 0;
+    public readonly maxScore: number = 0;
+    public readonly maxBoars: number = 0;
+    public readonly maxStreak: number = 0;
 
     // Item image positions, sizes, and values
 
-    public itemImageSize: number[] = [];
-    public itemBoarPos: number[] = [];
-    public itemBoarSize: number[] = [];
-    public itemBadgePos: number[] = [];
-    public itemBadgeSize: number[] = [];
-    public itemTitlePos: number[] = [];
-    public itemNamePos: number[] = [];
-    public itemNameplatePos: number[] = [];
-    public itemNameplatePadding: number = 0;
-    public itemNameplateHeight: number = 0;
-    public itemUserTagPos: number[] = [];
-    public itemUserAvatarPos: number[] = [];
-    public itemUserAvatarWidth: number = 0;
+    public readonly itemImageSize: number[] = [];
+    public readonly itemBoarPos: number[] = [];
+    public readonly itemBoarSize: number[] = [];
+    public readonly itemBadgePos: number[] = [];
+    public readonly itemBadgeSize: number[] = [];
+    public readonly itemTitlePos: number[] = [];
+    public readonly itemNamePos: number[] = [];
+    public readonly itemNameplatePos: number[] = [];
+    public readonly itemNameplatePadding: number = 0;
+    public readonly itemNameplateHeight: number = 0;
+    public readonly itemUserTagPos: number[] = [];
+    public readonly itemUserAvatarPos: number[] = [];
+    public readonly itemUserAvatarWidth: number = 0;
 
     // Collection image positions, sizes, and values
 
-    public collImageSize: number[] = [];
-    public collUserAvatarPos: number[] = [];
-    public collUserAvatarSize: number[] = [];
-    public collUserTagPos: number[] = [];
-    public collDatePos: number[] = [];
-    public collNoBadgePos: number[] = [];
-    public collBadgeStart: number = 0;
-    public collBadgeSpacing: number = 0;
-    public collBadgeY: number = 0;
-    public collBadgeSize: number[] = [];
-    public collScorePos: number[] = [];
-    public collTotalPos: number[] = [];
-    public collUniquePos: number[] = [];
-    public collMultiplierPos: number[] = [];
-    public collStreakPos: number[] = [];
-    public collBoarStartX: number = 0;
-    public collBoarStartY: number = 0;
-    public collBoarSpacingX: number = 0;
-    public collBoarSpacingY: number = 0;
-    public collBoarCols: number = 0;
-    public collBoarRows: number = 0;
-    public collBoarSize: number[] = [];
-    public collLastDailyPos: number[] = [];
-    public collRarityStartX: number = 0;
-    public collRarityStartY: number = 0;
-    public collRarityEndDiff: number = 0;
-    public collRarityWidth: number = 0;
-    public collLastBoarPos: number[] = [];
-    public collLastBoarSize: number[] = [];
-    public collLastRarityPos: number[] = [];
-    public collLastRaritySize: number[] = [];
-    public collFavBoarPos: number[] = [];
-    public collFavBoarSize: number[] = [];
-    public collFavRarityPos: number[] = [];
-    public collFavRaritySize: number[] = [];
+    public readonly collImageSize: number[] = [];
+    public readonly collUserAvatarPos: number[] = [];
+    public readonly collUserAvatarSize: number[] = [];
+    public readonly collUserTagPos: number[] = [];
+    public readonly collDatePos: number[] = [];
+    public readonly collNoBadgePos: number[] = [];
+    public readonly collBadgeStart: number = 0;
+    public readonly collBadgeSpacing: number = 0;
+    public readonly collBadgeY: number = 0;
+    public readonly collBadgeSize: number[] = [];
+    public readonly collScorePos: number[] = [];
+    public readonly collTotalPos: number[] = [];
+    public readonly collUniquePos: number[] = [];
+    public readonly collMultiplierPos: number[] = [];
+    public readonly collStreakPos: number[] = [];
+    public readonly collBoarStartX: number = 0;
+    public readonly collBoarStartY: number = 0;
+    public readonly collBoarSpacingX: number = 0;
+    public readonly collBoarSpacingY: number = 0;
+    public readonly collBoarCols: number = 0;
+    public readonly collBoarRows: number = 0;
+    public readonly collBoarSize: number[] = [];
+    public readonly collLastDailyPos: number[] = [];
+    public readonly collRarityStartX: number = 0;
+    public readonly collRarityStartY: number = 0;
+    public readonly collRarityEndDiff: number = 0;
+    public readonly collRarityWidth: number = 0;
+    public readonly collLastBoarPos: number[] = [];
+    public readonly collLastBoarSize: number[] = [];
+    public readonly collLastRarityPos: number[] = [];
+    public readonly collLastRaritySize: number[] = [];
+    public readonly collFavBoarPos: number[] = [];
+    public readonly collFavBoarSize: number[] = [];
+    public readonly collFavRarityPos: number[] = [];
+    public readonly collFavRaritySize: number[] = [];
 }

@@ -8,9 +8,9 @@
  * @copyright WeslayCodes 2023
  */
 export class ModalConfig {
-    public title: string = '';
-    public id: string = '';
-    public inputIDs: string[] = [];
-    public inputLabels: string[] = [];
-    public inputPlaceholders: string[] = [];
+    public readonly title: string = '';
+    public readonly id: string = '';
+    public readonly inputIDs: string[] = [];
+    public readonly inputLabels: string[] = [];
+    public readonly inputPlaceholders: string[] = [];
 }

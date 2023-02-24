@@ -13,25 +13,25 @@ export class CommandConfigs {
     /**
      * {@link CommandConfig Command information} for {@link HelpCommand}
      */
-    public help: CommandConfig = new CommandConfig;
+    public readonly help: CommandConfig = new CommandConfig;
 
     /**
      * {@link CommandConfig Command information} for {@link SetupCommand}
      */
-    public setup: CommandConfig = new CommandConfig;
+    public readonly setup: CommandConfig = new CommandConfig;
 
     /**
      * {@link CommandConfig Command information} for {@link DailyCommand}
      */
-    public daily: CommandConfig = new CommandConfig;
+    public readonly daily: CommandConfig = new CommandConfig;
 
     /**
      * {@link CommandConfig Command information} for {@link GiveCommand}
      */
-    public give: CommandConfig = new CommandConfig;
+    public readonly give: CommandConfig = new CommandConfig;
 
     /**
      * {@link CommandConfig Command information} for {@link CollectionCommand}
      */
-    public collection: CommandConfig = new CommandConfig;
+    public readonly collection: CommandConfig = new CommandConfig;
 }

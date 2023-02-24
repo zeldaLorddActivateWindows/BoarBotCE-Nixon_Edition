@@ -8,7 +8,7 @@
  * @copyright WeslayCodes 2023
  */
 export class CommandArgsConfig {
-    public name: string = '';
-    public description: string = '';
-    public required: boolean = false;
+    public readonly name: string = '';
+    public readonly description: string = '';
+    public readonly required: boolean = false;
 }

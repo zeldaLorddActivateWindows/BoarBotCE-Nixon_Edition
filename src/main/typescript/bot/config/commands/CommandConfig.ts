@@ -12,18 +12,21 @@ import {SetupModalConfigs} from '../modals/SetupModalConfigs';
  * @copyright WeslayCodes 2023
  */
 export class CommandConfig {
-    public name: string = '';
-    public description: string = '';
+    public readonly name: string = '';
+    public readonly description: string = '';
 
     // Arguments the command uses
-    public args: CommandArgsConfig[] = [];
+
+    public readonly args: CommandArgsConfig[] = [];
 
     // Tags for the command
-    public adminOnly: boolean = false;
-    public cooldown: boolean = false;
+
+    public readonly adminOnly: boolean = false;
+    public readonly cooldown: boolean = false;
 
     // Components and modals associated with a command
     // NOTE: Types should expand as more commands with Components and Modals are added
-    public components: SetupComponentConfigs = new SetupComponentConfigs;
-    public modals: SetupModalConfigs = new SetupModalConfigs;
+
+    public readonly components: SetupComponentConfigs = new SetupComponentConfigs;
+    public readonly modals: SetupModalConfigs = new SetupModalConfigs;
 }

@@ -11,16 +11,16 @@ import {BadgeItemConfig} from './items/BadgeItemConfig';
 export class ColorConfig {
     [colorKey: string]: string;
 
-    public foregroundGray: string = '';
-    public font: string = '';
+    public readonly foregroundGray: string = '';
+    public readonly font: string = '';
 
-    public badge: string = '';
+    public readonly badge: string = '';
 
-    public rarity1: string = '';
-    public rarity2: string = '';
-    public rarity3: string = '';
-    public rarity4: string = '';
-    public rarity5: string = '';
-    public rarity6: string = '';
-    public rarity7: string = '';
+    public readonly rarity1: string = '';
+    public readonly rarity2: string = '';
+    public readonly rarity3: string = '';
+    public readonly rarity4: string = '';
+    public readonly rarity5: string = '';
+    public readonly rarity6: string = '';
+    public readonly rarity7: string = '';
 }
