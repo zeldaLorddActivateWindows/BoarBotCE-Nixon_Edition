@@ -19,19 +19,19 @@ import {
 } from 'discord.js';
 import {PermissionFlagsBits} from 'discord-api-types/v10';
 import fs from 'fs';
-import {handleCooldown, hasAttachmentPerms} from '../util/GeneralFunctions';
-import {getConfigFile, getGuildData, removeGuildFile} from '../util/DataHandlers';
-import {handleError, sendDebug} from '../logging/LogDebug';
+import {handleCooldown, hasAttachmentPerms} from '../../util/GeneralFunctions';
+import {getConfigFile, getGuildData, removeGuildFile} from '../../util/DataHandlers';
+import {handleError, sendDebug} from '../../logging/LogDebug';
 import {
     getConfigFields,
     getStaticRow,
     modalHandle,
     Reasons,
     updateSelectField
-} from "../util/command_specific/ConfigFunctions";
-import {noPermsReply} from '../util/InteractionReplies';
-import {BoarBotApp} from '../BoarBotApp';
-import {Command} from '../api/commands/Command';
+} from "../../util/command_specific/ConfigFunctions";
+import {noPermsReply} from '../../util/InteractionReplies';
+import {BoarBotApp} from '../../BoarBotApp';
+import {Command} from '../../api/commands/Command';
 
 //***************************************
 

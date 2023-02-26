@@ -16,17 +16,17 @@ import {
     User
 } from 'discord.js';
 import {PermissionFlagsBits} from 'discord-api-types/v10';
-import {findRarity, handleStart} from '../util/GeneralFunctions';
-import {BoarUser} from '../util/BoarUser';
+import {findRarity, handleStart} from '../../util/GeneralFunctions';
+import {BoarUser} from '../../util/BoarUser';
 import Canvas from 'canvas';
-import {addQueue} from '../util/Queue';
-import {handleError, sendDebug} from '../logging/LogDebug';
-import {getConfigFile} from '../util/DataHandlers';
-import {drawImageCompact, drawRect, drawText} from '../util/CanvasFunctions';
-import {finishImage} from '../util/command_specific/CollectionFunctions';
+import {addQueue} from '../../util/Queue';
+import {handleError, sendDebug} from '../../logging/LogDebug';
+import {getConfigFile} from '../../util/DataHandlers';
+import {drawImageCompact, drawRect, drawText} from '../../util/CanvasFunctions';
+import {finishImage} from '../../util/command_specific/CollectionFunctions';
 import moment from 'moment';
-import {Command} from '../api/commands/Command';
-import {BoarBotApp} from '../BoarBotApp';
+import {Command} from '../../api/commands/Command';
+import {BoarBotApp} from '../../BoarBotApp';
 
 //***************************************
 

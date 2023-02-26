@@ -1,15 +1,14 @@
 import dotenv from 'dotenv';
 import fs from 'fs';
 import {ActivityType, Client, GatewayIntentBits, TextChannel} from 'discord.js';
-import {Routes} from 'discord-api-types/v10';
-import {registerFont} from 'canvas';
-import moment from 'moment';
 import {Bot} from '../api/bot/Bot';
 import {handleError, sendDebug} from '../logging/LogDebug';
+import {FormatStrings} from '../util/discord/FormatStrings';
+import {ConfigHandler} from './handlers/ConfigHandler';
+import {CommandHandler} from './handlers/CommandHandler';
+import {EventHandler} from './handlers/EventHandler';
 import {BotConfig} from './config/BotConfig';
 import {Command} from '../api/commands/Command';
-import {REST} from '@discordjs/rest';
-import {FormatStrings} from '../util/discord/FormatStrings';
 
 dotenv.config();
 
@@ -25,8 +24,9 @@ dotenv.config();
  */
 export class BoarBot implements Bot {
 	private client: Client = new Client({ intents:[] });
-	private config: BotConfig = new BotConfig;
-	private commands: Map<string, Command> = new Map();
+	private configHandler: ConfigHandler = new ConfigHandler;
+	private commandHandler: CommandHandler = new CommandHandler();
+	private eventHandler: EventHandler = new EventHandler();
 
 	/**
 	 * Creates the bot by loading and registering global information
@@ -34,12 +34,6 @@ export class BoarBot implements Bot {
 	public async create(): Promise<void> {
 		this.buildClient();
 
-		await this.loadConfig();
-		this.setCommands();
-		this.registerListeners();
-
-		this.loadFonts();
-		this.setRelativeTime();
 		this.fixGuildData();
 
 		await this.login();
@@ -63,154 +57,87 @@ export class BoarBot implements Bot {
 		});
 	}
 
-	/**
-	 * Loads config data from configuration file in project root
-	 */
-	public async loadConfig(): Promise<void> {
-		let parsedConfig: any;
+	public getClient(): Client { return this.client; }
 
+	/**
+	 * Finds config file and pulls it into the code
+	 */
+	public loadConfig(): void { this.configHandler.loadConfig(); }
+
+	/**
+	 * Returns config information that was gathered from config file
+	 */
+	public getConfig(): BotConfig { return this.configHandler.getConfig(); }
+
+	/**
+	 * Registers command and subcommand information from files
+	 */
+	public registerCommands(): void { this.commandHandler.registerCommands(); }
+
+	/**
+	 * Deploys both application and guild commands
+	 */
+	public deployCommands(): void { this.commandHandler.deployCommands(); }
+
+	/**
+	 * Returns command information like name, execute function, and more
+	 */
+	public getCommands(): Map<string, Command> { return this.commandHandler.getCommands(); }
+
+	/**
+	 * Registers event listeners from files
+	 */
+	public registerListeners() { this.eventHandler.registerListeners(); }
+
+	/**
+	 * Logs the bot in using token
+	 */
+	public async login(): Promise<void> {
 		try {
-			parsedConfig = JSON.parse(fs.readFileSync('config.json', 'utf-8'));
+			sendDebug('Logging in...');
+			await this.client.login(process.env.TOKEN);
 		} catch {
-			handleError('Unable to parse config file. Is \'config.json\' in the project root?');
+			handleError('Client wasn\'t initialized or you used an invalid token!');
 			process.exit(-1);
 		}
-
-		this.config = parsedConfig as BotConfig;
-
-		sendDebug('Config successfully loaded!');
 	}
 
 	/**
-	 * Verifies the contents of the data in the configuration file
-	 * @private
+	 * Sends a status message on start
 	 */
-	private verifyConfig(): void {}
+	public async onStart(): Promise<void> {
+		sendDebug('Successfully logged in! Bot online!');
 
-	/**
-	 * Grabs {@link BotConfig config} data the bot uses
-	 */
-	public getConfig(): BotConfig { return this.config; }
+		const botStatusChannel = await this.getStatusChannel();
 
-	/**
-	 * Sets up all the {@link Command commands} the bot can use
-	 */
-	public setCommands(): void {
-		if (!this.instanceVarsSet()) process.exit(-1);
+		if (!botStatusChannel) return;
 
-		const commandFiles = fs.readdirSync(this.config.pathConfig.commands);
-
-		for (const commandFile of commandFiles) {
-			const exports = require('../commands/' + commandFile);
-			const commandClass = new exports.default();
-
-			this.commands.set(commandClass.data.name, commandClass);
-
-			sendDebug('Successfully found and set command: ' + commandClass.data.name);
-		}
-	}
-
-	/**
-	 * Grabs the {@link Map} storing {@link Command} data
-	 */
-	public getCommands(): Map<string, Command> { return this.commands; }
-
-	/**
-	 * Deploys application commands to Discord API
-	 */
-	public async deployCommands(): Promise<void> {
-		const commandData = [];
-
-		for (const command of this.commands.values())
-			commandData.push(command.data);
-
-		const rest = new REST({ version: '10' }).setToken(process.env.TOKEN as string);
 		try {
-			await rest.put(Routes.applicationCommands(process.env.CLIENT_ID as string), { body: commandData });
-			sendDebug('Application commands have successfully been registered!');
+			await botStatusChannel.send(
+				this.getConfig().stringConfig.botStatus +
+				FormatStrings.toRelTime(Math.round(Date.now() / 1000))
+			);
 		} catch (err: unknown) {
 			handleError(err);
 		}
+
+		sendDebug('Successfully sent status message!');
 	}
 
 	/**
-	 * Registers {@link Listener event listeners} for the bot
+	 * Deletes empty guild files (Guild was in the process of setting bot up)
 	 */
-	public registerListeners(): void {
-		if (!this.instanceVarsSet()) process.exit(-1);
-
-		const listenerFiles = fs.readdirSync(this.config.pathConfig.listeners);
-
-		for (const listenerFile of listenerFiles) {
-			const exports = require('../listeners/' + listenerFile);
-			const listenClass = new exports.default();
-
-			this.client.on(listenClass.eventName, (...args: any[]) => listenClass.execute(...args));
-
-			sendDebug('Successfully registered listener for event: ' + listenClass.eventName);
-		}
-	}
-
-	/**
-	 * Grabs the font file and loads it for Canvas if it exists
-	 */
-	public loadFonts(): void {
-		if (!this.instanceVarsSet()) process.exit(-1);
+	private fixGuildData(): void {
+		let guildDataFolder: string;
+		let guildDataFiles: string[];
 
 		try {
-			const mcFont = this.config.pathConfig.otherAssets +
-				this.config.pathConfig.mainFont;
-
-			registerFont(mcFont, {family: this.config.stringConfig.fontName});
+			guildDataFolder = this.getConfig().pathConfig.guildDataFolder;
+			guildDataFiles = fs.readdirSync(guildDataFolder);
 		} catch {
-			handleError('Unable to load font. Verify its path in \'config.json\'.');
-			return;
+			handleError('Unable to find guild data directory provided in \'config.json\'!');
+			process.exit(-1);
 		}
-
-		sendDebug('Fonts successfully loaded!');
-	}
-
-	/**
-	 * Sets relative time information like cutoffs and locales
-	 */
-	public setRelativeTime(): void {
-		moment.relativeTimeThreshold('s', 60);
-		moment.relativeTimeThreshold('ss', 1);
-		moment.relativeTimeThreshold('m', 60);
-		moment.relativeTimeThreshold('h', 24);
-		moment.relativeTimeThreshold('d', 30.437);
-		moment.relativeTimeThreshold('M', 12);
-
-		moment.updateLocale('en', {
-			relativeTime : {
-				future: 'in %s',
-				past:   '%s ago',
-				s  : '%d second',
-				ss : '%d seconds',
-				m:  '%d minute',
-				mm: '%d minutes',
-				h:  '%d hour',
-				hh: '%d hours',
-				d:  '%d day',
-				dd: '%d days',
-				M:  '%d month',
-				MM: '%d months',
-				y:  '%d year',
-				yy: '%d years'
-			}
-		});
-
-		sendDebug('Relative time information set!');
-	}
-
-	/**
-	 * Deletes guild files that were in the process of setting the bot up
-	 */
-	public fixGuildData(): void {
-		if (!this.instanceVarsSet()) process.exit(-1);
-
-		const guildDataFolder = this.config.pathConfig.guildDataFolder;
-		const guildDataFiles = fs.readdirSync(guildDataFolder);
 
 		for (const guildData of guildDataFiles) {
 			const data = JSON.parse(fs.readFileSync(guildDataFolder + guildData, 'utf-8'));
@@ -226,55 +153,20 @@ export class BoarBot implements Bot {
 	}
 
 	/**
-	 * Logs the bot in
-	 */
-	public async login(): Promise<void> {
-		if (!await this.instanceVarsSet()) process.exit(-1);
-
-		try {
-			sendDebug('Logging in...');
-			await this.client.login(process.env.TOKEN);
-		} catch {
-			handleError('Invalid token!');
-			process.exit(-1);
-		}
-	}
-
-	/**
-	 * What the bot should do once it's fully logged in
-	 */
-	public async onStart(): Promise<void> {
-		if (!await this.instanceVarsSet()) process.exit(-1);
-
-		sendDebug('Successfully logged in! Bot online!');
-
-		const botStatusChannel = await this.getStatusChannel();
-
-		if (!botStatusChannel) return;
-
-		try {
-			await botStatusChannel.send(
-				this.config.stringConfig.botStatus +
-				FormatStrings.toRelTime(Math.round(Date.now() / 1000))
-			);
-		} catch (err: unknown) {
-			handleError(err);
-		}
-
-		sendDebug('Successfully sent status message!');
-	}
-
-	/**
 	 * Finds the {@link TextChannel} to send status messages to
 	 * @private
 	 */
 	private async getStatusChannel(): Promise<TextChannel | undefined> {
+		const botStatusChannelID: string = this.getConfig().botStatusChannel;
 		let botStatusChannel: TextChannel;
 
 		try {
-			botStatusChannel = await this.client.channels.fetch(this.config.botStatusChannel) as TextChannel;
+			botStatusChannel = await this.client.channels.fetch(botStatusChannelID) as TextChannel;
 		} catch {
-			handleError('Bot cannot find status channel. Status message not sent.');
+			handleError(
+				'Bot cannot find status channel. Status message not sent.\nIs the channel ID \'' +
+				botStatusChannelID + '\' correct? Does the bot have view channel permissions?'
+			);
 			return undefined;
 		}
 
@@ -293,22 +185,4 @@ export class BoarBot implements Bot {
 		return botStatusChannel;
 	}
 
-	/**
-	 * Used to prevent the usage of instance variables before they were set
-	 * @return allSet - Whether instance variables were set
-	 * @private
-	 */
-	private async instanceVarsSet(): Promise<boolean> {
-		let allSet = true;
-
-		if (Object.keys(this.client).length === 0) {
-			handleError('Client was never built!');
-			allSet = false;
-		} else if (Object.keys(this.config).length === 0) {
-			handleError('Client was never built!');
-			allSet = false;
-		}
-
-		return allSet;
-	}
 }

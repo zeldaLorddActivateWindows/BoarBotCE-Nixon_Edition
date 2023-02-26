@@ -51,7 +51,7 @@ function sendDebug(debugMessage: any) {
  */
 async function handleError(err: unknown | string, interaction?: ChatInputCommandInteraction | ModalSubmitInteraction) {
     try {
-        let errString = typeof err === 'string' ? err : (err as Error).stack;
+        let errString = typeof err === 'string' ? JSON.stringify(err) : (err as Error).stack;
         const prefix = `[${Colors.Green}CAUGHT ERROR${Colors.White}] `;
         const time = getPrefixTime();
 

@@ -77,144 +77,158 @@
         "commandDebugPrefix": "%@ [%@] | "
     },
     "commandConfigs": {
-        "help": {
-            "name": "boar-help",
-            "description": "See all boar commands",
-            "args": [],
-            "adminOnly": false,
-            "cooldown": false,
-            "components": {},
-            "modals": {}
-        },
-        "setup": {
-            "name": "boar-setup",
-            "description": "Set the bot up to your liking",
-            "args": [],
-            "adminOnly": true,
-            "cooldown": true,
-            "components": {
-                "selectMenu1": {
-                    "id": "SETUP_TRADE_CHANNEL_SELECT",
-                    "label": "UNSELECTED"
-                },
-                "selectMenu2_1": {
-                    "id": "SETUP_BOAR_CHANNEL_SELECT_1",
-                    "label": "UNSELECTED"
-                },
-                "selectMenu2_2": {
-                    "id": "SETUP_BOAR_CHANNEL_SELECT_2",
-                    "label": "UNSELECTED"
-                },
-                "selectMenu2_3": {
-                    "id": "SETUP_BOAR_CHANNEL_SELECT_3",
-                    "label": "UNSELECTED"
-                },
-                "refresh1": {
-                    "id": "SETUP_REFRESH_TRADE_CHANNEL",
-                    "label": "Refresh"
-                },
-                "refresh2": {
-                    "id": "SETUP_REFRESH_BOAR_CHANNELS",
-                    "label": "Refresh"
-                },
-                "info1": {
-                    "id": "SETUP_INFO_TRADE_CHANNEL",
-                    "label": "❔"
-                },
-                "info2": {
-                    "id": "SETUP_INFO_BOAR_CHANNELS",
-                    "label": "❔"
-                },
-                "info3": {
-                    "id": "SETUP_INFO_SB",
-                    "label": "❔"
-                },
-                "sbYes": {
-                    "id": "SETUP_SB_YES",
-                    "label": "Yes"
-                },
-                "sbNo": {
-                    "id": "SETUP_SB_NO",
-                    "label": "No"
-                },
-                "findChannel": {
-                    "id": "SETUP_FIND",
-                    "label": "\uD83D\uDCDD"
-                },
-                "cancel": {
-                    "id": "SETUP_CANCEL",
-                    "label": "Cancel"
-                },
-                "restart": {
-                    "id": "SETUP_RESTART",
-                    "label": "Restart"
-                },
-                "next": {
-                    "id": "SETUP_NEXT",
-                    "label": "Next",
-                    "altLabel": "Finish"
-                }
+        "boar": {
+            "name": "boar",
+            "description": "Commands to play and interact with BoarBot",
+            "staffOnly": false,
+            "devOnly": false,
+            "help": {
+                "name": "help",
+                "description": "See all boar command information",
+                "args": [],
+                "cooldown": false,
+                "components": {},
+                "modals": {}
             },
-            "modals": {
-                "modal1": {
-                    "title": "Input Channel ID",
-                    "id": "FIELD_ONE_MODAL",
-                    "inputIDs": ["CHANNEL_INPUT"],
-                    "inputLabels": ["ID"],
-                    "inputPlaceholders": ["012345678901234567"]
+            "daily": {
+                "name": "daily",
+                "description": "Get your daily boar",
+                "args": [],
+                "cooldown": false,
+                "components": {},
+                "modals": {}
+            },
+            "collection": {
+                "name": "collection",
+                "description": "View your collection of daily boars",
+                "args": [
+                    {
+                        "name": "user",
+                        "description": "Check someone else's collection of boars",
+                        "required": false
+                    }
+                ],
+                "cooldown": false,
+                "components": {},
+                "modals": {}
+            }
+        },
+        "boarManage": {
+            "name": "boar-manage",
+            "staffOnly": true,
+            "devOnly": false,
+            "description": "Commands to manage BoarBot",
+            "setup": {
+                "name": "setup",
+                "description": "Set the bot up to your liking",
+                "args": [],
+                "adminOnly": true,
+                "cooldown": true,
+                "components": {
+                    "selectMenu1": {
+                        "id": "SETUP_TRADE_CHANNEL_SELECT",
+                        "label": "UNSELECTED"
+                    },
+                    "selectMenu2_1": {
+                        "id": "SETUP_BOAR_CHANNEL_SELECT_1",
+                        "label": "UNSELECTED"
+                    },
+                    "selectMenu2_2": {
+                        "id": "SETUP_BOAR_CHANNEL_SELECT_2",
+                        "label": "UNSELECTED"
+                    },
+                    "selectMenu2_3": {
+                        "id": "SETUP_BOAR_CHANNEL_SELECT_3",
+                        "label": "UNSELECTED"
+                    },
+                    "refresh1": {
+                        "id": "SETUP_REFRESH_TRADE_CHANNEL",
+                        "label": "Refresh"
+                    },
+                    "refresh2": {
+                        "id": "SETUP_REFRESH_BOAR_CHANNELS",
+                        "label": "Refresh"
+                    },
+                    "info1": {
+                        "id": "SETUP_INFO_TRADE_CHANNEL",
+                        "label": "❔"
+                    },
+                    "info2": {
+                        "id": "SETUP_INFO_BOAR_CHANNELS",
+                        "label": "❔"
+                    },
+                    "info3": {
+                        "id": "SETUP_INFO_SB",
+                        "label": "❔"
+                    },
+                    "sbYes": {
+                        "id": "SETUP_SB_YES",
+                        "label": "Yes"
+                    },
+                    "sbNo": {
+                        "id": "SETUP_SB_NO",
+                        "label": "No"
+                    },
+                    "findChannel": {
+                        "id": "SETUP_FIND",
+                        "label": "\uD83D\uDCDD"
+                    },
+                    "cancel": {
+                        "id": "SETUP_CANCEL",
+                        "label": "Cancel"
+                    },
+                    "restart": {
+                        "id": "SETUP_RESTART",
+                        "label": "Restart"
+                    },
+                    "next": {
+                        "id": "SETUP_NEXT",
+                        "label": "Next",
+                        "altLabel": "Finish"
+                    }
                 },
-                "modal2": {
-                    "title": "Input Channel ID",
-                    "id": "FIELD_TWO_MODAL",
-                    "inputIDs": ["CHANNEL_INPUT"],
-                    "inputLabels": ["ID"],
-                    "inputPlaceholders": ["012345678901234567"]
+                "modals": {
+                    "modal1": {
+                        "title": "Input Channel ID",
+                        "id": "FIELD_ONE_MODAL",
+                        "inputIDs": ["CHANNEL_INPUT"],
+                        "inputLabels": ["ID"],
+                        "inputPlaceholders": ["012345678901234567"]
+                    },
+                    "modal2": {
+                        "title": "Input Channel ID",
+                        "id": "FIELD_TWO_MODAL",
+                        "inputIDs": ["CHANNEL_INPUT"],
+                        "inputLabels": ["ID"],
+                        "inputPlaceholders": ["012345678901234567"]
+                    }
                 }
             }
         },
-        "daily": {
-            "name": "boar-daily",
-            "description": "Get your daily boar",
-            "args": [],
-            "adminOnly": false,
-            "cooldown": false,
-            "components": {},
-            "modals": {}
-        },
-        "give": {
-            "name": "boar-give",
-            "description": "Give a user a boar/badge [DEV]",
-            "args": [
-                {
-                    "name": "user",
-                    "description": "User you'd like to give the boar/badge to",
-                    "required": true
-                },
-                {
-                    "name": "id",
-                    "description": "ID of boar/badge to give",
-                    "required": true
-                }
-            ],
-            "adminOnly": true,
-            "cooldown": false,
-            "components": {},
-            "modals": {}
-        },
-        "collection": {
-            "name": "boar-collection",
-            "description": "View your collection of daily boars",
-            "args": [
-                {
-                    "name": "user",
-                    "description": "Check someone else's collection of boars",
-                    "required": false
-                }
-            ],
-            "adminOnly": false,
-            "cooldown": false,
-            "components": {},
-            "modals": {}
+        "boarDev": {
+            "name": "boar-dev",
+            "staffOnly": true,
+            "devOnly": true,
+            "description": "Commands exclusive to developers of BoarBot",
+            "give": {
+                "name": "give",
+                "description": "Give a user a boar/badge",
+                "args": [
+                    {
+                        "name": "user",
+                        "description": "User you'd like to give the boar/badge to",
+                        "required": true
+                    },
+                    {
+                        "name": "id",
+                        "description": "ID of boar/badge to give",
+                        "required": true
+                    }
+                ],
+                "cooldown": false,
+                "components": {},
+                "modals": {}
+            }
         }
     },
     "numberConfig": {

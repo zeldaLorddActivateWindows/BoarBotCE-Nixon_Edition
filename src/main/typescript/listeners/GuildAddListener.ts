@@ -50,7 +50,7 @@ export default class GuildAddListener implements Listener {
         // Aliases for config
         const strConfig = this.config.stringConfig;
         const pathConfig = this.config.pathConfig;
-        const setupCommandConfig = this.config.commandConfigs.setup;
+        const setupCommandConfig = this.config.commandConfigs.boarManage.setup;
 
         // DM information to be sent
         const thankYouImage = pathConfig.otherAssets + pathConfig.thankYouImage;

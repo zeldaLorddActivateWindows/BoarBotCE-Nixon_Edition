@@ -1,6 +1,4 @@
-import {CommandArgsConfig} from './CommandArgsConfig';
-import {SetupComponentConfigs} from '../components/SetupComponentConfigs';
-import {SetupModalConfigs} from '../modals/SetupModalConfigs';
+import {PermissionFlagsBits} from 'discord-api-types/v10';
 
 /**
  * {@link CommandConfig CommandConfig.ts}
@@ -14,19 +12,6 @@ import {SetupModalConfigs} from '../modals/SetupModalConfigs';
 export class CommandConfig {
     public readonly name: string = '';
     public readonly description: string = '';
-
-    // Arguments the command uses
-
-    public readonly args: CommandArgsConfig[] = [];
-
-    // Tags for the command
-
-    public readonly adminOnly: boolean = false;
-    public readonly cooldown: boolean = false;
-
-    // Components and modals associated with a command
-    // NOTE: Types should expand as more commands with Components and Modals are added
-
-    public readonly components: SetupComponentConfigs = new SetupComponentConfigs;
-    public readonly modals: SetupModalConfigs = new SetupModalConfigs;
+    public readonly staffOnly: boolean = false;
+    public readonly devOnly: boolean = false;
 }

@@ -1,5 +1,3 @@
-import {CommandConfig} from './CommandConfig';
-
 /**
  * {@link CommandConfigs CommandConfigs.ts}
  *
@@ -9,29 +7,23 @@ import {CommandConfig} from './CommandConfig';
  * @license {@link http://www.apache.org/licenses/ Apache-2.0}
  * @copyright WeslayCodes 2023
  */
+import {BoarCommandConfig} from './BoarCommandConfig';
+import {BoarDevCommandConfig} from './BoarDevCommandConfig';
+import {BoarManageCommandConfig} from './BoarManageCommandConfig';
+
 export class CommandConfigs {
     /**
-     * {@link CommandConfig Command information} for {@link HelpCommand}
+     * {@link CommandConfig Command information} for {@link BoarCommand}
      */
-    public readonly help: CommandConfig = new CommandConfig;
+    public readonly boar: BoarCommandConfig = new BoarCommandConfig;
 
     /**
-     * {@link CommandConfig Command information} for {@link SetupCommand}
+     * {@link CommandConfig Command information} for {@link BoarDevCommand}
      */
-    public readonly setup: CommandConfig = new CommandConfig;
+    public readonly boarDev: BoarDevCommandConfig = new BoarDevCommandConfig;
 
     /**
-     * {@link CommandConfig Command information} for {@link DailyCommand}
+     * {@link CommandConfig Command information} for {@link BoarManageCommand}
      */
-    public readonly daily: CommandConfig = new CommandConfig;
-
-    /**
-     * {@link CommandConfig Command information} for {@link GiveCommand}
-     */
-    public readonly give: CommandConfig = new CommandConfig;
-
-    /**
-     * {@link CommandConfig Command information} for {@link CollectionCommand}
-     */
-    public readonly collection: CommandConfig = new CommandConfig;
+    public readonly boarManage: BoarManageCommandConfig = new BoarManageCommandConfig;
 }
