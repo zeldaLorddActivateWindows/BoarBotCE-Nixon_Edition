@@ -169,7 +169,7 @@ export class BoarUser {
         const pathConfig = config.pathConfig;
         const strConfig = config.stringConfig;
         const numConfig = config.numberConfig;
-        const giveCommandConfig = config.commandConfigs.give;
+        const giveCommandConfig = config.commandConfigs.boarDev.give;
 
         // Rarity information
         const rarities = config.rarityConfigs;
@@ -267,7 +267,7 @@ export class BoarUser {
      */
     public async addBadge(config: BotConfig, badgeID: string, interaction: ChatInputCommandInteraction) {
         const strConfig = config.stringConfig;
-        const giveCommandConfig = config.commandConfigs.give;
+        const giveCommandConfig = config.commandConfigs.boarDev.give;
 
         const hasBadge = this.badges.includes(badgeID);
         const wasGiven = interaction.commandName === giveCommandConfig.name;
@@ -353,6 +353,7 @@ export class BoarUser {
             await new Promise((resolve, reject) => {
                 const scriptOptions: Options = {
                     args: [
+                        JSON.stringify(config),
                         backgroundColor,
                         imageFilePath,
                         userAvatar,

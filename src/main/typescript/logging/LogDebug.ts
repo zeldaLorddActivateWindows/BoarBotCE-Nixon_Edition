@@ -7,9 +7,10 @@
  * License Info: http://www.apache.org/licenses/
  ***********************************************/
 
-import {ChatInputCommandInteraction, EmbedBuilder, Message, ModalSubmitInteraction} from 'discord.js';
+import {ChatInputCommandInteraction, EmbedBuilder, Interaction, Message, ModalSubmitInteraction} from 'discord.js';
 import {getConfigFile} from '../util/DataHandlers';
 import {BoarBotApp} from '../BoarBotApp';
+import {BotConfig} from '../bot/config/BotConfig';
 
 //***************************************
 
@@ -30,14 +31,30 @@ const errorEmbed = new EmbedBuilder()
 /**
  * [DEBUG] Sends messages to the console
  * @param debugMessage - Message to send to debug
+ * @param config - Configuration file
+ * @param interaction - Whether to prepend string with command and user info
  */
-function sendDebug(debugMessage: any) {
-    const config = getConfigFile();
-
+function sendDebug(
+    debugMessage: any,
+    config: BotConfig,
+    interaction?: ChatInputCommandInteraction
+) {
     if (!config.debugMode) return;
 
     const prefix = `[${Colors.Yellow}DEBUG${Colors.White}] `;
     const time = getPrefixTime();
+
+    if (typeof debugMessage !== 'string') {
+        debugMessage = JSON.stringify(debugMessage);
+    }
+
+    if (interaction) {
+        debugMessage = config.stringConfig.commandDebugPrefix
+            .replace('%@', interaction.user.tag)
+            .replace('%@', interaction.commandName)
+            .replace('%@', interaction.options.getSubcommand()) +
+            debugMessage
+    }
 
     console.log(prefix + time + debugMessage);
 }
@@ -51,7 +68,7 @@ function sendDebug(debugMessage: any) {
  */
 async function handleError(err: unknown | string, interaction?: ChatInputCommandInteraction | ModalSubmitInteraction) {
     try {
-        let errString = typeof err === 'string' ? JSON.stringify(err) : (err as Error).stack;
+        let errString = typeof err === 'string' ? err : (err as Error).stack;
         const prefix = `[${Colors.Green}CAUGHT ERROR${Colors.White}] `;
         const time = getPrefixTime();
 

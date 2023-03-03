@@ -36,12 +36,12 @@ export class EventHandler {
 
         for (const listenerFile of listenerFiles) {
             try {
-                const exports = require('../listeners/' + listenerFile);
+                const exports = require('../../listeners/' + listenerFile);
                 const listenClass = new exports.default();
 
                 client.on(listenClass.eventName, (...args: any[]) => listenClass.execute(...args));
 
-                sendDebug('Successfully registered listener for event: ' + listenClass.eventName);
+                sendDebug('Successfully registered listener for event: ' + listenClass.eventName, config);
             } catch {
                 handleError('One or more listener classes has an invalid structure!');
                 process.exit(-1);

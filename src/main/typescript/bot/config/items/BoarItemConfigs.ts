@@ -11,7 +11,7 @@ import {BoarItemConfig} from './BoarItemConfig';
 import {BadgeItemConfig} from './BadgeItemConfig';
 
 export class BoarItemConfigs {
-    [boarKey: string]: BadgeItemConfig;
+    [boarKey: string]: BoarItemConfig;
 
     // Common boar items
 

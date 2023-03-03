@@ -1,5 +1,5 @@
 /************************************************
- * SetupCommand.ts
+ * SetupSubcommand.ts
  * Sets up the bot with style and channels.
  *
  * Copyright 2023 WeslayCodes
@@ -14,10 +14,9 @@ import {
     ChannelType, ChatInputCommandInteraction,
     ComponentType,
     InteractionCollector,
-    SelectMenuInteraction, SlashCommandBuilder,
+    SelectMenuInteraction,
     TextInputStyle,
 } from 'discord.js';
-import {PermissionFlagsBits} from 'discord-api-types/v10';
 import fs from 'fs';
 import {handleCooldown, hasAttachmentPerms} from '../../util/GeneralFunctions';
 import {getConfigFile, getGuildData, removeGuildFile} from '../../util/DataHandlers';
@@ -29,20 +28,15 @@ import {
     Reasons,
     updateSelectField
 } from "../../util/command_specific/ConfigFunctions";
-import {noPermsReply} from '../../util/InteractionReplies';
 import {BoarBotApp} from '../../BoarBotApp';
-import {Command} from '../../api/commands/Command';
+import {Subcommand} from '../../api/commands/Subcommand';
 
 //***************************************
 
-export default class SetupCommand implements Command {
+export default class SetupSubcommand implements Subcommand {
     private initConfig = BoarBotApp.getBot().getConfig();
-    private commandInfo = this.initConfig.commandConfigs.setup;
-    public readonly data = new SlashCommandBuilder()
-        .setName(this.commandInfo.name)
-        .setDescription(this.commandInfo.description)
-        .setDMPermission(false)
-        .setDefaultMemberPermissions(this.commandInfo.adminOnly ? PermissionFlagsBits.Administrator : undefined);
+    private subcommandInfo = this.initConfig.commandConfigs.boarManage.setup;
+    public readonly data = { name: this.subcommandInfo.name };
 
     public async execute(interaction: ChatInputCommandInteraction) {
         if (!interaction.guild || !interaction.channel)
@@ -50,20 +44,16 @@ export default class SetupCommand implements Command {
 
         await interaction.deferReply({ ephemeral: true });
 
-        const onCooldown = await handleCooldown(interaction);
-
-        if (onCooldown)
-            return;
-
         const config = BoarBotApp.getBot().getConfig();
 
-        const strConfig = config.stringConfig;
-        const setupComponentsConfig = config.commandConfigs.setup.components;
+        const onCooldown = await handleCooldown(config, interaction);
 
-        sendDebug(strConfig.commandDebugPrefix
-            .replace('%@', interaction.user.tag)
-            .replace('%@', interaction.commandName)
-        );
+        if (onCooldown) return;
+
+        const strConfig = config.stringConfig;
+        const setupComponentsConfig = config.commandConfigs.boarManage.setup.components;
+
+        sendDebug('Started interaction', config, interaction);
 
         // Action rows and fields
         const staticRow = getStaticRow(interaction, config);
@@ -132,10 +122,7 @@ export default class SetupCommand implements Command {
                     timerVars.timeUntilNextCollect = Date.now() + 500;
                 }, 100);
 
-                sendDebug(strConfig.commandDebugPrefix
-                    .replace('%@', interaction.user.tag)
-                    .replace('%@', inter.customId)
-                );
+                sendDebug(`${inter.customId} on field ${curField}`, config, interaction);
 
                 // Terminates interaction when in maintenance mode
                 if (getConfigFile().maintenanceMode && !config.devs.includes(inter.user.id)) {
@@ -283,7 +270,7 @@ export default class SetupCommand implements Command {
                     // Reverts next button back to original state
                     nextButton.setLabel(setupComponentsConfig.next.label)
                         .setStyle(ButtonStyle.Primary)
-                        .setDisabled(true)
+                        .setDisabled(true);
 
                     // Brings user back to first field
                     await configFields.configFieldOne.editReply(interaction);
@@ -339,10 +326,7 @@ export default class SetupCommand implements Command {
         });
 
         collectorObj.collector.once('end', async (collected, reason) => {
-            sendDebug(strConfig.commandDebugPrefix
-                .replace('%@', interaction.user.tag)
-                .replace('%@', interaction.commandName)
-            );
+            sendDebug('Ended collection with reason: ' + reason, config, interaction);
 
             try {
                 const fileIsEmpty = Object.keys(guildData).length === 0;

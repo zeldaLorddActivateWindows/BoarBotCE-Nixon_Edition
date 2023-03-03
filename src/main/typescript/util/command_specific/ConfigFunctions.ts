@@ -248,7 +248,7 @@ async function updateSelectField(
     const config = BoarBotApp.getBot().getConfig();
 
     const strConfig = config.stringConfig;
-    const setupComponentsConfig = config.commandConfigs.setup.components;
+    const setupComponentsConfig = config.commandConfigs.boarManage.setup.components;
 
     // Components that need to be changed
     const fieldOneSelectMenu: SelectMenuBuilder =
@@ -328,7 +328,7 @@ async function updateSelectField(
 
 // Gets the static row that goes at the bottom of every field
 function getStaticRow(interaction: ChatInputCommandInteraction, config: BotConfig) {
-    const setupComponentConfigs = config.commandConfigs.setup.components;
+    const setupComponentConfigs = config.commandConfigs.boarManage.setup.components;
 
     return new ActionRowBuilder<ButtonBuilder | SelectMenuBuilder>().setComponents(
         new ButtonBuilder()
@@ -357,7 +357,7 @@ function getConfigFields(
     config: BotConfig
 ) {
     const strConfig = config.stringConfig;
-    const setupComponentConfigs = config.commandConfigs.setup.components;
+    const setupComponentConfigs = config.commandConfigs.boarManage.setup.components;
 
     return {
         // Field that gets trade channel

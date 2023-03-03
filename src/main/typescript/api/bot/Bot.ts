@@ -1,6 +1,7 @@
 import {BotConfig} from '../../bot/config/BotConfig';
 import {Command} from '../commands/Command';
 import {Client} from 'discord.js';
+import {Subcommand} from '../commands/Subcommand';
 
 /**
  * {@link Bot Bot.ts}
@@ -17,6 +18,7 @@ export interface Bot {
     getConfig(): BotConfig;
     registerCommands(): void;
     getCommands(): Map<string, Command>;
+    getSubcommands(): Map<string, Subcommand>;
     deployCommands(): void;
     registerListeners(): void;
     onStart(): void;

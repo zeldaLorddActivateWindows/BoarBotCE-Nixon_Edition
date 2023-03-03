@@ -36,10 +36,7 @@ export default class InteractionListener implements Listener {
             return;
         }
 
-        let command;
-
-        if (interaction.isChatInputCommand())
-            command = BoarBotApp.getBot().getCommands().get(interaction.commandName);
+        const command = BoarBotApp.getBot().getCommands().get(interaction.commandName);
 
         if (command) {
             try {

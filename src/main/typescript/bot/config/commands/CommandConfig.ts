@@ -12,6 +12,5 @@ import {PermissionFlagsBits} from 'discord-api-types/v10';
 export class CommandConfig {
     public readonly name: string = '';
     public readonly description: string = '';
-    public readonly staffOnly: boolean = false;
-    public readonly devOnly: boolean = false;
+    public readonly perms: bigint | undefined = undefined;
 }

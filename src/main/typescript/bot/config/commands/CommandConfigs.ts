@@ -10,6 +10,7 @@
 import {BoarCommandConfig} from './BoarCommandConfig';
 import {BoarDevCommandConfig} from './BoarDevCommandConfig';
 import {BoarManageCommandConfig} from './BoarManageCommandConfig';
+import {CommandConfig} from './CommandConfig';
 
 export class CommandConfigs {
     /**

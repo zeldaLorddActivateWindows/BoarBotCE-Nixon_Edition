@@ -33,7 +33,10 @@ export class ConfigHandler {
 
         this.config = parsedConfig as BotConfig;
 
-        sendDebug('Config successfully loaded!');
+        sendDebug('Config file successfully loaded!', this.config);
+
+        this.loadFonts();
+        this.setRelativeTime();
     }
 
     /**
@@ -54,13 +57,13 @@ export class ConfigHandler {
         try {
             const mcFont = this.config.pathConfig.otherAssets + this.config.pathConfig.mainFont;
 
-            registerFont(mcFont, {family: this.config.stringConfig.fontName});
+            registerFont(mcFont, { family: this.config.stringConfig.fontName });
         } catch {
-            handleError('Unable to load font. Verify its path in \'config.json\'.');
+            handleError('Unable to load custom font. Verify its path in \'config.json\'.');
             return;
         }
 
-        sendDebug('Fonts successfully loaded!');
+        sendDebug('Fonts successfully loaded!', this.config);
     }
 
     /**
@@ -93,6 +96,6 @@ export class ConfigHandler {
             }
         });
 
-        sendDebug('Relative time information set!');
+        sendDebug('Relative time information set!', this.config);
     }
 }

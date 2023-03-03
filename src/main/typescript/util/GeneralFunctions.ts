@@ -18,6 +18,7 @@ import {sendDebug} from '../logging/LogDebug';
 import {currentConfigReply, onCooldownReply, wrongChannelReply} from './InteractionReplies';
 import {BoarBotApp} from '../BoarBotApp';
 import {RarityConfig} from '../bot/config/items/RarityConfig';
+import {BotConfig} from '../bot/config/BotConfig';
 
 //***************************************
 
@@ -67,22 +68,20 @@ function findRarity(boarID: string) {
 
 /**
  * Handles the beginning of most command interactions to prevent duplicate code
+ * @param config
  * @param interaction - Interaction to reply to
  * @param includeTrade - Whether to include trade menu when deciding usable channels
  * @return guildData - Guild data parsed from JSON
  */
-async function handleStart(interaction: ChatInputCommandInteraction, includeTrade: boolean = false) {
+async function handleStart(
+    config: BotConfig,
+    interaction: ChatInputCommandInteraction,
+    includeTrade: boolean = false
+) {
     if (!interaction.guild || !interaction.channel)
         return undefined;
 
-    const config = BoarBotApp.getBot().getConfig();
-
-    const strConfig = config.stringConfig;
-
-    sendDebug(strConfig.commandDebugPrefix
-        .replace('%@', interaction.user.tag)
-        .replace('%@', interaction.commandName)
-    );
+    sendDebug('Started interaction', config, interaction);
 
     const guildData = await getGuildData(interaction);
 
@@ -90,17 +89,17 @@ async function handleStart(interaction: ChatInputCommandInteraction, includeTrad
         return undefined;
 
     if (!guildData.channels) {
-        await currentConfigReply(interaction);
+        await currentConfigReply(config, interaction);
         return undefined;
     }
 
     const acceptableChannels: string[] = [].concat(guildData.channels);
 
     if (includeTrade)
-        acceptableChannels.push(guildData.tradeChannel)
+        acceptableChannels.push(guildData.tradeChannel);
 
     if (!acceptableChannels.includes(interaction.channel.id)) {
-        await wrongChannelReply(interaction, guildData, includeTrade);
+        await wrongChannelReply(config, interaction, guildData, includeTrade);
         return undefined;
     }
 
@@ -111,10 +110,11 @@ async function handleStart(interaction: ChatInputCommandInteraction, includeTrad
 
 /**
  * Handles cooldowns for users on certain commands
+ * @param config
  * @param interaction - Interaction to reply to
  * @return onCooldown - Whether user is on cooldown or not
  */
-async function handleCooldown(interaction: ChatInputCommandInteraction) {
+async function handleCooldown(config: BotConfig, interaction: ChatInputCommandInteraction) {
     const commandName = interaction.commandName;
     const userID = interaction.user.id;
 
@@ -122,7 +122,7 @@ async function handleCooldown(interaction: ChatInputCommandInteraction) {
         cooldowns[commandName] = [];
 
     if (cooldowns[commandName].includes(userID)) {
-        await onCooldownReply(interaction);
+        await onCooldownReply(config, interaction);
         return true;
     }
 

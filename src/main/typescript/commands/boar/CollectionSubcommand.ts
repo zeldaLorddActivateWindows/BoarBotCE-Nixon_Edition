@@ -1,5 +1,5 @@
 /************************************************
- * CollectionCommand.ts
+ * CollectionSubcommand.ts
  * Used to see a collection of boars, powerups,
  * and other information pertaining to a user.
  *
@@ -27,51 +27,39 @@ import {finishImage} from '../../util/command_specific/CollectionFunctions';
 import moment from 'moment';
 import {Command} from '../../api/commands/Command';
 import {BoarBotApp} from '../../BoarBotApp';
+import {Subcommand} from '../../api/commands/Subcommand';
 
 //***************************************
 
-export default class CollectionCommand implements Command {
+export default class CollectionSubcommand implements Subcommand {
     private initConfig = BoarBotApp.getBot().getConfig();
-    private commandInfo = this.initConfig.commandConfigs.collection;
-    public readonly data = new SlashCommandBuilder()
-        .setName(this.commandInfo.name)
-        .setDescription(this.commandInfo.description)
-        .setDMPermission(false)
-        .setDefaultMemberPermissions(this.commandInfo.adminOnly ? PermissionFlagsBits.Administrator : undefined)
-        .addUserOption(option => option.setName(this.commandInfo.args[0].name)
-            .setDescription(this.commandInfo.args[0].description)
-            .setRequired(this.commandInfo.args[0].required)
-        ) as SlashCommandBuilder;
+    private subcommandInfo = this.initConfig.commandConfigs.boar.collection;
+    public readonly data = { name: this.subcommandInfo.name };
 
     public async execute(interaction: ChatInputCommandInteraction) {
-        const config = getConfigFile();
+        const config = BoarBotApp.getBot().getConfig();
 
-        const guildData = await handleStart(interaction);
+        const guildData = await handleStart(config, interaction);
 
-        if (!guildData)
-            return;
+        if (!guildData) return;
 
         await interaction.deferReply();
 
-        const debugStrings = config.strings.debug;
-
         // Gets user to interact with
-        const userInput = (interaction.options.getUser(this.commandInfo.args[0].name)
-            ? interaction.options.getUser(this.commandInfo.args[0].name)
+        const userInput = (interaction.options.getUser(this.subcommandInfo.args[0].name)
+            ? interaction.options.getUser(this.subcommandInfo.args[0].name)
             : interaction.user) as User;
 
         // Config aliases
-        const configStrings = config.strings;
-        const collectionStrings = configStrings.commands.collection.other;
-        const generalNums = config.numbers.general;
-        const nums = config.numbers.collection;
-        const hexColors = config.hexColors;
-        const rarities = Object.keys(config.raritiesInfo);
-        const configAssets = config.paths.assets;
-        const collectionAssets = configAssets.collection;
-        const collectionFolder = collectionAssets.basePath;
-        const boarsFolder = configAssets.boars;
-        const collectionUnderlay = collectionFolder + collectionAssets.underlay;
+        const strConfig = config.stringConfig;
+        const numConfig = config.numberConfig;
+        const pathConfig = config.pathConfig;
+        const hexColors = config.colorConfig;
+        const rarities = Object.keys(config.rarityConfigs);
+        const collectionFolder = pathConfig.collAssets;
+        const boarsFolder = pathConfig.boarImages;
+        const collectionUnderlay = collectionFolder + pathConfig.collUnderlay;
+        const collectionOverlay = collectionFolder + pathConfig.collOverlay;
 
         // Stores information about all boars the user has
         const boarArray: any[] = [];
@@ -109,7 +97,7 @@ export default class CollectionCommand implements Command {
                 userStreak = boarUser.boarStreak;
                 userLastDaily = boarUser.lastDaily;
                 userAvatar = userInput.displayAvatarURL({ extension: 'png' });
-                userTag = userInput.username.substring(0, generalNums.usernameLength) + '#' +
+                userTag = userInput.username.substring(0, numConfig.maxUsernameLength) + '#' +
                     userInput.discriminator;
 
                 // Atypical boar information
@@ -123,7 +111,7 @@ export default class CollectionCommand implements Command {
                     const rarity: number = findRarity(boarID);
 
                     // Global boar information
-                    const boarDetails = config.boarIDs[boarID];
+                    const boarDetails = config.boarItemConfigs[boarID];
 
                     boarArray.push({
                         id: boarID,
@@ -146,21 +134,21 @@ export default class CollectionCommand implements Command {
         const boarsPerPage = 16;
 
         // Aliases for information stored in config
-        const maxScore = nums.maxScore;
-        const maxBoars = nums.maxBoars;
-        const maxStreak = nums.maxStreak;
-        const maxMultiplier = 1 / config.raritiesInfo[rarities[rarities.length - 1]].probability;
-        let maxUniques = Object.keys(config.boarIDs).length;
+        const maxScore = numConfig.maxScore;
+        const maxBoars = numConfig.maxBoars;
+        const maxStreak = numConfig.maxStreak;
+        const maxMultiplier = 100000;
+        let maxUniques = Object.keys(config.boarItemConfigs).length;
 
         // Position and dimension information
-        const origin = generalNums.originPos;
-        const imageSize = nums.imageSize;
+        const origin = numConfig.originPos;
+        const imageSize = numConfig.collImageSize;
 
         // Font info
-        const fontName = configStrings.general.fontName;
-        const bigFont = `${generalNums.fontSizes.big}px ${fontName}`;
-        const mediumFont = `${generalNums.fontSizes.medium}px ${fontName}`;
-        const smallFont = `${generalNums.fontSizes.small_medium}px ${fontName}`;
+        const fontName = strConfig.fontName;
+        const bigFont = `${numConfig.fontBig}px ${fontName}`;
+        const mediumFont = `${numConfig.fontMedium}px ${fontName}`;
+        const smallFont = `${numConfig.fontSmallMedium}px ${fontName}`;
 
         // Sets stats depending on their size
         const scoreString = userScore <= maxScore
@@ -180,7 +168,7 @@ export default class CollectionCommand implements Command {
             : `${maxStreak.toLocaleString()}+`;
         const lastDailyString = userLastDaily > 1
             ? moment(userLastDaily).fromNow()
-            : collectionStrings.dateUnavailable;
+            : strConfig.unavailable;
 
         // // Gets the day a user first started using the bot
         // let firstDate: string;
@@ -327,16 +315,9 @@ export default class CollectionCommand implements Command {
                 timeUntilNextCollect = Date.now() + 500;
             }, 100);
 
-            sendDebug(debugStrings.formInteraction
-                .replace('%@', interaction.user.tag)
-                .replace('%@', inter.customId.split('|')[0])
-                .replace('%@', curPage)
-            );
+            sendDebug(`Used ${inter.customId.split('|')[0]} on field ${curPage}`, config, interaction);
         });
 
-        sendDebug(debugStrings.endCommand
-            .replace('%@', interaction.user.tag)
-            .replace('%@', interaction.commandName)
-        );
+        sendDebug('End of interaction', config, interaction);
     }
 }

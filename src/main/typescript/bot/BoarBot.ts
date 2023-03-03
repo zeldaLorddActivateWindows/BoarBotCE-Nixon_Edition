@@ -1,4 +1,4 @@
-import dotenv from 'dotenv';
+import dotenv, {config} from 'dotenv';
 import fs from 'fs';
 import {ActivityType, Client, GatewayIntentBits, TextChannel} from 'discord.js';
 import {Bot} from '../api/bot/Bot';
@@ -9,6 +9,7 @@ import {CommandHandler} from './handlers/CommandHandler';
 import {EventHandler} from './handlers/EventHandler';
 import {BotConfig} from './config/BotConfig';
 import {Command} from '../api/commands/Command';
+import {Subcommand} from '../api/commands/Subcommand';
 
 dotenv.config();
 
@@ -34,6 +35,9 @@ export class BoarBot implements Bot {
 	public async create(): Promise<void> {
 		this.buildClient();
 
+		this.loadConfig();
+		this.registerCommands();
+		this.registerListeners();
 		this.fixGuildData();
 
 		await this.login();
@@ -77,12 +81,17 @@ export class BoarBot implements Bot {
 	/**
 	 * Deploys both application and guild commands
 	 */
-	public deployCommands(): void { this.commandHandler.deployCommands(); }
+	public async deployCommands(): Promise<void> { await this.commandHandler.deployCommands(); }
 
 	/**
 	 * Returns command information like name, execute function, and more
 	 */
 	public getCommands(): Map<string, Command> { return this.commandHandler.getCommands(); }
+
+	/**
+	 * Returns subcommand information like name and execute function
+	 */
+	public getSubcommands(): Map<string, Subcommand> { return this.commandHandler.getSubcommands(); }
 
 	/**
 	 * Registers event listeners from files
@@ -94,7 +103,7 @@ export class BoarBot implements Bot {
 	 */
 	public async login(): Promise<void> {
 		try {
-			sendDebug('Logging in...');
+			sendDebug('Logging in...', this.getConfig());
 			await this.client.login(process.env.TOKEN);
 		} catch {
 			handleError('Client wasn\'t initialized or you used an invalid token!');
@@ -106,7 +115,7 @@ export class BoarBot implements Bot {
 	 * Sends a status message on start
 	 */
 	public async onStart(): Promise<void> {
-		sendDebug('Successfully logged in! Bot online!');
+		sendDebug('Successfully logged in! Bot online!', this.getConfig());
 
 		const botStatusChannel = await this.getStatusChannel();
 
@@ -121,7 +130,7 @@ export class BoarBot implements Bot {
 			handleError(err);
 		}
 
-		sendDebug('Successfully sent status message!');
+		sendDebug('Successfully sent status message!', this.getConfig());
 	}
 
 	/**
@@ -146,10 +155,10 @@ export class BoarBot implements Bot {
 
 			fs.rmSync(guildDataFolder + guildData);
 
-			sendDebug('Deleted empty guild file: ' + guildData);
+			sendDebug('Deleted empty guild file: ' + guildData, this.getConfig());
 		}
 
-		sendDebug('Guild data fixed!')
+		sendDebug('Guild data fixed!', this.getConfig())
 	}
 
 	/**

@@ -8,7 +8,6 @@
  */
 export class NumberConfig {
     // First pixel of an image location
-
     public readonly originPos: number[] = [];
 
     // Font sizes
@@ -24,6 +23,9 @@ export class NumberConfig {
     public readonly maxScore: number = 0;
     public readonly maxBoars: number = 0;
     public readonly maxStreak: number = 0;
+
+    // A constant used to determine how quickly to increase rarity
+    public readonly rarityIncreaseConst: number = 0;
 
     // Item image positions, sizes, and values
 

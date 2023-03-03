@@ -1,14 +1,10 @@
 import {
     User,
     TextChannel,
-    SelectMenuOptionBuilder,
-    RestOrArray,
     APISelectMenuOption,
-    SelectMenuComponentOptionData
 } from 'discord.js';
 import {PathConfig} from './PathConfig';
 import {StringConfig} from './StringConfig';
-import {CommandConfig} from './commands/SubcommandConfig';
 import {NumberConfig} from './NumberConfig';
 import {CommandConfigs} from './commands/CommandConfigs';
 import {BoarItemConfigs} from './items/BoarItemConfigs';

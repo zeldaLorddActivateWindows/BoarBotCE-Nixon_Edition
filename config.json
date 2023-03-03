@@ -74,14 +74,12 @@
         "unavailable": "N/A",
         "imageName": "unknown",
         "fontName": "Minecraft",
-        "commandDebugPrefix": "%@ [%@] | "
+        "commandDebugPrefix": "%@ [/%@ %@] | "
     },
     "commandConfigs": {
         "boar": {
             "name": "boar",
             "description": "Commands to play and interact with BoarBot",
-            "staffOnly": false,
-            "devOnly": false,
             "help": {
                 "name": "help",
                 "description": "See all boar command information",
@@ -115,9 +113,10 @@
         },
         "boarManage": {
             "name": "boar-manage",
+            "perms": 32,
+            "description": "Commands to manage BoarBot",
             "staffOnly": true,
             "devOnly": false,
-            "description": "Commands to manage BoarBot",
             "setup": {
                 "name": "setup",
                 "description": "Set the bot up to your liking",
@@ -207,9 +206,10 @@
         },
         "boarDev": {
             "name": "boar-dev",
+            "perms": 0,
+            "description": "Commands exclusive to developers of BoarBot",
             "staffOnly": true,
             "devOnly": true,
-            "description": "Commands exclusive to developers of BoarBot",
             "give": {
                 "name": "give",
                 "description": "Give a user a boar/badge",
@@ -241,6 +241,7 @@
         "maxScore": 100000000000000000,
         "maxBoars": 1000000000,
         "maxStreak": 100000000,
+        "rarityIncreaseConst": 25000,
         "itemImageSize": [930, 1080],
         "itemBoarPos": [27, 169],
         "itemBoarSize": [886, 886],

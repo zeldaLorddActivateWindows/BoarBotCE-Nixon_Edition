@@ -1,15 +1,14 @@
 import {ChatInputCommandInteraction, SlashCommandBuilder, SlashCommandSubcommandsOnlyBuilder} from 'discord.js';
-import {BadgeItemConfig} from '../../bot/config/items/BadgeItemConfig';
 
 /**
- * {@link Command Command.ts}
+ * {@link Subcommand Subcommand.ts}
  *
- * An interface used to create new commands.
+ * An interface used to create new subcommands.
  *
  * @license {@link http://www.apache.org/licenses/ Apache-2.0}
  * @copyright WeslayCodes 2023
  */
-export interface Command {
-    data: SlashCommandBuilder | SlashCommandSubcommandsOnlyBuilder;
+export interface Subcommand {
+    data: { name: string };
     execute(interaction: ChatInputCommandInteraction): void;
 }

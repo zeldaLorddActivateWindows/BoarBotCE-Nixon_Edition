@@ -11,97 +11,76 @@ import {ChatInputCommandInteraction} from 'discord.js';
 import {getConfigFile} from './DataHandlers';
 import {sendDebug} from '../logging/LogDebug';
 import {BoarBotApp} from '../BoarBotApp';
+import {BotConfig} from '../bot/config/BotConfig';
+import {FormatStrings} from './discord/FormatStrings';
 
 //***************************************
 
 /**
  * Handles when user sends command when config file is actively being configured for the first time
+ * @param config
  * @param interaction - Interaction to reply to
  */
-async function currentConfigReply(interaction: ChatInputCommandInteraction) {
-    const config = getConfigFile();
+async function currentConfigReply(config: BotConfig, interaction: ChatInputCommandInteraction) {
+    sendDebug('Tried to run command while setup being configured', config, interaction);
 
-    const debugStrings = config.strings.debug;
-    const generalStrings = config.strings.general;
-
-    sendDebug(debugStrings.duringConfig
-        .replace('%@', interaction.user.tag)
-        .replace('%@', interaction.commandName)
-    );
-
-    await handleReply(interaction, generalStrings.currentConfig);
+    await handleReply(interaction, config.stringConfig.doingSetup);
 }
 
 //***************************************
 
 /**
  * Handles when user sends command in channel not chosen in config
+ * @param config
  * @param interaction - Interaction to reply to
  * @param guildData -
  * @param includeTrade
  */
-async function wrongChannelReply(interaction: ChatInputCommandInteraction, guildData: any, includeTrade: boolean = false) {
-    const config = getConfigFile();
-
-    const debugStrings = config.strings.debug;
-    const generalStrings = config.strings.general;
-
-    sendDebug(debugStrings.wrongChannel
-        .replace('%@', interaction.user.tag)
-        .replace('%@', interaction.commandName)
-    );
+async function wrongChannelReply(
+    config: BotConfig,
+    interaction: ChatInputCommandInteraction,
+    guildData: any,
+    includeTrade: boolean = false
+) {
+    sendDebug('Used in the wrong channel', config, interaction);
 
     let strChannels = '\n';
 
     for (const ch of guildData.channels) {
-        strChannels += '> ' + generalStrings.formattedChannel
-            .replace('%@', ch) + '\n';
+        strChannels += '> ' + FormatStrings.toBasicChannel(ch);
     }
 
-    if (includeTrade)
-        strChannels += '> ' + generalStrings.formattedChannel
-            .replace('%@', guildData.tradeChannel);
+    if (includeTrade) {
+        strChannels += '> ' + FormatStrings.toBasicChannel(guildData.tradeChannel);
+    }
 
-    await handleReply(interaction, generalStrings.wrongChannel + strChannels);
+    await handleReply(interaction, config.stringConfig.wrongChannel + strChannels);
 }
 
 //***************************************
 
 /**
  * Handles when user sends command they don't have permission for
+ * @param config
  * @param interaction - Interaction to reply to
  */
-async function noPermsReply(interaction: ChatInputCommandInteraction) {
-    const config = getConfigFile();
+async function noPermsReply(config: BotConfig, interaction: ChatInputCommandInteraction) {
+    sendDebug('Not a developer', config, interaction);
 
-    const debugStrings = config.strings.debug;
-    const generalStrings = config.strings.general;
-
-    sendDebug(debugStrings.notDev
-        .replace('%@', interaction.user.tag)
-        .replace('%@', interaction.commandName)
-    );
-
-    await handleReply(interaction, generalStrings.noPermission);
+    await handleReply(interaction, config.stringConfig.noPermission);
 }
 
 //***************************************
 
 /**
  * Handles when user sends command that has a cooldown too fast
+ * @param config
  * @param interaction - Interaction to reply to
  */
-async function onCooldownReply(interaction: ChatInputCommandInteraction) {
-    const config = BoarBotApp.getBot().getConfig();
+async function onCooldownReply(config: BotConfig, interaction: ChatInputCommandInteraction) {
+    sendDebug('Currently on cooldown', config, interaction);
 
-    const strConfig = config.stringConfig;
-
-    sendDebug(strConfig.onCooldown
-        .replace('%@', interaction.user.tag)
-        .replace('%@', interaction.commandName)
-    );
-
-    await handleReply(interaction, strConfig.onCooldown);
+    await handleReply(interaction, config.stringConfig.onCooldown);
 }
 
 //***************************************

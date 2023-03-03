@@ -62,9 +62,7 @@ async function getGuildData(interaction: ChatInputCommandInteraction, create: bo
             return guildData;
         }
 
-        sendDebug(strConfig.noSetup
-            .replace('%@', interaction.user.tag)
-        );
+        sendDebug('Setup not configured', config, interaction);
 
         await interaction.reply({
             content: strConfig.noSetup,
