@@ -11,34 +11,37 @@ import Canvas from 'canvas';
 import {AttachmentBuilder, ChatInputCommandInteraction, User} from 'discord.js';
 import {Options, PythonShell} from 'python-shell';
 import fs from 'fs';
-import {getGlobalData} from './DataHandlers';
-import {addQueue} from './Queue';
-import {handleError, sendDebug} from '../logging/LogDebug';
-import {drawCircleImage, drawImageCompact, drawRect, drawText} from './CanvasFunctions';
-import {findRarity} from './GeneralFunctions';
+import {drawCircleImage, drawImageCompact, drawRect, drawText} from './generators/CanvasFunctions';
 import {BoarBotApp} from '../BoarBotApp';
 import {BotConfig} from '../bot/config/BotConfig';
-import * as path from 'path';
 import {BoarItemConfig} from '../bot/config/items/BoarItemConfig';
 import {BadgeItemConfig} from '../bot/config/items/BadgeItemConfig';
 import {RarityConfig} from '../bot/config/items/RarityConfig';
+import {Queue} from './Queue';
+import {DataHandlers} from './DataHandlers';
+import {GeneralFunctions} from './GeneralFunctions';
+import {LogDebug} from './logging/LogDebug';
 
 //***************************************
 
 export class BoarUser {
     public readonly user: User;
 
-    public lastDaily: number;
-    public numDailies: number;
-    public totalBoars: number;
-    public boarScore: number;
-    public favoriteBoar: string;
-    public lastBoar: string;
-    public firstDaily: number;
-    public powerupsWon: number;
-    public boarStreak: number;
-    public boarCollection: any; // update to own class, array of CollectedBoar
-    public powerups: any;       // update to own class
+    public lastDaily: number = 0;
+    public numDailies: number = 0;
+    public totalBoars: number = 0;
+    public boarScore: number = 0;
+    public favoriteBoar: string = '';
+    public lastBoar: string = '';
+    public firstDaily: number = 0;
+    public powerupsWon: number = 0;
+    public boarStreak: number = 0;
+    public boarCollection: any = {}; // update to own class, empty object that fills or an array
+    public powerups: any = {
+        multiplier: 1,
+        enhancers: 0,
+        gifts: 0
+    }; // update to own class
     public theme: string;
     public themes: string[];
     public badges: string[];
@@ -47,7 +50,7 @@ export class BoarUser {
 
     /**
      * Creates a new BoarUser from data file.
-     * If it doesn't exist, create empty BoarUser object
+     *
      * @param user - User to base BoarUser off of
      */
     constructor(user: User) {
@@ -76,19 +79,23 @@ export class BoarUser {
     //***************************************
 
     /**
-     * Returns user data from JSON file
+     * Returns user data from JSON file.
+     * If it doesn't exist, write new file with empty data
+     *
      * @return userData - User's parsed JSON data
      * @private
      */
-    private getUserData() {
+    private getUserData(): any {
         let userDataJSON: string;
         const config = BoarBotApp.getBot().getConfig();
-        const userFile = config.pathConfig.userDataFolder + this.user.id + '.json';
+        const userFile = config.pathConfig.userDataFolder + this.user?.id + '.json';
 
         try {
             userDataJSON = fs.readFileSync(userFile, 'utf-8');
         } catch {
-            fs.writeFileSync(userFile, JSON.stringify(config.emptyUser));
+            const { user, ...fixedObject } = this; // Returns object with all properties except user
+
+            fs.writeFileSync(userFile, JSON.stringify(fixedObject));
             userDataJSON = fs.readFileSync(userFile, 'utf-8');
         }
 
@@ -100,7 +107,7 @@ export class BoarUser {
     /**
      * Updates user data in JSON file and in this object
      */
-    public updateUserData() {
+    public updateUserData(): void {
         let userData = this.getUserData();
 
         userData.lastDaily = this.lastDaily;
@@ -124,11 +131,13 @@ export class BoarUser {
     //***************************************
 
     /**
-     * Fixes any potential issues with user data
+     * Fixes any potential issues with user data and
+     * writes to JSON file
+     *
      * @param userData - User's parsed JSON data
      * @private
      */
-    private fixUserData(userData: any) {
+    private fixUserData(userData: any): void {
         const config = BoarBotApp.getBot().getConfig();
         const userFile = config.pathConfig.userDataFolder + this.user.id + '.json';
 
@@ -159,6 +168,7 @@ export class BoarUser {
 
     /**
      * Add a boar to a user's collection and send an image
+     *
      * @param config - Global config data parsed from JSON
      * @param boarID - ID of boar to add
      * @param interaction - Interaction to reply to with image
@@ -183,7 +193,7 @@ export class BoarUser {
         }
 
         if (rarityIndex === -1) {
-            await handleError(strConfig.dailyNoBoarFound, interaction);
+            await LogDebug.handleError(strConfig.dailyNoBoarFound, interaction);
             return false;
         }
 
@@ -217,8 +227,8 @@ export class BoarUser {
         let boarEdition: number = 0;
 
         // Updates global edition data
-        await addQueue(() => {
-            const globalData = getGlobalData();
+        await Queue.addQueue(() => {
+            const globalData = DataHandlers.getGlobalData();
 
             // Sets edition number
             if (!globalData.editions[boarID])
@@ -233,7 +243,13 @@ export class BoarUser {
             this.firstDaily = Date.now();
 
         if (!this.boarCollection[boarID]) {
-            this.boarCollection[boarID] = config.emptyBoar;
+            this.boarCollection[boarID] = {
+                num: 0,
+                editions: [],
+                editionDates: [],
+                firstObtained: 0,
+                lastObtained: 0
+            };
             this.boarCollection[boarID].firstObtained = Date.now();
         }
 
@@ -330,7 +346,7 @@ export class BoarUser {
         } else {
             info = config.boarItemConfigs[id];
             folderPath = pathConfig.boarImages;
-            backgroundColor = config.colorConfig['rarity' + findRarity(id)];
+            backgroundColor = config.colorConfig['rarity' + GeneralFunctions.findRarity(id)];
         }
 
         const imageFilePath = folderPath + info.file;
@@ -367,7 +383,7 @@ export class BoarUser {
                 // Sends python all dynamic image data and receives final animated image
                 PythonShell.run(script, scriptOptions, (err, data) => {
                     if (!data) {
-                        handleError(err);
+                        LogDebug.handleError(err);
 
                         reject('Python Error!');
                         return;
@@ -379,10 +395,10 @@ export class BoarUser {
             });
         } else {
             const itemAssetsFolder = pathConfig.itemAssets;
-            const underlayPath = pathConfig.itemAssets + pathConfig.itemUnderlay;
-            const backplatePath = pathConfig.itemAssets + pathConfig.itemBackplate;
-            const overlay = pathConfig.itemAssets + pathConfig.itemOverlay;
-            const nameplate = pathConfig.itemAssets + pathConfig.itemNameplate;
+            const underlayPath = itemAssetsFolder + pathConfig.itemUnderlay;
+            const backplatePath = itemAssetsFolder + pathConfig.itemBackplate;
+            const overlay = itemAssetsFolder + pathConfig.itemOverlay;
+            const nameplate = itemAssetsFolder + pathConfig.itemNameplate;
 
             // Positioning and dimension info
             const origin = numConfig.originPos;

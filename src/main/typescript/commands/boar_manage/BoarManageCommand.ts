@@ -1,24 +1,19 @@
-/************************************************
- * BoarManageCommand.ts
- * All management-only boar commands
- *
- * Copyright 2023 WeslayCodes
- * License Info: http://www.apache.org/licenses/
- ***********************************************/
-
 import {ChatInputCommandInteraction, SlashCommandBuilder} from 'discord.js';
-import {PermissionFlagsBits} from 'discord-api-types/v10';
 import {BoarBotApp} from '../../BoarBotApp';
 import {Command} from '../../api/commands/Command';
-import {BoarManageCommandConfig} from '../../bot/config/commands/BoarManageCommandConfig';
-import {handleError} from '../../logging/LogDebug';
+import {LogDebug} from '../../util/logging/LogDebug';
 
-//***************************************
-
+/**
+ * {@link BoarManageCommand BoarManageCommand.ts}
+ *
+ * All management-only boar commands.
+ *
+ * @license {@link http://www.apache.org/licenses/ Apache-2.0}
+ * @copyright WeslayCodes 2023
+ */
 export default class BoarManageCommand implements Command {
     private config = BoarBotApp.getBot().getConfig();
     private commandInfo = this.config.commandConfigs.boarManage;
-
     public readonly data = new SlashCommandBuilder()
         .setName(this.commandInfo.name)
         .setDescription(this.commandInfo.description)
@@ -28,14 +23,22 @@ export default class BoarManageCommand implements Command {
             .setDescription(this.commandInfo.setup.description)
         );
 
+    /**
+     * Executes the called subcommand if it exists
+     *
+     * @param interaction - An interaction that could've called a boar-manage subcommand
+     */
     public async execute(interaction: ChatInputCommandInteraction) {
         const subcommand = BoarBotApp.getBot().getSubcommands().get(interaction.options.getSubcommand());
 
         if (subcommand) {
+            const exports = require(subcommand.data.path);
+            const commandClass = new exports.default();
+
             try {
-                await subcommand.execute(interaction);
+                await commandClass.execute(interaction);
             } catch (err: unknown) {
-                await handleError(err, interaction);
+                await LogDebug.handleError(err, interaction);
             }
         }
     }

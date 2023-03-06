@@ -1,32 +1,32 @@
-/************************************************
- * HelpSubcommand.ts
+import {ChatInputCommandInteraction} from 'discord.js';
+import fs from 'fs';
+import {BoarBotApp} from '../../BoarBotApp';
+import {Subcommand} from '../../api/commands/Subcommand';
+import {GeneralFunctions} from '../../util/GeneralFunctions';
+import {LogDebug} from '../../util/logging/LogDebug';
+
+/**
+ * {@link HelpSubcommand HelpSubcommand.ts}
+ *
  * Used to see information about the bot.
  *
- * Copyright 2023 WeslayCodes
- * License Info: http://www.apache.org/licenses/
- ***********************************************/
-
-import {ChatInputCommandInteraction, SlashCommandBuilder} from 'discord.js';
-import {PermissionFlagsBits} from 'discord-api-types/v10';
-import fs from 'fs';
-import {getConfigFile} from '../../util/DataHandlers';
-import {sendDebug} from '../../logging/LogDebug';
-import {handleStart} from '../../util/GeneralFunctions';
-import {BoarBotApp} from '../../BoarBotApp';
-import {Command} from '../../api/commands/Command';
-import {Subcommand} from '../../api/commands/Subcommand';
-
-//***************************************
-
+ * @license {@link http://www.apache.org/licenses/ Apache-2.0}
+ * @copyright WeslayCodes 2023
+ */
 export default class HelpSubcommand implements Subcommand {
     private initConfig = BoarBotApp.getBot().getConfig();
     private subcommandInfo = this.initConfig.commandConfigs.boar.help;
-    public readonly data = { name: this.subcommandInfo.name };
+    public readonly data = { name: this.subcommandInfo.name, path: __filename };
 
+    /**
+     * Handles the functionality for this subcommand
+     *
+     * @param interaction - The interaction that called the subcommand
+     */
     public async execute(interaction: ChatInputCommandInteraction) {
         const config = BoarBotApp.getBot().getConfig();
 
-        const guildData = await handleStart(config, interaction, true);
+        const guildData = await GeneralFunctions.handleStart(config, interaction, true);
 
         if (!guildData) return;
 
@@ -38,6 +38,6 @@ export default class HelpSubcommand implements Subcommand {
             files: [fs.readFileSync(helpImagePath)]
         });
 
-        sendDebug('End of interaction', config, interaction);
+        LogDebug.sendDebug('End of interaction', config, interaction);
     }
 }

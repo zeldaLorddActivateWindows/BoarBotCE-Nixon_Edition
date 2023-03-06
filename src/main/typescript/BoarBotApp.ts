@@ -9,8 +9,8 @@
 
 import dotenv from 'dotenv';
 import {BoarBot} from './bot/BoarBot';
-import {handleError, sendDebug} from './logging/LogDebug';
 import {Bot} from './api/bot/Bot';
+import {LogDebug} from './util/logging/LogDebug';
 
 dotenv.config();
 
@@ -39,5 +39,5 @@ export class BoarBotApp {
 try {
     BoarBotApp.main();
 } catch (err: unknown) {
-    handleError(err);
+    LogDebug.handleError(err);
 }

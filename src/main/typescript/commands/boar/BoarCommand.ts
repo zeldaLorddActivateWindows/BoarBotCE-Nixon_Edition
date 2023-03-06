@@ -1,23 +1,19 @@
-/************************************************
- * BoarCommand.ts
- * All main boar commands
- *
- * Copyright 2023 WeslayCodes
- * License Info: http://www.apache.org/licenses/
- ***********************************************/
-
 import {ChatInputCommandInteraction, SlashCommandBuilder} from 'discord.js';
-import {PermissionFlagsBits} from 'discord-api-types/v10';
 import {BoarBotApp} from '../../BoarBotApp';
 import {Command} from '../../api/commands/Command';
-import {handleError, sendDebug} from '../../logging/LogDebug';
+import {LogDebug} from '../../util/logging/LogDebug';
 
-//***************************************
-
+/**
+ * {@link BoarCommand BoarCommand.ts}
+ *
+ * All main boar commands.
+ *
+ * @license {@link http://www.apache.org/licenses/ Apache-2.0}
+ * @copyright WeslayCodes 2023
+ */
 export default class BoarCommand implements Command {
     private config = BoarBotApp.getBot().getConfig();
     private commandInfo = this.config.commandConfigs.boar;
-
     public readonly data = new SlashCommandBuilder()
         .setName(this.commandInfo.name)
         .setDescription(this.commandInfo.description)
@@ -37,14 +33,22 @@ export default class BoarCommand implements Command {
             )
         );
 
+    /**
+     * Executes the called subcommand if it exists
+     *
+     * @param interaction - An interaction that could've called a boar subcommand
+     */
     public async execute(interaction: ChatInputCommandInteraction) {
         const subcommand = BoarBotApp.getBot().getSubcommands().get(interaction.options.getSubcommand());
 
         if (subcommand) {
+            const exports = require(subcommand.data.path);
+            const commandClass = new exports.default();
+
             try {
-                await subcommand.execute(interaction);
+                await commandClass.execute(interaction);
             } catch (err: unknown) {
-                await handleError(err, interaction);
+                await LogDebug.handleError(err, interaction);
             }
         }
     }

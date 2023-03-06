@@ -8,7 +8,9 @@
  * @copyright WeslayCodes 2023
  */
 export class ComponentConfig {
-    public readonly id: string = '';
-    public readonly label: string = '';
-    public readonly altLabel: string = '';
+    public readonly customId: string = '';
+    public readonly label: string | undefined = undefined;
+    public readonly style: number = 2;
+    public readonly disabled: boolean = false;
+    public readonly placeholder: string | undefined = undefined;
 }

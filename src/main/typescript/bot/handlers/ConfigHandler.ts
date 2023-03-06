@@ -1,16 +1,14 @@
 import {BotConfig} from '../config/BotConfig';
 import fs from 'fs';
-import {handleError, sendDebug} from '../../logging/LogDebug';
-import {Command} from '../../api/commands/Command';
-import {REST} from '@discordjs/rest';
 import {registerFont} from 'canvas';
 import moment from 'moment/moment';
+import {LogDebug} from '../../util/logging/LogDebug';
 
 /**
  * {@link ConfigHandler ConfigHandler.ts}
  *
- * Handles setting, getting, and deploying commands
- * for a bot instance
+ * Handles loading, getting, and verifying config
+ * information for a bot instance.
  *
  * @license {@link http://www.apache.org/licenses/ Apache-2.0}
  * @copyright WeslayCodes 2023
@@ -27,13 +25,13 @@ export class ConfigHandler {
         try {
             parsedConfig = JSON.parse(fs.readFileSync('config.json', 'utf-8'));
         } catch {
-            handleError('Unable to parse config file. Is \'config.json\' in the project root?');
+            LogDebug.handleError('Unable to parse config file. Is \'config.json\' in the project root?');
             process.exit(-1);
         }
 
         this.config = parsedConfig as BotConfig;
 
-        sendDebug('Config file successfully loaded!', this.config);
+        LogDebug.sendDebug('Config file successfully loaded!', this.config);
 
         this.loadFonts();
         this.setRelativeTime();
@@ -59,11 +57,11 @@ export class ConfigHandler {
 
             registerFont(mcFont, { family: this.config.stringConfig.fontName });
         } catch {
-            handleError('Unable to load custom font. Verify its path in \'config.json\'.');
+            LogDebug.handleError('Unable to load custom font. Verify its path in \'config.json\'.');
             return;
         }
 
-        sendDebug('Fonts successfully loaded!', this.config);
+        LogDebug.sendDebug('Fonts successfully loaded!', this.config);
     }
 
     /**
@@ -96,6 +94,6 @@ export class ConfigHandler {
             }
         });
 
-        sendDebug('Relative time information set!', this.config);
+        LogDebug.sendDebug('Relative time information set!', this.config);
     }
 }

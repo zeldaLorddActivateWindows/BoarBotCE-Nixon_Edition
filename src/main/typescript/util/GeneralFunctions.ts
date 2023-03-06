@@ -13,134 +13,134 @@ import {
     ModalSubmitInteraction,
     SelectMenuInteraction
 } from 'discord.js';
-import {getConfigFile, getGuildData} from './DataHandlers';
-import {sendDebug} from '../logging/LogDebug';
-import {currentConfigReply, onCooldownReply, wrongChannelReply} from './InteractionReplies';
 import {BoarBotApp} from '../BoarBotApp';
 import {RarityConfig} from '../bot/config/items/RarityConfig';
 import {BotConfig} from '../bot/config/BotConfig';
-
-//***************************************
-
-const cooldowns: any = {};
-
-//***************************************
+import {DataHandlers} from './DataHandlers';
+import {Replies} from './Replies';
+import {LogDebug} from './logging/LogDebug';
 
 /**
- * Gets whether bot has attachment perms
- * @param interaction - Gets information from guild
- * @return attachmentPerms - Whether bot has attachment perms
+ * {@link GeneralFunctions GeneralFunctions.ts}
+ *
+ * A collection of functions and variables that
+ * still need to be incorporated into individual classes.
+ *
+ * @license {@link http://www.apache.org/licenses/ Apache-2.0}
+ * @copyright WeslayCodes 2023
  */
-function hasAttachmentPerms(interaction: ChatInputCommandInteraction | ButtonInteraction | SelectMenuInteraction | ModalSubmitInteraction) {
-    if (!interaction.guild || !interaction.guild.members.me)
-        return false;
+export class GeneralFunctions {
+    private static cooldowns: any = {};
 
-    return interaction.guild.members.me.permissions.has('AttachFiles');
-}
+    /**
+     * Gets whether bot has attachment perms
+     *
+     * @param interaction - Gets information from guild
+     * @return attachmentPerms - Whether bot has attachment perms
+     */
+    public static hasAttachmentPerms(
+        interaction: ChatInputCommandInteraction | ButtonInteraction |
+            SelectMenuInteraction | ModalSubmitInteraction
+    ): boolean {
+        if (!interaction.guild || !interaction.guild.members.me)
+            return false;
 
-//***************************************
+        return interaction.guild.members.me.permissions.has('AttachFiles');
+    }
 
-/**
- * Finds the rarity from a given boar ID
- * @param boarID - Boar ID to get rarity for
- * @return rarity - Rarity of the boar
- */
-function findRarity(boarID: string) {
-    const config = BoarBotApp.getBot().getConfig();
+    /**
+     * Finds the rarity index from a given boar ID
+     *
+     * @param boarID - Boar ID to get rarity for
+     * @return rarity - Rarity of the boar in index form
+     */
+    public static findRarity(boarID: string): number {
+        const config = BoarBotApp.getBot().getConfig();
 
-    const orderedRarities: RarityConfig[] = [...config.rarityConfigs]
-        .sort((rarity1, rarity2) => { return rarity2.weight - rarity1.weight; });
-    let foundRarity: number = 0;
+        const orderedRarities: RarityConfig[] = [...config.rarityConfigs]
+            .sort((rarity1, rarity2) => { return rarity2.weight - rarity1.weight; });
+        let foundRarity: number = 0;
 
-    for (let i=0; i<orderedRarities.length; i++) {
-        const boarExists: boolean = orderedRarities[i].boars.includes(boarID);
+        for (let i=0; i<orderedRarities.length; i++) {
+            const boarExists: boolean = orderedRarities[i].boars.includes(boarID);
 
-        if (boarExists) {
-            foundRarity = i + 1;
-            break;
+            if (boarExists) {
+                foundRarity = i + 1;
+                break;
+            }
         }
+
+        return foundRarity;
     }
 
-    return foundRarity;
-}
+    /**
+     * Handles the beginning of most command interactions to prevent duplicate code
+     *
+     * @param config
+     * @param interaction - Interaction to reply to
+     * @param includeTrade - Whether to include trade menu when deciding usable channels
+     * @return guildData - Guild data parsed from JSON
+     */
+    public static async handleStart(
+        config: BotConfig,
+        interaction: ChatInputCommandInteraction,
+        includeTrade: boolean = false
+    ): Promise<any> {
+        if (!interaction.guild || !interaction.channel) return;
 
-//***************************************
+        LogDebug.sendDebug('Started interaction', config, interaction);
 
-/**
- * Handles the beginning of most command interactions to prevent duplicate code
- * @param config
- * @param interaction - Interaction to reply to
- * @param includeTrade - Whether to include trade menu when deciding usable channels
- * @return guildData - Guild data parsed from JSON
- */
-async function handleStart(
-    config: BotConfig,
-    interaction: ChatInputCommandInteraction,
-    includeTrade: boolean = false
-) {
-    if (!interaction.guild || !interaction.channel)
-        return undefined;
+        const guildData = await DataHandlers.getGuildData(interaction);
 
-    sendDebug('Started interaction', config, interaction);
+        if (!guildData) return;
 
-    const guildData = await getGuildData(interaction);
+        if (!guildData.channels) {
+            await Replies.currentConfigReply(config, interaction);
+            return;
+        }
 
-    if (!guildData)
-        return undefined;
+        const acceptableChannels: string[] = [].concat(guildData.channels);
 
-    if (!guildData.channels) {
-        await currentConfigReply(config, interaction);
-        return undefined;
+        if (includeTrade)
+            acceptableChannels.push(guildData.tradeChannel);
+
+        if (!acceptableChannels.includes(interaction.channel.id)) {
+            await Replies.wrongChannelReply(config, interaction, guildData, includeTrade);
+            return;
+        }
+
+        return guildData;
     }
 
-    const acceptableChannels: string[] = [].concat(guildData.channels);
+    /**
+     * Handles cooldowns for users on certain commands
+     *
+     * @param config
+     * @param interaction - Interaction to reply to
+     * @return onCooldown - Whether user is on cooldown or not
+     */
+    public static async handleCooldown(
+        config: BotConfig,
+        interaction: ChatInputCommandInteraction
+    ): Promise<boolean> {
+        const commandName = interaction.commandName;
+        const userID = interaction.user.id;
 
-    if (includeTrade)
-        acceptableChannels.push(guildData.tradeChannel);
+        if (!GeneralFunctions.cooldowns[commandName])
+            GeneralFunctions.cooldowns[commandName] = [];
 
-    if (!acceptableChannels.includes(interaction.channel.id)) {
-        await wrongChannelReply(config, interaction, guildData, includeTrade);
-        return undefined;
+        if (GeneralFunctions.cooldowns[commandName].includes(userID)) {
+            await Replies.onCooldownReply(config, interaction);
+            return true;
+        }
+
+        GeneralFunctions.cooldowns[commandName].push(userID);
+
+        setTimeout(() => {
+            const index = GeneralFunctions.cooldowns[commandName].indexOf(userID);
+            GeneralFunctions.cooldowns[commandName].splice(index, 1);
+        }, 5000);
+
+        return false;
     }
-
-    return guildData;
-}
-
-//***************************************
-
-/**
- * Handles cooldowns for users on certain commands
- * @param config
- * @param interaction - Interaction to reply to
- * @return onCooldown - Whether user is on cooldown or not
- */
-async function handleCooldown(config: BotConfig, interaction: ChatInputCommandInteraction) {
-    const commandName = interaction.commandName;
-    const userID = interaction.user.id;
-
-    if (!cooldowns[commandName])
-        cooldowns[commandName] = [];
-
-    if (cooldowns[commandName].includes(userID)) {
-        await onCooldownReply(config, interaction);
-        return true;
-    }
-
-    cooldowns[commandName].push(userID);
-
-    setTimeout(() => {
-        const index = cooldowns[commandName].indexOf(userID);
-        cooldowns[commandName].splice(index, 1);
-    }, 5000);
-
-    return false;
-}
-
-//***************************************
-
-export {
-    hasAttachmentPerms,
-    findRarity,
-    handleStart,
-    handleCooldown
 }

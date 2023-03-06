@@ -1,8 +1,7 @@
-import dotenv, {config} from 'dotenv';
+import dotenv from 'dotenv';
 import fs from 'fs';
-import {ActivityType, Client, GatewayIntentBits, TextChannel} from 'discord.js';
+import {ActivityType, Client, GatewayIntentBits, Partials, TextChannel} from 'discord.js';
 import {Bot} from '../api/bot/Bot';
-import {handleError, sendDebug} from '../logging/LogDebug';
 import {FormatStrings} from '../util/discord/FormatStrings';
 import {ConfigHandler} from './handlers/ConfigHandler';
 import {CommandHandler} from './handlers/CommandHandler';
@@ -10,6 +9,7 @@ import {EventHandler} from './handlers/EventHandler';
 import {BotConfig} from './config/BotConfig';
 import {Command} from '../api/commands/Command';
 import {Subcommand} from '../api/commands/Subcommand';
+import {LogDebug} from '../util/logging/LogDebug';
 
 dotenv.config();
 
@@ -49,6 +49,9 @@ export class BoarBot implements Bot {
 	 */
 	public buildClient(): void {
 		this.client = new Client({
+			partials: [
+				Partials.Channel // For DM Reporting
+			],
 			intents: [
 				GatewayIntentBits.Guilds,
 				GatewayIntentBits.GuildMessages,
@@ -61,6 +64,9 @@ export class BoarBot implements Bot {
 		});
 	}
 
+	/**
+	 * Returns the client object associated with the bot
+	 */
 	public getClient(): Client { return this.client; }
 
 	/**
@@ -103,10 +109,10 @@ export class BoarBot implements Bot {
 	 */
 	public async login(): Promise<void> {
 		try {
-			sendDebug('Logging in...', this.getConfig());
+			LogDebug.sendDebug('Logging in...', this.getConfig());
 			await this.client.login(process.env.TOKEN);
 		} catch {
-			handleError('Client wasn\'t initialized or you used an invalid token!');
+			LogDebug.handleError('Client wasn\'t initialized or you used an invalid token!');
 			process.exit(-1);
 		}
 	}
@@ -115,7 +121,7 @@ export class BoarBot implements Bot {
 	 * Sends a status message on start
 	 */
 	public async onStart(): Promise<void> {
-		sendDebug('Successfully logged in! Bot online!', this.getConfig());
+		LogDebug.sendDebug('Successfully logged in! Bot online!', this.getConfig());
 
 		const botStatusChannel = await this.getStatusChannel();
 
@@ -127,14 +133,16 @@ export class BoarBot implements Bot {
 				FormatStrings.toRelTime(Math.round(Date.now() / 1000))
 			);
 		} catch (err: unknown) {
-			handleError(err);
+			LogDebug.handleError(err);
 		}
 
-		sendDebug('Successfully sent status message!', this.getConfig());
+		LogDebug.sendDebug('Successfully sent status message!', this.getConfig());
 	}
 
 	/**
 	 * Deletes empty guild files (Guild was in the process of setting bot up)
+	 *
+	 * @private
 	 */
 	private fixGuildData(): void {
 		let guildDataFolder: string;
@@ -144,7 +152,7 @@ export class BoarBot implements Bot {
 			guildDataFolder = this.getConfig().pathConfig.guildDataFolder;
 			guildDataFiles = fs.readdirSync(guildDataFolder);
 		} catch {
-			handleError('Unable to find guild data directory provided in \'config.json\'!');
+			LogDebug.handleError('Unable to find guild data directory provided in \'config.json\'!');
 			process.exit(-1);
 		}
 
@@ -155,14 +163,15 @@ export class BoarBot implements Bot {
 
 			fs.rmSync(guildDataFolder + guildData);
 
-			sendDebug('Deleted empty guild file: ' + guildData, this.getConfig());
+			LogDebug.sendDebug('Deleted empty guild file: ' + guildData, this.getConfig());
 		}
 
-		sendDebug('Guild data fixed!', this.getConfig())
+		LogDebug.sendDebug('Guild data fixed!', this.getConfig())
 	}
 
 	/**
 	 * Finds the {@link TextChannel} to send status messages to
+	 *
 	 * @private
 	 */
 	private async getStatusChannel(): Promise<TextChannel | undefined> {
@@ -172,7 +181,7 @@ export class BoarBot implements Bot {
 		try {
 			botStatusChannel = await this.client.channels.fetch(botStatusChannelID) as TextChannel;
 		} catch {
-			handleError(
+			LogDebug.handleError(
 				'Bot cannot find status channel. Status message not sent.\nIs the channel ID \'' +
 				botStatusChannelID + '\' correct? Does the bot have view channel permissions?'
 			);
@@ -181,13 +190,13 @@ export class BoarBot implements Bot {
 
 		const memberMe = botStatusChannel.guild.members.me;
 		if (!memberMe) {
-			handleError('Bot doesn\'t exist in testing server. Status message not sent.');
+			LogDebug.handleError('Bot doesn\'t exist in testing server. Status message not sent.');
 			return undefined;
 		}
 
 		const memberMePerms = memberMe.permissions.toArray();
 		if (!memberMePerms.includes('SendMessages')) {
-			handleError('Bot doesn\'t have permission to send status message. Status message not sent.');
+			LogDebug.handleError('Bot doesn\'t have permission to send status message. Status message not sent.');
 			return undefined;
 		}
 

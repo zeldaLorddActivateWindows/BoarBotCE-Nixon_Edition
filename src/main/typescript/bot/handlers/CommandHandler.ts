@@ -1,18 +1,18 @@
 import {Routes} from 'discord-api-types/v10';
 import {BotConfig} from '../config/BotConfig';
 import fs from 'fs';
-import {handleError, sendDebug} from '../../logging/LogDebug';
 import {Command} from '../../api/commands/Command';
 import {REST} from '@discordjs/rest';
 import {BoarBotApp} from '../../BoarBotApp';
 import {Subcommand} from '../../api/commands/Subcommand';
 import {SlashCommandBuilder, SlashCommandSubcommandsOnlyBuilder} from 'discord.js';
+import {LogDebug} from '../../util/logging/LogDebug';
 
 /**
  * {@link CommandHandler CommandHandler.ts}
  *
  * Handles setting, getting, and deploying commands
- * for a bot instance
+ * for a bot instance.
  *
  * @license {@link http://www.apache.org/licenses/ Apache-2.0}
  * @copyright WeslayCodes 2023
@@ -32,7 +32,7 @@ export class CommandHandler {
         try {
             commandFolders = fs.readdirSync(config.pathConfig.commands);
         } catch {
-            handleError('Unable to find command directory provided in \'config.json\'!');
+            LogDebug.handleError('Unable to find command directory provided in \'config.json\'!');
             process.exit(-1);
         }
 
@@ -70,7 +70,7 @@ export class CommandHandler {
             });
 
             if (!commandFile) {
-                handleError(`Command folder '${commandFolder}' has no command class file!`);
+                LogDebug.handleError(`Command folder '${commandFolder}' has no command class file!`);
                 process.exit(-1);
             }
 
@@ -106,9 +106,9 @@ export class CommandHandler {
                     this.subcommands.set(commandClass.data.name, commandClass);
                 }
 
-                sendDebug('Successfully found and set command: ' + commandClass.data.name, config);
+                LogDebug.sendDebug('Successfully found and set command: ' + commandClass.data.name, config);
             } catch {
-                handleError('One or more command classes have an invalid structure!');
+                LogDebug.handleError('One or more command classes have an invalid structure!');
                 process.exit(-1);
             }
         }
@@ -158,9 +158,9 @@ export class CommandHandler {
     ): Promise<void> {
         try {
             await rest.put(Routes.applicationCommands(process.env.CLIENT_ID as string), { body: commandData });
-            sendDebug('Application commands have successfully been registered!', config);
+            LogDebug.sendDebug('Application commands have successfully been registered!', config);
         } catch (err: unknown) {
-            handleError(err);
+            LogDebug.handleError(err);
         }
     }
 
@@ -182,9 +182,9 @@ export class CommandHandler {
                 Routes.applicationGuildCommands(process.env.CLIENT_ID as string, process.env.GUILD_ID as string),
                 { body: commandData }
             );
-            sendDebug('Guild commands have successfully been registered!', config);
+            LogDebug.sendDebug('Guild commands have successfully been registered!', config);
         } catch (err: unknown) {
-            handleError(err);
+            LogDebug.handleError(err);
         }
     }
 }

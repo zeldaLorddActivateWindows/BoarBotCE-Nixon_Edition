@@ -1,21 +1,18 @@
-/***********************************************
- * onInteractions.ts
- * An event that runs once the bot detects an
- * interaction.
- *
- * Copyright 2023 WeslayCodes
- * License Info: http://www.apache.org/licenses/
- ***********************************************/
-
 import {ChatInputCommandInteraction, EmbedBuilder, Events, Interaction, ModalSubmitInteraction} from 'discord.js';
-import {handleError, sendDebug} from '../logging/LogDebug';
-import {getConfigFile} from '../util/DataHandlers';
 import {Listener} from '../api/listeners/Listener';
 import {BotConfig} from '../bot/config/BotConfig';
 import {BoarBotApp} from '../BoarBotApp';
+import {LogDebug} from '../util/logging/LogDebug';
 
-//***************************************
-
+/**
+ * {@link GuildAddListener GuildAddListener.ts}
+ *
+ * An event that runs once the bot detects an
+ * interaction.
+ *
+ * @license {@link http://www.apache.org/licenses/ Apache-2.0}
+ * @copyright WeslayCodes 2023
+ */
 export default class InteractionListener implements Listener {
     public readonly eventName: Events = Events.InteractionCreate;
     private interaction: ChatInputCommandInteraction | ModalSubmitInteraction | null = null;
@@ -32,7 +29,7 @@ export default class InteractionListener implements Listener {
         try {
             if (!await this.handleMaintenance()) return;
         } catch (err: unknown) {
-            await handleError(err, interaction);
+            await LogDebug.handleError(err, interaction);
             return;
         }
 
@@ -42,7 +39,7 @@ export default class InteractionListener implements Listener {
             try {
                 await command.execute(interaction);
             } catch (err: unknown) {
-                await handleError(err, interaction);
+                await LogDebug.handleError(err, interaction);
                 return;
             }
         }

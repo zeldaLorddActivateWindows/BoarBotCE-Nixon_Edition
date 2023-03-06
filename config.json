@@ -31,7 +31,7 @@
     "stringConfig": {
         "botStatus": "> Bot went online ",
         "guildAdd": "Hey, %@! Thanks for adding me to your server **%@**!\n> To get started, run the command `/%@` in your server!",
-        "dmReceived": "Thanks for the DM! Your complaint/issue/feedback has been logged!",
+        "dmReceived": "Thanks for the DM! Your complaint/issue/feedback has been logged!\n> *Note: If you're sending an image, make sure you include the link!*",
         "noPermission": "You don't have permission to use this command.",
         "noSetup": "To use this command, an admin must first do `/boar setup`!",
         "doingSetup": "BoarBot is currently being set up! Please wait!",
@@ -123,69 +123,109 @@
                 "args": [],
                 "adminOnly": true,
                 "cooldown": true,
-                "components": {
-                    "selectMenu1": {
-                        "id": "SETUP_TRADE_CHANNEL_SELECT",
-                        "label": "UNSELECTED"
-                    },
-                    "selectMenu2_1": {
-                        "id": "SETUP_BOAR_CHANNEL_SELECT_1",
-                        "label": "UNSELECTED"
-                    },
-                    "selectMenu2_2": {
-                        "id": "SETUP_BOAR_CHANNEL_SELECT_2",
-                        "label": "UNSELECTED"
-                    },
-                    "selectMenu2_3": {
-                        "id": "SETUP_BOAR_CHANNEL_SELECT_3",
-                        "label": "UNSELECTED"
-                    },
-                    "refresh1": {
-                        "id": "SETUP_REFRESH_TRADE_CHANNEL",
-                        "label": "Refresh"
-                    },
-                    "refresh2": {
-                        "id": "SETUP_REFRESH_BOAR_CHANNELS",
-                        "label": "Refresh"
-                    },
-                    "info1": {
-                        "id": "SETUP_INFO_TRADE_CHANNEL",
-                        "label": "❔"
-                    },
-                    "info2": {
-                        "id": "SETUP_INFO_BOAR_CHANNELS",
-                        "label": "❔"
-                    },
-                    "info3": {
-                        "id": "SETUP_INFO_SB",
-                        "label": "❔"
-                    },
-                    "sbYes": {
-                        "id": "SETUP_SB_YES",
-                        "label": "Yes"
-                    },
-                    "sbNo": {
-                        "id": "SETUP_SB_NO",
-                        "label": "No"
-                    },
-                    "findChannel": {
-                        "id": "SETUP_FIND",
-                        "label": "\uD83D\uDCDD"
-                    },
-                    "cancel": {
-                        "id": "SETUP_CANCEL",
-                        "label": "Cancel"
-                    },
-                    "restart": {
-                        "id": "SETUP_RESTART",
-                        "label": "Restart"
-                    },
-                    "next": {
-                        "id": "SETUP_NEXT",
-                        "label": "Next",
-                        "altLabel": "Finish"
-                    }
-                },
+                "component_rows": [
+                    [
+                        [
+                            {
+                                "customId": "SETUP_TRADE_CHANNEL_SELECT",
+                                "placeholder": "UNSELECTED"
+                            }
+                        ],
+                        [
+                            {
+                                "customId": "SETUP_REFRESH_TRADE_CHANNEL",
+                                "label": "Refresh",
+                                "style": 2
+                            },
+                            {
+                                "customId": "SETUP_FIND",
+                                "emoji": "\uD83D\uDCDD",
+                                "style": 2
+                            },
+                            {
+                                "customId": "SETUP_INFO_TRADE_CHANNEL",
+                                "emoji": "❔",
+                                "style": 2
+                            }
+                        ]
+                    ],
+                    [
+                        [
+                            {
+                                "customId": "SETUP_BOAR_CHANNEL_SELECT_1",
+                                "placeholder": "UNSELECTED"
+                            }
+                        ],
+                        [
+                            {
+                                "customId": "SETUP_BOAR_CHANNEL_SELECT_2",
+                                "placeholder": "UNSELECTED"
+                            }
+                        ],
+                        [
+                            {
+                                "customId": "SETUP_BOAR_CHANNEL_SELECT_3",
+                                "placeholder": "UNSELECTED"
+                            }
+                        ],
+                        [
+                            {
+                                "customId": "SETUP_REFRESH_BOAR_CHANNELS",
+                                "label": "Refresh",
+                                "style": 2
+                            },
+                            {
+                                "customId": "SETUP_FIND",
+                                "emoji": "\uD83D\uDCDD",
+                                "style": 2
+                            },
+                            {
+                                "customId": "SETUP_INFO_BOAR_CHANNELS",
+                                "emoji": "❔",
+                                "style": 2
+                            }
+                        ]
+                    ],
+                    [
+                        [
+                            {
+                                "customId": "SETUP_SB_YES",
+                                "label": "Yes",
+                                "style": 1
+                            },
+                            {
+                                "customId": "SETUP_SB_NO",
+                                "label": "No",
+                                "style": 1
+                            },
+                            {
+                                "customId": "SETUP_INFO_SB",
+                                "emoji": "❔",
+                                "style": 2
+                            }
+                        ]
+                    ],
+                    [
+                        [
+                            {
+                                "customId": "SETUP_CANCEL",
+                                "label": "Cancel",
+                                "style": 4
+                            },
+                            {
+                                "customId": "SETUP_RESTART",
+                                "label": "Restart",
+                                "style": 2
+                            },
+                            {
+                                "customId": "SETUP_NEXT",
+                                "label": "Next",
+                                "style": 1,
+                                "disabled": true
+                            }
+                        ]
+                    ]
+                ],
                 "modals": {
                     "modal1": {
                         "title": "Input Channel ID",
@@ -646,33 +686,6 @@
             ]
         }
     ],
-    "emptyUser": {
-        "lastDaily": 0,
-        "numDailies": 0,
-        "totalBoars": 0,
-        "boarScore": 0,
-        "favoriteBoar": "",
-        "lastBoar": "",
-        "firstDaily": 0,
-        "powerupsWon": 0,
-        "boarStreak": 0,
-        "boarCollection": {},
-        "powerups": {
-            "multiplier": 1,
-            "enhancers": 0,
-            "gifts": 0
-        },
-        "theme": "normal",
-        "themes": ["normal"],
-        "badges": []
-    },
-    "emptyBoar": {
-        "num": 0,
-        "editions": [],
-        "editionDates": [],
-        "firstObtained": 0,
-        "lastObtained": 0
-    },
     "emptySelectMenu": [
         {
             "label": "None",

@@ -1,45 +1,44 @@
-/************************************************
- * CollectionSubcommand.ts
- * Used to see a collection of boars, powerups,
- * and other information pertaining to a user.
- *
- * Copyright 2023 WeslayCodes
- * License Info: http://www.apache.org/licenses/
- ***********************************************/
-
 import {
-    ActionRowBuilder,
+    ActionRowBuilder, AttachmentBuilder,
     ButtonBuilder,
     ButtonInteraction, ButtonStyle,
     ChatInputCommandInteraction, InteractionCollector, SelectMenuBuilder,
-    SelectMenuInteraction, SlashCommandBuilder,
+    SelectMenuInteraction,
     User
 } from 'discord.js';
-import {PermissionFlagsBits} from 'discord-api-types/v10';
-import {findRarity, handleStart} from '../../util/GeneralFunctions';
 import {BoarUser} from '../../util/BoarUser';
 import Canvas from 'canvas';
-import {addQueue} from '../../util/Queue';
-import {handleError, sendDebug} from '../../logging/LogDebug';
-import {getConfigFile} from '../../util/DataHandlers';
-import {drawImageCompact, drawRect, drawText} from '../../util/CanvasFunctions';
-import {finishImage} from '../../util/command_specific/CollectionFunctions';
+import {drawImageCompact, drawLine, drawRect, drawText} from '../../util/generators/CanvasFunctions';
 import moment from 'moment';
-import {Command} from '../../api/commands/Command';
 import {BoarBotApp} from '../../BoarBotApp';
 import {Subcommand} from '../../api/commands/Subcommand';
+import {Queue} from '../../util/Queue';
+import {GeneralFunctions} from '../../util/GeneralFunctions';
+import {LogDebug} from '../../util/logging/LogDebug';
 
-//***************************************
-
+/**
+ * {@link CollectionSubcommand CollectionSubcommand.ts}
+ *
+ * Used to see a collection of boars, powerups,
+ * and other information pertaining to a user.
+ *
+ * @license {@link http://www.apache.org/licenses/ Apache-2.0}
+ * @copyright WeslayCodes 2023
+ */
 export default class CollectionSubcommand implements Subcommand {
     private initConfig = BoarBotApp.getBot().getConfig();
     private subcommandInfo = this.initConfig.commandConfigs.boar.collection;
-    public readonly data = { name: this.subcommandInfo.name };
+    public readonly data = { name: this.subcommandInfo.name, path: __filename };
 
+    /**
+     * Handles the functionality for this subcommand
+     *
+     * @param interaction - The interaction that called the subcommand
+     */
     public async execute(interaction: ChatInputCommandInteraction) {
         const config = BoarBotApp.getBot().getConfig();
 
-        const guildData = await handleStart(config, interaction);
+        const guildData = await GeneralFunctions.handleStart(config, interaction);
 
         if (!guildData) return;
 
@@ -82,7 +81,7 @@ export default class CollectionSubcommand implements Subcommand {
         let lastBoarRarity: number;
         let favoriteBoarRarity: number;
 
-        await addQueue(async () => {
+        await Queue.addQueue(async () => {
             try {
                 if (!interaction.guild || !interaction.channel)
                     return;
@@ -101,14 +100,14 @@ export default class CollectionSubcommand implements Subcommand {
                     userInput.discriminator;
 
                 // Atypical boar information
-                lastBoarRarity = findRarity(boarUser.lastBoar);
-                favoriteBoarRarity = findRarity(boarUser.favoriteBoar);
+                lastBoarRarity = GeneralFunctions.findRarity(boarUser.lastBoar);
+                favoriteBoarRarity = GeneralFunctions.findRarity(boarUser.favoriteBoar);
 
                 // Adds information about each boar in user's boar collection to an array
                 for (const boarID of Object.keys(boarUser.boarCollection)) {
                     // Local boar information
                     const boarInfo = boarUser.boarCollection[boarID];
-                    const rarity: number = findRarity(boarID);
+                    const rarity: number = GeneralFunctions.findRarity(boarID);
 
                     // Global boar information
                     const boarDetails = config.boarItemConfigs[boarID];
@@ -126,7 +125,7 @@ export default class CollectionSubcommand implements Subcommand {
                     });
                 }
             } catch (err: unknown) {
-                await handleError(err, interaction);
+                await LogDebug.handleError(err, interaction);
             }
         }, interaction.id + userInput.id);
 
@@ -315,9 +314,71 @@ export default class CollectionSubcommand implements Subcommand {
                 timeUntilNextCollect = Date.now() + 500;
             }, 100);
 
-            sendDebug(`Used ${inter.customId.split('|')[0]} on field ${curPage}`, config, interaction);
+            LogDebug.sendDebug(`Used ${inter.customId.split('|')[0]} on field ${curPage}`, config, interaction);
         });
 
-        sendDebug('End of interaction', config, interaction);
+        LogDebug.sendDebug('End of interaction', config, interaction);
+    }
+
+    /**
+     * Finishes off the collection image
+     *
+     * @param config
+     * @param interaction
+     * @param canvasBase
+     * @param currentBoarArray
+     * @param components
+     */
+    public async finishImage(
+        config: any,
+        interaction: ChatInputCommandInteraction | ButtonInteraction,
+        canvasBase: Canvas.Canvas,
+        currentBoarArray: any[],
+        components: ActionRowBuilder<ButtonBuilder | SelectMenuBuilder>[]
+    ): Promise<void> {
+        const origin = config.numbers.general.originPos;
+        const nums = config.numbers.collection;
+        const imageSize = nums.imageSize;
+        const boarsFolder = config.paths.assets.boars;
+        const collectionAssets = config.paths.assets.collection;
+        const collectionOverlay = collectionAssets.basePath + collectionAssets.overlay;
+        const hexColors = config.hexColors;
+
+        let attachment: AttachmentBuilder;
+
+        const canvas = Canvas.createCanvas(imageSize[0], imageSize[1]);
+        const ctx = canvas.getContext('2d');
+
+        drawImageCompact(ctx, canvasBase, origin, imageSize);
+
+        // Draws boars and rarities
+        for (let i=0; i<currentBoarArray.length; i++) {
+            const boarImagePos = [
+                nums.boarStartX + (i % nums.boarCols) * nums.boarSpacingX,
+                nums.boarStartY + Math.floor(i / nums.boarRows) * nums.boarSpacingY
+            ];
+
+            const lineStartPos = [
+                nums.rarityStartX + (i % nums.boarCols) * nums.boarSpacingX,
+                nums.rarityStartY + Math.floor(i / nums.boarRows) * nums.boarSpacingY
+            ];
+
+            const lineEndPost = [
+                nums.rarityStartX + nums.rarityEndDiff + (i % nums.boarCols) * nums.boarSpacingX,
+                nums.rarityStartY - nums.rarityEndDiff + Math.floor(i / nums.boarRows) * nums.boarSpacingY
+            ];
+
+            const boarFile = boarsFolder + currentBoarArray[i].file;
+
+            drawImageCompact(ctx, await Canvas.loadImage(boarFile), boarImagePos, nums.boarSize);
+            drawLine(ctx, lineStartPos, lineEndPost, nums.rarityWidth, hexColors[currentBoarArray[i].rarity]);
+        }
+
+        // Draws overlay
+        drawImageCompact(ctx, await Canvas.loadImage(collectionOverlay), origin, imageSize);
+
+        attachment = new AttachmentBuilder(canvas.toBuffer())
+
+        await interaction.editReply({ files: [attachment], components: components });
     }
 }

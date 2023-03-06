@@ -1,20 +1,18 @@
-/***********************************************
- * GuildAddListener.ts
- * An event that runs once the bot is added to
- * a server.
- *
- * Copyright 2023 WeslayCodes
- * License Info: http://www.apache.org/licenses/
- ***********************************************/
-
 import {AttachmentBuilder, AuditLogEvent, Events, Guild, GuildAuditLogsEntry, User} from 'discord.js';
 import fs from 'fs';
 import {Listener} from '../api/listeners/Listener';
 import {BoarBotApp} from '../BoarBotApp';
 import {BotConfig} from '../bot/config/BotConfig';
 
-//***************************************
-
+/**
+ * {@link GuildAddListener GuildAddListener.ts}
+ *
+ * An event that runs once the bot is added to
+ * a server.
+ *
+ * @license {@link http://www.apache.org/licenses/ Apache-2.0}
+ * @copyright WeslayCodes 2023
+ */
 export default class GuildAddListener implements Listener {
     public readonly eventName: Events = Events.GuildMemberAdd;
     private guild: Guild | null = null;

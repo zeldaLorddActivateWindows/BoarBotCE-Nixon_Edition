@@ -9,6 +9,6 @@ import {ChatInputCommandInteraction, SlashCommandBuilder, SlashCommandSubcommand
  * @copyright WeslayCodes 2023
  */
 export interface Subcommand {
-    data: { name: string };
+    data: { name: string, path: string };
     execute(interaction: ChatInputCommandInteraction): void;
 }
