@@ -77,11 +77,6 @@ export class BotConfig {
     public readonly emptyBoar: any;
 
     /**
-     * Option that's left when select menu empty
-     */
-    public readonly emptySelectMenu: APISelectMenuOption[] = [{ label: '', value: '' }];
-
-    /**
      * {@link ColorConfig Color configurations} used by the bot
      */
     public readonly colorConfig: ColorConfig = new ColorConfig;

@@ -1,7 +1,11 @@
+import {ComponentType} from 'discord.js';
+import {ComponentConfig} from '../components/ComponentConfig';
+import {RowConfig} from '../components/RowConfig';
+
 /**
  * {@link ModalConfig ModalConfig.ts}
  *
- * Stores modal configurations for a specific interaction
+ * Stores configurations for a modal
  * for a bot instance.
  *
  * @license {@link http://www.apache.org/licenses/ Apache-2.0}
@@ -9,8 +13,6 @@
  */
 export class ModalConfig {
     public readonly title: string = '';
-    public readonly id: string = '';
-    public readonly inputIDs: string[] = [];
-    public readonly inputLabels: string[] = [];
-    public readonly inputPlaceholders: string[] = [];
+    public readonly customId: string = '';
+    public readonly components: RowConfig[] = [];
 }

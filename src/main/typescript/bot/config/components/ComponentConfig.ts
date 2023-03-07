@@ -1,16 +1,20 @@
+import {ButtonStyle, ComponentType} from 'discord.js';
+
 /**
  * {@link ComponentConfig ComponentConfig.ts}
  *
- * Stores component configurations for a
- * specific interaction for bot instance.
+ * Stores configurations for a component
+ * for a bot instance.
  *
  * @license {@link http://www.apache.org/licenses/ Apache-2.0}
  * @copyright WeslayCodes 2023
  */
 export class ComponentConfig {
+    public readonly type: number = 2;
     public readonly customId: string = '';
-    public readonly label: string | undefined = undefined;
+    public readonly label: string = '';
+    public readonly emoji?: string;
+    public readonly placeholder?: string;
     public readonly style: number = 2;
-    public readonly disabled: boolean = false;
-    public readonly placeholder: string | undefined = undefined;
+    public readonly required: boolean = false;
 }

@@ -1,5 +1,5 @@
 import {
-    ActionRowBuilder, ButtonBuilder, ChatInputCommandInteraction,
+    ActionRowBuilder, ButtonBuilder, ButtonInteraction, ChatInputCommandInteraction,
     ModalSubmitInteraction, SelectMenuBuilder, SelectMenuInteraction
 } from 'discord.js';
 
@@ -34,7 +34,9 @@ export class FormField {
      *
      * @param interaction - Interaction to be edited
      */
-    public async editReply(interaction: ChatInputCommandInteraction | SelectMenuInteraction | ModalSubmitInteraction) {
+    public async editReply(
+        interaction: ChatInputCommandInteraction | SelectMenuInteraction | ButtonInteraction | ModalSubmitInteraction
+    ) {
         await interaction.editReply({
             content: this.content,
             components: [...this.components]

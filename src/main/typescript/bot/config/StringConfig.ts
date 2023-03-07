@@ -68,6 +68,7 @@ export class StringConfig {
     public readonly noParentChannel: string = '';
     public readonly notValidChannel: string = '';
     public readonly defaultSelectPlaceholder: string = '';
+    public readonly emptySelect: string = '';
     public readonly channelOptionLabel: string = '';
     public readonly unavailable: string = '';
     public readonly imageName: string = '';

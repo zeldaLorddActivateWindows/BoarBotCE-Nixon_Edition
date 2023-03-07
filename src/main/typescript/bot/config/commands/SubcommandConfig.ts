@@ -1,6 +1,7 @@
-import {SetupModalConfigs} from '../modals/SetupModalConfigs';
 import {SubcommandArgsConfig} from './SubcommandArgsConfig';
-import {ComponentConfig} from '../components/ComponentConfig';
+import {ActionRowBuilder, ButtonBuilder, ModalComponentData, SelectMenuBuilder} from 'discord.js';
+import {RowConfig} from '../components/RowConfig';
+import {ModalConfig} from '../modals/ModalConfig';
 
 /**
  * {@link SubcommandConfig SubcommandConfig.ts}
@@ -26,6 +27,7 @@ export class SubcommandConfig {
     // Components and modals associated with a command
     // NOTE: Types should expand as more commands with Components and Modals are added
 
-    public readonly component_rows: ComponentConfig[][][] = [[[]]];
-    public readonly modals: SetupModalConfigs = new SetupModalConfigs;
+    public readonly componentFields: RowConfig[][] = [[]];
+    public readonly modals: ModalConfig[] = [];
+
 }

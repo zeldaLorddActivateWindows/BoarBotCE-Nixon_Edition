@@ -11,12 +11,12 @@ import {ButtonInteraction, SelectMenuInteraction} from 'discord.js';
  */
 export class CollectorUtils {
     public static async canInteract(
-        inter: ButtonInteraction | SelectMenuInteraction,
+
         timerVars: { timeUntilNextCollect: number, updateTime: NodeJS.Timer },
-        onlyUpdate: boolean = false
+        inter?: ButtonInteraction | SelectMenuInteraction,
     ): Promise<boolean> {
         // If the collection attempt was too quick, cancel it
-        if (!onlyUpdate && Date.now() < timerVars.timeUntilNextCollect) {
+        if (inter && Date.now() < timerVars.timeUntilNextCollect) {
             await inter.deferUpdate();
             return false;
         }

@@ -70,6 +70,7 @@
         "noParentChannel": "NO CATEGORY",
         "notValidChannel": "This channel isn't valid! Try a different one! The channel should be:\n- A text channel\n- Not already chosen\n- Exists in this server",
         "defaultSelectPlaceholder": "UNSELECTED",
+        "emptySelect": "None",
         "channelOptionLabel": "#%@ [%@]",
         "unavailable": "N/A",
         "imageName": "unknown",
@@ -123,125 +124,189 @@
                 "args": [],
                 "adminOnly": true,
                 "cooldown": true,
-                "component_rows": [
+                "componentFields": [
                     [
-                        [
-                            {
-                                "customId": "SETUP_TRADE_CHANNEL_SELECT",
-                                "placeholder": "UNSELECTED"
-                            }
-                        ],
-                        [
-                            {
-                                "customId": "SETUP_REFRESH_TRADE_CHANNEL",
-                                "label": "Refresh",
-                                "style": 2
-                            },
-                            {
-                                "customId": "SETUP_FIND",
-                                "emoji": "\uD83D\uDCDD",
-                                "style": 2
-                            },
-                            {
-                                "customId": "SETUP_INFO_TRADE_CHANNEL",
-                                "emoji": "❔",
-                                "style": 2
-                            }
-                        ]
+                        {
+                            "type": 1,
+                            "components": [
+                                {
+                                    "type": 3,
+                                    "customId": "SETUP_TRADE_CHANNEL_SELECT",
+                                    "placeholder": "UNSELECTED"
+                                }
+                            ]
+                        },
+                        {
+                            "type": 1,
+                            "components": [
+                                {
+                                    "type": 2,
+                                    "customId": "SETUP_REFRESH_TRADE_CHANNEL",
+                                    "label": "Refresh",
+                                    "style": 2
+                                },
+                                {
+                                    "type": 2,
+                                    "customId": "SETUP_FIND",
+                                    "emoji": "\uD83D\uDCDD",
+                                    "style": 2
+                                },
+                                {
+                                    "type": 2,
+                                    "customId": "SETUP_INFO_TRADE_CHANNEL",
+                                    "emoji": "❔",
+                                    "style": 2
+                                }
+                            ]
+                        }
                     ],
                     [
-                        [
-                            {
-                                "customId": "SETUP_BOAR_CHANNEL_SELECT_1",
-                                "placeholder": "UNSELECTED"
-                            }
-                        ],
-                        [
-                            {
-                                "customId": "SETUP_BOAR_CHANNEL_SELECT_2",
-                                "placeholder": "UNSELECTED"
-                            }
-                        ],
-                        [
-                            {
-                                "customId": "SETUP_BOAR_CHANNEL_SELECT_3",
-                                "placeholder": "UNSELECTED"
-                            }
-                        ],
-                        [
-                            {
-                                "customId": "SETUP_REFRESH_BOAR_CHANNELS",
-                                "label": "Refresh",
-                                "style": 2
-                            },
-                            {
-                                "customId": "SETUP_FIND",
-                                "emoji": "\uD83D\uDCDD",
-                                "style": 2
-                            },
-                            {
-                                "customId": "SETUP_INFO_BOAR_CHANNELS",
-                                "emoji": "❔",
-                                "style": 2
-                            }
-                        ]
+                        {
+                            "type": 1,
+                            "components": [
+                                {
+                                    "type": 3,
+                                    "customId": "SETUP_BOAR_CHANNEL_SELECT_1",
+                                    "placeholder": "UNSELECTED"
+                                }
+                            ]
+                        },
+                        {
+                            "type": 1,
+                            "components": [
+                                {
+                                    "type": 3,
+                                    "customId": "SETUP_BOAR_CHANNEL_SELECT_2",
+                                    "placeholder": "UNSELECTED"
+                                }
+                            ]
+                        },
+                        {
+                            "type": 1,
+                            "components": [
+                                {
+                                    "type": 3,
+                                    "customId": "SETUP_BOAR_CHANNEL_SELECT_3",
+                                    "placeholder": "UNSELECTED"
+                                }
+                            ]
+                        },
+                        {
+                            "type": 1,
+                            "components": [
+                                {
+                                    "type": 2,
+                                    "customId": "SETUP_REFRESH_BOAR_CHANNELS",
+                                    "label": "Refresh",
+                                    "style": 2
+                                },
+                                {
+                                    "type": 2,
+                                    "customId": "SETUP_FIND",
+                                    "emoji": "\uD83D\uDCDD",
+                                    "style": 2
+                                },
+                                {
+                                    "type": 2,
+                                    "customId": "SETUP_INFO_BOAR_CHANNELS",
+                                    "emoji": "❔",
+                                    "style": 2
+                                }
+                            ]
+                        }
                     ],
                     [
-                        [
-                            {
-                                "customId": "SETUP_SB_YES",
-                                "label": "Yes",
-                                "style": 1
-                            },
-                            {
-                                "customId": "SETUP_SB_NO",
-                                "label": "No",
-                                "style": 1
-                            },
-                            {
-                                "customId": "SETUP_INFO_SB",
-                                "emoji": "❔",
-                                "style": 2
-                            }
-                        ]
+                        {
+                            "type": 1,
+                            "components": [
+                                {
+                                    "type": 2,
+                                    "customId": "SETUP_SB_YES",
+                                    "label": "Yes",
+                                    "style": 1
+                                },
+                                {
+                                    "type": 2,
+                                    "customId": "SETUP_SB_NO",
+                                    "label": "No",
+                                    "style": 1
+                                },
+                                {
+                                    "type": 2,
+                                    "customId": "SETUP_INFO_SB",
+                                    "emoji": "❔",
+                                    "style": 2
+                                }
+                            ]
+                        }
                     ],
                     [
-                        [
-                            {
-                                "customId": "SETUP_CANCEL",
-                                "label": "Cancel",
-                                "style": 4
-                            },
-                            {
-                                "customId": "SETUP_RESTART",
-                                "label": "Restart",
-                                "style": 2
-                            },
-                            {
-                                "customId": "SETUP_NEXT",
-                                "label": "Next",
-                                "style": 1,
-                                "disabled": true
-                            }
-                        ]
+                        {
+                            "type": 1,
+                            "components": [
+                                {
+                                    "type": 2,
+                                    "customId": "SETUP_CANCEL",
+                                    "label": "Cancel",
+                                    "style": 4
+                                },
+                                {
+                                    "type": 2,
+                                    "customId": "SETUP_RESTART",
+                                    "label": "Restart",
+                                    "style": 2
+                                },
+                                {
+                                    "type": 2,
+                                    "customId": "SETUP_NEXT",
+                                    "label": "Next",
+                                    "style": 1,
+                                    "disabled": true
+                                }
+                            ]
+                        }
                     ]
                 ],
-                "modals": {
-                    "modal1": {
+                "modals": [
+                    {
                         "title": "Input Channel ID",
-                        "id": "FIELD_ONE_MODAL",
-                        "inputIDs": ["CHANNEL_INPUT"],
-                        "inputLabels": ["ID"],
-                        "inputPlaceholders": ["012345678901234567"]
+                        "customId": "FIELD_ONE_MODAL",
+                        "components": [
+                            {
+                                "type": 1,
+                                "components": [
+                                    {
+                                        "type": 4,
+                                        "customId": "CHANNEL_INPUT",
+                                        "label": "ID",
+                                        "placeholder": "012345678901234567",
+                                        "style": 1,
+                                        "required": true
+                                    }
+                                ]
+                            }
+                        ]
                     },
-                    "modal2": {
+                    {
                         "title": "Input Channel ID",
-                        "id": "FIELD_TWO_MODAL",
-                        "inputIDs": ["CHANNEL_INPUT"],
-                        "inputLabels": ["ID"],
-                        "inputPlaceholders": ["012345678901234567"]
+                        "customId": "FIELD_TWO_MODAL",
+                        "components": [
+                            {
+                                "type": 1,
+                                "components": [
+                                    {
+                                        "type": 4,
+                                        "customId": "CHANNEL_INPUT",
+                                        "label": "ID",
+                                        "placeholder": "012345678901234567",
+                                        "style": 1,
+                                        "required": true
+                                    }
+                                ]
+                            }
+                        ]
                     }
-                }
+                ]
             }
         },
         "boarDev": {
@@ -684,12 +749,6 @@
                 "imposter",
                 "curious"
             ]
-        }
-    ],
-    "emptySelectMenu": [
-        {
-            "label": "None",
-            "value": "none"
         }
     ],
     "colorConfig": {

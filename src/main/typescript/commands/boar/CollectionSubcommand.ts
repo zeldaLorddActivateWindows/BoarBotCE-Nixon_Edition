@@ -292,7 +292,7 @@ export default class CollectionSubcommand implements Subcommand {
 
         // Only allows button presses from current interaction to affect results
         const filter = async (btnInt: ButtonInteraction | SelectMenuInteraction) => {
-            return btnInt.customId.split('|')[1] === interaction.id + btnInt.user.id;
+            return btnInt.id + btnInt.customId === interaction.id + btnInt.user.id;
         };
 
         const collector = interaction.channel?.createMessageComponentCollector({
@@ -314,7 +314,7 @@ export default class CollectionSubcommand implements Subcommand {
                 timeUntilNextCollect = Date.now() + 500;
             }, 100);
 
-            LogDebug.sendDebug(`Used ${inter.customId.split('|')[0]} on field ${curPage}`, config, interaction);
+            LogDebug.sendDebug(`Used ${inter.customId} on field ${curPage}`, config, interaction);
         });
 
         LogDebug.sendDebug('End of interaction', config, interaction);
