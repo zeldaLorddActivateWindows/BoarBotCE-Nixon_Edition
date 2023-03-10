@@ -91,7 +91,6 @@ export class GeneralFunctions {
         LogDebug.sendDebug('Started interaction', config, interaction);
 
         const guildData = await DataHandlers.getGuildData(interaction);
-
         if (!guildData) return;
 
         if (!guildData.channels) {

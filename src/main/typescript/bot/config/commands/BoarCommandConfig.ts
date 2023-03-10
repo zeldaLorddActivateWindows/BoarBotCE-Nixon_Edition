@@ -12,17 +12,17 @@ import {CommandConfig} from './CommandConfig';
  */
 export class BoarCommandConfig extends CommandConfig {
     /**
-     * {@link SubcommandConfig Subcommand information} for {@link HelpCommand}
+     * {@link SubcommandConfig Subcommand information} for {@link HelpSubcommand}
      */
     public readonly help: SubcommandConfig = new SubcommandConfig;
 
     /**
-     * {@link SubcommandConfig Subcommand information} for {@link DailyCommand}
+     * {@link SubcommandConfig Subcommand information} for {@link DailySubcommand}
      */
     public readonly daily: SubcommandConfig = new SubcommandConfig;
 
     /**
-     * {@link SubcommandConfig Subcommand information} for {@link CollectionCommand}
+     * {@link SubcommandConfig Subcommand information} for {@link CollectionSubcommand}
      */
     public readonly collection: SubcommandConfig = new SubcommandConfig;
 }

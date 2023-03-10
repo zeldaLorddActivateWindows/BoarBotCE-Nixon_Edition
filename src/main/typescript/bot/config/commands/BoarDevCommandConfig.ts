@@ -12,7 +12,12 @@ import {CommandConfig} from './CommandConfig';
  */
 export class BoarDevCommandConfig extends CommandConfig {
     /**
-     * {@link SubcommandConfig Subcommand information} for {@link GiveCommand}
+     * {@link SubcommandConfig Subcommand information} for {@link GiveSubcommand}
      */
     public readonly give: SubcommandConfig = new SubcommandConfig;
+
+    /**
+     * {@link SubcommandConfig Subcommand information} for {@link ConfigRefreshSubcommand}
+     */
+    public readonly configRefresh: SubcommandConfig = new SubcommandConfig;
 }

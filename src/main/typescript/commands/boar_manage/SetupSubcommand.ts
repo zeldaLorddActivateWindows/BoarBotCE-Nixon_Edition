@@ -80,9 +80,9 @@ export default class SetupSubcommand implements Subcommand {
         if (!interaction.guild || !interaction.channel) return;
         
         await interaction.deferReply({ ephemeral: true });
+        this.firstInter = interaction;
 
         this.config = BoarBotApp.getBot().getConfig();
-        this.firstInter = interaction;
 
         const onCooldown = await GeneralFunctions.handleCooldown(this.config, interaction);
         if (onCooldown) return;
@@ -95,10 +95,11 @@ export default class SetupSubcommand implements Subcommand {
         this.guildDataPath = this.config.pathConfig.guildDataFolder + interaction.guild.id + '.json';
         this.guildData = await DataHandlers.getGuildData(interaction, true);
         
-        this.collector = await this.createCollector(interaction).catch(async (err: unknown) => {
-            await DataHandlers.removeGuildFile(this.guildDataPath, this.guildData);
-            throw err;
-        });
+        this.collector = await CollectorUtils.createCollector(interaction, interaction.id)
+            .catch(async (err: unknown) => {
+                await DataHandlers.removeGuildFile(this.guildDataPath, this.guildData);
+                throw err;
+            });
 
         await this.setupFields[0].editReply(interaction).catch(async (err: unknown) => {
             await DataHandlers.removeGuildFile(this.guildDataPath, this.guildData);
@@ -107,26 +108,6 @@ export default class SetupSubcommand implements Subcommand {
 
         this.collector.on('collect', async (inter: SelectMenuInteraction) => this.handleCollect(inter));
         this.collector.once('end', async (collected, reason) => this.handleEndCollect(reason));
-    }
-
-    /**
-     * Creates and returns a message component collector
-     *
-     * @param interaction - The interaction to create the collector with
-     * @private
-     */
-    private async createCollector(
-        interaction: ChatInputCommandInteraction
-    ): Promise<InteractionCollector<ButtonInteraction | SelectMenuInteraction>> {
-        // Only allows button presses from current interaction
-        const filter = async (btnInt: ButtonInteraction | SelectMenuInteraction) => {
-            return btnInt.customId.endsWith(interaction.id);
-        };
-
-        return interaction.channel?.createMessageComponentCollector({
-            filter,
-            idle: 1000 * 60 * 2
-        }) as InteractionCollector<ButtonInteraction | SelectMenuInteraction>;
     }
 
     /**

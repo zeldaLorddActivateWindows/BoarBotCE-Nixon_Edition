@@ -107,8 +107,8 @@ export class CommandHandler {
                 }
 
                 LogDebug.sendDebug('Successfully found and set command: ' + commandClass.data.name, config);
-            } catch {
-                LogDebug.handleError('One or more command classes have an invalid structure!');
+            } catch (err: unknown) {
+                LogDebug.handleError(err);
                 process.exit(-1);
             }
         }

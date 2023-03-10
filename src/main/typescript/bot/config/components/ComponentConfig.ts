@@ -17,4 +17,5 @@ export class ComponentConfig {
     public readonly placeholder?: string;
     public readonly style: number = 2;
     public readonly required: boolean = false;
+    public readonly disabled: boolean = false;
 }

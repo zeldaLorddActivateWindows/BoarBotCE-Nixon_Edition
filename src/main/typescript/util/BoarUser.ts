@@ -42,9 +42,9 @@ export class BoarUser {
         enhancers: 0,
         gifts: 0
     }; // update to own class
-    public theme: string;
-    public themes: string[];
-    public badges: string[];
+    public theme: string = 'normal';
+    public themes: string[] = ['normal'];
+    public badges: string[] = [];
 
     //***************************************
 
@@ -200,7 +200,7 @@ export class BoarUser {
         const rarityInfo = rarities[rarityIndex];
 
         // Information about interaction
-        const wasGiven = interaction.commandName === giveCommandConfig.name;
+        const wasGiven = interaction.options.getSubcommand() === giveCommandConfig.name;
 
         // Image elements to be combined into one final image
         let attachmentTitle = strConfig.dailyTitle;
@@ -286,7 +286,7 @@ export class BoarUser {
         const giveCommandConfig = config.commandConfigs.boarDev.give;
 
         const hasBadge = this.badges.includes(badgeID);
-        const wasGiven = interaction.commandName === giveCommandConfig.name;
+        const wasGiven = interaction.options.getSubcommand() === giveCommandConfig.name;
 
         if (hasBadge && wasGiven) {
             await interaction.editReply(strConfig.giveBadgeHas);

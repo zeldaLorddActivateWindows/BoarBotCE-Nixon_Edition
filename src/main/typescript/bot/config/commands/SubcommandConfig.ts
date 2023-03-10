@@ -27,7 +27,7 @@ export class SubcommandConfig {
     // Components and modals associated with a command
     // NOTE: Types should expand as more commands with Components and Modals are added
 
-    public readonly componentFields: RowConfig[][] = [[]];
+    public readonly componentFields: RowConfig[][] = [];
     public readonly modals: ModalConfig[] = [];
 
 }

@@ -1,4 +1,10 @@
-import {ChatInputCommandInteraction, EmbedBuilder, Message, ModalSubmitInteraction} from 'discord.js';
+import {
+    AutocompleteInteraction,
+    ChatInputCommandInteraction,
+    EmbedBuilder,
+    Message,
+    ModalSubmitInteraction
+} from 'discord.js';
 import {BotConfig} from '../../bot/config/BotConfig';
 import {BoarBotApp} from '../../BoarBotApp';
 
@@ -64,7 +70,7 @@ export class LogDebug {
      */
     public static async handleError(
         err: unknown | string,
-        interaction?: ChatInputCommandInteraction | ModalSubmitInteraction
+        interaction?: ChatInputCommandInteraction | ModalSubmitInteraction | AutocompleteInteraction
     ): Promise<void> {
         try {
             let errString = typeof err === 'string' ? err : (err as Error).stack;
@@ -73,7 +79,7 @@ export class LogDebug {
 
             console.log(prefix + time + errString);
 
-            if (!interaction) return;
+            if (!interaction || !interaction.isChatInputCommand()) return;
 
             const config = BoarBotApp.getBot().getConfig();
             const errResponse = config.stringConfig.error;

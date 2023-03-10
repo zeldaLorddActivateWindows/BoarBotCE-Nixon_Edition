@@ -51,6 +51,8 @@ export class StringConfig {
 
     // Give command messages/strings (also badges)
 
+    public readonly giveBoarChoiceTag: string = '';
+    public readonly giveBadgeChoiceTag: string = '';
     public readonly giveBoar: string = '';
     public readonly giveTitle: string = '';
     public readonly giveSpecialTitle: string = '';
@@ -62,6 +64,15 @@ export class StringConfig {
     // Collection command strings
 
     public readonly collNoBadges: string = '';
+    public readonly collDateLabel: string = '';
+    public readonly collScoreLabel: string = '';
+    public readonly collTotalLabel: string = '';
+    public readonly collUniquesLabel: string = '';
+    public readonly collDailiesLabel: string = '';
+    public readonly collStreakLabel: string = '';
+    public readonly collLastDailyLabel: string = '';
+    public readonly collFavLabel: string = '';
+    public readonly collRecentLabel: string = '';
 
     // Miscellaneous strings
 

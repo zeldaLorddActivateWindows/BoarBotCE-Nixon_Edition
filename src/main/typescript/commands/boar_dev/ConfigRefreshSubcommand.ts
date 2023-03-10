@@ -1,21 +1,23 @@
-import {ChatInputCommandInteraction} from 'discord.js';
-import fs from 'fs';
+import {ChatInputCommandInteraction, User} from 'discord.js';
+import {BoarUser} from '../../util/BoarUser';
 import {BoarBotApp} from '../../BoarBotApp';
 import {Subcommand} from '../../api/commands/Subcommand';
+import {Queue} from '../../util/Queue';
 import {GeneralFunctions} from '../../util/GeneralFunctions';
+import {Replies} from '../../util/Replies';
 import {LogDebug} from '../../util/logging/LogDebug';
 
 /**
- * {@link HelpSubcommand HelpSubcommand.ts}
+ * {@link ConfigRefreshSubcommand ConfigRefreshSubcommand.ts}
  *
- * Used to see information about the bot.
+ * Refreshes the config the bot is using
  *
  * @license {@link http://www.apache.org/licenses/ Apache-2.0}
  * @copyright WeslayCodes 2023
  */
-export default class HelpSubcommand implements Subcommand {
+export default class ConfigRefreshSubcommand implements Subcommand {
     private config = BoarBotApp.getBot().getConfig();
-    private subcommandInfo = this.config.commandConfigs.boar.help;
+    private subcommandInfo = this.config.commandConfigs.boarDev.configRefresh;
     public readonly data = { name: this.subcommandInfo.name, path: __filename };
 
     /**
@@ -24,17 +26,11 @@ export default class HelpSubcommand implements Subcommand {
      * @param interaction - The interaction that called the subcommand
      */
     public async execute(interaction: ChatInputCommandInteraction) {
-        this.config = BoarBotApp.getBot().getConfig();
+        LogDebug.sendDebug('Started interaction', this.config, interaction);
 
-        const guildData = await GeneralFunctions.handleStart(this.config, interaction, true);
+        BoarBotApp.getBot().loadConfig();
 
-        if (!guildData) return;
-
-        await interaction.deferReply({ ephemeral: true });
-
-        const helpImagePath = this.config.pathConfig.otherAssets + this.config.pathConfig.helpBackground;
-
-        await interaction.editReply({ files: [fs.readFileSync(helpImagePath)] });
+        await interaction.reply({ content: 'Successfully refreshed the config.', ephemeral: true });
 
         LogDebug.sendDebug('End of interaction', this.config, interaction);
     }

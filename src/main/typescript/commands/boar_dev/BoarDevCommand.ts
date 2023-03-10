@@ -1,4 +1,4 @@
-import {ChatInputCommandInteraction, SlashCommandBuilder} from 'discord.js';
+import {AutocompleteInteraction, ChatInputCommandInteraction, Interaction, SlashCommandBuilder} from 'discord.js';
 import {BoarBotApp} from '../../BoarBotApp';
 import {Command} from '../../api/commands/Command';
 import {LogDebug} from '../../util/logging/LogDebug';
@@ -28,7 +28,11 @@ export default class BoarDevCommand implements Command {
             .addStringOption(option => option.setName(this.commandInfo.give.args[1].name)
                 .setDescription(this.commandInfo.give.args[1].description)
                 .setRequired(this.commandInfo.give.args[1].required)
+                .setAutocomplete(true)
             )
+        )
+        .addSubcommand(sub => sub.setName(this.commandInfo.configRefresh.name)
+            .setDescription(this.commandInfo.configRefresh.description)
         );
 
     /**
@@ -36,18 +40,29 @@ export default class BoarDevCommand implements Command {
      *
      * @param interaction - An interaction that could've called a boar-dev subcommand
      */
-    public async execute(interaction: ChatInputCommandInteraction) {
+    public async execute(interaction: AutocompleteInteraction | ChatInputCommandInteraction) {
         const subcommand = BoarBotApp.getBot().getSubcommands().get(interaction.options.getSubcommand());
 
-        if (subcommand) {
-            const exports = require(subcommand.data.path);
-            const commandClass = new exports.default();
+        if (!subcommand) return;
 
+        const exports = require(subcommand.data.path);
+        const commandClass = new exports.default();
+
+        if (interaction.isChatInputCommand()) {
             try {
                 await commandClass.execute(interaction);
             } catch (err: unknown) {
                 await LogDebug.handleError(err, interaction);
             }
+        } else if (interaction.isAutocomplete()) {
+            try {
+                await commandClass.autocomplete(interaction);
+            } catch (err: unknown) {
+                await LogDebug.handleError(err, interaction);
+            }
         }
+
+
+
     }
 }

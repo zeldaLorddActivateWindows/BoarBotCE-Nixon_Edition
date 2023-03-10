@@ -1,5 +1,5 @@
 {
-    "developers": [
+    "devs": [
         "184439280980983808"
     ],
     "botStatusChannel": "1042624481044209735",
@@ -20,6 +20,7 @@
         "itemNameplate": "DailyNameplate.png",
         "collOverlay": "BoarCollectionOverlay.png",
         "collUnderlay": "BoarCollectionUnderlay.png",
+        "clanNone": "BoarClanNone.png",
         "enhancerOn": "EnhancerActive.png",
         "enhancerOff": "EnhancerInactive.png",
         "thankYouImage": "BoarBotThanks.png",
@@ -60,6 +61,8 @@
         "dailyTitle": "Daily Boar!",
         "dailyNoBoarFound": "Failed to find a valid boar!",
         "giveBoar": "Successfully given boar (If it didn't show, make sure perms are correct!)",
+        "giveBoarChoiceTag": " | BOAR",
+        "giveBadgeChoiceTag": " | BADGE",
         "giveTitle": "Boar Given!",
         "giveSpecialTitle": "SPECIAL BOAR GIVEN!",
         "giveBadge": "Successfully given badge (If it didn't show, make sure perms are correct!)",
@@ -67,6 +70,15 @@
         "giveBadgeHas": "This user already has this badge!",
         "obtainedBadgeTitle": "Badge Obtained!",
         "collNoBadges": "No Badges!",
+        "collDateLabel": "Started collecting on",
+        "collScoreLabel": "Boar Score",
+        "collTotalLabel": "Total",
+        "collUniquesLabel": "Uniques",
+        "collDailiesLabel": "Dailies",
+        "collStreakLabel": "Streak",
+        "collLastDailyLabel": "Last Daily",
+        "collFavLabel": "FAVORITE",
+        "collRecentLabel": "RECENT",
         "noParentChannel": "NO CATEGORY",
         "notValidChannel": "This channel isn't valid! Try a different one! The channel should be:\n- A text channel\n- Not already chosen\n- Exists in this server",
         "defaultSelectPlaceholder": "UNSELECTED",
@@ -86,16 +98,16 @@
                 "description": "See all boar command information",
                 "args": [],
                 "cooldown": false,
-                "components": {},
-                "modals": {}
+                "componentFields": [],
+                "modals": []
             },
             "daily": {
                 "name": "daily",
                 "description": "Get your daily boar",
                 "args": [],
                 "cooldown": false,
-                "components": {},
-                "modals": {}
+                "componentFields": [],
+                "modals": []
             },
             "collection": {
                 "name": "collection",
@@ -104,12 +116,90 @@
                     {
                         "name": "user",
                         "description": "Check someone else's collection of boars",
-                        "required": false
+                        "required": false,
+                        "autocomplete": false,
+                        "choices": []
                     }
                 ],
                 "cooldown": false,
-                "components": {},
-                "modals": {}
+                "componentFields": [
+                    [
+                        {
+                            "type": 1,
+                            "components": [
+                                {
+                                    "type": 2,
+                                    "customId": "COLLECTION_BACK",
+                                    "emoji": "<:back:1073072529507369072>",
+                                    "style": 2,
+                                    "disabled": true
+                                },
+                                {
+                                    "type": 2,
+                                    "customId": "COLLECTION_PAGE",
+                                    "emoji": "\uD83D\uDCDD",
+                                    "style": 2,
+                                    "disabled": true
+                                },
+                                {
+                                    "type": 2,
+                                    "customId": "COLLECTION_FORWARD",
+                                    "emoji": "<:forward:1073071982096175184>",
+                                    "style": 2,
+                                    "disabled": true
+                                }
+                            ]
+                        },
+                        {
+                            "type": 1,
+                            "components": [
+                                {
+                                    "type": 2,
+                                    "customId": "COLLECTION_VIEW_NORMAL",
+                                    "label": "Normal",
+                                    "style": 1,
+                                    "disabled": true
+                                },
+                                {
+                                    "type": 2,
+                                    "customId": "COLLECTION_VIEW_DETAILED",
+                                    "label": "Detailed",
+                                    "style": 1,
+                                    "disabled": true
+                                },
+                                {
+                                    "type": 2,
+                                    "customId": "COLLECTION_VIEW_POWERUPS",
+                                    "label": "Powerups",
+                                    "style": 1,
+                                    "disabled": true
+                                }
+                            ]
+                        }
+                    ],
+                    [
+                        {
+                            "type": 1,
+                            "components": [
+                                {
+                                    "type": 2,
+                                    "customId": "COLLECTION_FAVORITE",
+                                    "emoji": "\uD83C\uDF1F",
+                                    "style": 3,
+                                    "disabled": true
+                                },
+                                {
+                                    "type": 2,
+                                    "customId": "COLLECTION_GIFT",
+                                    "emoji": "\uD83C\uDF81",
+                                    "style": 3,
+                                    "disabled": true
+                                }
+                            ]
+                        }
+                    ]
+                ],
+                "modals": []
             }
         },
         "boarManage": {
@@ -321,18 +411,30 @@
                 "args": [
                     {
                         "name": "user",
-                        "description": "User you'd like to give the boar/badge to",
-                        "required": true
+                        "description": "User you'd like to give the item to",
+                        "required": true,
+                        "autocomplete": false,
+                        "choices": []
                     },
                     {
                         "name": "id",
-                        "description": "ID of boar/badge to give",
-                        "required": true
+                        "description": "ID of item to give",
+                        "required": true,
+                        "autocomplete": true,
+                        "choices": []
                     }
                 ],
                 "cooldown": false,
-                "components": {},
-                "modals": {}
+                "componentFields": [],
+                "modals": []
+            },
+            "configRefresh": {
+                "name": "config-refresh",
+                "description": "Refresh the bot's config",
+                "args": [],
+                "cooldown": false,
+                "components": [],
+                "modals": []
             }
         }
     },
@@ -341,11 +443,13 @@
         "fontBig": 60,
         "fontMedium": 45,
         "fontSmallMedium": 40,
+        "fontSmallest": 35,
         "maxUsernameLength": 16,
         "maxTrackedEditions": 10,
-        "maxScore": 100000000000000000,
-        "maxBoars": 1000000000,
-        "maxStreak": 100000000,
+        "maxScore": 999999999999999999,
+        "maxBoars": 99999999,
+        "maxStreak": 99999999,
+        "maxDailies": 99999999,
         "rarityIncreaseConst": 25000,
         "itemImageSize": [930, 1080],
         "itemBoarPos": [27, 169],
@@ -364,17 +468,28 @@
         "collUserAvatarPos": [24, 24],
         "collUserAvatarSize": [156, 156],
         "collUserTagPos": [225, 80],
-        "collDatePos": [991, 150],
+        "collClanPos": [1740, 24],
+        "collClanSize": [156,156],
+        "collDateLabelPos": [994, 78],
+        "collDatePos": [1005, 150],
         "collNoBadgePos": [240, 150],
         "collBadgeStart": 240,
         "collBadgeSpacing": 70,
         "collBadgeY": 105,
         "collBadgeSize": [55, 55],
+        "collScoreLabelPos": [365, 289],
         "collScorePos": [365, 359],
-        "collTotalPos": [227, 561],
-        "collUniquePos": [568, 562],
-        "collMultiplierPos": [185, 745],
-        "collStreakPos": [533, 745],
+        "collTotalLabelPos": [201, 472],
+        "collTotalPos": [201, 542],
+        "collUniquesLabelPos": [538, 472],
+        "collUniquePos": [538, 542],
+        "collDailiesLabelPos": [201, 656],
+        "collDailiesPos": [201, 726],
+        "collStreakLabelPos": [538, 656],
+        "collStreakPos": [538, 726],
+        "collLastDailyLabelPos": [370, 846],
+        "collLastDailyPos": [370, 946],
+        "collBoarsPerPage": 16,
         "collBoarStartX": 740,
         "collBoarStartY": 210,
         "collBoarSpacingX": 296,
@@ -382,19 +497,16 @@
         "collBoarCols": 4,
         "collBoarRows": 4,
         "collBoarSize": [268, 268],
-        "collLastDailyPos": [370, 946],
         "collRarityStartX": 730,
         "collRarityStartY": 253,
         "collRarityEndDiff": 53,
         "collRarityWidth": 20,
         "collLastBoarPos": [382, 1037],
         "collLastBoarSize": [329, 329],
-        "collLastRarityPos": [382, 1037],
-        "collLastRaritySize": [200, 40],
+        "collRecentLabelPos": [485, 1070],
         "collFavBoarPos": [26, 1037],
         "collFavBoarSize": [329, 329],
-        "collFavRarityPos": [26, 1037],
-        "collFavRaritySize": [200, 40]
+        "collFavLabelPos": [130, 1070]
     },
     "boarItemConfigs": {
         "normal": {

@@ -37,6 +37,7 @@ export class PathConfig {
 
     public readonly collOverlay: string = '';
     public readonly collUnderlay: string = '';
+    public readonly clanNone: string = '';
     public readonly enhancerOn: string = '';
     public readonly enhancerOff: string = '';
 

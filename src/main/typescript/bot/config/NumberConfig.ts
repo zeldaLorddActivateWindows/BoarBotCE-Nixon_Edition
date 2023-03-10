@@ -15,6 +15,7 @@ export class NumberConfig {
     public readonly fontBig: number = 0;
     public readonly fontMedium: number = 0;
     public readonly fontSmallMedium: number = 0;
+    public readonly fontSmallest: number = 0;
 
     // Maximum values
 
@@ -22,6 +23,7 @@ export class NumberConfig {
     public readonly maxTrackedEditions: number = 0;
     public readonly maxScore: number = 0;
     public readonly maxBoars: number = 0;
+    public readonly maxDailies: number = 0;
     public readonly maxStreak: number = 0;
 
     // A constant used to determine how quickly to increase rarity
@@ -45,21 +47,32 @@ export class NumberConfig {
 
     // Collection image positions, sizes, and values
 
+    public readonly collBoarsPerPage: number = 0;
     public readonly collImageSize: number[] = [];
     public readonly collUserAvatarPos: number[] = [];
     public readonly collUserAvatarSize: number[] = [];
     public readonly collUserTagPos: number[] = [];
+    public readonly collClanPos: number[] = [];
+    public readonly collClanSize: number[] = [];
+    public readonly collDateLabelPos: number[] = [];
     public readonly collDatePos: number[] = [];
     public readonly collNoBadgePos: number[] = [];
     public readonly collBadgeStart: number = 0;
     public readonly collBadgeSpacing: number = 0;
     public readonly collBadgeY: number = 0;
     public readonly collBadgeSize: number[] = [];
+    public readonly collScoreLabelPos: number[] = [];
     public readonly collScorePos: number[] = [];
+    public readonly collTotalLabelPos: number[] = [];
     public readonly collTotalPos: number[] = [];
+    public readonly collUniquesLabelPos: number[] = [];
     public readonly collUniquePos: number[] = [];
-    public readonly collMultiplierPos: number[] = [];
+    public readonly collDailiesLabelPos: number[] = [];
+    public readonly collDailiesPos: number[] = [];
+    public readonly collStreakLabelPos: number[] = [];
     public readonly collStreakPos: number[] = [];
+    public readonly collLastDailyLabelPos: number[] = [];
+    public readonly collLastDailyPos: number[] = [];
     public readonly collBoarStartX: number = 0;
     public readonly collBoarStartY: number = 0;
     public readonly collBoarSpacingX: number = 0;
@@ -67,17 +80,14 @@ export class NumberConfig {
     public readonly collBoarCols: number = 0;
     public readonly collBoarRows: number = 0;
     public readonly collBoarSize: number[] = [];
-    public readonly collLastDailyPos: number[] = [];
     public readonly collRarityStartX: number = 0;
     public readonly collRarityStartY: number = 0;
     public readonly collRarityEndDiff: number = 0;
     public readonly collRarityWidth: number = 0;
     public readonly collLastBoarPos: number[] = [];
     public readonly collLastBoarSize: number[] = [];
-    public readonly collLastRarityPos: number[] = [];
-    public readonly collLastRaritySize: number[] = [];
+    public readonly collRecentLabelPos: number[]= [];
     public readonly collFavBoarPos: number[] = [];
     public readonly collFavBoarSize: number[] = [];
-    public readonly collFavRarityPos: number[] = [];
-    public readonly collFavRaritySize: number[] = [];
+    public readonly collFavLabelPos: number[]= [];
 }

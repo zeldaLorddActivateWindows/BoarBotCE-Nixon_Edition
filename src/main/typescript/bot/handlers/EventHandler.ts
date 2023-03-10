@@ -38,8 +38,8 @@ export class EventHandler {
                 client.on(listenClass.eventName, (...args: any[]) => listenClass.execute(...args));
 
                 LogDebug.sendDebug('Successfully registered listener for event: ' + listenClass.eventName, config);
-            } catch {
-                LogDebug.handleError('One or more listener classes has an invalid structure!');
+            } catch (err: unknown) {
+                LogDebug.handleError(err);
                 process.exit(-1);
             }
         }

@@ -1,4 +1,11 @@
-import {ChatInputCommandInteraction, EmbedBuilder, Events, Interaction, ModalSubmitInteraction} from 'discord.js';
+import {
+    AutocompleteInteraction,
+    ChatInputCommandInteraction,
+    EmbedBuilder,
+    Events,
+    Interaction,
+    ModalSubmitInteraction
+} from 'discord.js';
 import {Listener} from '../api/listeners/Listener';
 import {BotConfig} from '../bot/config/BotConfig';
 import {BoarBotApp} from '../BoarBotApp';
@@ -15,13 +22,13 @@ import {LogDebug} from '../util/logging/LogDebug';
  */
 export default class InteractionListener implements Listener {
     public readonly eventName: Events = Events.InteractionCreate;
-    private interaction: ChatInputCommandInteraction | ModalSubmitInteraction | null = null;
+    private interaction: ChatInputCommandInteraction | ModalSubmitInteraction | AutocompleteInteraction | null = null;
     private config: BotConfig | null = null;
     public static maintenanceEmbed = new EmbedBuilder()
         .setColor(0xFFFF00);
 
     public async execute(interaction: Interaction) {
-        if (!interaction.isChatInputCommand()) return;
+        if (!interaction.isChatInputCommand() && !interaction.isAutocomplete()) return;
 
         this.interaction = interaction;
         this.config = BoarBotApp.getBot().getConfig();

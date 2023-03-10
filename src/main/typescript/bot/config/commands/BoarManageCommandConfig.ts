@@ -12,7 +12,7 @@ import {CommandConfig} from './CommandConfig';
  */
 export class BoarManageCommandConfig extends CommandConfig {
     /**
-     * {@link SubcommandConfig Subcommand information} for {@link SetupCommand}
+     * {@link SubcommandConfig Subcommand information} for {@link SetupSubcommand}
      */
     public readonly setup: SubcommandConfig = new SubcommandConfig;
 }

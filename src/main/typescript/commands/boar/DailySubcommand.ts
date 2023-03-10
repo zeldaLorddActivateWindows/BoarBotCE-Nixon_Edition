@@ -32,13 +32,13 @@ export default class DailySubcommand implements Subcommand {
      * @param interaction - The interaction that called the subcommand
      */
     public async execute(interaction: ChatInputCommandInteraction): Promise<void> {
-        this.interaction = interaction;
         this.config = BoarBotApp.getBot().getConfig();
         this.guildData = await GeneralFunctions.handleStart(this.config, interaction);
 
         if (Object.keys(this.guildData).length === 0) return;
 
         await interaction.deferReply();
+        this.interaction = interaction;
 
         await Queue.addQueue(() => this.doDaily(), interaction.id + interaction.user.id);
 

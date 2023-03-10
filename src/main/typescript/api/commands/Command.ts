@@ -1,4 +1,9 @@
-import {ChatInputCommandInteraction, SlashCommandBuilder, SlashCommandSubcommandsOnlyBuilder} from 'discord.js';
+import {
+    AutocompleteInteraction,
+    ChatInputCommandInteraction,
+    SlashCommandBuilder,
+    SlashCommandSubcommandsOnlyBuilder
+} from 'discord.js';
 import {BadgeItemConfig} from '../../bot/config/items/BadgeItemConfig';
 
 /**
@@ -11,5 +16,5 @@ import {BadgeItemConfig} from '../../bot/config/items/BadgeItemConfig';
  */
 export interface Command {
     data: SlashCommandBuilder | SlashCommandSubcommandsOnlyBuilder;
-    execute(interaction: ChatInputCommandInteraction): void;
+    execute(interaction: ChatInputCommandInteraction | AutocompleteInteraction): void;
 }
