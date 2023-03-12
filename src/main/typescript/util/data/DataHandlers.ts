@@ -1,14 +1,14 @@
 import fs from 'fs';
 import {ChatInputCommandInteraction} from 'discord.js';
-import {BoarBotApp} from '../BoarBotApp';
-import {LogDebug} from './logging/LogDebug';
+import {BoarBotApp} from '../../BoarBotApp';
+import {LogDebug} from '../logging/LogDebug';
 
 /**
  * {@link DataHandlers DataHandlers.ts}
  *
  * Handles getting/removing/creating data to/from
  * data files.
- * MOVE USER DATA HANDLING HERE MAYBE
+ * MOVE USER DATA HANDLING HERE MAYBE [FIXFIXFIX]
  *
  * @license {@link http://www.apache.org/licenses/ Apache-2.0}
  * @copyright WeslayCodes 2023
@@ -70,7 +70,7 @@ export class DataHandlers {
      * Attempts to remove the guild config file
      *
      * @param guildDataPath - Path of guild data file
-     * @param guildData
+     * @param guildData - Guild data parsed from JSON (or undefined if it doesn't exist)
      */
     public static async removeGuildFile(guildDataPath: string, guildData: any): Promise<void> {
         if (Object.keys(guildData).length !== 0) return;

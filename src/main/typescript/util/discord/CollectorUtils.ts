@@ -4,14 +4,19 @@ import {ButtonInteraction, ChatInputCommandInteraction, InteractionCollector, Se
  * {@link CollectorUtils CollectorUtils.ts}
  *
  * A collection of functions that collectors
- * use frequently
+ * use frequently.
  *
  * @license {@link http://www.apache.org/licenses/ Apache-2.0}
  * @copyright WeslayCodes 2023
  */
 export class CollectorUtils {
+    /**
+     * Determines whether the interaction should be processed
+     *
+     * @param timerVars - Information regarding component cooldown
+     * @param inter - Used if the interaction should be dumped
+     */
     public static async canInteract(
-
         timerVars: { timeUntilNextCollect: number, updateTime: NodeJS.Timer },
         inter?: ButtonInteraction | SelectMenuInteraction,
     ): Promise<boolean> {

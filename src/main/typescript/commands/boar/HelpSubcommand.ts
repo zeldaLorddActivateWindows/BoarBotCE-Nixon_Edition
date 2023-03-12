@@ -2,7 +2,7 @@ import {ChatInputCommandInteraction} from 'discord.js';
 import fs from 'fs';
 import {BoarBotApp} from '../../BoarBotApp';
 import {Subcommand} from '../../api/commands/Subcommand';
-import {GeneralFunctions} from '../../util/GeneralFunctions';
+import {InteractionUtils} from '../../util/interactions/InteractionUtils';
 import {LogDebug} from '../../util/logging/LogDebug';
 
 /**
@@ -26,7 +26,7 @@ export default class HelpSubcommand implements Subcommand {
     public async execute(interaction: ChatInputCommandInteraction) {
         this.config = BoarBotApp.getBot().getConfig();
 
-        const guildData = await GeneralFunctions.handleStart(this.config, interaction, true);
+        const guildData = await InteractionUtils.handleStart(this.config, interaction, true);
 
         if (!guildData) return;
 

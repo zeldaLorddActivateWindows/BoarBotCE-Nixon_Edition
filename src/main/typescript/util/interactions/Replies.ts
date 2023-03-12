@@ -1,22 +1,22 @@
-/***********************************************
- * Replies.ts
+import {ChatInputCommandInteraction} from 'discord.js';
+import {BotConfig} from '../../bot/config/BotConfig';
+import {FormatStrings} from '../discord/FormatStrings';
+import {LogDebug} from '../logging/LogDebug';
+
+/**
+ * {@link Replies Replies.ts}
+ *
  * A collection of replies that are commonly
  * executed.
  *
- * Copyright 2023 WeslayCodes
- * License Info: http://www.apache.org/licenses/
- ***********************************************/
-
-import {ChatInputCommandInteraction} from 'discord.js';
-import {BotConfig} from '../bot/config/BotConfig';
-import {FormatStrings} from './discord/FormatStrings';
-import {LogDebug} from './logging/LogDebug';
-
+ * @license {@link http://www.apache.org/licenses/ Apache-2.0}
+ * @copyright WeslayCodes 2023
+ */
 export class Replies {
     /**
      * Handles when user sends command when config file is actively being configured for the first time
      *
-     * @param config
+     * @param config - Used to get the string to reply with
      * @param interaction - Interaction to reply to
      */
     public static async currentConfigReply(
@@ -30,10 +30,10 @@ export class Replies {
     /**
      * Handles when user sends command in channel not chosen in config
      *
-     * @param config
+     * @param config - Used to get the string to reply with
      * @param interaction - Interaction to reply to
-     * @param guildData -
-     * @param includeTrade
+     * @param guildData - Used to get the channels that can be used
+     * @param includeTrade - Whether to include trade channel in usable channels
      */
     public static async wrongChannelReply(
         config: BotConfig,
@@ -59,7 +59,7 @@ export class Replies {
     /**
      * Handles when user sends command they don't have permission for
      *
-     * @param config
+     * @param config - Used to get the string to reply with
      * @param interaction - Interaction to reply to
      */
     public static async noPermsReply(
@@ -73,7 +73,7 @@ export class Replies {
     /**
      * Handles when user sends command that has a cooldown too fast
      *
-     * @param config
+     * @param config - Used to get the string to reply with
      * @param interaction - Interaction to reply to
      */
     public static async onCooldownReply(

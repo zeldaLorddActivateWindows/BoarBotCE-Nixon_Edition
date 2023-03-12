@@ -6,17 +6,18 @@ import {
     SelectMenuInteraction,
     User
 } from 'discord.js';
-import {BoarUser} from '../../util/BoarUser';
+import {BoarUser} from '../../util/boar/BoarUser';
 import Canvas from 'canvas';
-import {drawImageCompact, drawLine, drawText} from '../../util/generators/CanvasFunctions';
 import moment from 'moment';
 import {BoarBotApp} from '../../BoarBotApp';
 import {Subcommand} from '../../api/commands/Subcommand';
-import {Queue} from '../../util/Queue';
-import {GeneralFunctions} from '../../util/GeneralFunctions';
+import {Queue} from '../../util/interactions/Queue';
+import {InteractionUtils} from '../../util/interactions/InteractionUtils';
 import {LogDebug} from '../../util/logging/LogDebug';
 import {CollectorUtils} from '../../util/discord/CollectorUtils';
 import {ComponentUtils} from '../../util/discord/ComponentUtils';
+import {BoarUtils} from '../../util/boar/BoarUtils';
+import {CanvasUtils} from '../../util/generators/CanvasUtils';
 
 /**
  * {@link CollectionSubcommand CollectionSubcommand.ts}
@@ -52,7 +53,7 @@ export default class CollectionSubcommand implements Subcommand {
     public async execute(interaction: ChatInputCommandInteraction) {
         const config = BoarBotApp.getBot().getConfig();
 
-        const guildData = await GeneralFunctions.handleStart(config, interaction);
+        const guildData = await InteractionUtils.handleStart(config, interaction);
         if (!guildData) return;
 
         await interaction.deferReply();
@@ -79,6 +80,12 @@ export default class CollectionSubcommand implements Subcommand {
         LogDebug.sendDebug('End of interaction', config, interaction);
     }
 
+    /**
+     * Gets information from the user's file
+     *
+     * @param userInput - The {@link User} that was input from the command
+     * @private
+     */
     private async getUserInfo(userInput: User) {
         try {
             if (!this.firstInter.guild || !this.firstInter.channel) return;
@@ -89,7 +96,7 @@ export default class CollectionSubcommand implements Subcommand {
             for (const boarID of Object.keys(this.boarUser.boarCollection)) {
                 // Local user boar information
                 const boarInfo = this.boarUser.boarCollection[boarID];
-                const rarity: number = GeneralFunctions.findRarity(boarID);
+                const rarity: number = BoarUtils.findRarity(boarID);
 
                 // Global boar information
                 const boarDetails = this.config.boarItemConfigs[boarID];
@@ -111,6 +118,11 @@ export default class CollectionSubcommand implements Subcommand {
         }
     }
 
+    /**
+     * Displays the collection image
+     *
+     * @private
+     */
     private async showCollection() {
         // Config aliases
 
@@ -201,50 +213,52 @@ export default class CollectionSubcommand implements Subcommand {
         const mainCtx = this.baseCanvas.getContext('2d');
 
         // Draws underlay
-        drawImageCompact(mainCtx, await Canvas.loadImage(collectionUnderlay), origin, imageSize);
+        mainCtx.drawImage(await Canvas.loadImage(collectionUnderlay), ...origin, ...imageSize);
 
         // Draws top bar information
 
-        drawImageCompact(mainCtx, await Canvas.loadImage(userAvatar), nums.collUserAvatarPos, nums.collUserAvatarSize);
-        drawText(mainCtx, userTag, nums.collUserTagPos, mediumFont, 'left', colorConfig.font);
-        drawText(mainCtx, dateLabel, nums.collDateLabelPos, mediumFont, 'left', colorConfig.font);
-        drawText(mainCtx, firstDate, nums.collDatePos, mediumFont, 'left', colorConfig.font);
-        drawImageCompact(mainCtx, await Canvas.loadImage(noClan), nums.collClanPos, nums.collClanSize);
+        mainCtx.drawImage(await Canvas.loadImage(userAvatar), ...nums.collUserAvatarPos, ...nums.collUserAvatarSize);
+        CanvasUtils.drawText(mainCtx, userTag, nums.collUserTagPos, mediumFont, 'left', colorConfig.font);
+        CanvasUtils.drawText(mainCtx, dateLabel, nums.collDateLabelPos, mediumFont, 'left', colorConfig.font);
+        CanvasUtils.drawText(mainCtx, firstDate, nums.collDatePos, mediumFont, 'left', colorConfig.font);
+        mainCtx.drawImage(await Canvas.loadImage(noClan), ...nums.collClanPos, ...nums.collClanSize);
 
         if (this.boarUser.badges.length === 0) {
-            drawText(mainCtx, strConfig.collNoBadges, nums.collNoBadgePos, mediumFont, 'left', colorConfig.font);
+            CanvasUtils.drawText(
+                mainCtx, strConfig.collNoBadges, nums.collNoBadgePos, mediumFont, 'left', colorConfig.font
+            );
         }
 
         // Draws badge information if the user has badges
         for (let i=0; i<this.boarUser.badges.length; i++) {
             const badgesFolder = pathConfig.badgeImages;
-            const badgeXY = [nums.collBadgeStart + i * nums.collBadgeSpacing, nums.collBadgeY];
+            const badgeXY: [number, number] = [nums.collBadgeStart + i * nums.collBadgeSpacing, nums.collBadgeY];
             const badgeFile = badgesFolder + this.config.badgeItemConfigs[this.boarUser.badges[i]].file;
 
-            drawImageCompact(mainCtx, await Canvas.loadImage(badgeFile), badgeXY, nums.collBadgeSize);
+            mainCtx.drawImage(await Canvas.loadImage(badgeFile), ...badgeXY, ...nums.collBadgeSize);
         }
 
         // Draws stats information
 
-        drawText(mainCtx, scoreLabel, nums.collScoreLabelPos, mediumFont, 'center', colorConfig.font);
-        drawText(mainCtx, scoreString, nums.collScorePos, smallFont, 'center', colorConfig.font);
-        drawText(mainCtx, totalLabel, nums.collTotalLabelPos, mediumFont, 'center', colorConfig.font);
-        drawText(mainCtx, totalString, nums.collTotalPos, smallFont, 'center', colorConfig.font);
-        drawText(mainCtx, uniquesLabel, nums.collUniquesLabelPos, mediumFont, 'center', colorConfig.font);
-        drawText(mainCtx, uniqueString, nums.collUniquePos, smallFont, 'center', colorConfig.font);
-        drawText(mainCtx, dailiesLabel, nums.collDailiesLabelPos, mediumFont, 'center', colorConfig.font);
-        drawText(mainCtx, dailiesString, nums.collDailiesPos, smallFont, 'center', colorConfig.font);
-        drawText(mainCtx, streakLabel, nums.collStreakLabelPos, mediumFont, 'center', colorConfig.font);
-        drawText(mainCtx, streakString, nums.collStreakPos, smallFont, 'center', colorConfig.font);
-        drawText(mainCtx, lastDailyLabel, nums.collLastDailyLabelPos, bigFont, 'center', colorConfig.font);
-        drawText(mainCtx, lastDailyString, nums.collLastDailyPos, bigFont, 'center', colorConfig.font);
+        CanvasUtils.drawText(mainCtx, scoreLabel, nums.collScoreLabelPos, mediumFont, 'center', colorConfig.font);
+        CanvasUtils.drawText(mainCtx, scoreString, nums.collScorePos, smallFont, 'center', colorConfig.font);
+        CanvasUtils.drawText(mainCtx, totalLabel, nums.collTotalLabelPos, mediumFont, 'center', colorConfig.font);
+        CanvasUtils.drawText(mainCtx, totalString, nums.collTotalPos, smallFont, 'center', colorConfig.font);
+        CanvasUtils.drawText(mainCtx, uniquesLabel, nums.collUniquesLabelPos, mediumFont, 'center', colorConfig.font);
+        CanvasUtils.drawText(mainCtx, uniqueString, nums.collUniquePos, smallFont, 'center', colorConfig.font);
+        CanvasUtils.drawText(mainCtx, dailiesLabel, nums.collDailiesLabelPos, mediumFont, 'center', colorConfig.font);
+        CanvasUtils.drawText(mainCtx, dailiesString, nums.collDailiesPos, smallFont, 'center', colorConfig.font);
+        CanvasUtils.drawText(mainCtx, streakLabel, nums.collStreakLabelPos, mediumFont, 'center', colorConfig.font);
+        CanvasUtils.drawText(mainCtx, streakString, nums.collStreakPos, smallFont, 'center', colorConfig.font);
+        CanvasUtils.drawText(mainCtx, lastDailyLabel, nums.collLastDailyLabelPos, bigFont, 'center', colorConfig.font);
+        CanvasUtils.drawText(mainCtx, lastDailyString, nums.collLastDailyPos, bigFont, 'center', colorConfig.font);
 
         // Draws last boar gotten and rarity
         if (this.boarUser.lastBoar !== '') {
             const lastBoarDetails = this.config.boarItemConfigs[this.boarUser.lastBoar];
             const boarFile = boarsFolder + lastBoarDetails.file;
 
-            drawImageCompact(mainCtx, await Canvas.loadImage(boarFile), nums.collLastBoarPos, nums.collLastBoarSize);
+            mainCtx.drawImage(await Canvas.loadImage(boarFile), ...nums.collLastBoarPos, ...nums.collLastBoarSize);
         }
 
         // Draws favorite boar and rarity
@@ -252,7 +266,7 @@ export default class CollectionSubcommand implements Subcommand {
             const favoriteBoarDetails = this.config.boarItemConfigs[this.boarUser.favoriteBoar];
             const boarFile = boarsFolder + favoriteBoarDetails.file;
 
-            drawImageCompact(mainCtx, await Canvas.loadImage(boarFile), nums.collFavBoarPos, nums.collFavBoarSize);
+            mainCtx.drawImage(await Canvas.loadImage(boarFile), ...nums.collFavBoarPos, ...nums.collFavBoarSize);
         }
 
         const collFieldConfigs = this.config.commandConfigs.boar.collection.componentFields;
@@ -272,7 +286,7 @@ export default class CollectionSubcommand implements Subcommand {
     /**
      * Finishes off the collection image
      *
-     * @param components
+     * @param components - The components to add beneath the image
      */
     private async finishImage(components: ActionRowBuilder<ButtonBuilder | SelectMenuBuilder>[]): Promise<void> {
         // Config aliases
@@ -308,11 +322,11 @@ export default class CollectionSubcommand implements Subcommand {
         const canvas = Canvas.createCanvas(imageSize[0], imageSize[1]);
         const ctx = canvas.getContext('2d');
 
-        drawImageCompact(ctx, this.baseCanvas, origin, imageSize);
+        ctx.drawImage(this.baseCanvas, ...origin, ...imageSize);
 
         // Draws boars and rarities
         for (let i=0; i<this.curBoars.length; i++) {
-            const boarImagePos = [
+            const boarImagePos: [number, number] = [
                 nums.collBoarStartX + (i % nums.collBoarCols) * nums.collBoarSpacingX,
                 nums.collBoarStartY + Math.floor(i / nums.collBoarRows) * nums.collBoarSpacingY
             ];
@@ -330,17 +344,17 @@ export default class CollectionSubcommand implements Subcommand {
 
             const boarFile = boarsFolder + this.curBoars[i].file;
 
-            drawImageCompact(ctx, await Canvas.loadImage(boarFile), boarImagePos, nums.collBoarSize);
-            drawLine(
+            ctx.drawImage(await Canvas.loadImage(boarFile), ...boarImagePos, ...nums.collBoarSize);
+            CanvasUtils.drawLine(
                 ctx, lineStartPos, lineEndPos, nums.collRarityWidth, colorConfig['rarity' + this.curBoars[i].rarity]
             );
         }
 
         // Draws overlay
 
-        drawImageCompact(ctx, await Canvas.loadImage(collectionOverlay), origin, imageSize);
-        drawText(ctx, favLabel, nums.collFavLabelPos, smallestFont, 'center', colorConfig.font);
-        drawText(ctx, recentLabel, nums.collRecentLabelPos, smallestFont, 'center', colorConfig.font);
+        ctx.drawImage(await Canvas.loadImage(collectionOverlay), ...origin, ...imageSize);
+        CanvasUtils.drawText(ctx, favLabel, nums.collFavLabelPos, smallestFont, 'center', colorConfig.font);
+        CanvasUtils.drawText(ctx, recentLabel, nums.collRecentLabelPos, smallestFont, 'center', colorConfig.font);
 
         attachment = new AttachmentBuilder(canvas.toBuffer());
 

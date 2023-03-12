@@ -13,15 +13,16 @@ import {
 import fs from 'fs';
 import {BoarBotApp} from '../../BoarBotApp';
 import {Subcommand} from '../../api/commands/Subcommand';
-import {GeneralFunctions} from '../../util/GeneralFunctions';
-import {DataHandlers} from '../../util/DataHandlers';
+import {DataHandlers} from '../../util/data/DataHandlers';
 import {BotConfig} from '../../bot/config/BotConfig';
-import {FormField} from '../../util/FormField';
+import {FormField} from '../../util/interactions/FormField';
 import {FormatStrings} from '../../util/discord/FormatStrings';
 import {LogDebug} from '../../util/logging/LogDebug';
 import {CollectorUtils} from '../../util/discord/CollectorUtils';
 import {SubcommandConfig} from '../../bot/config/commands/SubcommandConfig';
 import {ComponentUtils} from '../../util/discord/ComponentUtils';
+import {Cooldown} from '../../util/interactions/Cooldown';
+import {PermissionUtils} from '../../util/discord/PermissionUtils';
 
 // Reasons for ending collection
 enum Reasons {
@@ -84,7 +85,7 @@ export default class SetupSubcommand implements Subcommand {
 
         this.config = BoarBotApp.getBot().getConfig();
 
-        const onCooldown = await GeneralFunctions.handleCooldown(this.config, interaction);
+        const onCooldown = await Cooldown.handleCooldown(this.config, interaction);
         if (onCooldown) return;
 
         LogDebug.sendDebug('Started interaction', this.config, interaction);
@@ -385,7 +386,7 @@ export default class SetupSubcommand implements Subcommand {
 
                     replyContent = strConfig.setupFinishedAll;
 
-                    if (!GeneralFunctions.hasAttachmentPerms(this.firstInter)) {
+                    if (!PermissionUtils.hasPerm(this.firstInter, 'AttachFiles')) {
                         replyContent += '\n\n' + strConfig.noAttachmentPerms;
                     }
 
@@ -682,7 +683,7 @@ export default class SetupSubcommand implements Subcommand {
     /**
      * Creates {@link FormField form fields} from configurations and returns them
      *
-     * @param staticRow
+     * @param staticRow - The row that all setup fields have
      * @private
      */
     private getSetupFields(

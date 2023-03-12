@@ -1,5 +1,3 @@
-import {BadgeItemConfig} from './items/BadgeItemConfig';
-
 /**
  * {@link ColorConfig ColorConfig.ts}
  *
@@ -11,16 +9,16 @@ import {BadgeItemConfig} from './items/BadgeItemConfig';
 export class ColorConfig {
     [colorKey: string]: string;
 
-    public readonly foregroundGray: string = '';
-    public readonly font: string = '';
+    public readonly foregroundGray: string = '#000000';
+    public readonly font: string = '#000000';
 
-    public readonly badge: string = '';
+    public readonly badge: string = '#000000';
 
-    public readonly rarity1: string = '';
-    public readonly rarity2: string = '';
-    public readonly rarity3: string = '';
-    public readonly rarity4: string = '';
-    public readonly rarity5: string = '';
-    public readonly rarity6: string = '';
-    public readonly rarity7: string = '';
+    public readonly rarity1: string = '#000000';
+    public readonly rarity2: string = '#000000';
+    public readonly rarity3: string = '#000000';
+    public readonly rarity4: string = '#000000';
+    public readonly rarity5: string = '#000000';
+    public readonly rarity6: string = '#000000';
+    public readonly rarity7: string = '#000000';
 }

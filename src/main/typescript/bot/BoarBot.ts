@@ -35,7 +35,7 @@ export class BoarBot implements Bot {
 	public async create(): Promise<void> {
 		this.buildClient();
 
-		this.loadConfig();
+		await this.loadConfig();
 		this.registerCommands();
 		this.registerListeners();
 		this.fixGuildData();
@@ -72,7 +72,7 @@ export class BoarBot implements Bot {
 	/**
 	 * Finds config file and pulls it into the code
 	 */
-	public loadConfig(): void { this.configHandler.loadConfig(); }
+	public async loadConfig(): Promise<void> { await this.configHandler.loadConfig(); }
 
 	/**
 	 * Returns config information that was gathered from config file

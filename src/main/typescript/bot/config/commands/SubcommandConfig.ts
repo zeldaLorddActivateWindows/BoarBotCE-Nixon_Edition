@@ -6,7 +6,7 @@ import {ModalConfig} from '../modals/ModalConfig';
 /**
  * {@link SubcommandConfig SubcommandConfig.ts}
  *
- * Stores configurations for a specific subcommand
+ * Stores a specific subcommand configuration
  * for a bot instance.
  *
  * @license {@link http://www.apache.org/licenses/ Apache-2.0}

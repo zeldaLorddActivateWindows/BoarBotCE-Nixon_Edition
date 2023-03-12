@@ -25,7 +25,7 @@
         "enhancerOff": "EnhancerInactive.png",
         "thankYouImage": "BoarBotThanks.png",
         "mainFont": "MinecraftFont.ttf",
-        "helpBackground": "other/Help.png",
+        "helpBackground": "Help.png",
         "circleMask": "CircleMask.png",
         "dynamicImageScript": "src/main/python/get_dynamic_image.py"
     },

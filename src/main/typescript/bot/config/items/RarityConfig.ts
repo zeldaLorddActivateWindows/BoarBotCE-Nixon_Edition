@@ -1,7 +1,7 @@
 /**
  * {@link RarityConfig RarityConfig.ts}
  *
- * Stores rarity configurations for a specific rarity
+ * Stores a specific rarity configuration
  * for a bot instance.
  *
  * @license {@link http://www.apache.org/licenses/ Apache-2.0}

@@ -4,7 +4,7 @@ import {CommandConfig} from './CommandConfig';
 /**
  * {@link BoarDevCommandConfig BoarDevCommandConfig.ts}
  *
- * Stores configurations for the boar command
+ * Stores configurations for the {@link BoarDevCommand boar-dev command}
  * for a bot instance.
  *
  * @license {@link http://www.apache.org/licenses/ Apache-2.0}

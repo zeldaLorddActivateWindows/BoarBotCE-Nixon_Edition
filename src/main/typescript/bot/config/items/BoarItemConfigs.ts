@@ -1,3 +1,6 @@
+import {BoarItemConfig} from './BoarItemConfig';
+import {BadgeItemConfig} from './BadgeItemConfig';
+
 /**
  * {@link BoarItemConfigs BoarItemConfigs.ts}
  *
@@ -7,9 +10,6 @@
  * @license {@link http://www.apache.org/licenses/ Apache-2.0}
  * @copyright WeslayCodes 2023
  */
-import {BoarItemConfig} from './BoarItemConfig';
-import {BadgeItemConfig} from './BadgeItemConfig';
-
 export class BoarItemConfigs {
     [boarKey: string]: BoarItemConfig;
 

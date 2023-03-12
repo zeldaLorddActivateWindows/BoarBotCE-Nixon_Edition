@@ -1,7 +1,7 @@
 /**
  * {@link BadgeItemConfig BadgeItemConfig.ts}
  *
- * Stores badge item configuration for a specific item
+ * Stores a specific badge item configuration
  * for a bot instance.
  *
  * @license {@link http://www.apache.org/licenses/ Apache-2.0}

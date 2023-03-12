@@ -19,8 +19,10 @@ export class ConfigHandler {
     /**
      * Loads config data from configuration file in project root
      */
-    public loadConfig(): void {
-        let parsedConfig: any;
+    public async loadConfig(): Promise<void> {
+        let parsedConfig: BotConfig;
+
+        this.setRelativeTime();
 
         try {
             parsedConfig = JSON.parse(fs.readFileSync('config.json', 'utf-8'));
@@ -29,19 +31,105 @@ export class ConfigHandler {
             process.exit(-1);
         }
 
-        this.config = parsedConfig as BotConfig;
+        if (!await this.verifyConfig(parsedConfig)) {
+            LogDebug.sendDebug('Failed to verify config file, sticking with old/default version.', this.config);
+            return;
+        }
+
+        this.config = parsedConfig;
 
         LogDebug.sendDebug('Config file successfully loaded!', this.config);
 
         this.loadFonts();
-        this.setRelativeTime();
     }
 
     /**
      * Verifies the contents of the data in the configuration file
+     *
+     * @return passed - Whether the config file passed verification
      * @private
      */
-    private verifyConfig(): void {}
+    private async verifyConfig(parsedConfig: BotConfig): Promise<boolean> {
+        const rarities = parsedConfig.rarityConfigs;
+        const boars = parsedConfig.boarItemConfigs;
+        const boarIDs = Object.keys(boars);
+        const badges = parsedConfig.badgeItemConfigs;
+        const badgeIDs = Object.keys(badges);
+        const foundBoars: string[] = [];
+
+        const pathConfig = parsedConfig.pathConfig;
+        const boarImages = pathConfig.boarImages;
+        const badgeImages = pathConfig.badgeImages;
+        const itemAssets = pathConfig.itemAssets;
+        const collAssets = pathConfig.collAssets;
+        const otherAssets = pathConfig.otherAssets;
+
+        const allPaths = [
+            pathConfig.listeners,
+            pathConfig.commands,
+            pathConfig.guildDataFolder,
+            pathConfig.userDataFolder,
+            pathConfig.globalDataFile,
+            itemAssets + pathConfig.itemOverlay,
+            itemAssets + pathConfig.itemUnderlay,
+            itemAssets + pathConfig.itemBackplate,
+            itemAssets + pathConfig.itemNameplate,
+            collAssets + pathConfig.collOverlay,
+            collAssets + pathConfig.collUnderlay,
+            collAssets + pathConfig.clanNone,
+            collAssets + pathConfig.enhancerOn,
+            collAssets + pathConfig.enhancerOff,
+            otherAssets + pathConfig.thankYouImage,
+            otherAssets + pathConfig.mainFont,
+            otherAssets + pathConfig.helpBackground,
+            otherAssets + pathConfig.circleMask,
+        ];
+
+        let passed = true;
+
+        for (const rarity in rarities) {
+            const rarityInfo = rarities[rarity];
+            for (const boar of rarityInfo.boars) {
+                if (boarIDs.includes(boar) && !foundBoars.includes(boar)) {
+                    foundBoars.push(boar);
+                    continue;
+                }
+
+                if (!boarIDs.includes(boar)) {
+                    LogDebug.sendDebug(`Boar ID '${boar}' not found in rarity '${rarity}'`, this.config);
+                }
+
+                if (foundBoars.includes(boar)) {
+                    LogDebug.sendDebug(`Boar ID '${boar}' used more than once`, this.config);
+                }
+
+                passed = false;
+                foundBoars.push(boar);
+            }
+        }
+
+        for (const boar of boarIDs) {
+            allPaths.push(boarImages + boars[boar].file);
+
+            if (foundBoars.includes(boar)) continue;
+
+            LogDebug.sendDebug(`Boar ID '${boar}' is unused`, this.config);
+            passed = false;
+        }
+
+        for (const badge of badgeIDs) {
+            allPaths.push(badgeImages + badges[badge].file);
+        }
+
+        for (const path of allPaths) {
+            if (fs.existsSync(path)) continue;
+
+            LogDebug.sendDebug(`Path '${path}' is invalid`, this.config);
+            passed = false;
+        }
+
+        return passed;
+    }
 
     /**
      * Grabs {@link BotConfig config} data the bot uses

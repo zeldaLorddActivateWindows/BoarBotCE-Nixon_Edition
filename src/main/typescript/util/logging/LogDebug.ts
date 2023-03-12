@@ -20,7 +20,7 @@ enum Colors {
 /**
  * {@link LogDebug LogDebug.ts}
  *
- * Handles util.logging information, debugging, and
+ * Handles util logging information, debugging, and
  * errors.
  *
  * @license {@link http://www.apache.org/licenses/ Apache-2.0}
@@ -31,10 +31,10 @@ export class LogDebug {
     public static readonly errorEmbed = new EmbedBuilder().setColor(0xFF0000);
 
     /**
-     * [DEBUG] Sends messages to the console
+     * Sends messages to the console
      *
      * @param debugMessage - Message to send to debug
-     * @param config - Configuration file
+     * @param config - Used to get debug prefix and see if debug mode
      * @param interaction - Whether to prepend string with command and user info
      */
     public static sendDebug(
@@ -52,7 +52,8 @@ export class LogDebug {
         }
 
         if (interaction) {
-            debugMessage = config.stringConfig.commandDebugPrefix
+            debugMessage =
+                config.stringConfig.commandDebugPrefix
                     .replace('%@', interaction.user.tag)
                     .replace('%@', interaction.commandName)
                     .replace('%@', interaction.options.getSubcommand()) +
@@ -108,7 +109,7 @@ export class LogDebug {
      * Handles DM reports
      *
      * @param message - Message from DM
-     * @param config
+     * @param config - Used to get DM reply string
      */
     public static async sendReport(message: Message, config: BotConfig): Promise<void> {
         const prefix = `[${Colors.Blue}DM REPORT${Colors.White}] `;
@@ -120,7 +121,7 @@ export class LogDebug {
     }
 
     /**
-     * [DEBUG] Pauses the code for a specified amount of time
+     * Pauses the code for a specified amount of time
      *
      * @param time - Time in ms to sleep
      */

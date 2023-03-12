@@ -1,3 +1,5 @@
+import {BadgeItemConfig} from './BadgeItemConfig';
+
 /**
  * {@link BadgeItemConfigs BadgeItemConfigs.ts}
  *
@@ -7,8 +9,6 @@
  * @license {@link http://www.apache.org/licenses/ Apache-2.0}
  * @copyright WeslayCodes 2023
  */
-import {BadgeItemConfig} from './BadgeItemConfig';
-
 export class BadgeItemConfigs {
     [badgeKey: string]: BadgeItemConfig;
 

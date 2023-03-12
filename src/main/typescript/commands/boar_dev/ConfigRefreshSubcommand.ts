@@ -1,16 +1,16 @@
 import {ChatInputCommandInteraction, User} from 'discord.js';
-import {BoarUser} from '../../util/BoarUser';
+import {BoarUser} from '../../util/boar/BoarUser';
 import {BoarBotApp} from '../../BoarBotApp';
 import {Subcommand} from '../../api/commands/Subcommand';
-import {Queue} from '../../util/Queue';
-import {GeneralFunctions} from '../../util/GeneralFunctions';
-import {Replies} from '../../util/Replies';
+import {Queue} from '../../util/interactions/Queue';
+import {InteractionUtils} from '../../util/interactions/InteractionUtils';
+import {Replies} from '../../util/interactions/Replies';
 import {LogDebug} from '../../util/logging/LogDebug';
 
 /**
  * {@link ConfigRefreshSubcommand ConfigRefreshSubcommand.ts}
  *
- * Refreshes the config the bot is using
+ * Refreshes the config the bot is using.
  *
  * @license {@link http://www.apache.org/licenses/ Apache-2.0}
  * @copyright WeslayCodes 2023

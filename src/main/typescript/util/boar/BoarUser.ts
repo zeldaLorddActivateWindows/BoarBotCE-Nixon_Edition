@@ -1,29 +1,27 @@
-/***********************************************
- * BoarUser.ts
- * Handles the manipulation of a user's profile,
- * which is stored in JSON.
- *
- * Copyright 2023 WeslayCodes
- * License Info: http://www.apache.org/licenses/
- ***********************************************/
-
 import Canvas from 'canvas';
 import {AttachmentBuilder, ChatInputCommandInteraction, User} from 'discord.js';
 import {Options, PythonShell} from 'python-shell';
 import fs from 'fs';
-import {drawCircleImage, drawImageCompact, drawRect, drawText} from './generators/CanvasFunctions';
-import {BoarBotApp} from '../BoarBotApp';
-import {BotConfig} from '../bot/config/BotConfig';
-import {BoarItemConfig} from '../bot/config/items/BoarItemConfig';
-import {BadgeItemConfig} from '../bot/config/items/BadgeItemConfig';
-import {RarityConfig} from '../bot/config/items/RarityConfig';
-import {Queue} from './Queue';
-import {DataHandlers} from './DataHandlers';
-import {GeneralFunctions} from './GeneralFunctions';
-import {LogDebug} from './logging/LogDebug';
+import {BoarBotApp} from '../../BoarBotApp';
+import {BotConfig} from '../../bot/config/BotConfig';
+import {BoarItemConfig} from '../../bot/config/items/BoarItemConfig';
+import {BadgeItemConfig} from '../../bot/config/items/BadgeItemConfig';
+import {RarityConfig} from '../../bot/config/items/RarityConfig';
+import {Queue} from '../interactions/Queue';
+import {DataHandlers} from '../data/DataHandlers';
+import {LogDebug} from '../logging/LogDebug';
+import {BoarUtils} from './BoarUtils';
+import {CanvasUtils} from '../generators/CanvasUtils';
 
-//***************************************
-
+/**
+ * {@link BoarUser BoarUser.ts}
+ *
+ * Handles the manipulation of a user's profile,
+ * which is stored in JSON.
+ *
+ * @license {@link http://www.apache.org/licenses/ Apache-2.0}
+ * @copyright WeslayCodes 2023
+ */
 export class BoarUser {
     public readonly user: User;
 
@@ -45,8 +43,6 @@ export class BoarUser {
     public theme: string = 'normal';
     public themes: string[] = ['normal'];
     public badges: string[] = [];
-
-    //***************************************
 
     /**
      * Creates a new BoarUser from data file.
@@ -76,8 +72,6 @@ export class BoarUser {
         this.fixUserData(userData);
     }
 
-    //***************************************
-
     /**
      * Returns user data from JSON file.
      * If it doesn't exist, write new file with empty data
@@ -102,10 +96,8 @@ export class BoarUser {
         return JSON.parse(userDataJSON);
     }
 
-    //***************************************
-
     /**
-     * Updates user data in JSON file and in this object
+     * Updates user data in JSON file and in this instance
      */
     public updateUserData(): void {
         let userData = this.getUserData();
@@ -127,8 +119,6 @@ export class BoarUser {
 
         this.fixUserData(userData);
     }
-
-    //***************************************
 
     /**
      * Fixes any potential issues with user data and
@@ -163,8 +153,6 @@ export class BoarUser {
 
         fs.writeFileSync(userFile, JSON.stringify(userData));
     }
-
-    //***************************************
 
     /**
      * Add a boar to a user's collection and send an image
@@ -272,8 +260,6 @@ export class BoarUser {
         return true;
     }
 
-    //***************************************
-
     /**
      * Add a badge to a user's profile and send an image
      * @param config - Global config data parsed from JSON
@@ -318,8 +304,6 @@ export class BoarUser {
         return true;
     }
 
-    //***************************************
-
     /**
      * Creates the image to be sent on boar/badge add
      * @param config - Global config data parsed from JSON
@@ -346,7 +330,7 @@ export class BoarUser {
         } else {
             info = config.boarItemConfigs[id];
             folderPath = pathConfig.boarImages;
-            backgroundColor = config.colorConfig['rarity' + GeneralFunctions.findRarity(id)];
+            backgroundColor = config.colorConfig['rarity' + BoarUtils.findRarity(id)];
         }
 
         const imageFilePath = folderPath + info.file;
@@ -401,11 +385,13 @@ export class BoarUser {
             const nameplate = itemAssetsFolder + pathConfig.itemNameplate;
 
             // Positioning and dimension info
+
             const origin = numConfig.originPos;
             const imageSize = numConfig.itemImageSize;
+            let nameplateSize: [number, number];
 
-            let mainPos: number[];
-            let mainSize: number[];
+            let mainPos: [number, number];
+            let mainSize: [number, number];
 
             if (!isBoar) {
                 mainPos = numConfig.itemBadgePos;
@@ -416,6 +402,7 @@ export class BoarUser {
             }
 
             // Font info
+
             const fontName = strConfig.fontName;
             const bigFont = `${numConfig.fontBig}px ${fontName}`;
             const mediumFont = `${numConfig.fontMedium}px ${fontName}`;
@@ -424,27 +411,32 @@ export class BoarUser {
             const ctx = canvas.getContext('2d');
 
             // Draws edge/background rarity color
-            drawRect(ctx, origin, imageSize, backgroundColor);
+
+            CanvasUtils.drawRect(ctx, origin, imageSize, backgroundColor);
             ctx.globalCompositeOperation = 'destination-in';
-            drawImageCompact(ctx, await Canvas.loadImage(underlayPath), origin, imageSize);
+            ctx.drawImage(await Canvas.loadImage(underlayPath), ...origin, ...imageSize);
             ctx.globalCompositeOperation = 'normal';
 
             // Draws badge and overlay
-            drawImageCompact(ctx, await Canvas.loadImage(backplatePath), origin, imageSize);
-            drawImageCompact(ctx, await Canvas.loadImage(imageFilePath), mainPos, mainSize);
-            drawImageCompact(ctx, await Canvas.loadImage(overlay), origin, imageSize);
+
+            ctx.drawImage(await Canvas.loadImage(backplatePath), ...origin, ...imageSize);
+            ctx.drawImage(await Canvas.loadImage(imageFilePath), ...mainPos, ...mainSize);
+            ctx.drawImage(await Canvas.loadImage(overlay), ...origin, ...imageSize);
 
             // Draws method of delivery and name of badge
-            drawText(ctx, attachmentTitle, numConfig.itemTitlePos, bigFont, 'center', colorConfig.font);
-            drawText(ctx, info.name, numConfig.itemNamePos, mediumFont, 'center', colorConfig.font);
+
+            CanvasUtils.drawText(ctx, attachmentTitle, numConfig.itemTitlePos, bigFont, 'center', colorConfig.font);
+            CanvasUtils.drawText(ctx, info.name, numConfig.itemNamePos, mediumFont, 'center', colorConfig.font);
 
             // Draws user information
-            drawImageCompact(
-                ctx, await Canvas.loadImage(nameplate), numConfig.itemNameplatePos,
-                [ctx.measureText(userTag).width + numConfig.itemNameplatePadding, numConfig.itemNameplateHeight]
-            );
-            drawText(ctx, userTag, numConfig.itemUserTagPos, mediumFont, 'left', colorConfig.font);
-            drawCircleImage(
+
+            nameplateSize = [
+                ctx.measureText(userTag).width + numConfig.itemNameplatePadding,
+                numConfig.itemNameplateHeight
+            ];
+            ctx.drawImage(await Canvas.loadImage(nameplate), ...numConfig.itemNameplatePos, ...nameplateSize);
+            CanvasUtils.drawText(ctx, userTag, numConfig.itemUserTagPos, mediumFont, 'left', colorConfig.font);
+            CanvasUtils.drawCircleImage(
                 ctx, await Canvas.loadImage(userAvatar), numConfig.itemUserAvatarPos, numConfig.itemUserAvatarWidth
             );
 
@@ -453,8 +445,6 @@ export class BoarUser {
 
         return new AttachmentBuilder(buffer, { name:`${strConfig.imageName}.${imageExtension}` });
     }
-
-    //***************************************
 
     /**
      * Reorder a user's boars to appear in order when viewing collection

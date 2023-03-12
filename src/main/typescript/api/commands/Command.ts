@@ -4,7 +4,6 @@ import {
     SlashCommandBuilder,
     SlashCommandSubcommandsOnlyBuilder
 } from 'discord.js';
-import {BadgeItemConfig} from '../../bot/config/items/BadgeItemConfig';
 
 /**
  * {@link Command Command.ts}

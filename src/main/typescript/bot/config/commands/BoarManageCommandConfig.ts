@@ -4,7 +4,7 @@ import {CommandConfig} from './CommandConfig';
 /**
  * {@link BoarManageCommandConfig BoarManageCommandConfig.ts}
  *
- * Stores configurations for the boar command
+ * Stores configurations for the {@link BoarManageCommand boar-manage command}
  * for a bot instance.
  *
  * @license {@link http://www.apache.org/licenses/ Apache-2.0}

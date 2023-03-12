@@ -3,7 +3,7 @@ import {PermissionFlagsBits} from 'discord-api-types/v10';
 /**
  * {@link CommandConfig CommandConfig.ts}
  *
- * Stores configurations for a specific command
+ * Stores a specific command configuration
  * for a bot instance.
  *
  * @license {@link http://www.apache.org/licenses/ Apache-2.0}

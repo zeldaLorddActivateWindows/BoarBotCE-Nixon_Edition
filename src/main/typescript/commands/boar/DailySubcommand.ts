@@ -1,12 +1,12 @@
 import {ChatInputCommandInteraction} from 'discord.js';
-import {BoarUser} from '../../util/BoarUser';
+import {BoarUser} from '../../util/boar/BoarUser';
 import {BoarBotApp} from '../../BoarBotApp';
 import {FormatStrings} from '../../util/discord/FormatStrings';
 import {Subcommand} from '../../api/commands/Subcommand';
 import {RarityConfig} from '../../bot/config/items/RarityConfig';
 import {BoarItemConfigs} from '../../bot/config/items/BoarItemConfigs';
-import {Queue} from '../../util/Queue';
-import {GeneralFunctions} from '../../util/GeneralFunctions';
+import {Queue} from '../../util/interactions/Queue';
+import {InteractionUtils} from '../../util/interactions/InteractionUtils';
 import {LogDebug} from '../../util/logging/LogDebug';
 import {BotConfig} from '../../bot/config/BotConfig';
 import {SubcommandConfig} from '../../bot/config/commands/SubcommandConfig';
@@ -33,7 +33,7 @@ export default class DailySubcommand implements Subcommand {
      */
     public async execute(interaction: ChatInputCommandInteraction): Promise<void> {
         this.config = BoarBotApp.getBot().getConfig();
-        this.guildData = await GeneralFunctions.handleStart(this.config, interaction);
+        this.guildData = await InteractionUtils.handleStart(this.config, interaction);
 
         if (Object.keys(this.guildData).length === 0) return;
 

@@ -1,4 +1,4 @@
-import {ChatInputCommandInteraction, SlashCommandBuilder, SlashCommandSubcommandsOnlyBuilder} from 'discord.js';
+import {ChatInputCommandInteraction} from 'discord.js';
 
 /**
  * {@link Subcommand Subcommand.ts}
