@@ -43,14 +43,14 @@ export class Replies {
     ): Promise<void> {
         LogDebug.sendDebug('Used in the wrong channel', config, interaction);
 
-        let strChannels = '\n';
+        let strChannels = '';
 
         for (const ch of guildData.channels) {
-            strChannels += '> ' + FormatStrings.toBasicChannel(ch);
+            strChannels += '\n> ' + FormatStrings.toBasicChannel(ch);
         }
 
         if (includeTrade) {
-            strChannels += '> ' + FormatStrings.toBasicChannel(guildData.tradeChannel);
+            strChannels += '\n> ' + FormatStrings.toBasicChannel(guildData.tradeChannel);
         }
 
         await Replies.handleReply(interaction, config.stringConfig.wrongChannel + strChannels);

@@ -56,7 +56,7 @@ export default class DailySubcommand implements Subcommand {
             if (!this.interaction.guild || !this.interaction.channel) return;
 
             // New boar user object used for easier manipulation of data
-            const boarUser = new BoarUser(this.interaction.user);
+            const boarUser = new BoarUser(this.interaction.user, true);
 
             const canUseDaily = await this.canUseDaily(boarUser);
             if (!canUseDaily) return;

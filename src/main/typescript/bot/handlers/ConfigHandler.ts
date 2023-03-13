@@ -83,6 +83,7 @@ export class ConfigHandler {
             otherAssets + pathConfig.mainFont,
             otherAssets + pathConfig.helpBackground,
             otherAssets + pathConfig.circleMask,
+            pathConfig.dynamicImageScript
         ];
 
         let passed = true;

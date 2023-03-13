@@ -54,6 +54,7 @@ export class StringConfig {
     public readonly giveBoarChoiceTag: string = ' ';
     public readonly giveBadgeChoiceTag: string = ' ';
     public readonly giveBoar: string = ' ';
+    public readonly giveBadID: string = '';
     public readonly giveTitle: string = ' ';
     public readonly giveSpecialTitle: string = ' ';
     public readonly giveBadge: string = ' ';

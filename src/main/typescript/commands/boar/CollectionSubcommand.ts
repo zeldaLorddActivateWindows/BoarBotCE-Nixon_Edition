@@ -315,6 +315,9 @@ export default class CollectionSubcommand implements Subcommand {
         const favLabel = strConfig.collFavLabel;
         const recentLabel = strConfig.collRecentLabel;
 
+        const lastBoarRarity = BoarUtils.findRarity(this.boarUser.lastBoar);
+        const favBoarRarity = BoarUtils.findRarity(this.boarUser.favoriteBoar);
+
         let attachment: AttachmentBuilder;
 
         this.curBoars = this.allBoars.slice(0, boarsPerPage);
@@ -353,8 +356,16 @@ export default class CollectionSubcommand implements Subcommand {
         // Draws overlay
 
         ctx.drawImage(await Canvas.loadImage(collectionOverlay), ...origin, ...imageSize);
-        CanvasUtils.drawText(ctx, favLabel, nums.collFavLabelPos, smallestFont, 'center', colorConfig.font);
-        CanvasUtils.drawText(ctx, recentLabel, nums.collRecentLabelPos, smallestFont, 'center', colorConfig.font);
+        CanvasUtils.drawText(
+            ctx, favLabel, nums.collFavLabelPos, smallestFont, 'center', favBoarRarity === 0
+                ? colorConfig.font
+                : colorConfig['rarity' + favBoarRarity]
+        );
+        CanvasUtils.drawText(
+            ctx, recentLabel, nums.collRecentLabelPos, smallestFont, 'center', lastBoarRarity === 0
+                ? colorConfig.font
+                : colorConfig['rarity' + lastBoarRarity]
+        );
 
         attachment = new AttachmentBuilder(canvas.toBuffer());
 
