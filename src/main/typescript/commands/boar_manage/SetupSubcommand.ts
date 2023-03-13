@@ -122,6 +122,8 @@ export default class SetupSubcommand implements Subcommand {
             const canInteract = await CollectorUtils.canInteract(this.timerVars, inter);
             if (!canInteract) return;
 
+            if (!inter.isMessageComponent()) return;
+
             this.compInter = inter;
 
             LogDebug.sendDebug(
@@ -469,7 +471,7 @@ export default class SetupSubcommand implements Subcommand {
 
         inter.client.on(
             Events.InteractionCreate,
-            async (submittedModal: Interaction) => this.modalListener(submittedModal)
+            this.modalListener
         );
 
         setTimeout(() => {
@@ -483,14 +485,14 @@ export default class SetupSubcommand implements Subcommand {
      * @param submittedModal - The interaction to respond to
      * @private
      */
-    private async modalListener(submittedModal: Interaction) {
+    private modalListener = async (submittedModal: Interaction) => {
         try  {
             // If not a modal submission on current interaction, destroy the modal listener
             if (submittedModal.isMessageComponent() && submittedModal.customId.endsWith(this.firstInter.id) ||
                 BoarBotApp.getBot().getConfig().maintenanceMode && !this.config.devs.includes(this.compInter.user.id)
             ) {
                 clearInterval(this.timerVars.updateTime);
-                this.compInter.client.removeListener(Events.InteractionCreate, this.modalListener);
+                submittedModal.client.removeListener(Events.InteractionCreate, this.modalListener);
 
                 return;
             }
@@ -534,6 +536,7 @@ export default class SetupSubcommand implements Subcommand {
                 });
 
                 clearInterval(this.timerVars.updateTime);
+                submittedModal.client.removeListener(Events.InteractionCreate, this.modalListener);
                 return;
             }
 
@@ -574,8 +577,8 @@ export default class SetupSubcommand implements Subcommand {
         }
 
         clearInterval(this.timerVars.updateTime);
-        this.compInter.client.removeListener(Events.InteractionCreate, this.modalListener);
-    }
+        submittedModal.client.removeListener(Events.InteractionCreate, this.modalListener);
+    };
 
     /**
      * Updates fields with select menus

@@ -1,6 +1,6 @@
 import dotenv from 'dotenv';
 import fs from 'fs';
-import {ActivityType, Client, GatewayIntentBits, Partials, TextChannel} from 'discord.js';
+import {ActivityType, Client, Events, GatewayIntentBits, Partials, TextChannel} from 'discord.js';
 import {Bot} from '../api/bot/Bot';
 import {FormatStrings} from '../util/discord/FormatStrings';
 import {ConfigHandler} from './handlers/ConfigHandler';
@@ -122,6 +122,10 @@ export class BoarBot implements Bot {
 	 */
 	public async onStart(): Promise<void> {
 		LogDebug.sendDebug('Successfully logged in! Bot online!', this.getConfig());
+
+		setInterval(() => {
+			LogDebug.sendDebug('Interaction Listeners: ' + this.client.listenerCount(Events.InteractionCreate), this.getConfig())
+		}, 600000);
 
 		const botStatusChannel = await this.getStatusChannel();
 
