@@ -8,6 +8,7 @@ import {LogDebug} from '../logging/LogDebug';
 import {CanvasUtils} from './CanvasUtils';
 import {AttachmentBuilder} from 'discord.js';
 import {BoarUser} from '../boar/BoarUser';
+import fs from 'fs';
 
 /**
  * {@link ItemImageGenerator ItemImageGenerator.ts}
@@ -23,7 +24,7 @@ export class ItemImageGenerator {
     private readonly id: string = '';
     private readonly title: string = '';
     private buffer: Buffer = {} as Buffer;
-    private backgroundColor: string = '';
+    private rarityColorKey: string = '';
     private imageFilePath: string = '';
     private userAvatar: string = '';
     private userTag: string = '';
@@ -45,7 +46,6 @@ export class ItemImageGenerator {
      */
     public async handleImageCreate(): Promise<AttachmentBuilder> {
         const strConfig = this.config.stringConfig;
-        const colorConfig = this.config.colorConfig;
         const pathConfig = this.config.pathConfig;
         const numConfig = this.config.numberConfig;
 
@@ -55,16 +55,24 @@ export class ItemImageGenerator {
         if (!this.isBoar) {
             this.itemInfo = this.config.badgeItemConfigs[this.id];
             folderPath = pathConfig.badgeImages;
-            this.backgroundColor = colorConfig.badge;
+            this.rarityColorKey = 'badge';
         } else {
             this.itemInfo = this.config.boarItemConfigs[this.id];
             folderPath = pathConfig.boarImages;
-            this.backgroundColor = this.config.colorConfig['rarity' + BoarUtils.findRarity(this.id)];
+            this.rarityColorKey = 'rarity' + BoarUtils.findRarity(this.id);
         }
 
         this.imageFilePath = folderPath + this.itemInfo.file;
         const imageExtension = this.imageFilePath.split('.')[1];
         const isAnimated = imageExtension === 'gif';
+
+        const tempPath = pathConfig.tempItemAssets + this.id + this.rarityColorKey + '.' + imageExtension;
+
+        if (fs.existsSync(tempPath)) {
+            return new AttachmentBuilder(
+                fs.readFileSync(tempPath), { name:`${strConfig.imageName}.${imageExtension}` }
+            );
+        }
 
         const usernameLength = numConfig.maxUsernameLength;
 
@@ -79,6 +87,9 @@ export class ItemImageGenerator {
             await this.makeStatic();
         }
 
+        // Saves image file for faster subsequent interactions
+        fs.writeFileSync(tempPath, this.buffer);
+
         return new AttachmentBuilder(this.buffer, { name:`${strConfig.imageName}.${imageExtension}` });
     }
 
@@ -90,7 +101,7 @@ export class ItemImageGenerator {
             const scriptOptions: Options = {
                 args: [
                     JSON.stringify(this.config),
-                    this.backgroundColor,
+                    this.rarityColorKey,
                     this.imageFilePath,
                     this.userAvatar,
                     this.userTag,
@@ -155,7 +166,7 @@ export class ItemImageGenerator {
 
         // Draws edge/background rarity color
 
-        CanvasUtils.drawRect(ctx, origin, imageSize, this.backgroundColor);
+        CanvasUtils.drawRect(ctx, origin, imageSize, colorConfig[this.rarityColorKey]);
         ctx.globalCompositeOperation = 'destination-in';
         ctx.drawImage(await Canvas.loadImage(underlayPath), ...origin, ...imageSize);
         ctx.globalCompositeOperation = 'normal';

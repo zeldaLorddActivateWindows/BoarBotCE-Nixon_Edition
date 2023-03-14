@@ -7,6 +7,7 @@ import {
 } from 'discord.js';
 import {BotConfig} from '../../bot/config/BotConfig';
 import {BoarBotApp} from '../../BoarBotApp';
+import {InteractionUtils} from '../interactions/InteractionUtils';
 
 // Console colors
 enum Colors {
@@ -27,7 +28,6 @@ enum Colors {
  * @copyright WeslayCodes 2023
  */
 export class LogDebug {
-    public static readonly Colors = Colors;
     public static readonly errorEmbed = new EmbedBuilder().setColor(0xFF0000);
 
     /**
@@ -52,15 +52,17 @@ export class LogDebug {
         }
 
         if (interaction) {
-            debugMessage =
-                config.stringConfig.commandDebugPrefix
-                    .replace('%@', interaction.user.tag)
-                    .replace('%@', interaction.commandName)
-                    .replace('%@', interaction.options.getSubcommand()) +
+            debugMessage = config.stringConfig.commandDebugPrefix
+                .replace('%@', interaction.user.tag)
+                .replace('%@', interaction.commandName)
+                .replace('%@', interaction.options.getSubcommand()) +
                 debugMessage
         }
 
+        const completeString = prefix + time + debugMessage;
+
         console.log(prefix + time + debugMessage);
+        this.sendLogMessage(config, completeString);
     }
 
     /**
@@ -77,12 +79,14 @@ export class LogDebug {
             let errString = typeof err === 'string' ? err : (err as Error).stack;
             const prefix = `[${Colors.Green}CAUGHT ERROR${Colors.White}] `;
             const time = LogDebug.getPrefixTime();
+            const completeString = prefix + time + errString;
+            const config = BoarBotApp.getBot().getConfig();
 
-            console.log(prefix + time + errString);
+            console.log(completeString);
+            await this.sendLogMessage(config, completeString);
 
             if (!interaction || !interaction.isChatInputCommand()) return;
 
-            const config = BoarBotApp.getBot().getConfig();
             const errResponse = config.stringConfig.error;
 
             if (interaction.replied) {
@@ -114,8 +118,10 @@ export class LogDebug {
     public static async sendReport(message: Message, config: BotConfig): Promise<void> {
         const prefix = `[${Colors.Blue}DM REPORT${Colors.White}] `;
         const time = LogDebug.getPrefixTime();
+        const completeString = prefix + time + `${message.author.tag} sent: ` + message.content;
 
-        console.log(prefix + time + `${message.author.tag} sent: ` + message.content);
+        console.log(completeString);
+        await this.sendLogMessage(config, completeString);
 
         await message.reply(config.stringConfig.dmReceived);
     }
@@ -136,5 +142,14 @@ export class LogDebug {
      */
     private static getPrefixTime(): string {
         return `[${Colors.Grey}${new Date().toLocaleString()}${Colors.White}]\n`;
+    }
+
+    private static async sendLogMessage(config: BotConfig, message: string): Promise<void> {
+        if (BoarBotApp.getBot().getClient().isReady()) {
+            InteractionUtils.getTextChannel(config, config.logChannel).then(async (logChannel) => {
+                if (!logChannel) return;
+                await logChannel.send('```ansi\n' + message + '```');
+            });
+        }
     }
 }

@@ -23,6 +23,7 @@ export class PathConfig {
     public readonly boarImages: string = '';
     public readonly badgeImages: string = '';
     public readonly itemAssets: string = '';
+    public readonly tempItemAssets: string = '';
     public readonly collAssets: string = '';
     public readonly otherAssets: string = '';
 

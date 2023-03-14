@@ -40,6 +40,7 @@ export class ConfigHandler {
 
         LogDebug.sendDebug('Config file successfully loaded!', this.config);
 
+        this.removeTempFiles();
         this.loadFonts();
     }
 
@@ -130,6 +131,22 @@ export class ConfigHandler {
         }
 
         return passed;
+    }
+
+    /**
+     * Removes temp files to allow config changes to show
+     *
+     * @private
+     */
+    private removeTempFiles(): void {
+        const tempItemFolder = this.config.pathConfig.tempItemAssets;
+        const tempItemFiles = fs.readdirSync(tempItemFolder);
+
+        for (const file of tempItemFiles) {
+            fs.rmSync(tempItemFolder + file);
+        }
+
+        LogDebug.sendDebug('Deleted all temp files!', this.config);
     }
 
     /**

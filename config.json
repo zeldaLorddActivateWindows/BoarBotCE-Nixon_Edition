@@ -3,6 +3,7 @@
         "184439280980983808"
     ],
     "botStatusChannel": "1042624481044209735",
+    "logChannel": "1084972329970442310",
     "pathConfig": {
         "listeners": "src/main/typescript/listeners/",
         "commands": "src/main/typescript/commands/",
@@ -12,6 +13,7 @@
         "boarImages": "src/main/resources/boars/",
         "badgeImages": "src/main/resources/badges/",
         "itemAssets": "src/main/resources/items/",
+        "tempItemAssets": "src/main/resources/temp_items/",
         "collAssets": "src/main/resources/collection/",
         "otherAssets": "src/main/resources/other/",
         "itemOverlay": "DailyOverlay.png",
@@ -32,7 +34,7 @@
     "stringConfig": {
         "botStatus": "> Bot went online ",
         "guildAdd": "Hey, %@! Thanks for adding me to your server **%@**!\n> To get started, run the command `/%@` in your server!",
-        "dmReceived": "Thanks for the DM! Your complaint/issue/feedback has been logged!\n> *Note: If you're sending an image, make sure you include the link!*",
+        "dmReceived": "Thanks for the DM! Your complaint/issue/feedback has been logged!\n\n*Note: If you're sending an image, make sure you include the link!*",
         "noPermission": "You don't have permission to use this command.",
         "noSetup": "To use this command, an admin must first do </boar-manage setup:1080193988046364734>!",
         "doingSetup": "BoarBot is currently being set up! Please wait!",
@@ -775,7 +777,7 @@
     "rarityConfigs": [
         {
             "name": "Common",
-            "weight": 825,
+            "weight": 1,
             "score": 1,
             "fromDaily": true,
             "boars": [
@@ -786,7 +788,7 @@
         },
         {
             "name": "Uncommon",
-            "weight": 100,
+            "weight": 1,
             "score": 10,
             "fromDaily": true,
             "boars": [
@@ -800,7 +802,7 @@
         },
         {
             "name": "Rare",
-            "weight": 40,
+            "weight": 1,
             "score": 25,
             "fromDaily": true,
             "boars": [
@@ -815,7 +817,7 @@
         },
         {
             "name": "Epic",
-            "weight": 20,
+            "weight": 1,
             "score": 50,
             "fromDaily": true,
             "boars": [
@@ -830,7 +832,7 @@
         },
         {
             "name": "Legendary",
-            "weight": 10,
+            "weight": 1,
             "score": 100,
             "fromDaily": true,
             "boars": [
@@ -841,7 +843,7 @@
         },
         {
             "name": "Mythic",
-            "weight": 4,
+            "weight": 1,
             "score": 250,
             "fromDaily": true,
             "boars": [

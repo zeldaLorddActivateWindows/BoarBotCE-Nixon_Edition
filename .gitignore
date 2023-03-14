@@ -3,7 +3,7 @@
 /node_modules
 database/guilds/*.json
 database/users/*.json
-Notes.txt
+*.txt
 package.json
 package-lock.json
 tsconfig.json

@@ -13,12 +13,11 @@ from io import BytesIO
 import requests  # used to get input from pyshell send in TS file
 import json
 import sys
-import numpy as np
 
 # Inputs from JS
 
 config = json.loads(sys.argv[1])
-back_color = sys.argv[2]
+back_color_key = sys.argv[2]
 main_image_path = sys.argv[3]
 avatar_url = sys.argv[4]
 user_tag = sys.argv[5]
@@ -31,6 +30,7 @@ is_boar = sys.argv[8]
 path_config = config['pathConfig']
 item_assets = path_config['itemAssets']
 other_assets = path_config['otherAssets']
+temp_item_assets = path_config['tempItemAssets']
 
 # Configured asset file paths
 
@@ -40,10 +40,12 @@ underlay_path = item_assets + path_config['itemUnderlay']
 backplate_path = item_assets + path_config['itemBackplate']
 circle_mask_path = other_assets + path_config['circleMask']
 font_path = other_assets + path_config['mainFont']
+main_image_name = main_image_path.split('/').pop().split('.')[0]
 
-# Configured font color
+# Configured colors
 
-fontColor = config['colorConfig']['font']
+font_color = config['colorConfig']['font']
+back_color = config['colorConfig'][back_color_key]
 
 # Number configurations
 
@@ -51,30 +53,30 @@ num_config = config['numberConfig']
 
 # Setting font size from configurations
 
-bigFont = num_config['fontBig'] // 2
-mediumFont = num_config['fontMedium'] // 2
-text_big = ImageFont.truetype(font_path, bigFont)
-text_medium = ImageFont.truetype(font_path, mediumFont)
+big_font = num_config['fontBig']
+medium_font = num_config['fontMedium']
+text_big = ImageFont.truetype(font_path, medium_font)
+text_medium = ImageFont.truetype(font_path, medium_font)
 
 # Setting image positioning and sizes from configurations
 
-image_size = tuple(np.floor_divide(num_config['itemImageSize'], 2))
-avatar_size = (num_config['itemUserAvatarWidth'] // 2, num_config['itemUserAvatarWidth'] // 2)
-nameplate_padding = num_config['itemNameplatePadding'] // 2
-nameplate_height = num_config['itemNameplateHeight'] // 2
+image_size = tuple(num_config['itemImageSize'])
+avatar_size = (num_config['itemUserAvatarWidth'], num_config['itemUserAvatarWidth'])
+nameplate_padding = num_config['itemNameplatePadding']
+nameplate_height = num_config['itemNameplateHeight']
 
 if not is_boar:
-    item_size = tuple(np.floor_divide(num_config['itemBadgeSize'], 2))
-    item_pos = tuple(np.floor_divide(num_config['itemBadgePos'], 2))
+    item_size = tuple(num_config['itemBadgeSize'])
+    item_pos = tuple(num_config['itemBadgePos'])
 else:
-    item_size = tuple(np.floor_divide(num_config['itemBoarSize'], 2))
-    item_pos = tuple(np.floor_divide(num_config['itemBoarPos'], 2))
+    item_size = tuple(num_config['itemBoarSize'])
+    item_pos = tuple(num_config['itemBoarPos'])
 
-nameplate_pos = tuple(np.floor_divide(num_config['itemNameplatePos'], 2))
-user_avatar_pos = tuple(np.floor_divide(num_config['itemUserAvatarPos'], 2))
-title_pos = tuple(np.floor_divide(num_config['itemTitlePos'], 2))
-name_pos = tuple(np.floor_divide(num_config['itemNamePos'], 2))
-user_tag_pos = tuple(np.floor_divide(num_config['itemUserTagPos'], 2))
+nameplate_pos = tuple(num_config['itemNameplatePos'])
+user_avatar_pos = tuple(num_config['itemUserAvatarPos'])
+title_pos = tuple(num_config['itemTitlePos'])
+name_pos = tuple(num_config['itemNamePos'])
+user_tag_pos = tuple(num_config['itemUserTagPos'])
 
 # Opening, converting, and resizing asset files
 
@@ -130,13 +132,13 @@ for frame in ImageSequence.Iterator(main_image):
     # Places all text on the image
 
     new_frame_draw = ImageDraw.Draw(new_frame)
-    new_frame_draw.text(title_pos, title, fontColor, font=text_big, anchor='ms')
-    new_frame_draw.text(name_pos, name, fontColor, font=text_medium, anchor='ms')
+    new_frame_draw.text(title_pos, title, font_color, font=text_big, anchor='ms')
+    new_frame_draw.text(name_pos, name, font_color, font=text_medium, anchor='ms')
     new_frame_draw.text(
-        user_tag_pos, user_tag.encode('utf-16').decode('utf-16'), fontColor, font=text_medium, anchor='ls'
+        user_tag_pos, user_tag.encode('utf-16').decode('utf-16'), font_color, font=text_medium, anchor='ls'
     )
 
-    frames.append(new_frame)
+    frames.append(new_frame.resize((int(image_size[0] / 3), int(image_size[1] / 3))))
 
 # Formatting the result to work with JS
 
