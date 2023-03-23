@@ -202,7 +202,7 @@ export class BoarUser {
         }
 
         // Get the image attachment from ID
-        const attachment = await new ItemImageGenerator(this, config, boarID, attachmentTitle).handleImageCreate();
+        const attachment = await new ItemImageGenerator(this, config, boarID, attachmentTitle).handleImageCreate(false);
 
         // If regular boar on '/boar daily', reply to interaction with attachment
         // If given, send as separate message and reply to interaction with success
@@ -287,7 +287,7 @@ export class BoarUser {
             ? strConfig.giveBadgeTitle
             : strConfig.obtainedBadgeTitle;
 
-        const attachment = await new ItemImageGenerator(this, config, badgeID, attachmentTitle).handleImageCreate();
+        const attachment = await new ItemImageGenerator(this, config, badgeID, attachmentTitle).handleImageCreate(true);
 
         // If gotten from regular means, followup interaction with image
         // If given, send as separate message and reply to interaction with success
@@ -317,8 +317,9 @@ export class BoarUser {
 
         let maxUniques = 0;
 
-        for (const rarity of orderedRarities)
+        for (const rarity of orderedRarities) {
             maxUniques += rarity.boars.length;
+        }
 
         // Looping through all boar classes (Common -> Very Special)
         // FIX THIS, CREATE AND SORT MAP BASED ON WEIGHT INSTEAD OF REVERSING
@@ -343,8 +344,9 @@ export class BoarUser {
             }
         }
 
-        if (obtainedBoars.length >= maxUniques)
-            await this.addBadge(config, 'badge_hunter', interaction);
+        if (obtainedBoars.length >= maxUniques) {
+            await this.addBadge(config, 'hunter', interaction);
+        }
 
         this.updateUserData();
     }

@@ -44,15 +44,14 @@ export class ItemImageGenerator {
      * @return attachment - AttachmentBuilder object containing image
      * @private
      */
-    public async handleImageCreate(): Promise<AttachmentBuilder> {
+    public async handleImageCreate(isBadge: boolean): Promise<AttachmentBuilder> {
         const strConfig = this.config.stringConfig;
         const pathConfig = this.config.pathConfig;
         const numConfig = this.config.numberConfig;
 
-        this.isBoar = this.id in this.config.boarItemConfigs;
         let folderPath: string;
 
-        if (!this.isBoar) {
+        if (isBadge) {
             this.itemInfo = this.config.badgeItemConfigs[this.id];
             folderPath = pathConfig.badgeImages;
             this.rarityColorKey = 'badge';
@@ -68,27 +67,29 @@ export class ItemImageGenerator {
 
         const tempPath = pathConfig.tempItemAssets + this.id + this.rarityColorKey + '.' + imageExtension;
 
-        if (fs.existsSync(tempPath)) {
-            return new AttachmentBuilder(
-                fs.readFileSync(tempPath), { name:`${strConfig.imageName}.${imageExtension}` }
-            );
-        }
-
         const usernameLength = numConfig.maxUsernameLength;
 
         this.userAvatar = this.boarUser.user.displayAvatarURL({ extension: 'png' });
         this.userTag = this.boarUser.user.username.substring(0, usernameLength) +
             '#' + this.boarUser.user.discriminator;
 
-        // Creates a dynamic response attachment depending on the boar's image type
-        if (isAnimated) {
-            await this.makeAnimated();
+        // Creates base response attachment depending on the boar's image type
+        if (!fs.existsSync(tempPath)) {
+            if (isAnimated) {
+                await this.makeAnimated();
+            } else {
+                await this.makeStatic();
+            }
+            fs.writeFileSync(tempPath, this.buffer);
         } else {
-            await this.makeStatic();
+            this.buffer = fs.readFileSync(tempPath);
         }
 
-        // Saves image file for faster subsequent interactions
-        fs.writeFileSync(tempPath, this.buffer);
+        if (isAnimated) {
+
+        } else {
+            await this.addStaticProfile();
+        }
 
         return new AttachmentBuilder(this.buffer, { name:`${strConfig.imageName}.${imageExtension}` });
     }
@@ -136,13 +137,11 @@ export class ItemImageGenerator {
         const underlayPath = itemAssetsFolder + pathConfig.itemUnderlay;
         const backplatePath = itemAssetsFolder + pathConfig.itemBackplate;
         const overlay = itemAssetsFolder + pathConfig.itemOverlay;
-        const nameplate = itemAssetsFolder + pathConfig.itemNameplate;
 
         // Positioning and dimension info
 
         const origin = numConfig.originPos;
         const imageSize = numConfig.itemImageSize;
-        let nameplateSize: [number, number];
 
         let mainPos: [number, number];
         let mainSize: [number, number];
@@ -171,25 +170,47 @@ export class ItemImageGenerator {
         ctx.drawImage(await Canvas.loadImage(underlayPath), ...origin, ...imageSize);
         ctx.globalCompositeOperation = 'normal';
 
-        // Draws badge and overlay
+        // Draws item and overlay
 
         ctx.drawImage(await Canvas.loadImage(backplatePath), ...origin, ...imageSize);
         ctx.drawImage(await Canvas.loadImage(this.imageFilePath), ...mainPos, ...mainSize);
         ctx.drawImage(await Canvas.loadImage(overlay), ...origin, ...imageSize);
 
-        // Draws method of delivery and name of badge
+        // Draws method of delivery and name of item
 
         CanvasUtils.drawText(ctx, this.title, numConfig.itemTitlePos, bigFont, 'center', colorConfig.font);
         CanvasUtils.drawText(
             ctx, this.itemInfo.name, numConfig.itemNamePos, mediumFont, 'center', colorConfig.font
         );
 
-        // Draws user information
+        this.buffer = canvas.toBuffer();
+    }
 
-        nameplateSize = [
+    private async addStaticProfile() {
+        const strConfig = this.config.stringConfig;
+        const pathConfig = this.config.pathConfig;
+        const numConfig = this.config.numberConfig;
+        const colorConfig = this.config.colorConfig;
+
+        const nameplate = pathConfig.itemAssets + pathConfig.itemNameplate;
+
+        const origin = numConfig.originPos;
+        const imageSize = numConfig.itemImageSize;
+
+        const mediumFont = `${numConfig.fontMedium}px ${strConfig.fontName}`;
+
+        const canvas = Canvas.createCanvas(imageSize[0], imageSize[1]);
+        const ctx = canvas.getContext('2d');
+
+        ctx.drawImage(await Canvas.loadImage(this.buffer), ...origin, ...imageSize);
+
+        ctx.font = mediumFont;
+
+        const nameplateSize: [number, number] = [
             ctx.measureText(this.userTag).width + numConfig.itemNameplatePadding,
             numConfig.itemNameplateHeight
         ];
+
         ctx.drawImage(await Canvas.loadImage(nameplate), ...numConfig.itemNameplatePos, ...nameplateSize);
         CanvasUtils.drawText(ctx, this.userTag, numConfig.itemUserTagPos, mediumFont, 'left', colorConfig.font);
         CanvasUtils.drawCircleImage(
