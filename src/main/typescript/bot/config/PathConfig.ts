@@ -49,6 +49,8 @@ export class PathConfig {
     public readonly helpBackground: string = '';
     public readonly circleMask: string = '';
 
-    // Used for applying dynamic information to animated images
+    // Python scripts
+
     public readonly dynamicImageScript: string = '';
+    public readonly userOverlayScript: string = '';
 }

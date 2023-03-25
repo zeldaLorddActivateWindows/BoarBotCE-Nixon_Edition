@@ -29,7 +29,8 @@
         "mainFont": "MinecraftFont.ttf",
         "helpBackground": "Help.png",
         "circleMask": "CircleMask.png",
-        "dynamicImageScript": "src/main/python/get_dynamic_image.py"
+        "dynamicImageScript": "src/main/python/make_animated_image.py",
+        "userOverlayScript": "src/main/python/user_animated_overlay.py"
     },
     "stringConfig": {
         "botStatus": "> Bot went online ",
@@ -854,7 +855,7 @@
         },
         {
             "name": "Divine",
-            "weight": 1,
+            "weight": 100000,
             "score": 1000,
             "fromDaily": true,
             "boars": [

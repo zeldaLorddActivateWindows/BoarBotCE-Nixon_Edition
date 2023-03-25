@@ -1,4 +1,4 @@
-# BoarBot (Alpha v0.5.0)
+# BoarBot (Alpha v0.5.1)
 
 This is a personal project I've set out to create for a Discord community.
 I've always wanted to make something that makes people happy, so this is it.

@@ -24,6 +24,7 @@ export class ItemImageGenerator {
     private readonly id: string = '';
     private readonly title: string = '';
     private buffer: Buffer = {} as Buffer;
+    private tempPath: string = '';
     private rarityColorKey: string = '';
     private imageFilePath: string = '';
     private userAvatar: string = '';
@@ -65,7 +66,7 @@ export class ItemImageGenerator {
         const imageExtension = this.imageFilePath.split('.')[1];
         const isAnimated = imageExtension === 'gif';
 
-        const tempPath = pathConfig.tempItemAssets + this.id + this.rarityColorKey + '.' + imageExtension;
+        this.tempPath = pathConfig.tempItemAssets + this.id + this.rarityColorKey + '.' + imageExtension;
 
         const usernameLength = numConfig.maxUsernameLength;
 
@@ -74,19 +75,19 @@ export class ItemImageGenerator {
             '#' + this.boarUser.user.discriminator;
 
         // Creates base response attachment depending on the boar's image type
-        if (!fs.existsSync(tempPath)) {
+        if (!fs.existsSync(this.tempPath)) {
             if (isAnimated) {
                 await this.makeAnimated();
             } else {
                 await this.makeStatic();
             }
-            fs.writeFileSync(tempPath, this.buffer);
+            fs.writeFileSync(this.tempPath, this.buffer);
         } else {
-            this.buffer = fs.readFileSync(tempPath);
+            this.buffer = fs.readFileSync(this.tempPath);
         }
 
         if (isAnimated) {
-
+            await this.addAnimatedProfile();
         } else {
             await this.addStaticProfile();
         }
@@ -104,8 +105,6 @@ export class ItemImageGenerator {
                     JSON.stringify(this.config),
                     this.rarityColorKey,
                     this.imageFilePath,
-                    this.userAvatar,
-                    this.userTag,
                     this.title,
                     this.itemInfo.name,
                     this.isBoar.toString()
@@ -186,6 +185,35 @@ export class ItemImageGenerator {
         this.buffer = canvas.toBuffer();
     }
 
+    private async addAnimatedProfile() {
+        const script = this.config.pathConfig.userOverlayScript;
+
+        // Waits for python code to execute before continuing
+        await new Promise((resolve, reject) => {
+            const scriptOptions: Options = {
+                args: [
+                    JSON.stringify(this.config),
+                    this.tempPath,
+                    this.userAvatar,
+                    this.userTag
+                ]
+            };
+
+            // Sends python all dynamic image data and receives final animated image
+            PythonShell.run(script, scriptOptions, (err, data) => {
+                if (!data) {
+                    LogDebug.handleError(err);
+
+                    reject('Python Error!');
+                    return;
+                }
+
+                this.buffer = Buffer.from(data[0], 'base64');
+                resolve('Script ran successfully!');
+            });
+        });
+    }
+
     private async addStaticProfile() {
         const strConfig = this.config.stringConfig;
         const pathConfig = this.config.pathConfig;
@@ -202,7 +230,7 @@ export class ItemImageGenerator {
         const canvas = Canvas.createCanvas(imageSize[0], imageSize[1]);
         const ctx = canvas.getContext('2d');
 
-        ctx.drawImage(await Canvas.loadImage(this.buffer), ...origin, ...imageSize);
+        ctx.drawImage(await Canvas.loadImage(this.tempPath), ...origin, ...imageSize);
 
         ctx.font = mediumFont;
 
