@@ -855,7 +855,7 @@
         },
         {
             "name": "Divine",
-            "weight": 100000,
+            "weight": 1000000,
             "score": 1000,
             "fromDaily": true,
             "boars": [

@@ -110,7 +110,7 @@ for frame in ImageSequence.Iterator(main_image):
 # Formatting the result to work with JS
 
 output = BytesIO()
-frames[0].save(output, format='GIF', save_all=True, append_images=frames[1:], duration=100, loop=0, disposal=2)
+frames[0].save(output, format='GIF', save_all=True, append_images=frames[1:], duration=main_image.info['duration'], loop=0, disposal=2)
 img_data = output.getvalue()
 
 # Sends the result to JS
