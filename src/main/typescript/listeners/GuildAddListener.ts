@@ -20,8 +20,7 @@ export default class GuildAddListener implements Listener {
     private userToThank: User | null = null;
 
     public async execute(guild: Guild): Promise<void> {
-        if (!guild.members.me || !guild.members.me.permissions.has('ViewAuditLog'))
-            return;
+        if (!guild.members || !guild.members.me || !guild.members.me.permissions.has('ViewAuditLog')) return;
 
         this.guild = guild;
         this.config = BoarBotApp.getBot().getConfig();

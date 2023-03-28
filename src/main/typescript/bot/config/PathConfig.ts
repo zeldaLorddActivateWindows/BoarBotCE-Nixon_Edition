@@ -23,6 +23,7 @@ export class PathConfig {
     public readonly boarImages: string = '';
     public readonly badgeImages: string = '';
     public readonly itemAssets: string = '';
+    public readonly tempItemAssets: string = '';
     public readonly collAssets: string = '';
     public readonly otherAssets: string = '';
 
@@ -48,6 +49,8 @@ export class PathConfig {
     public readonly helpBackground: string = '';
     public readonly circleMask: string = '';
 
-    // Used for applying dynamic information to animated images
+    // Python scripts
+
     public readonly dynamicImageScript: string = '';
+    public readonly userOverlayScript: string = '';
 }

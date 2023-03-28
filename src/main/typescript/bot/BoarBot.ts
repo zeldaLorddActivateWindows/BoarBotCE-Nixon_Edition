@@ -1,6 +1,6 @@
 import dotenv from 'dotenv';
 import fs from 'fs';
-import {ActivityType, Client, GatewayIntentBits, Partials, TextChannel} from 'discord.js';
+import {ActivityType, Client, Events, GatewayIntentBits, Partials} from 'discord.js';
 import {Bot} from '../api/bot/Bot';
 import {FormatStrings} from '../util/discord/FormatStrings';
 import {ConfigHandler} from './handlers/ConfigHandler';
@@ -10,6 +10,7 @@ import {BotConfig} from './config/BotConfig';
 import {Command} from '../api/commands/Command';
 import {Subcommand} from '../api/commands/Subcommand';
 import {LogDebug} from '../util/logging/LogDebug';
+import {InteractionUtils} from '../util/interactions/InteractionUtils';
 
 dotenv.config();
 
@@ -123,7 +124,13 @@ export class BoarBot implements Bot {
 	public async onStart(): Promise<void> {
 		LogDebug.sendDebug('Successfully logged in! Bot online!', this.getConfig());
 
-		const botStatusChannel = await this.getStatusChannel();
+		setInterval(() => {
+			LogDebug.sendDebug('Interaction Listeners: ' + this.client.listenerCount(Events.InteractionCreate), this.getConfig())
+		}, 600000);
+
+		const botStatusChannel = await InteractionUtils.getTextChannel(
+			this.getConfig(), this.getConfig().botStatusChannel
+		);
 
 		if (!botStatusChannel) return;
 
@@ -168,39 +175,4 @@ export class BoarBot implements Bot {
 
 		LogDebug.sendDebug('Guild data fixed!', this.getConfig())
 	}
-
-	/**
-	 * Finds the {@link TextChannel} to send status messages to
-	 *
-	 * @private
-	 */
-	private async getStatusChannel(): Promise<TextChannel | undefined> {
-		const botStatusChannelID: string = this.getConfig().botStatusChannel;
-		let botStatusChannel: TextChannel;
-
-		try {
-			botStatusChannel = await this.client.channels.fetch(botStatusChannelID) as TextChannel;
-		} catch {
-			LogDebug.handleError(
-				'Bot cannot find status channel. Status message not sent.\nIs the channel ID \'' +
-				botStatusChannelID + '\' correct? Does the bot have view channel permissions?'
-			);
-			return undefined;
-		}
-
-		const memberMe = botStatusChannel.guild.members.me;
-		if (!memberMe) {
-			LogDebug.handleError('Bot doesn\'t exist in testing server. Status message not sent.');
-			return undefined;
-		}
-
-		const memberMePerms = memberMe.permissions.toArray();
-		if (!memberMePerms.includes('SendMessages')) {
-			LogDebug.handleError('Bot doesn\'t have permission to send status message. Status message not sent.');
-			return undefined;
-		}
-
-		return botStatusChannel;
-	}
-
 }

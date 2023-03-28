@@ -8,6 +8,7 @@ import {LogDebug} from '../logging/LogDebug';
 import {CanvasUtils} from './CanvasUtils';
 import {AttachmentBuilder} from 'discord.js';
 import {BoarUser} from '../boar/BoarUser';
+import fs from 'fs';
 
 /**
  * {@link ItemImageGenerator ItemImageGenerator.ts}
@@ -23,7 +24,8 @@ export class ItemImageGenerator {
     private readonly id: string = '';
     private readonly title: string = '';
     private buffer: Buffer = {} as Buffer;
-    private backgroundColor: string = '';
+    private tempPath: string = '';
+    private rarityColorKey: string = '';
     private imageFilePath: string = '';
     private userAvatar: string = '';
     private userTag: string = '';
@@ -43,28 +45,28 @@ export class ItemImageGenerator {
      * @return attachment - AttachmentBuilder object containing image
      * @private
      */
-    public async handleImageCreate(): Promise<AttachmentBuilder> {
+    public async handleImageCreate(isBadge: boolean): Promise<AttachmentBuilder> {
         const strConfig = this.config.stringConfig;
-        const colorConfig = this.config.colorConfig;
         const pathConfig = this.config.pathConfig;
         const numConfig = this.config.numberConfig;
 
-        this.isBoar = this.id in this.config.boarItemConfigs;
         let folderPath: string;
 
-        if (!this.isBoar) {
+        if (isBadge) {
             this.itemInfo = this.config.badgeItemConfigs[this.id];
             folderPath = pathConfig.badgeImages;
-            this.backgroundColor = colorConfig.badge;
+            this.rarityColorKey = 'badge';
         } else {
             this.itemInfo = this.config.boarItemConfigs[this.id];
             folderPath = pathConfig.boarImages;
-            this.backgroundColor = this.config.colorConfig['rarity' + BoarUtils.findRarity(this.id)];
+            this.rarityColorKey = 'rarity' + BoarUtils.findRarity(this.id);
         }
 
         this.imageFilePath = folderPath + this.itemInfo.file;
         const imageExtension = this.imageFilePath.split('.')[1];
         const isAnimated = imageExtension === 'gif';
+
+        this.tempPath = pathConfig.tempItemAssets + this.id + this.rarityColorKey + '.' + imageExtension;
 
         const usernameLength = numConfig.maxUsernameLength;
 
@@ -72,11 +74,22 @@ export class ItemImageGenerator {
         this.userTag = this.boarUser.user.username.substring(0, usernameLength) +
             '#' + this.boarUser.user.discriminator;
 
-        // Creates a dynamic response attachment depending on the boar's image type
-        if (isAnimated) {
-            await this.makeAnimated();
+        // Creates base response attachment depending on the boar's image type
+        if (!fs.existsSync(this.tempPath)) {
+            if (isAnimated) {
+                await this.makeAnimated();
+            } else {
+                await this.makeStatic();
+            }
+            fs.writeFileSync(this.tempPath, this.buffer);
         } else {
-            await this.makeStatic();
+            this.buffer = fs.readFileSync(this.tempPath);
+        }
+
+        if (isAnimated) {
+            await this.addAnimatedProfile();
+        } else {
+            await this.addStaticProfile();
         }
 
         return new AttachmentBuilder(this.buffer, { name:`${strConfig.imageName}.${imageExtension}` });
@@ -90,10 +103,8 @@ export class ItemImageGenerator {
             const scriptOptions: Options = {
                 args: [
                     JSON.stringify(this.config),
-                    this.backgroundColor,
+                    this.rarityColorKey,
                     this.imageFilePath,
-                    this.userAvatar,
-                    this.userTag,
                     this.title,
                     this.itemInfo.name,
                     this.isBoar.toString()
@@ -125,13 +136,11 @@ export class ItemImageGenerator {
         const underlayPath = itemAssetsFolder + pathConfig.itemUnderlay;
         const backplatePath = itemAssetsFolder + pathConfig.itemBackplate;
         const overlay = itemAssetsFolder + pathConfig.itemOverlay;
-        const nameplate = itemAssetsFolder + pathConfig.itemNameplate;
 
         // Positioning and dimension info
 
         const origin = numConfig.originPos;
         const imageSize = numConfig.itemImageSize;
-        let nameplateSize: [number, number];
 
         let mainPos: [number, number];
         let mainSize: [number, number];
@@ -155,30 +164,81 @@ export class ItemImageGenerator {
 
         // Draws edge/background rarity color
 
-        CanvasUtils.drawRect(ctx, origin, imageSize, this.backgroundColor);
+        CanvasUtils.drawRect(ctx, origin, imageSize, colorConfig[this.rarityColorKey]);
         ctx.globalCompositeOperation = 'destination-in';
         ctx.drawImage(await Canvas.loadImage(underlayPath), ...origin, ...imageSize);
         ctx.globalCompositeOperation = 'normal';
 
-        // Draws badge and overlay
+        // Draws item and overlay
 
         ctx.drawImage(await Canvas.loadImage(backplatePath), ...origin, ...imageSize);
         ctx.drawImage(await Canvas.loadImage(this.imageFilePath), ...mainPos, ...mainSize);
         ctx.drawImage(await Canvas.loadImage(overlay), ...origin, ...imageSize);
 
-        // Draws method of delivery and name of badge
+        // Draws method of delivery and name of item
 
         CanvasUtils.drawText(ctx, this.title, numConfig.itemTitlePos, bigFont, 'center', colorConfig.font);
         CanvasUtils.drawText(
             ctx, this.itemInfo.name, numConfig.itemNamePos, mediumFont, 'center', colorConfig.font
         );
 
-        // Draws user information
+        this.buffer = canvas.toBuffer();
+    }
 
-        nameplateSize = [
+    private async addAnimatedProfile() {
+        const script = this.config.pathConfig.userOverlayScript;
+
+        // Waits for python code to execute before continuing
+        await new Promise((resolve, reject) => {
+            const scriptOptions: Options = {
+                args: [
+                    JSON.stringify(this.config),
+                    this.tempPath,
+                    this.userAvatar,
+                    this.userTag
+                ]
+            };
+
+            // Sends python all dynamic image data and receives final animated image
+            PythonShell.run(script, scriptOptions, (err, data) => {
+                if (!data) {
+                    LogDebug.handleError(err);
+
+                    reject('Python Error!');
+                    return;
+                }
+
+                this.buffer = Buffer.from(data[0], 'base64');
+                resolve('Script ran successfully!');
+            });
+        });
+    }
+
+    private async addStaticProfile() {
+        const strConfig = this.config.stringConfig;
+        const pathConfig = this.config.pathConfig;
+        const numConfig = this.config.numberConfig;
+        const colorConfig = this.config.colorConfig;
+
+        const nameplate = pathConfig.itemAssets + pathConfig.itemNameplate;
+
+        const origin = numConfig.originPos;
+        const imageSize = numConfig.itemImageSize;
+
+        const mediumFont = `${numConfig.fontMedium}px ${strConfig.fontName}`;
+
+        const canvas = Canvas.createCanvas(imageSize[0], imageSize[1]);
+        const ctx = canvas.getContext('2d');
+
+        ctx.drawImage(await Canvas.loadImage(this.tempPath), ...origin, ...imageSize);
+
+        ctx.font = mediumFont;
+
+        const nameplateSize: [number, number] = [
             ctx.measureText(this.userTag).width + numConfig.itemNameplatePadding,
             numConfig.itemNameplateHeight
         ];
+
         ctx.drawImage(await Canvas.loadImage(nameplate), ...numConfig.itemNameplatePos, ...nameplateSize);
         CanvasUtils.drawText(ctx, this.userTag, numConfig.itemUserTagPos, mediumFont, 'left', colorConfig.font);
         CanvasUtils.drawCircleImage(

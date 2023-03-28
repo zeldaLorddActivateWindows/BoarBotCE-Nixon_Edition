@@ -1,0 +1,8 @@
+SETUP COMMAND
+- Refresh button
+  - Page 1: Brings back unfinished text, disables next button, UNSELECTED placeholder
+  - Page 2: Same as page 1
+- Manual ID input
+  - Page 1 valid ID: Change text and select menu placeholder
+  - Page 1 invalid ID: Followup with invalid response, keep everything else the same
+  - Page 2: Same as page 1
