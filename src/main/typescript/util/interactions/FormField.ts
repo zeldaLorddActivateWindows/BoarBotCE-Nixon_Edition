@@ -1,6 +1,6 @@
 import {
     ActionRowBuilder, ButtonBuilder, ButtonInteraction, ChatInputCommandInteraction,
-    ModalSubmitInteraction, SelectMenuBuilder, SelectMenuInteraction
+    ModalSubmitInteraction, StringSelectMenuBuilder, StringSelectMenuInteraction
 } from 'discord.js';
 
 /**
@@ -14,7 +14,7 @@ import {
 export class FormField {
     private readonly defaultContent: string;
     public content: string;
-    public components: ActionRowBuilder<ButtonBuilder | SelectMenuBuilder>[];
+    public components: ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>[];
 
     /**
      * Create a field in a form
@@ -22,7 +22,7 @@ export class FormField {
      * @param content - Message content in the form
      * @param components - Components (Buttons, Select Menus) in the form
      */
-    constructor(content: string, components: ActionRowBuilder<ButtonBuilder | SelectMenuBuilder>[]) {
+    constructor(content: string, components: ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>[]) {
         this.defaultContent = content;
 
         this.content = content;
@@ -35,7 +35,7 @@ export class FormField {
      * @param interaction - Interaction to be edited
      */
     public async editReply(
-        interaction: ChatInputCommandInteraction | SelectMenuInteraction | ButtonInteraction | ModalSubmitInteraction
+        interaction: ChatInputCommandInteraction | StringSelectMenuInteraction | ButtonInteraction | ModalSubmitInteraction
     ) {
         await interaction.editReply({
             content: this.content,

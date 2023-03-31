@@ -1,4 +1,7 @@
 import {PermissionFlagsBits} from 'discord-api-types/v10';
+import {BoarCommandConfig} from './BoarCommandConfig';
+import {BoarDevCommandConfig} from './BoarDevCommandConfig';
+import {BoarManageCommandConfig} from './BoarManageCommandConfig';
 
 /**
  * {@link CommandConfig CommandConfig.ts}

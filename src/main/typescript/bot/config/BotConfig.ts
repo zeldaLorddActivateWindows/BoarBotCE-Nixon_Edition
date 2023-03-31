@@ -1,7 +1,6 @@
 import {
     User,
-    TextChannel,
-    APISelectMenuOption,
+    TextChannel
 } from 'discord.js';
 import {PathConfig} from './PathConfig';
 import {StringConfig} from './StringConfig';

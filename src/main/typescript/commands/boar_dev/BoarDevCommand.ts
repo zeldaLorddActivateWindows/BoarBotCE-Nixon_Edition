@@ -28,7 +28,7 @@ export default class BoarDevCommand implements Command {
             .addStringOption(option => option.setName(this.commandInfo.give.args[1].name)
                 .setDescription(this.commandInfo.give.args[1].description)
                 .setRequired(this.commandInfo.give.args[1].required)
-                .setAutocomplete(true)
+                .setAutocomplete(this.commandInfo.give.args[1].autocomplete)
             )
         )
         .addSubcommand(sub => sub.setName(this.commandInfo.configRefresh.name)

@@ -1,13 +1,12 @@
 import {
     ActionRowBuilder,
-    APISelectMenuOption,
     ButtonBuilder,
     ButtonInteraction,
     ButtonStyle,
-    ChannelType, ChatInputCommandInteraction,
+    ChannelType, ChatInputCommandInteraction, ColorResolvable,
     ComponentType, Events, Interaction,
-    InteractionCollector, ModalBuilder, SelectMenuBuilder,
-    SelectMenuInteraction,
+    InteractionCollector, ModalBuilder, SelectMenuComponentOptionData,
+    StringSelectMenuBuilder, StringSelectMenuInteraction,
     TextInputStyle,
 } from 'discord.js';
 import fs from 'fs';
@@ -21,8 +20,7 @@ import {LogDebug} from '../../util/logging/LogDebug';
 import {CollectorUtils} from '../../util/discord/CollectorUtils';
 import {SubcommandConfig} from '../../bot/config/commands/SubcommandConfig';
 import {ComponentUtils} from '../../util/discord/ComponentUtils';
-import {Cooldown} from '../../util/interactions/Cooldown';
-import {PermissionUtils} from '../../util/discord/PermissionUtils';
+import {Replies} from '../../util/interactions/Replies';
 
 // Reasons for ending collection
 enum Reasons {
@@ -48,9 +46,9 @@ export default class SetupSubcommand implements Subcommand {
     // The initiating interaction
     private firstInter: ChatInputCommandInteraction = {} as ChatInputCommandInteraction;
     // The current component interaction
-    private compInter: SelectMenuInteraction = {} as SelectMenuInteraction;
+    private compInter: StringSelectMenuInteraction = {} as StringSelectMenuInteraction;
 
-    private staticRow = new ActionRowBuilder<ButtonBuilder | SelectMenuBuilder>();
+    private staticRow = new ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>();
     private setupFields: FormField[] = [];
     private guildDataPath: string = '';
     private guildData: any = {};
@@ -63,14 +61,14 @@ export default class SetupSubcommand implements Subcommand {
         timeUntilNextCollect: 0,
         updateTime: setTimeout(() => {}, 0)
     };
-    private collector: InteractionCollector<ButtonInteraction | SelectMenuInteraction> = 
-        {} as InteractionCollector<ButtonInteraction | SelectMenuInteraction>;
+    private collector: InteractionCollector<ButtonInteraction | StringSelectMenuInteraction> =
+        {} as InteractionCollector<ButtonInteraction | StringSelectMenuInteraction>;
     private curField: number = 1;
 
     // The modal that's shown to a user if they opened one
     private modalShowing: ModalBuilder = {} as ModalBuilder;
 
-    public readonly data = { name: this.subcommandInfo.name, path: __filename };
+    public readonly data = { name: this.subcommandInfo.name, path: __filename, cooldown: this.subcommandInfo.cooldown };
 
     /**
      * Handles the functionality for this subcommand
@@ -84,11 +82,6 @@ export default class SetupSubcommand implements Subcommand {
         this.firstInter = interaction;
 
         this.config = BoarBotApp.getBot().getConfig();
-
-        const onCooldown = await Cooldown.handleCooldown(this.config, interaction);
-        if (onCooldown) return;
-
-        LogDebug.sendDebug('Started interaction', this.config, interaction);
         
         this.staticRow = this.getStaticRow();
         this.setupFields = this.getSetupFields(this.staticRow);
@@ -107,7 +100,7 @@ export default class SetupSubcommand implements Subcommand {
             throw err;
         });
 
-        this.collector.on('collect', async (inter: SelectMenuInteraction) => this.handleCollect(inter));
+        this.collector.on('collect', async (inter: StringSelectMenuInteraction) => this.handleCollect(inter));
         this.collector.once('end', async (collected, reason) => this.handleEndCollect(reason));
     }
 
@@ -117,7 +110,7 @@ export default class SetupSubcommand implements Subcommand {
      * @param inter - The interaction associated with a component interaction
      * @private
      */
-    private async handleCollect(inter: SelectMenuInteraction): Promise<void> {
+    private async handleCollect(inter: StringSelectMenuInteraction): Promise<void> {
         try {
             const canInteract = await CollectorUtils.canInteract(this.timerVars, inter);
             if (!canInteract) return;
@@ -209,17 +202,17 @@ export default class SetupSubcommand implements Subcommand {
 
                 // User wants more information on trade channel
                 case setupComponents.tradeInfo.customId:
-                    await inter.followUp({content: this.config.stringConfig.setupInfoResponse1, ephemeral: true});
+                    await Replies.handleReply(inter, this.config.stringConfig.setupInfoResponse1);
                     break;
 
                 // User wants more information on boar channels
                 case setupComponents.boarInfo.customId:
-                    await inter.followUp({content: this.config.stringConfig.setupInfoResponse2, ephemeral: true});
+                    await Replies.handleReply(inter, this.config.stringConfig.setupInfoResponse2);
                     break;
 
                 // User wants more information on SB boars
                 case setupComponents.sbInfo.customId:
-                    await inter.followUp({content: this.config.stringConfig.setupInfoResponse3, ephemeral: true});
+                    await Replies.handleReply(inter, this.config.stringConfig.setupInfoResponse3);
                     break;
             }
         } catch (err: unknown) {
@@ -359,6 +352,7 @@ export default class SetupSubcommand implements Subcommand {
             const strConfig = this.config.stringConfig;
 
             let replyContent: string;
+            let color: ColorResolvable | undefined;
 
             if (reason && reason !== Reasons.Finished) {
                 await DataHandlers.removeGuildFile(this.guildDataPath, this.guildData);
@@ -387,10 +381,7 @@ export default class SetupSubcommand implements Subcommand {
                     fs.writeFileSync(this.guildDataPath, JSON.stringify(this.guildData));
 
                     replyContent = strConfig.setupFinishedAll;
-
-                    if (!PermissionUtils.hasPerm(this.firstInter, 'AttachFiles')) {
-                        replyContent += '\n\n' + strConfig.noAttachmentPerms;
-                    }
+                    color = 0x3BA55C;
 
                     break;
                 default:
@@ -398,11 +389,7 @@ export default class SetupSubcommand implements Subcommand {
                     break;
             }
 
-            await this.firstInter.editReply({
-                content: replyContent,
-                files: [],
-                components: []
-            });
+            await Replies.handleReply(this.firstInter, replyContent, color);
         } catch (err: unknown) {
             await LogDebug.handleError(err);
         }
@@ -416,11 +403,14 @@ export default class SetupSubcommand implements Subcommand {
      * @param blackList - Channel IDs to ignore
      * @private
      */
-    private getTextChannels(interaction: Interaction = this.firstInter, blackList?: string[]): APISelectMenuOption[] {
+    private getTextChannels(
+        interaction: Interaction = this.firstInter,
+        blackList?: string[]
+    ): SelectMenuComponentOptionData[] {
         const strConfig = this.config.stringConfig;
 
-        const channelOptions: APISelectMenuOption[] = [];
-        const noChannelOptions: APISelectMenuOption[] = [{
+        const channelOptions: SelectMenuComponentOptionData[] = [];
+        const noChannelOptions: SelectMenuComponentOptionData[] = [{
             label: strConfig.emptySelect,
             value: strConfig.emptySelect
         }];
@@ -462,7 +452,7 @@ export default class SetupSubcommand implements Subcommand {
      * @param inter - Used to show the modal and create/remove listener
      * @private
      */
-    private async modalHandle(inter: SelectMenuInteraction,): Promise<void> {
+    private async modalHandle(inter: StringSelectMenuInteraction): Promise<void> {
         const modals = this.config.commandConfigs.boarManage.setup.modals;
 
         this.modalShowing = new ModalBuilder(modals[this.curField-1]);
@@ -530,10 +520,7 @@ export default class SetupSubcommand implements Subcommand {
                     submittedChannelParentName = submittedChannel.parent.name.toUpperCase();
                 }
             } else {
-                await submittedModal.followUp({
-                    content: strConfig.notValidChannel,
-                    ephemeral: true
-                });
+                await Replies.handleReply(submittedModal,strConfig.notValidChannel);
 
                 clearInterval(this.timerVars.updateTime);
                 submittedModal.client.removeListener(Events.InteractionCreate, this.modalListener);
@@ -555,8 +542,8 @@ export default class SetupSubcommand implements Subcommand {
             if (this.curField === 2) {
                 // Gets next select menu that can be changed, if all full, change last one
                 for (let i=0; i<2; i++) {
-                    const selectMenu: SelectMenuBuilder =
-                        this.setupFields[1].components[i].components[0] as SelectMenuBuilder;
+                    const selectMenu: StringSelectMenuBuilder =
+                        this.setupFields[1].components[i].components[0] as StringSelectMenuBuilder;
 
                     if (selectMenu.data.placeholder === strConfig.defaultSelectPlaceholder) {
                         selectIndex = i;
@@ -600,10 +587,10 @@ export default class SetupSubcommand implements Subcommand {
         };
 
         // Components that need to be changed
-        const fieldOneSelectMenu: SelectMenuBuilder =
-            this.setupFields[0].components[0].components[0] as SelectMenuBuilder;
-        const fieldTwoSelectMenus: ActionRowBuilder<SelectMenuBuilder>[] =
-            this.setupFields[1].components.slice(0,3) as ActionRowBuilder<SelectMenuBuilder>[];
+        const fieldOneSelectMenu: StringSelectMenuBuilder =
+            this.setupFields[0].components[0].components[0] as StringSelectMenuBuilder;
+        const fieldTwoSelectMenus: ActionRowBuilder<StringSelectMenuBuilder>[] =
+            this.setupFields[1].components.slice(0,3) as ActionRowBuilder<StringSelectMenuBuilder>[];
         const nextButton: ButtonBuilder =
             this.staticRow.components[2] as ButtonBuilder;
 
@@ -637,7 +624,7 @@ export default class SetupSubcommand implements Subcommand {
         // Update boar channel select menus no matter what as changes from trade field must register in
         // boar channel field
         for (const row of fieldTwoSelectMenus) {
-            const fieldTwoSelectMenu: SelectMenuBuilder = row.components[0] as SelectMenuBuilder;
+            const fieldTwoSelectMenu: StringSelectMenuBuilder = row.components[0] as StringSelectMenuBuilder;
 
             fieldTwoSelectMenu
                 .setOptions(...this.getTextChannels(this.compInter, chosenChannels))
@@ -649,8 +636,8 @@ export default class SetupSubcommand implements Subcommand {
 
         // Edit boar channels field content based on if it's a refresh or not
         if (!isRefresh && this.curField === 2) {
-            const selectMenu: SelectMenuBuilder =
-                this.setupFields[1].components[selectIndex].components[0] as SelectMenuBuilder;
+            const selectMenu: StringSelectMenuBuilder =
+                this.setupFields[1].components[selectIndex].components[0] as StringSelectMenuBuilder;
 
             let channelsString = '';
 
@@ -674,9 +661,9 @@ export default class SetupSubcommand implements Subcommand {
      *
      * @private
      */
-    private getStaticRow(): ActionRowBuilder<ButtonBuilder | SelectMenuBuilder> {
+    private getStaticRow(): ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder> {
         const setupRowConfigs = this.config.commandConfigs.boarManage.setup.componentFields;
-        let staticRow = new ActionRowBuilder<ButtonBuilder | SelectMenuBuilder>(setupRowConfigs[3][0]);
+        let staticRow = new ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>(setupRowConfigs[3][0]);
 
         staticRow = ComponentUtils.addToIDs(setupRowConfigs[3][0], staticRow, this.firstInter.id);
 
@@ -690,18 +677,18 @@ export default class SetupSubcommand implements Subcommand {
      * @private
      */
     private getSetupFields(
-        staticRow: ActionRowBuilder<ButtonBuilder | SelectMenuBuilder>,
+        staticRow: ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>,
     ): FormField[] {
         const strConfig = this.config.stringConfig;
         const setupFieldConfigs = this.config.commandConfigs.boarManage.setup.componentFields;
 
-        const allFields: ActionRowBuilder<ButtonBuilder | SelectMenuBuilder>[][] = [];
+        const allFields: ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>[][] = [];
 
         for (const field in setupFieldConfigs) {
             allFields.push([]);
 
             for (const rowConfig of setupFieldConfigs[field]) {
-                let newRow = new ActionRowBuilder<ButtonBuilder | SelectMenuBuilder>(rowConfig);
+                let newRow = new ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>(rowConfig);
 
                 newRow = ComponentUtils.addToIDs(rowConfig, newRow, this.firstInter.id);
                 newRow = ComponentUtils.addOptionsToSelectRow(newRow, this.getTextChannels());

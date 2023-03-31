@@ -29,8 +29,6 @@ export class InteractionUtils {
     ): Promise<any> {
         if (!interaction.guild || !interaction.channel) return;
 
-        LogDebug.sendDebug('Started interaction', config, interaction);
-
         const guildData = await DataHandlers.getGuildData(interaction);
         if (!guildData) return;
 

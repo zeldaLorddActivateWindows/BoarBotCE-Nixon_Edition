@@ -1,4 +1,10 @@
-import {ChatInputCommandInteraction} from 'discord.js';
+import {
+    ChatInputCommandInteraction,
+    ColorResolvable,
+    EmbedBuilder,
+    MessageComponentInteraction,
+    ModalSubmitInteraction
+} from 'discord.js';
 import {BotConfig} from '../../bot/config/BotConfig';
 import {FormatStrings} from '../discord/FormatStrings';
 import {LogDebug} from '../logging/LogDebug';
@@ -89,21 +95,43 @@ export class Replies {
      *
      * @param interaction - Interaction to reply to
      * @param content - Content of the reply
+     * @param color - Color of the embed
      */
     public static async handleReply(
-        interaction: ChatInputCommandInteraction,
-        content: string
+        interaction: ChatInputCommandInteraction | MessageComponentInteraction | ModalSubmitInteraction,
+        content: string,
+        color: ColorResolvable = 0x4F545C
     ): Promise<void> {
-        if (interaction.replied) {
+        const responseEmbed: EmbedBuilder = new EmbedBuilder()
+            .setColor(color);
+
+        if (content.length > 256) {
+            responseEmbed.setDescription(content);
+        } else {
+            responseEmbed.setTitle(content);
+        }
+
+        if (interaction.deferred && interaction.isChatInputCommand()) {
+            await interaction.editReply({
+                content: '',
+                files: [],
+                components: [],
+                embeds: [responseEmbed]
+            });
+        } else if (interaction.replied || !interaction.isChatInputCommand()) {
             await interaction.followUp({
-                content: content,
+                content: '',
+                files: [],
+                components: [],
+                embeds: [responseEmbed],
                 ephemeral: true
             });
-        } else if (interaction.deferred) {
-            await interaction.editReply(content);
         } else {
             await interaction.reply({
-                content: content,
+                content: '',
+                files: [],
+                components: [],
+                embeds: [responseEmbed],
                 ephemeral: true
             });
         }

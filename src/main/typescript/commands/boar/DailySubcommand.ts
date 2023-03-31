@@ -10,6 +10,7 @@ import {InteractionUtils} from '../../util/interactions/InteractionUtils';
 import {LogDebug} from '../../util/logging/LogDebug';
 import {BotConfig} from '../../bot/config/BotConfig';
 import {SubcommandConfig} from '../../bot/config/commands/SubcommandConfig';
+import {Replies} from '../../util/interactions/Replies';
 
 /**
  * {@link DailySubcommand DailySubcommand.ts}
@@ -24,7 +25,7 @@ export default class DailySubcommand implements Subcommand {
     private subcommandInfo: SubcommandConfig = this.config.commandConfigs.boar.daily;
     private guildData: any = {};
     private interaction: ChatInputCommandInteraction = {} as ChatInputCommandInteraction;
-    public readonly data = { name: this.subcommandInfo.name, path: __filename };
+    public readonly data = { name: this.subcommandInfo.name, path: __filename, cooldown: this.subcommandInfo.cooldown };
 
     /**
      * Handles the functionality for this subcommand
@@ -41,8 +42,6 @@ export default class DailySubcommand implements Subcommand {
         this.interaction = interaction;
 
         await Queue.addQueue(() => this.doDaily(), interaction.id + interaction.user.id);
-
-        LogDebug.sendDebug('End of interaction', this.config, interaction);
     }
 
     /**
@@ -95,7 +94,8 @@ export default class DailySubcommand implements Subcommand {
 
         // Returns if user has already used their daily boar
         if (boarUser.lastDaily >= nextBoarTime - (1000 * 60 * 60 * 24) && !this.config.unlimitedBoars) {
-            await this.interaction.editReply(
+            await Replies.handleReply(
+                this.interaction,
                 this.config.stringConfig.dailyUsed + FormatStrings.toRelTime(nextBoarTime / 1000)
             );
             return false;

@@ -1,14 +1,13 @@
 import {
-    ActionRowBuilder, AttachmentBuilder,
+    ActionRowBuilder,
     ButtonBuilder,
-    ButtonInteraction, ButtonStyle,
-    ChatInputCommandInteraction, InteractionCollector, SelectMenuBuilder,
-    SelectMenuInteraction,
+    ButtonInteraction,
+    ChatInputCommandInteraction, InteractionCollector,
+    StringSelectMenuBuilder, StringSelectMenuInteraction,
     User
 } from 'discord.js';
 import {BoarUser} from '../../util/boar/BoarUser';
 import Canvas from 'canvas';
-import moment from 'moment';
 import {BoarBotApp} from '../../BoarBotApp';
 import {Subcommand} from '../../api/commands/Subcommand';
 import {Queue} from '../../util/interactions/Queue';
@@ -17,7 +16,6 @@ import {LogDebug} from '../../util/logging/LogDebug';
 import {CollectorUtils} from '../../util/discord/CollectorUtils';
 import {ComponentUtils} from '../../util/discord/ComponentUtils';
 import {BoarUtils} from '../../util/boar/BoarUtils';
-import {CanvasUtils} from '../../util/generators/CanvasUtils';
 import {CollectionImageGenerator} from '../../util/generators/CollectionImageGenerator';
 
 /**
@@ -43,9 +41,9 @@ export default class CollectionSubcommand implements Subcommand {
         timeUntilNextCollect: 0,
         updateTime: setTimeout(() => {})
     };
-    private collector: InteractionCollector<ButtonInteraction | SelectMenuInteraction> =
-        {} as InteractionCollector<ButtonInteraction | SelectMenuInteraction>;
-    public readonly data = { name: this.subcommandInfo.name, path: __filename };
+    private collector: InteractionCollector<ButtonInteraction | StringSelectMenuInteraction> =
+        {} as InteractionCollector<ButtonInteraction | StringSelectMenuInteraction>;
+    public readonly data = { name: this.subcommandInfo.name, path: __filename, cooldown: this.subcommandInfo.cooldown };
 
     /**
      * Handles the functionality for this subcommand
@@ -79,8 +77,6 @@ export default class CollectionSubcommand implements Subcommand {
 
             LogDebug.sendDebug(`Used ${inter.customId} on field ${this.curPage}`, config, interaction);
         });
-
-        LogDebug.sendDebug('End of interaction', config, interaction);
     }
 
     /**
@@ -131,11 +127,12 @@ export default class CollectionSubcommand implements Subcommand {
         const finalImage = await this.collectionImage.finalizeNormalImage(page);
 
         const collFieldConfigs = this.config.commandConfigs.boar.collection.componentFields;
-        const baseRows: ActionRowBuilder<ButtonBuilder | SelectMenuBuilder>[] = [];
-        const optionalButtonsRow = new ActionRowBuilder<ButtonBuilder | SelectMenuBuilder>(collFieldConfigs[1][0]);
+        const baseRows: ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>[] = [];
+        const optionalButtonsRow =
+            new ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>(collFieldConfigs[1][0]);
 
         for (const rowConfig of collFieldConfigs[0]) {
-            let newRow = new ActionRowBuilder<ButtonBuilder | SelectMenuBuilder>(rowConfig);
+            let newRow = new ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>(rowConfig);
 
             newRow = ComponentUtils.addToIDs(rowConfig, newRow, this.firstInter.id);
             baseRows.push(newRow);

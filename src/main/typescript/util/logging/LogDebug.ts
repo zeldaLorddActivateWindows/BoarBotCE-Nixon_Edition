@@ -1,13 +1,13 @@
 import {
     AutocompleteInteraction,
     ChatInputCommandInteraction,
-    EmbedBuilder,
     Message,
     ModalSubmitInteraction
 } from 'discord.js';
 import {BotConfig} from '../../bot/config/BotConfig';
 import {BoarBotApp} from '../../BoarBotApp';
 import {InteractionUtils} from '../interactions/InteractionUtils';
+import {Replies} from '../interactions/Replies';
 
 // Console colors
 enum Colors {
@@ -28,8 +28,6 @@ enum Colors {
  * @copyright WeslayCodes 2023
  */
 export class LogDebug {
-    public static readonly errorEmbed = new EmbedBuilder().setColor(0xFF0000);
-
     /**
      * Sends messages to the console
      *
@@ -40,7 +38,7 @@ export class LogDebug {
     public static sendDebug(
         debugMessage: any,
         config: BotConfig,
-        interaction?: ChatInputCommandInteraction
+        interaction?: ChatInputCommandInteraction | AutocompleteInteraction
     ): void {
         if (!config.debugMode) return;
 
@@ -89,21 +87,7 @@ export class LogDebug {
 
             const errResponse = config.stringConfig.error;
 
-            if (interaction.replied) {
-                await interaction.followUp({
-                    embeds: [LogDebug.errorEmbed.setTitle(errResponse)],
-                    ephemeral: true
-                });
-            } else if (interaction.deferred) {
-                await interaction.editReply({
-                    embeds: [LogDebug.errorEmbed.setTitle(errResponse)]
-                });
-            } else if (Date.now() - interaction.createdTimestamp < 3000) {
-                await interaction.reply({
-                    embeds: [LogDebug.errorEmbed.setTitle(errResponse)],
-                    ephemeral: true
-                });
-            }
+            await Replies.handleReply(interaction, errResponse, 0xED4245);
         } catch (err: unknown) {
             await this.handleError(err);
         }

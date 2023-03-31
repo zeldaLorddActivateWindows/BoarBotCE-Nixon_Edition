@@ -9,6 +9,7 @@ import {LogDebug} from '../logging/LogDebug';
 import {CollectedBoar} from './CollectedBoar';
 import {PowerupData} from './PowerupData';
 import {ItemImageGenerator} from '../generators/ItemImageGenerator';
+import {Replies} from '../interactions/Replies';
 
 /**
  * {@link BoarUser BoarUser.ts}
@@ -209,7 +210,7 @@ export class BoarUser {
         if (!wasGiven) {
             await interaction.editReply({ files: [attachment] });
         } else {
-            await interaction.editReply(strConfig.giveBoar);
+            await Replies.handleReply(interaction, strConfig.giveBoar);
             await interaction.followUp({ files: [attachment] });
         }
 
@@ -276,7 +277,7 @@ export class BoarUser {
         const wasGiven = interaction.options.getSubcommand() === giveCommandConfig.name;
 
         if (hasBadge && wasGiven) {
-            await interaction.editReply(strConfig.giveBadgeHas);
+            await Replies.handleReply(interaction, strConfig.giveBadgeHas);
             return false;
         }
 
@@ -294,7 +295,7 @@ export class BoarUser {
         if (!wasGiven) {
             await interaction.followUp({ files: [attachment] });
         } else {
-            await interaction.editReply(strConfig.giveBadge);
+            await Replies.handleReply(interaction, strConfig.giveBadge);
             await interaction.followUp({ files: [attachment] });
         }
 

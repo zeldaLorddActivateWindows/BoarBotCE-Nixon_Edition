@@ -1,4 +1,8 @@
-import {ButtonInteraction, ChatInputCommandInteraction, InteractionCollector, SelectMenuInteraction} from 'discord.js';
+import {
+    ButtonInteraction,
+    ChatInputCommandInteraction,
+    InteractionCollector, MessageComponentInteraction, StringSelectMenuInteraction,
+} from 'discord.js';
 
 /**
  * {@link CollectorUtils CollectorUtils.ts}
@@ -18,7 +22,7 @@ export class CollectorUtils {
      */
     public static async canInteract(
         timerVars: { timeUntilNextCollect: number, updateTime: NodeJS.Timer },
-        inter?: ButtonInteraction | SelectMenuInteraction,
+        inter?: ButtonInteraction | StringSelectMenuInteraction,
     ): Promise<boolean> {
         // If the collection attempt was too quick, cancel it
         if (inter && Date.now() < timerVars.timeUntilNextCollect) {
@@ -46,15 +50,15 @@ export class CollectorUtils {
     public static async createCollector(
         interaction: ChatInputCommandInteraction,
         addition: string
-    ): Promise<InteractionCollector<ButtonInteraction | SelectMenuInteraction>> {
+    ): Promise<InteractionCollector<ButtonInteraction | StringSelectMenuInteraction>> {
         // Only allows button presses from current interaction
-        const filter = async (compInter: ButtonInteraction | SelectMenuInteraction) => {
+        const filter = (compInter: MessageComponentInteraction) => {
             return compInter.customId.endsWith(addition);
         };
 
         return interaction.channel?.createMessageComponentCollector({
             filter,
             idle: 1000 * 60 * 2
-        }) as InteractionCollector<ButtonInteraction | SelectMenuInteraction>;
+        }) as InteractionCollector<ButtonInteraction | StringSelectMenuInteraction>;
     }
 }
