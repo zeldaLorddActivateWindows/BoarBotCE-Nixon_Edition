@@ -22,15 +22,6 @@ import {SubcommandConfig} from '../../bot/config/commands/SubcommandConfig';
 import {ComponentUtils} from '../../util/discord/ComponentUtils';
 import {Replies} from '../../util/interactions/Replies';
 
-// Reasons for ending collection
-enum Reasons {
-    Finished = 'finished',
-    Cancelled = 'cancelled',
-    Error = 'error',
-    Maintenance = 'maintenance',
-    Expired = 'idle'
-}
-
 /**
  * {@link SetupSubcommand SetupSubcommand.ts}
  *
@@ -46,7 +37,8 @@ export default class SetupSubcommand implements Subcommand {
     // The initiating interaction
     private firstInter: ChatInputCommandInteraction = {} as ChatInputCommandInteraction;
     // The current component interaction
-    private compInter: StringSelectMenuInteraction = {} as StringSelectMenuInteraction;
+    private compInter: StringSelectMenuInteraction | ButtonInteraction =
+        {} as StringSelectMenuInteraction | ButtonInteraction;
 
     private staticRow = new ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>();
     private setupFields: FormField[] = [];
@@ -100,7 +92,9 @@ export default class SetupSubcommand implements Subcommand {
             throw err;
         });
 
-        this.collector.on('collect', async (inter: StringSelectMenuInteraction) => this.handleCollect(inter));
+        this.collector.on('collect', async (inter: StringSelectMenuInteraction | ButtonInteraction) =>
+            this.handleCollect(inter)
+        );
         this.collector.once('end', async (collected, reason) => this.handleEndCollect(reason));
     }
 
@@ -110,7 +104,7 @@ export default class SetupSubcommand implements Subcommand {
      * @param inter - The interaction associated with a component interaction
      * @private
      */
-    private async handleCollect(inter: StringSelectMenuInteraction): Promise<void> {
+    private async handleCollect(inter: StringSelectMenuInteraction | ButtonInteraction): Promise<void> {
         try {
             const canInteract = await CollectorUtils.canInteract(this.timerVars, inter);
             if (!canInteract) return;
@@ -122,6 +116,11 @@ export default class SetupSubcommand implements Subcommand {
             LogDebug.sendDebug(
                 `${inter.customId.split('|')[0]} on field ${this.curField}`, this.config, this.firstInter
             );
+
+            if (BoarBotApp.getBot().getConfig().maintenanceMode && !this.config.devs.includes(inter.user.id)) {
+                this.collector.stop(CollectorUtils.Reasons.Maintenance);
+                return;
+            }
 
             const setupRowConfig = this.config.commandConfigs.boarManage.setup.componentFields;
             const setupComponents = {
@@ -142,11 +141,6 @@ export default class SetupSubcommand implements Subcommand {
                 next: setupRowConfig[3][0].components[2]
             };
 
-            if (BoarBotApp.getBot().getConfig().maintenanceMode && !this.config.devs.includes(inter.user.id)) {
-                this.collector.stop(Reasons.Maintenance);
-                return;
-            }
-
             // User wants to input a channel via ID
             if (
                 inter.customId.startsWith(setupComponents.findChannel.customId) &&
@@ -163,7 +157,7 @@ export default class SetupSubcommand implements Subcommand {
                 // User wants to finish or go to next field
                 case setupComponents.next.customId:
                     if (this.curField === 3) {
-                        this.collector.stop(Reasons.Finished);
+                        this.collector.stop(CollectorUtils.Reasons.Finished);
                         break;
                     }
 
@@ -172,7 +166,7 @@ export default class SetupSubcommand implements Subcommand {
 
                 // User wants to cancel setup
                 case setupComponents.cancel.customId:
-                    this.collector.stop(Reasons.Cancelled);
+                    this.collector.stop(CollectorUtils.Reasons.Cancelled);
                     break;
 
                 // User selects the trade channel
@@ -217,7 +211,7 @@ export default class SetupSubcommand implements Subcommand {
             }
         } catch (err: unknown) {
             await LogDebug.handleError(err);
-            this.collector.stop(Reasons.Error);
+            this.collector.stop(CollectorUtils.Reasons.Error);
         }
 
         clearInterval(this.timerVars.updateTime);
@@ -248,11 +242,12 @@ export default class SetupSubcommand implements Subcommand {
      * @private
      */
     private async doTradeSelect() {
-        this.userResponses.tradeChannelId = this.compInter.values[0];
+        const selectInter = this.compInter as StringSelectMenuInteraction;
+        this.userResponses.tradeChannelId = selectInter.values[0];
 
         // Gets the label of the chosen option
-        const placeholder = this.compInter.component.options.filter(option =>
-            option.value === this.compInter.values[0]
+        const placeholder = selectInter.component.options.filter(option =>
+            option.value === selectInter.values[0]
         )[0].label;
 
         // Refreshes all select menu options, changes placeholder, and tells user field is done
@@ -265,14 +260,16 @@ export default class SetupSubcommand implements Subcommand {
      * @private
      */
     private async doBoarSelect() {
+        const selectInter = this.compInter as StringSelectMenuInteraction;
+
         // Gets index to change based on ending number in select menu ID
         const selectIndex: number =
             parseInt(this.compInter.customId.charAt(this.compInter.customId.lastIndexOf('_') + 1)) - 1;
-        this.userResponses.boarChannels[selectIndex] = this.compInter.values[0];
+        this.userResponses.boarChannels[selectIndex] = selectInter.values[0];
 
         // Gets the label of the chosen option
-        const placeholder = this.compInter.component.options.filter(option =>
-            option.value === this.compInter.values[0]
+        const placeholder = selectInter.component.options.filter(option =>
+            option.value === selectInter.values[0]
         )[0].label;
 
         // Refreshes all select menu options, changes placeholder, and tells user field is done
@@ -354,24 +351,25 @@ export default class SetupSubcommand implements Subcommand {
             let replyContent: string;
             let color: ColorResolvable | undefined;
 
-            if (reason && reason !== Reasons.Finished) {
+            if (reason && reason !== CollectorUtils.Reasons.Finished) {
                 await DataHandlers.removeGuildFile(this.guildDataPath, this.guildData);
             }
 
             switch (reason) {
-                case Reasons.Maintenance:
+                case CollectorUtils.Reasons.Maintenance:
                     replyContent = strConfig.maintenance;
                     break;
-                case Reasons.Cancelled:
+                case CollectorUtils.Reasons.Cancelled:
                     replyContent = strConfig.setupCancelled;
                     break;
-                case Reasons.Error:
+                case CollectorUtils.Reasons.Error:
                     replyContent = strConfig.setupError;
+                    color = 0xED4245;
                     break;
-                case Reasons.Expired:
+                case CollectorUtils.Reasons.Expired:
                     replyContent = strConfig.setupExpired;
                     break;
-                case Reasons.Finished:
+                case CollectorUtils.Reasons.Finished:
                     this.guildData = {
                         isSBServer: this.userResponses.isSBServer,
                         tradeChannel: this.userResponses.tradeChannelId,
@@ -452,7 +450,7 @@ export default class SetupSubcommand implements Subcommand {
      * @param inter - Used to show the modal and create/remove listener
      * @private
      */
-    private async modalHandle(inter: StringSelectMenuInteraction): Promise<void> {
+    private async modalHandle(inter: StringSelectMenuInteraction | ButtonInteraction): Promise<void> {
         const modals = this.config.commandConfigs.boarManage.setup.modals;
 
         this.modalShowing = new ModalBuilder(modals[this.curField-1]);
@@ -560,7 +558,7 @@ export default class SetupSubcommand implements Subcommand {
             );
         } catch (err: unknown) {
             await LogDebug.handleError(err);
-            this.collector.stop(Reasons.Error);
+            this.collector.stop(CollectorUtils.Reasons.Error);
         }
 
         clearInterval(this.timerVars.updateTime);

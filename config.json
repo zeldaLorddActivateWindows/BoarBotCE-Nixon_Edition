@@ -44,13 +44,13 @@
         "nullFound": "One or more inputs are `null`!",
         "invalidID": "Invalid ID input!",
         "onCooldown": "You're using this command too fast! Please wait 5 seconds!",
-        "noAttachmentPerms": ":exclamation: **WARNING:** The bot doesn't have attachment permissions, so some interactive images may not appear.",
-        "error": ":anger: Something went wrong! Please try again in a few minutes. If the issue persists, DM the bot with the issue!",
-        "maintenance": ":warning: BoarBot is currently in maintenance mode!",
-        "setupCancelled": ":x: **__Setup was cancelled!__**",
-        "setupError": ":exclamation: **__An error occurred while getting information! Try again later.__**",
+        "noAttachmentPerms": "BoarBot doesn't have attachment permissions, so some interactive images may not appear.",
+        "error": "Something went wrong! Please try again in a few minutes. If the issue persists, DM the bot with the issue!",
+        "maintenance": "BoarBot is currently in maintenance mode!",
+        "setupCancelled": "**Setup was cancelled!**",
+        "setupError": "**An error occurred while getting information! Try again later.**",
         "setupFinishedAll": "**BoarBot has successfully been set up! Do </boar daily:1080193988046364733> in one of the boar channels you chose to get started.**",
-        "setupExpired": ":question: **__You haven't interacted with the form for 2 minutes! Automatically terminating setup.__**",
+        "setupExpired": "**You haven't interacted with the form for 2 minutes! Automatically terminating setup.**",
         "setupUnfinished1": "**What channel can be used for trading?** \n*(Note: Threads will dynamically be created in this channel.)*",
         "setupUnfinished2": "**What channels can BoarBot commands be used in? [Max 3]** \n*(Note: If you have a lot of server members, these channels may get flooded.)*",
         "setupUnfinished3": "**Is this server a Hypixel Skyblock community?**",
@@ -101,7 +101,7 @@
                 "name": "help",
                 "description": "See all boar command information",
                 "args": [],
-                "cooldown": false,
+                "cooldown": true,
                 "componentFields": [],
                 "modals": []
             },
@@ -125,7 +125,7 @@
                         "choices": []
                     }
                 ],
-                "cooldown": false,
+                "cooldown": true,
                 "componentFields": [
                     [
                         {

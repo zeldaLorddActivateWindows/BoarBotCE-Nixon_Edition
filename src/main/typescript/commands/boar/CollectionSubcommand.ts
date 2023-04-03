@@ -17,6 +17,7 @@ import {CollectorUtils} from '../../util/discord/CollectorUtils';
 import {ComponentUtils} from '../../util/discord/ComponentUtils';
 import {BoarUtils} from '../../util/boar/BoarUtils';
 import {CollectionImageGenerator} from '../../util/generators/CollectionImageGenerator';
+import {Replies} from '../../util/interactions/Replies';
 
 /**
  * {@link CollectionSubcommand CollectionSubcommand.ts}
@@ -31,12 +32,14 @@ export default class CollectionSubcommand implements Subcommand {
     private config = BoarBotApp.getBot().getConfig();
     private subcommandInfo = this.config.commandConfigs.boar.collection;
     private firstInter: ChatInputCommandInteraction = {} as ChatInputCommandInteraction;
+    private compInter: ButtonInteraction = {} as ButtonInteraction;
     private collectionImage = {} as CollectionImageGenerator;
     private allBoars: any[] = [];
     private curBoars: any[] = [];
     private boarUser: BoarUser = {} as BoarUser;
     private baseCanvas: Canvas.Canvas = {} as Canvas.Canvas;
-    private curPage: number = 1;
+    private curPage: number = 0;
+    private maxPageNormal: number = 0;
     private timerVars = {
         timeUntilNextCollect: 0,
         updateTime: setTimeout(() => {})
@@ -66,17 +69,63 @@ export default class CollectionSubcommand implements Subcommand {
 
         await Queue.addQueue(() => this.getUserInfo(userInput), interaction.id + userInput.id);
 
+        this.maxPageNormal = Math.floor(Object.keys(this.allBoars).length / config.numberConfig.collBoarsPerPage);
+
         this.collector = await CollectorUtils.createCollector(interaction, interaction.id + interaction.user.id);
 
         this.collectionImage = new CollectionImageGenerator(this.boarUser, this.config, this.allBoars);
-        await this.showCollection(0);
+        await this.showCollection();
 
-        this.collector.on('collect', async (inter: ButtonInteraction) => {
+        this.collector.on('collect', async (inter: ButtonInteraction) => this.handleCollect(inter));
+    }
+
+    private async handleCollect(inter: ButtonInteraction) {
+        try {
             const canInteract = await CollectorUtils.canInteract(this.timerVars, inter);
             if (!canInteract) return;
 
-            LogDebug.sendDebug(`Used ${inter.customId} on field ${this.curPage}`, config, interaction);
-        });
+            if (!inter.isMessageComponent()) return;
+
+            this.compInter = inter;
+
+            LogDebug.sendDebug(`${inter.customId.split('|')[0]} on field ${this.curPage}`, this.config, this.firstInter);
+
+            if (BoarBotApp.getBot().getConfig().maintenanceMode && !this.config.devs.includes(inter.user.id)) {
+                this.collector.stop(CollectorUtils.Reasons.Maintenance);
+                return;
+            }
+
+            const collRowConfig = this.config.commandConfigs.boar.collection.componentFields;
+            const collComponents = {
+                leftPage: collRowConfig[0][0].components[0],
+                inputPage: collRowConfig[0][0].components[1],
+                rightPage: collRowConfig[0][0].components[2],
+                normalView: collRowConfig[0][1].components[0],
+                detailedView: collRowConfig[0][1].components[1],
+                powerupView: collRowConfig[0][1].components[2]
+            };
+
+            await inter.deferUpdate();
+
+            switch (inter.customId.split('|')[0]) {
+                // User wants to go to previous page
+                case collComponents.leftPage.customId:
+                    this.curPage--;
+                    await this.showCollection();
+                    break;
+
+                // User wants to go to the next page
+                case collComponents.rightPage.customId:
+                    this.curPage++;
+                    await this.showCollection();
+                    break;
+            }
+        } catch (err: unknown) {
+            await LogDebug.handleError(err);
+            this.collector.stop(CollectorUtils.Reasons.Error);
+        }
+
+        clearInterval(this.timerVars.updateTime);
     }
 
     /**
@@ -122,9 +171,12 @@ export default class CollectionSubcommand implements Subcommand {
      *
      * @private
      */
-    private async showCollection(page: number) {
-        await this.collectionImage.createNormalBase();
-        const finalImage = await this.collectionImage.finalizeNormalImage(page);
+    private async showCollection() {
+        if (!this.collectionImage.normalBaseMade()) {
+            await this.collectionImage.createNormalBase();
+        }
+
+        const finalImage = await this.collectionImage.finalizeNormalImage(this.curPage);
 
         const collFieldConfigs = this.config.commandConfigs.boar.collection.componentFields;
         const baseRows: ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>[] = [];
@@ -134,8 +186,18 @@ export default class CollectionSubcommand implements Subcommand {
         for (const rowConfig of collFieldConfigs[0]) {
             let newRow = new ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>(rowConfig);
 
-            newRow = ComponentUtils.addToIDs(rowConfig, newRow, this.firstInter.id);
+            newRow = ComponentUtils.addToIDs(rowConfig, newRow, this.firstInter.id + this.firstInter.user.id);
             baseRows.push(newRow);
+        }
+
+        // Enables next button if there's more than one page
+        if (this.maxPageNormal > this.curPage) {
+            baseRows[0].components[2].setDisabled(false);
+        }
+
+        // Enables previous button if on a page other than the first
+        if (this.curPage > 0) {
+            baseRows[0].components[0].setDisabled(false);
         }
 
         await this.firstInter.editReply({ files: [finalImage], components: baseRows });

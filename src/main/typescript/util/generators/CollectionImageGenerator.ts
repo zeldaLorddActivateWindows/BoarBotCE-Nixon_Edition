@@ -151,6 +151,10 @@ export class CollectionImageGenerator {
         this.normalBase = canvas.toBuffer();
     }
 
+    public normalBaseMade(): boolean {
+        return Object.keys(this.normalBase).length !== 0;
+    }
+
     /**
      * Finalizes the Normal view image
      *
@@ -209,6 +213,22 @@ export class CollectionImageGenerator {
             CanvasUtils.drawLine(
                 ctx, lineStartPos, lineEndPos, nums.collRarityWidth, colorConfig['rarity' + curBoars[i].rarity]
             );
+        }
+
+        // Draws last boar gotten and rarity
+        if (this.boarUser.lastBoar !== '') {
+            const lastBoarDetails = this.config.boarItemConfigs[this.boarUser.lastBoar];
+            const boarFile = boarsFolder + lastBoarDetails.file;
+
+            ctx.drawImage(await Canvas.loadImage(boarFile), ...nums.collLastBoarPos, ...nums.collLastBoarSize);
+        }
+
+        // Draws favorite boar and rarity
+        if (this.boarUser.favoriteBoar !== '') {
+            const favoriteBoarDetails = this.config.boarItemConfigs[this.boarUser.favoriteBoar];
+            const boarFile = boarsFolder + favoriteBoarDetails.file;
+
+            ctx.drawImage(await Canvas.loadImage(boarFile), ...nums.collFavBoarPos, ...nums.collFavBoarSize);
         }
 
         // Draws overlay

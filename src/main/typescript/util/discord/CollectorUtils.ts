@@ -3,6 +3,17 @@ import {
     ChatInputCommandInteraction,
     InteractionCollector, MessageComponentInteraction, StringSelectMenuInteraction,
 } from 'discord.js';
+import {LogDebug} from '../logging/LogDebug';
+import {BoarBotApp} from '../../BoarBotApp';
+
+// Reasons for ending collection
+enum Reasons {
+    Finished = 'finished',
+    Cancelled = 'cancelled',
+    Error = 'error',
+    Maintenance = 'maintenance',
+    Expired = 'idle'
+}
 
 /**
  * {@link CollectorUtils CollectorUtils.ts}
@@ -14,6 +25,8 @@ import {
  * @copyright WeslayCodes 2023
  */
 export class CollectorUtils {
+    public static readonly Reasons = Reasons;
+
     /**
      * Determines whether the interaction should be processed
      *
