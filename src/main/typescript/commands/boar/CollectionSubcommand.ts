@@ -2,8 +2,15 @@ import {
     ActionRowBuilder,
     ButtonBuilder,
     ButtonInteraction,
-    ChatInputCommandInteraction, InteractionCollector,
-    StringSelectMenuBuilder, StringSelectMenuInteraction,
+    ChatInputCommandInteraction,
+    ColorResolvable,
+    Events,
+    Interaction,
+    InteractionCollector,
+    MessageComponentInteraction,
+    ModalBuilder,
+    StringSelectMenuBuilder,
+    StringSelectMenuInteraction,
     User
 } from 'discord.js';
 import {BoarUser} from '../../util/boar/BoarUser';
@@ -18,6 +25,7 @@ import {ComponentUtils} from '../../util/discord/ComponentUtils';
 import {BoarUtils} from '../../util/boar/BoarUtils';
 import {CollectionImageGenerator} from '../../util/generators/CollectionImageGenerator';
 import {Replies} from '../../util/interactions/Replies';
+
 
 /**
  * {@link CollectionSubcommand CollectionSubcommand.ts}
@@ -44,6 +52,10 @@ export default class CollectionSubcommand implements Subcommand {
         timeUntilNextCollect: 0,
         updateTime: setTimeout(() => {})
     };
+
+    // The modal that's shown to a user if they opened one
+    private modalShowing: ModalBuilder = {} as ModalBuilder;
+
     private collector: InteractionCollector<ButtonInteraction | StringSelectMenuInteraction> =
         {} as InteractionCollector<ButtonInteraction | StringSelectMenuInteraction>;
     public readonly data = { name: this.subcommandInfo.name, path: __filename, cooldown: this.subcommandInfo.cooldown };
@@ -76,7 +88,8 @@ export default class CollectionSubcommand implements Subcommand {
         this.collectionImage = new CollectionImageGenerator(this.boarUser, this.config, this.allBoars);
         await this.showCollection();
 
-        this.collector.on('collect', async (inter: ButtonInteraction) => this.handleCollect(inter));
+        this.collector.on('collect', async (inter: ButtonInteraction) => await this.handleCollect(inter));
+        this.collector.once('end', async (collected, reason) => await this.handleEndCollect(reason));
     }
 
     private async handleCollect(inter: ButtonInteraction) {
@@ -90,11 +103,6 @@ export default class CollectionSubcommand implements Subcommand {
 
             LogDebug.sendDebug(`${inter.customId.split('|')[0]} on field ${this.curPage}`, this.config, this.firstInter);
 
-            if (BoarBotApp.getBot().getConfig().maintenanceMode && !this.config.devs.includes(inter.user.id)) {
-                this.collector.stop(CollectorUtils.Reasons.Maintenance);
-                return;
-            }
-
             const collRowConfig = this.config.commandConfigs.boar.collection.componentFields;
             const collComponents = {
                 leftPage: collRowConfig[0][0].components[0],
@@ -105,20 +113,103 @@ export default class CollectionSubcommand implements Subcommand {
                 powerupView: collRowConfig[0][1].components[2]
             };
 
+            // User wants to input a page manually
+            if (inter.customId.startsWith(collComponents.inputPage.customId)) {
+                await this.modalHandle(inter);
+                clearInterval(this.timerVars.updateTime);
+                return;
+            }
+
             await inter.deferUpdate();
 
             switch (inter.customId.split('|')[0]) {
                 // User wants to go to previous page
                 case collComponents.leftPage.customId:
                     this.curPage--;
-                    await this.showCollection();
                     break;
 
                 // User wants to go to the next page
                 case collComponents.rightPage.customId:
                     this.curPage++;
-                    await this.showCollection();
                     break;
+            }
+
+            await this.showCollection();
+        } catch (err: unknown) {
+            await LogDebug.handleError(err);
+            this.collector.stop(CollectorUtils.Reasons.Error);
+        }
+
+        clearInterval(this.timerVars.updateTime);
+    }
+
+    /**
+     * Sends modals and receives information on modal submission
+     *
+     * @param inter - Used to show the modal and create/remove listener
+     * @private
+     */
+    private async modalHandle(inter: MessageComponentInteraction): Promise<void> {
+        const modals = this.config.commandConfigs.boar.collection.modals;
+
+        this.modalShowing = new ModalBuilder(modals[0]);
+        this.modalShowing.setCustomId(modals[0].customId + '|' + inter.id);
+        await inter.showModal(this.modalShowing);
+
+        inter.client.on(
+            Events.InteractionCreate,
+            this.modalListener
+        );
+
+        setTimeout(() => {
+            inter.client.removeListener(Events.InteractionCreate, this.modalListener);
+        }, 60000);
+    }
+
+    /**
+     * Handles when the user makes an interaction that could be a modal submission
+     *
+     * @param submittedModal - The interaction to respond to
+     * @private
+     */
+    private modalListener = async (submittedModal: Interaction) => {
+        try  {
+            // If not a modal submission on current interaction, destroy the modal listener
+            if (submittedModal.isMessageComponent() && submittedModal.customId.endsWith(this.firstInter.id + this.firstInter.user.id) ||
+                BoarBotApp.getBot().getConfig().maintenanceMode && !this.config.devs.includes(this.compInter.user.id)
+            ) {
+                clearInterval(this.timerVars.updateTime);
+                submittedModal.client.removeListener(Events.InteractionCreate, this.modalListener);
+
+                return;
+            }
+
+            // Updates the cooldown to interact again
+            CollectorUtils.canInteract(this.timerVars);
+
+            if (!submittedModal.isModalSubmit() || this.collector.ended ||
+                !submittedModal.guild || submittedModal.customId !== this.modalShowing.data.custom_id
+            ) {
+                clearInterval(this.timerVars.updateTime);
+                return;
+            }
+
+            await submittedModal.deferUpdate();
+
+            const submittedPage = submittedModal.fields.getTextInputValue(
+                this.modalShowing.components[0].components[0].data.custom_id as string
+            );
+            const submittedPageInt = parseInt(submittedPage);
+
+            LogDebug.sendDebug(
+                `${submittedModal.customId.split('|')[0]} input value: ` + submittedPage, this.config, this.firstInter
+            );
+
+            if (submittedPageInt) {
+                this.curPage = Math.max(Math.min(submittedPageInt, this.maxPageNormal), 0);
+                await this.showCollection();
+            } else {
+                await Replies.handleReply(submittedModal, this.config.stringConfig.invalidPage);
             }
         } catch (err: unknown) {
             await LogDebug.handleError(err);
@@ -126,6 +217,23 @@ export default class CollectionSubcommand implements Subcommand {
         }
 
         clearInterval(this.timerVars.updateTime);
+        submittedModal.client.removeListener(Events.InteractionCreate, this.modalListener);
+    };
+
+    private async handleEndCollect(reason: string) {
+        try {
+            LogDebug.sendDebug('Ended collection with reason: ' + reason, this.config, this.firstInter);
+
+            if (reason == CollectorUtils.Reasons.Error) {
+                await Replies.handleReply(this.firstInter, this.config.stringConfig.setupError, 0xED4245, true);
+            }
+
+            await this.firstInter.editReply({
+                components: []
+            });
+        } catch (err: unknown) {
+            await LogDebug.handleError(err);
+        }
     }
 
     /**
@@ -198,6 +306,11 @@ export default class CollectionSubcommand implements Subcommand {
         // Enables previous button if on a page other than the first
         if (this.curPage > 0) {
             baseRows[0].components[0].setDisabled(false);
+        }
+
+        // Enables manual input button if there's more than one page
+        if (this.maxPageNormal > 0) {
+            baseRows[0].components[1].setDisabled(false);
         }
 
         await this.firstInter.editReply({ files: [finalImage], components: baseRows });

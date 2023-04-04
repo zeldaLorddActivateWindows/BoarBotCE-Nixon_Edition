@@ -96,11 +96,13 @@ export class Replies {
      * @param interaction - Interaction to reply to
      * @param content - Content of the reply
      * @param color - Color of the embed
+     * @param forceFollowup - Forces interaction reply to be a followup
      */
     public static async handleReply(
         interaction: ChatInputCommandInteraction | MessageComponentInteraction | ModalSubmitInteraction,
         content: string,
-        color: ColorResolvable = 0x4F545C
+        color: ColorResolvable = 0x4F545C,
+        forceFollowup: boolean = false
     ): Promise<void> {
         const responseEmbed: EmbedBuilder = new EmbedBuilder()
             .setColor(color);
@@ -111,14 +113,14 @@ export class Replies {
             responseEmbed.setTitle(content);
         }
 
-        if (interaction.deferred && interaction.isChatInputCommand()) {
+        if (!forceFollowup && interaction.deferred && interaction.isChatInputCommand()) {
             await interaction.editReply({
                 content: '',
                 files: [],
                 components: [],
                 embeds: [responseEmbed]
             });
-        } else if (interaction.replied || !interaction.isChatInputCommand()) {
+        } else if (forceFollowup || interaction.replied || !interaction.isChatInputCommand()) {
             await interaction.followUp({
                 content: '',
                 files: [],

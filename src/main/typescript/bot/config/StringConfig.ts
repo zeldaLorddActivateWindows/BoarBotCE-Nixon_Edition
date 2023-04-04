@@ -22,6 +22,7 @@ export class StringConfig {
     public readonly noGuild: string = ' ';
     public readonly nullFound: string = ' ';
     public readonly invalidID: string = ' ';
+    public readonly invalidPage: string = ' ';
     public readonly onCooldown: string = ' ';
     public readonly noAttachmentPerms: string = ' ';
     public readonly error: string = ' ';

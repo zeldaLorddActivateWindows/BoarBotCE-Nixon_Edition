@@ -93,9 +93,9 @@ export default class SetupSubcommand implements Subcommand {
         });
 
         this.collector.on('collect', async (inter: StringSelectMenuInteraction | ButtonInteraction) =>
-            this.handleCollect(inter)
+            await this.handleCollect(inter)
         );
-        this.collector.once('end', async (collected, reason) => this.handleEndCollect(reason));
+        this.collector.once('end', async (collected, reason) => await this.handleEndCollect(reason));
     }
 
     /**
@@ -116,11 +116,6 @@ export default class SetupSubcommand implements Subcommand {
             LogDebug.sendDebug(
                 `${inter.customId.split('|')[0]} on field ${this.curField}`, this.config, this.firstInter
             );
-
-            if (BoarBotApp.getBot().getConfig().maintenanceMode && !this.config.devs.includes(inter.user.id)) {
-                this.collector.stop(CollectorUtils.Reasons.Maintenance);
-                return;
-            }
 
             const setupRowConfig = this.config.commandConfigs.boarManage.setup.componentFields;
             const setupComponents = {
@@ -356,9 +351,6 @@ export default class SetupSubcommand implements Subcommand {
             }
 
             switch (reason) {
-                case CollectorUtils.Reasons.Maintenance:
-                    replyContent = strConfig.maintenance;
-                    break;
                 case CollectorUtils.Reasons.Cancelled:
                     replyContent = strConfig.setupCancelled;
                     break;
@@ -454,7 +446,7 @@ export default class SetupSubcommand implements Subcommand {
         const modals = this.config.commandConfigs.boarManage.setup.modals;
 
         this.modalShowing = new ModalBuilder(modals[this.curField-1]);
-        this.modalShowing.setCustomId(modals[this.curField-1].customId + inter.id);
+        this.modalShowing.setCustomId(modals[this.curField-1].customId + + '|' + inter.id);
         await inter.showModal(this.modalShowing);
 
         inter.client.on(
@@ -509,6 +501,12 @@ export default class SetupSubcommand implements Subcommand {
 
             let submittedChannelName: string;
             let submittedChannelParentName: string = strConfig.noParentChannel;
+
+            LogDebug.sendDebug(
+                `${submittedModal.customId.split('|')[0]} input value: ` + submittedChannelID,
+                this.config,
+                this.firstInter
+            );
 
             // Checking if channel exists and getting properties of channel
             if (submittedChannel && submittedChannel.isTextBased() && notAlreadyChosen) {

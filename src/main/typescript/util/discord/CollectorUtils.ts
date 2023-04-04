@@ -11,7 +11,6 @@ enum Reasons {
     Finished = 'finished',
     Cancelled = 'cancelled',
     Error = 'error',
-    Maintenance = 'maintenance',
     Expired = 'idle'
 }
 
