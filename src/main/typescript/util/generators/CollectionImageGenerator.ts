@@ -43,26 +43,13 @@ export class CollectionImageGenerator {
 
         const strConfig = this.config.stringConfig;
         const nums = this.config.numberConfig;
-        const pathConfig = this.config.pathConfig;
         const colorConfig = this.config.colorConfig;
 
-        // Asset path info
-
-        const collectionFolder = pathConfig.collAssets;
-        const boarsFolder = pathConfig.boarImages;
-        const collectionUnderlay = collectionFolder + pathConfig.collUnderlay;
-        const noClan = collectionFolder + pathConfig.clanNone;
-
-        // Maximums
+        const collectionUnderlay = this.config.pathConfig.collAssets + this.config.pathConfig.collUnderlay;
 
         const maxUniques = Object.keys(this.config.boarItemConfigs).length;
 
-        // Non-trivial user information
-
         const userUniques = Object.keys(this.boarUser.boarCollection).length;
-        const userTag = this.boarUser.user.username.substring(0, nums.maxUsernameLength) + '#' +
-            this.boarUser.user.discriminator;
-        const userAvatar = this.boarUser.user.displayAvatarURL({ extension: 'png' });
 
         // Fixes stats through flooring/alternate values
 
@@ -74,47 +61,18 @@ export class CollectionImageGenerator {
         const lastDailyString = this.boarUser.lastDaily > 0
             ? moment(this.boarUser.lastDaily).fromNow()
             : strConfig.unavailable;
-        const firstDate = this.boarUser.firstDaily > 0
-            ? new Date(this.boarUser.firstDaily).toLocaleString('en-US',{month:'long',day:'numeric',year:'numeric'})
-            : strConfig.unavailable;
 
         // Font info
 
-        const fontName = strConfig.fontName;
-        const bigFont = `${nums.fontBig}px ${fontName}`;
-        const mediumFont = `${nums.fontMedium}px ${fontName}`;
-        const smallFont = `${nums.fontSmallMedium}px ${fontName}`;
+        const bigFont = `${nums.fontBig}px ${strConfig.fontName}`;
+        const mediumFont = `${nums.fontMedium}px ${strConfig.fontName}`;
+        const smallFont = `${nums.fontSmallMedium}px ${strConfig.fontName}`;
 
         const canvas = Canvas.createCanvas(nums.collImageSize[0], nums.collImageSize[1]);
         const ctx = canvas.getContext('2d');
 
-        // Draws underlay
-
         ctx.drawImage(await Canvas.loadImage(collectionUnderlay), ...nums.originPos, ...nums.collImageSize);
-
-        // Draws top bar information
-
-        ctx.drawImage(await Canvas.loadImage(userAvatar), ...nums.collUserAvatarPos, ...nums.collUserAvatarSize);
-        CanvasUtils.drawText(ctx, userTag, nums.collUserTagPos, mediumFont, 'left', colorConfig.font);
-        CanvasUtils.drawText(ctx, strConfig.collDateLabel, nums.collDateLabelPos, mediumFont, 'left', colorConfig.font);
-        CanvasUtils.drawText(ctx, firstDate, nums.collDatePos, mediumFont, 'left', colorConfig.font);
-        ctx.drawImage(await Canvas.loadImage(noClan), ...nums.collClanPos, ...nums.collClanSize);
-
-        if (this.boarUser.badges.length === 0) {
-            CanvasUtils.drawText(
-                ctx, strConfig.collNoBadges, nums.collNoBadgePos, mediumFont, 'left', colorConfig.font
-            );
-        }
-
-        // Draws badge information if the user has badges
-
-        for (let i=0; i<this.boarUser.badges.length; i++) {
-            const badgesFolder = pathConfig.badgeImages;
-            const badgeXY: [number, number] = [nums.collBadgeStart + i * nums.collBadgeSpacing, nums.collBadgeY];
-            const badgeFile = badgesFolder + this.config.badgeItemConfigs[this.boarUser.badges[i]].file;
-
-            ctx.drawImage(await Canvas.loadImage(badgeFile), ...badgeXY, ...nums.collBadgeSize);
-        }
+        await this.drawTopBar(ctx);
 
         // Draws stats information
 
@@ -253,7 +211,112 @@ export class CollectionImageGenerator {
      *
      * @private
      */
-    public async createDetailedBase(): Promise<void> {}
+    public async createDetailedBase(): Promise<void> {
+        // Config aliases
+
+        const strConfig = this.config.stringConfig;
+        const nums = this.config.numberConfig;
+        const colorConfig = this.config.colorConfig;
+
+        const collectionUnderlay = this.config.pathConfig.collAssets + this.config.pathConfig.collDetailUnderlay;
+
+        // Font info
+
+        const mediumFont = `${nums.fontMedium}px ${strConfig.fontName}`;
+
+        const canvas = Canvas.createCanvas(nums.collImageSize[0], nums.collImageSize[1]);
+        const ctx = canvas.getContext('2d');
+
+        ctx.drawImage(await Canvas.loadImage(collectionUnderlay), ...nums.originPos, ...nums.collImageSize);
+        await this.drawTopBar(ctx);
+
+        // Draws labels
+
+        CanvasUtils.drawText(
+            ctx, strConfig.collIndivTotalLabel, nums.collIndivTotalLabelPos, mediumFont, 'center', colorConfig.font
+        );
+
+        CanvasUtils.drawText(
+            ctx, strConfig.collFirstObtainedLabel, nums.collFirstObtainedLabelPos,
+            mediumFont, 'center', colorConfig.font
+        );
+
+        CanvasUtils.drawText(
+            ctx, strConfig.collLastObtainedLabel, nums.collLastObtainedLabelPos, mediumFont, 'center', colorConfig.font
+        );
+
+        CanvasUtils.drawText(
+            ctx, strConfig.collDescriptionLabel, nums.collDescriptionLabelPos, mediumFont, 'center', colorConfig.font
+        );
+
+        this.detailedBase = canvas.toBuffer();
+    }
+
+    public detailedBaseMade(): boolean {
+        return Object.keys(this.detailedBase).length !== 0;
+    }
+
+    /**
+     * Finalizes the Detailed view image
+     *
+     * @private
+     */
+    public async finalizeDetailedImage(page: number): Promise<AttachmentBuilder> {
+        // Config aliases
+
+        const strConfig = this.config.stringConfig;
+        const pathConfig = this.config.pathConfig;
+        const nums = this.config.numberConfig;
+        const colorConfig = this.config.colorConfig;
+
+        // Asset path info
+
+        const boarsFolder = pathConfig.boarImages;
+        const collectionOverlay = pathConfig.collAssets + pathConfig.collDetailOverlay;
+
+        const bigFont = `${nums.fontBig}px ${strConfig.fontName}`;
+        const mediumFont = `${nums.fontMedium}px ${strConfig.fontName}`;
+        const smallMediumFont = `${nums.fontSmallMedium}px ${strConfig.fontName}`;
+        const smallestFont = `${nums.fontSmallest}px ${strConfig.fontName}`;
+
+        const curBoar = this.allBoars[page];
+
+        const boarFile = boarsFolder + curBoar.file;
+        const firstObtainedDate = new Date(curBoar.firstObtained)
+            .toLocaleString('en-US',{month:'long',day:'numeric',year:'numeric'});
+        const lastObtainedDate = new Date(curBoar.lastObtained)
+            .toLocaleString('en-US',{month:'long',day:'numeric',year:'numeric'});
+
+        const canvas = Canvas.createCanvas(nums.collImageSize[0], nums.collImageSize[1]);
+        const ctx = canvas.getContext('2d');
+
+        ctx.drawImage(await Canvas.loadImage(this.detailedBase), ...nums.originPos, ...nums.collImageSize);
+
+        ctx.drawImage(canvas, ...nums.originPos, ...nums.collImageSize);
+
+        ctx.drawImage(await Canvas.loadImage(boarFile), ...nums.collIndivBoarPos, ...nums.collIndivBoarSize);
+
+        CanvasUtils.drawText(
+            ctx, curBoar.num, nums.collIndivTotalPos, smallMediumFont, "center", colorConfig.font
+        );
+
+        CanvasUtils.drawText(
+            ctx, firstObtainedDate, nums.collFirstObtainedPos, smallMediumFont, "center", colorConfig.font
+        );
+
+        CanvasUtils.drawText(
+            ctx, lastObtainedDate, nums.collLastObtainedPos, smallMediumFont, "center", colorConfig.font
+        );
+
+        CanvasUtils.drawText(
+            ctx, curBoar.description, nums.collDescriptionPos, smallestFont,
+            "center", colorConfig.font, nums.collDescriptionWidth, true
+        );
+
+        ctx.drawImage(await Canvas.loadImage(collectionOverlay), ...nums.originPos, ...nums.collImageSize);
+
+        return new AttachmentBuilder(canvas.toBuffer());
+    }
 
     /**
      * Creates the base image of the Powerups view
@@ -261,4 +324,51 @@ export class CollectionImageGenerator {
      * @private
      */
     public async createPowerupsBase(): Promise<void> {}
+
+    public async drawTopBar(ctx: Canvas.CanvasRenderingContext2D,): Promise<void> {
+        // Config aliases
+
+        const strConfig = this.config.stringConfig;
+        const pathConfig = this.config.pathConfig;
+        const nums = this.config.numberConfig;
+        const colorConfig = this.config.colorConfig;
+
+        const noClan = pathConfig.collAssets + pathConfig.clanNone;
+
+        // Non-trivial user information
+
+        const userTag = this.boarUser.user.username.substring(0, nums.maxUsernameLength) + '#' +
+            this.boarUser.user.discriminator;
+        const userAvatar = this.boarUser.user.displayAvatarURL({ extension: 'png' });
+
+        // Fixes stats through flooring/alternate values
+
+        const firstDate = this.boarUser.firstDaily > 0
+            ? new Date(this.boarUser.firstDaily).toLocaleString('en-US',{month:'long',day:'numeric',year:'numeric'})
+            : strConfig.unavailable;
+
+        const mediumFont = `${nums.fontMedium}px ${strConfig.fontName}`;
+
+        ctx.drawImage(await Canvas.loadImage(userAvatar), ...nums.collUserAvatarPos, ...nums.collUserAvatarSize);
+        CanvasUtils.drawText(ctx, userTag, nums.collUserTagPos, mediumFont, 'left', colorConfig.font);
+        CanvasUtils.drawText(ctx, strConfig.collDateLabel, nums.collDateLabelPos, mediumFont, 'left', colorConfig.font);
+        CanvasUtils.drawText(ctx, firstDate, nums.collDatePos, mediumFont, 'left', colorConfig.font);
+        ctx.drawImage(await Canvas.loadImage(noClan), ...nums.collClanPos, ...nums.collClanSize);
+
+        if (this.boarUser.badges.length === 0) {
+            CanvasUtils.drawText(
+                ctx, strConfig.collNoBadges, nums.collNoBadgePos, mediumFont, 'left', colorConfig.font
+            );
+        }
+
+        // Draws badge information if the user has badges
+
+        for (let i=0; i<this.boarUser.badges.length; i++) {
+            const badgesFolder = pathConfig.badgeImages;
+            const badgeXY: [number, number] = [nums.collBadgeStart + i * nums.collBadgeSpacing, nums.collBadgeY];
+            const badgeFile = badgesFolder + this.config.badgeItemConfigs[this.boarUser.badges[i]].file;
+
+            ctx.drawImage(await Canvas.loadImage(badgeFile), ...badgeXY, ...nums.collBadgeSize);
+        }
+    }
 }

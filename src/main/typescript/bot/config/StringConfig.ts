@@ -75,6 +75,10 @@ export class StringConfig {
     public readonly collLastDailyLabel: string = ' ';
     public readonly collFavLabel: string = ' ';
     public readonly collRecentLabel: string = ' ';
+    public readonly collIndivTotalLabel: string = ' ';
+    public readonly collFirstObtainedLabel: string = ' ';
+    public readonly collLastObtainedLabel: string = ' ';
+    public readonly collDescriptionLabel: string = ' ';
 
     // Miscellaneous strings
 

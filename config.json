@@ -22,6 +22,8 @@
         "itemNameplate": "DailyNameplate.png",
         "collOverlay": "BoarCollectionOverlay.png",
         "collUnderlay": "BoarCollectionUnderlay.png",
+        "collDetailOverlay": "BoarCollectionDetailedOverlay.png",
+        "collDetailUnderlay": "BoarCollectionDetailedUnderlay.png",
         "clanNone": "BoarClanNone.png",
         "enhancerOn": "EnhancerActive.png",
         "enhancerOff": "EnhancerInactive.png",
@@ -84,6 +86,10 @@
         "collLastDailyLabel": "Last Daily",
         "collFavLabel": "FAVORITE",
         "collRecentLabel": "RECENT",
+        "collIndivTotalLabel": "Total Collected",
+        "collFirstObtainedLabel": "First Obtained",
+        "collLastObtainedLabel": "Last Gotten",
+        "collDescriptionLabel": "Description",
         "noParentChannel": "NO CATEGORY",
         "notValidChannel": "This channel isn't valid! Try a different one! The channel should be:\n- A text channel\n- Not already chosen\n- Exists in this server",
         "defaultSelectPlaceholder": "UNSELECTED",
@@ -474,6 +480,7 @@
         "maxBoars": 99999999,
         "maxStreak": 99999999,
         "maxDailies": 99999999,
+        "maxIndivBoars": 9999999999999999999,
         "rarityIncreaseConst": 25000,
         "itemImageSize": [930, 1080],
         "itemBoarPos": [27, 169],
@@ -513,6 +520,15 @@
         "collStreakPos": [538, 726],
         "collLastDailyLabelPos": [370, 846],
         "collLastDailyPos": [370, 946],
+        "collIndivTotalLabelPos": [370, 468],
+        "collIndivTotalPos": [370, 539],
+        "collFirstObtainedLabelPos": [370, 643],
+        "collFirstObtainedPos": [370, 714],
+        "collLastObtainedLabelPos": [370, 818],
+        "collLastObtainedPos": [370, 889],
+        "collDescriptionLabelPos": [370, 1003],
+        "collDescriptionPos": [370, 1230],
+        "collDescriptionWidth": 630,
         "collBoarsPerPage": 16,
         "collBoarStartX": 740,
         "collBoarStartY": 210,
@@ -530,7 +546,9 @@
         "collRecentLabelPos": [485, 1070],
         "collFavBoarPos": [26, 1037],
         "collFavBoarSize": [329, 329],
-        "collFavLabelPos": [130, 1070]
+        "collFavLabelPos": [130, 1070],
+        "collIndivBoarPos": [741, 210],
+        "collIndivBoarSize": [1156, 1156]
     },
     "boarItemConfigs": {
         "normal": {
@@ -543,10 +561,9 @@
         "explosionless": {
             "name": "Explosionless Boar",
             "file": "ExplosionlessBoar.png",
-            "description": "Its mind was blown so hard it refuses to ignite anymore. If it ever does, though, it's assumed its explosion would be cataclysmic.",
+            "description": "Its mind was blown so hard that it refuses to ignite anymore. If it ever does, though, it's assumed its explosion would be... cataclysmic.",
             "isSB": false,
-            "blacklisted": false,
-            "rarity": {"$ref":  "#/rarityConfigs/rarity1"}
+            "blacklisted": false
         },
         "tiny": {
             "name": "Tiny Boar",
@@ -628,7 +645,7 @@
         "fruit": {
             "name": "Fruit Boar",
             "file": "FruitBoar.png",
-            "description": "This boar is part of cult with shape-shifting abilities. Instead of doing anything cool, though, they only shape shift into various fruit.",
+            "description": "This boar is part of a cult with shape-shifting abilities. Instead of doing anything cool, though, they only shape shift into various fruits.",
             "isSB": false,
             "blacklisted": false
         },
@@ -649,7 +666,7 @@
         "creepy": {
             "name": "Creepy Boar",
             "file": "CreepyBoar.png",
-            "description": "Looks striking similar to a normal boar at first glance, but is actually a supernatural being that lives in the skin of recently perished boars.",
+            "description": "Looks striking similar to a normal boar at first glance, but is actually a paranormal being that lives in the skin of recently perished boars.",
             "isSB": false,
             "blacklisted": false
         },
@@ -761,7 +778,7 @@
         "imposter": {
             "name": "Imposter Boar",
             "file": "ImposterBoar.png",
-            "description": "Kills its crew mates on the Internation Boar Station and frames it as a spacewalking accident. Its kill count is said to be in the dozens.",
+            "description": "Kills its crew mates on the International Boar Station and frames it as a spacewalking accident. Its kill count is said to be in the dozens.",
             "isSB": false,
             "blacklisted": false
         },

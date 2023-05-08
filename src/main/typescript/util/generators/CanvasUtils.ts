@@ -19,6 +19,8 @@ export class CanvasUtils {
      * @param font - Font to use for text
      * @param align - Alignment of text
      * @param color - Color of text
+     * @param wrap
+     * @param width
      */
     public static drawText(
         ctx: Canvas.CanvasRenderingContext2D,
@@ -26,13 +28,46 @@ export class CanvasUtils {
         pos: number[],
         font: string,
         align: CanvasTextAlign,
-        color: string
+        color: string,
+        width?: number,
+        wrap: boolean = false
     ): void {
         ctx.font = font;
         ctx.textAlign = align;
         ctx.fillStyle = color;
 
-        ctx.fillText(text, pos[0], pos[1]);
+        if (width != undefined && wrap) {
+            const words: string[] = text.split(" ");
+            const lineHeight: number = (ctx.measureText("Sp").actualBoundingBoxAscent +
+                ctx.measureText("Sp").actualBoundingBoxDescent) * 1.1;
+            let newHeight = pos[1];
+            let lines: string[] = [];
+            let curLine: string = "";
+
+            for (let i=0; i<words.length; i++) {
+                const word: string = words[i];
+
+                if (ctx.measureText(curLine + word + " ").width < width) {
+                    curLine += word + " ";
+                } else {
+                    lines.push(curLine.substring(0, curLine.length-1));
+                    curLine = word + " ";
+                }
+            }
+
+            lines.push(curLine);
+
+            newHeight -= lineHeight * lines.length / 2;
+
+            for (const line of lines) {
+                ctx.fillText(line, pos[0], newHeight);
+                newHeight += lineHeight;
+            }
+        } else if (width != undefined) {
+
+        } else {
+            ctx.fillText(text, pos[0], pos[1]);
+        }
     }
 
     /**

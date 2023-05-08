@@ -59,7 +59,6 @@ export class LogDebug {
 
         const completeString = prefix + time + debugMessage;
 
-        console.log(prefix + time + debugMessage);
         this.sendLogMessage(config, completeString);
     }
 
@@ -80,7 +79,6 @@ export class LogDebug {
             const completeString = prefix + time + errString;
             const config = BoarBotApp.getBot().getConfig();
 
-            console.log(completeString);
             await this.sendLogMessage(config, completeString);
 
             if (!interaction || !interaction.isChatInputCommand()) return;
@@ -104,7 +102,6 @@ export class LogDebug {
         const time = LogDebug.getPrefixTime();
         const completeString = prefix + time + `${message.author.tag} sent: ` + message.content;
 
-        console.log(completeString);
         await this.sendLogMessage(config, completeString);
 
         await message.reply(config.stringConfig.dmReceived);
@@ -129,6 +126,8 @@ export class LogDebug {
     }
 
     private static async sendLogMessage(config: BotConfig, message: string): Promise<void> {
+        console.log(message);
+
         if (BoarBotApp.getBot().getClient().isReady()) {
             InteractionUtils.getTextChannel(config, config.logChannel).then(async (logChannel) => {
                 if (!logChannel) return;

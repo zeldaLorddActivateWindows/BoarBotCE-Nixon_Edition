@@ -25,6 +25,7 @@ export class NumberConfig {
     public readonly maxBoars: number = 0;
     public readonly maxDailies: number = 0;
     public readonly maxStreak: number = 0;
+    public readonly maxIndivBoars: number = 0;
 
     // A constant used to determine how quickly to increase rarity
     public readonly rarityIncreaseConst: number = 0;
@@ -73,6 +74,15 @@ export class NumberConfig {
     public readonly collStreakPos: [number, number] = [0, 0];
     public readonly collLastDailyLabelPos: [number, number] = [0, 0];
     public readonly collLastDailyPos: [number, number] = [0, 0];
+    public readonly collIndivTotalLabelPos: [number, number] = [0, 0];
+    public readonly collIndivTotalPos: [number, number] = [0, 0];
+    public readonly collFirstObtainedLabelPos: [number, number] = [0, 0];
+    public readonly collFirstObtainedPos: [number, number] = [0, 0];
+    public readonly collLastObtainedLabelPos: [number, number] = [0, 0];
+    public readonly collLastObtainedPos: [number, number] = [0, 0];
+    public readonly collDescriptionLabelPos: [number, number] = [0, 0];
+    public readonly collDescriptionPos: [number, number] = [0, 0];
+    public readonly collDescriptionWidth: number = 0;
     public readonly collBoarStartX: number = 0;
     public readonly collBoarStartY: number = 0;
     public readonly collBoarSpacingX: number = 0;
@@ -90,4 +100,6 @@ export class NumberConfig {
     public readonly collFavBoarPos: [number, number] = [0, 0];
     public readonly collFavBoarSize: [number, number] = [0, 0];
     public readonly collFavLabelPos: [number, number] = [0, 0];
+    public readonly collIndivBoarPos: [number, number] = [0, 0];
+    public readonly collIndivBoarSize: [number, number] = [0, 0];
 }

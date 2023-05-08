@@ -1,5 +1,5 @@
 import {
-    ActionRowBuilder,
+    ActionRowBuilder, AttachmentBuilder,
     ButtonBuilder,
     ButtonInteraction,
     ChatInputCommandInteraction,
@@ -26,6 +26,11 @@ import {BoarUtils} from '../../util/boar/BoarUtils';
 import {CollectionImageGenerator} from '../../util/generators/CollectionImageGenerator';
 import {Replies} from '../../util/interactions/Replies';
 
+enum View {
+    Normal,
+    Detailed,
+    Powerup
+}
 
 /**
  * {@link CollectionSubcommand CollectionSubcommand.ts}
@@ -43,9 +48,11 @@ export default class CollectionSubcommand implements Subcommand {
     private compInter: ButtonInteraction = {} as ButtonInteraction;
     private collectionImage = {} as CollectionImageGenerator;
     private allBoars: any[] = [];
-    private curBoars: any[] = [];
     private boarUser: BoarUser = {} as BoarUser;
-    private baseCanvas: Canvas.Canvas = {} as Canvas.Canvas;
+    private baseRows: ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>[] = [];
+    private optionalRow: ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder> =
+        {} as ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>;
+    private curView: View = View.Normal;
     private curPage: number = 0;
     private maxPageNormal: number = 0;
     private timerVars = {
@@ -101,7 +108,7 @@ export default class CollectionSubcommand implements Subcommand {
 
             this.compInter = inter;
 
-            LogDebug.sendDebug(`${inter.customId.split('|')[0]} on field ${this.curPage}`, this.config, this.firstInter);
+            LogDebug.sendDebug(`${inter.customId.split('|')[0]} on page ${this.curPage}`, this.config, this.firstInter);
 
             const collRowConfig = this.config.commandConfigs.boar.collection.componentFields;
             const collComponents = {
@@ -131,6 +138,16 @@ export default class CollectionSubcommand implements Subcommand {
                 // User wants to go to the next page
                 case collComponents.rightPage.customId:
                     this.curPage++;
+                    break;
+
+                case collComponents.normalView.customId:
+                    this.curView = View.Normal;
+                    this.curPage = 0;
+                    break;
+
+                case collComponents.detailedView.customId:
+                    this.curView = View.Detailed;
+                    this.curPage = 0;
                     break;
             }
 
@@ -205,12 +222,18 @@ export default class CollectionSubcommand implements Subcommand {
                 `${submittedModal.customId.split('|')[0]} input value: ` + submittedPage, this.config, this.firstInter
             );
 
-            if (submittedPageInt) {
-                this.curPage = Math.max(Math.min(submittedPageInt, this.maxPageNormal), 0);
-                await this.showCollection();
-            } else {
+            if (Number.isNaN(submittedPageInt)) {
                 await Replies.handleReply(submittedModal, this.config.stringConfig.invalidPage);
+                return;
             }
+
+            if (this.curView == View.Normal) {
+                this.curPage = Math.max(Math.min(submittedPageInt-1, this.maxPageNormal), 0);
+            } else if (this.curView == View.Detailed) {
+                this.curPage = Math.max(Math.min(submittedPageInt-1, this.allBoars.length), 0);
+            }
+
+            await this.showCollection();
         } catch (err: unknown) {
             await LogDebug.handleError(err);
             this.collector.stop(CollectorUtils.Reasons.Error);
@@ -266,7 +289,8 @@ export default class CollectionSubcommand implements Subcommand {
                     firstObtained: boarInfo.firstObtained,
                     lastObtained: boarInfo.lastObtained,
                     rarity: rarity,
-                    color: this.config.colorConfig[rarity]
+                    color: this.config.colorConfig[rarity],
+                    description: boarDetails.description
                 });
             }
         } catch (err: unknown) {
@@ -282,37 +306,89 @@ export default class CollectionSubcommand implements Subcommand {
     private async showCollection() {
         if (!this.collectionImage.normalBaseMade()) {
             await this.collectionImage.createNormalBase();
+            this.initButtons();
         }
 
-        const finalImage = await this.collectionImage.finalizeNormalImage(this.curPage);
-
-        const collFieldConfigs = this.config.commandConfigs.boar.collection.componentFields;
-        const baseRows: ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>[] = [];
-        const optionalButtonsRow =
-            new ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>(collFieldConfigs[1][0]);
-
-        for (const rowConfig of collFieldConfigs[0]) {
-            let newRow = new ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>(rowConfig);
-
-            newRow = ComponentUtils.addToIDs(rowConfig, newRow, this.firstInter.id + this.firstInter.user.id);
-            baseRows.push(newRow);
+        if (this.curView == View.Detailed && !this.collectionImage.detailedBaseMade()) {
+            await this.collectionImage.createDetailedBase();
         }
+
+        let finalImage: AttachmentBuilder = new AttachmentBuilder(Buffer.from([0x00]));
+
+        if (this.curView == View.Normal) {
+            finalImage = await this.collectionImage.finalizeNormalImage(this.curPage);
+        } else if (this.curView == View.Detailed) {
+            finalImage = await this.collectionImage.finalizeDetailedImage(this.curPage);
+        }
+
+        this.disableButtons();
 
         // Enables next button if there's more than one page
-        if (this.maxPageNormal > this.curPage) {
-            baseRows[0].components[2].setDisabled(false);
+        if (
+            this.curView == View.Normal && this.maxPageNormal > this.curPage ||
+            this.curView == View.Detailed && this.allBoars.length > this.curPage
+        ) {
+            this.baseRows[0].components[2].setDisabled(false);
         }
 
         // Enables previous button if on a page other than the first
         if (this.curPage > 0) {
-            baseRows[0].components[0].setDisabled(false);
+            this.baseRows[0].components[0].setDisabled(false);
         }
 
         // Enables manual input button if there's more than one page
-        if (this.maxPageNormal > 0) {
-            baseRows[0].components[1].setDisabled(false);
+        if (
+            this.curView == View.Normal && this.maxPageNormal > 0 ||
+            this.curView == View.Detailed && this.allBoars.length > 0
+        ) {
+            this.baseRows[0].components[1].setDisabled(false);
         }
 
-        await this.firstInter.editReply({ files: [finalImage], components: baseRows });
+        // Allows pressing Normal view if not currently on it
+        if (this.curView !== View.Normal) {
+            this.baseRows[1].components[0].setDisabled(false);
+        }
+
+        // Allows pressing Detailed view if not currently on it and if there's boars to view
+        if (this.curView !== View.Detailed && this.allBoars.length > 0) {
+            this.baseRows[1].components[1].setDisabled(false);
+        }
+
+        // Allows pressing Powerup view if not currently on it
+        if (this.curView !== View.Powerup) {
+            this.baseRows[1].components[2].setDisabled(false);
+        }
+
+        await this.firstInter.editReply({ files: [finalImage], components: this.baseRows });
+    }
+
+    private initButtons(): void {
+        const collFieldConfigs = this.config.commandConfigs.boar.collection.componentFields;
+
+        for (let i=0; i<collFieldConfigs.length; i++) {
+            for (const rowConfig of collFieldConfigs[i]) {
+                let newRow = new ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>(rowConfig);
+
+                newRow = ComponentUtils.addToIDs(rowConfig, newRow, this.firstInter.id + this.firstInter.user.id);
+
+                if (i == 0) {
+                    this.baseRows.push(newRow);
+                } else {
+                    this.optionalRow = newRow;
+                }
+            }
+        }
+    }
+
+    private disableButtons(): void {
+        for (const row of this.baseRows) {
+            for (const component of row.components) {
+                component.setDisabled(true);
+            }
+        }
+
+        for (const component of this.optionalRow.components) {
+            component.setDisabled(true);
+        }
     }
 }
