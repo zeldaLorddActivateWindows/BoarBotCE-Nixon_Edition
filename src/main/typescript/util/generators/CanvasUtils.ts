@@ -34,6 +34,7 @@ export class CanvasUtils {
     ): void {
         ctx.font = font;
         ctx.textAlign = align;
+        ctx.textBaseline = "alphabetic";
         ctx.fillStyle = color;
 
         if (width != undefined && wrap) {
@@ -64,7 +65,12 @@ export class CanvasUtils {
                 newHeight += lineHeight;
             }
         } else if (width != undefined) {
-
+            while (ctx.measureText(text).width > width) {
+                font = (parseInt(font)-1) + font.substring(font.indexOf("px"));
+                ctx.font = font;
+            }
+            ctx.textBaseline = "middle";
+            ctx.fillText(text, pos[0], pos[1]);
         } else {
             ctx.fillText(text, pos[0], pos[1]);
         }

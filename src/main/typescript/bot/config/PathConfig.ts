@@ -43,6 +43,7 @@ export class PathConfig {
     public readonly clanNone: string = '';
     public readonly enhancerOn: string = '';
     public readonly enhancerOff: string = '';
+    public readonly favorite: string = '';
 
     // Other image/asset file names
 

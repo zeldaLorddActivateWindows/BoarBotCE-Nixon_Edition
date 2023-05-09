@@ -74,6 +74,11 @@ export class NumberConfig {
     public readonly collStreakPos: [number, number] = [0, 0];
     public readonly collLastDailyLabelPos: [number, number] = [0, 0];
     public readonly collLastDailyPos: [number, number] = [0, 0];
+    public readonly collIndivRarityPos: [number, number] = [0, 0];
+    public readonly collIndivFavHeight: number = 0;
+    public readonly collIndivFavSize: [number, number] = [0, 0];
+    public readonly collBoarNamePos: [number, number] = [0, 0];
+    public readonly collBoarNameWidth: number = 0;
     public readonly collIndivTotalLabelPos: [number, number] = [0, 0];
     public readonly collIndivTotalPos: [number, number] = [0, 0];
     public readonly collFirstObtainedLabelPos: [number, number] = [0, 0];

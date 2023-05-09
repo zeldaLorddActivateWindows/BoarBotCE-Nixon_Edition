@@ -64,7 +64,7 @@ export class BoarUser {
         this.themes = userData.themes;
         this.badges = userData.badges;
 
-        if (createFile) {
+        if (createFile || this.boarStreak > 0) {
             this.fixUserData(userData);
         }
     }
@@ -134,6 +134,7 @@ export class BoarUser {
         const userFile = config.pathConfig.userDataFolder + this.user.id + '.json';
 
         const boarsGottenIDs = Object.keys(this.boarCollection);
+        const twoDailiesAgo = Math.floor(new Date().setUTCHours(24,0,0,0)) - (1000 * 60 * 60 * 24 * 2);
 
         for (const boarID of boarsGottenIDs) {
             if (boarID !in config.boarItemConfigs) continue;
@@ -152,6 +153,11 @@ export class BoarUser {
         userData.totalBoars = this.totalBoars;
         userData.favoriteBoar = this.favoriteBoar;
         userData.lastBoar = this.lastBoar;
+
+        if (this.lastDaily < twoDailiesAgo) {
+            userData.powerups.multiplier = this.powerups.multiplier -= this.boarStreak;
+            userData.boarStreak = this.boarStreak = 0;
+        }
 
         fs.writeFileSync(userFile, JSON.stringify(userData));
     }

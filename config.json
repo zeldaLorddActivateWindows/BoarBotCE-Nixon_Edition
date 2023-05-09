@@ -27,6 +27,7 @@
         "clanNone": "BoarClanNone.png",
         "enhancerOn": "EnhancerActive.png",
         "enhancerOff": "EnhancerInactive.png",
+        "favorite": "favorite.png",
         "thankYouImage": "BoarBotThanks.png",
         "mainFont": "MinecraftFont.ttf",
         "helpBackground": "Help.png",
@@ -480,7 +481,7 @@
         "maxBoars": 99999999,
         "maxStreak": 99999999,
         "maxDailies": 99999999,
-        "maxIndivBoars": 9999999999999999999,
+        "maxIndivBoars": 999999999999999999,
         "rarityIncreaseConst": 25000,
         "itemImageSize": [930, 1080],
         "itemBoarPos": [27, 169],
@@ -520,6 +521,11 @@
         "collStreakPos": [538, 726],
         "collLastDailyLabelPos": [370, 846],
         "collLastDailyPos": [370, 946],
+        "collIndivRarityPos": [370, 290],
+        "collIndivFavHeight": 242,
+        "collIndivFavSize": [55, 55],
+        "collBoarNamePos": [370, 336],
+        "collBoarNameWidth": 635,
         "collIndivTotalLabelPos": [370, 468],
         "collIndivTotalPos": [370, 539],
         "collFirstObtainedLabelPos": [370, 643],
@@ -666,7 +672,7 @@
         "creepy": {
             "name": "Creepy Boar",
             "file": "CreepyBoar.png",
-            "description": "Looks striking similar to a normal boar at first glance, but is actually a paranormal being that lives in the skin of recently perished boars.",
+            "description": "Looks strikingly similar to a normal boar at first glance, but is actually a paranormal being that lives in the skin of recently perished boars.",
             "isSB": false,
             "blacklisted": false
         },
@@ -815,7 +821,7 @@
     "rarityConfigs": [
         {
             "name": "Common",
-            "weight": 7,
+            "weight": 825,
             "score": 1,
             "fromDaily": true,
             "boars": [
@@ -826,7 +832,7 @@
         },
         {
             "name": "Uncommon",
-            "weight": 6,
+            "weight": 100,
             "score": 10,
             "fromDaily": true,
             "boars": [
@@ -840,7 +846,7 @@
         },
         {
             "name": "Rare",
-            "weight": 5,
+            "weight": 40,
             "score": 25,
             "fromDaily": true,
             "boars": [
@@ -855,7 +861,7 @@
         },
         {
             "name": "Epic",
-            "weight": 4,
+            "weight": 20,
             "score": 50,
             "fromDaily": true,
             "boars": [
@@ -870,7 +876,7 @@
         },
         {
             "name": "Legendary",
-            "weight": 3,
+            "weight": 10,
             "score": 100,
             "fromDaily": true,
             "boars": [
@@ -881,7 +887,7 @@
         },
         {
             "name": "Mythic",
-            "weight": 2,
+            "weight": 4,
             "score": 250,
             "fromDaily": true,
             "boars": [

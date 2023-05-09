@@ -1,14 +1,10 @@
 import Canvas from 'canvas';
 import {BotConfig} from '../../bot/config/BotConfig';
-import {BoarItemConfig} from '../../bot/config/items/BoarItemConfig';
-import {BadgeItemConfig} from '../../bot/config/items/BadgeItemConfig';
 import {BoarUtils} from '../boar/BoarUtils';
-import {Options, PythonShell} from 'python-shell';
 import {LogDebug} from '../logging/LogDebug';
 import {CanvasUtils} from './CanvasUtils';
 import {AttachmentBuilder} from 'discord.js';
 import {BoarUser} from '../boar/BoarUser';
-import fs from 'fs';
 import moment from 'moment/moment';
 
 /**
@@ -48,7 +44,6 @@ export class CollectionImageGenerator {
         const collectionUnderlay = this.config.pathConfig.collAssets + this.config.pathConfig.collUnderlay;
 
         const maxUniques = Object.keys(this.config.boarItemConfigs).length;
-
         const userUniques = Object.keys(this.boarUser.boarCollection).length;
 
         // Fixes stats through flooring/alternate values
@@ -220,8 +215,6 @@ export class CollectionImageGenerator {
 
         const collectionUnderlay = this.config.pathConfig.collAssets + this.config.pathConfig.collDetailUnderlay;
 
-        // Font info
-
         const mediumFont = `${nums.fontMedium}px ${strConfig.fontName}`;
 
         const canvas = Canvas.createCanvas(nums.collImageSize[0], nums.collImageSize[1]);
@@ -268,11 +261,14 @@ export class CollectionImageGenerator {
         const pathConfig = this.config.pathConfig;
         const nums = this.config.numberConfig;
         const colorConfig = this.config.colorConfig;
+        const rarityConfig = this.config.rarityConfigs;
 
         // Asset path info
 
         const boarsFolder = pathConfig.boarImages;
         const collectionOverlay = pathConfig.collAssets + pathConfig.collDetailOverlay;
+
+        // Font info
 
         const bigFont = `${nums.fontBig}px ${strConfig.fontName}`;
         const mediumFont = `${nums.fontMedium}px ${strConfig.fontName}`;
@@ -281,7 +277,10 @@ export class CollectionImageGenerator {
 
         const curBoar = this.allBoars[page];
 
+        // Dynamic information (stats, images)
+
         const boarFile = boarsFolder + curBoar.file;
+        const numCollectedString = Math.min(curBoar.num, nums.maxIndivBoars).toLocaleString();
         const firstObtainedDate = new Date(curBoar.firstObtained)
             .toLocaleString('en-US',{month:'long',day:'numeric',year:'numeric'});
         const lastObtainedDate = new Date(curBoar.lastObtained)
@@ -291,13 +290,40 @@ export class CollectionImageGenerator {
         const ctx = canvas.getContext('2d');
 
         ctx.drawImage(await Canvas.loadImage(this.detailedBase), ...nums.originPos, ...nums.collImageSize);
-
         ctx.drawImage(canvas, ...nums.originPos, ...nums.collImageSize);
-
         ctx.drawImage(await Canvas.loadImage(boarFile), ...nums.collIndivBoarPos, ...nums.collIndivBoarSize);
 
+        // Shows a star when on a favorite boar
+
+        let indivRarityPos: [number, number] = [...nums.collIndivRarityPos];
+        if (curBoar.id == this.boarUser.favoriteBoar) {
+            const favoriteFile = pathConfig.collAssets + pathConfig.favorite;
+            let favoritePos: [number, number];
+
+            indivRarityPos[0] -= nums.collIndivFavSize[0] / 2 + 10;
+            ctx.font = mediumFont;
+            favoritePos = [
+                ctx.measureText(rarityConfig[curBoar.rarity-1].name.toUpperCase()).width / 2 + indivRarityPos[0] + 10,
+                nums.collIndivFavHeight
+            ];
+
+            ctx.drawImage(await Canvas.loadImage(favoriteFile), ...favoritePos, ...nums.collIndivFavSize);
+        }
+
+        // Draws stats
+
         CanvasUtils.drawText(
-            ctx, curBoar.num, nums.collIndivTotalPos, smallMediumFont, "center", colorConfig.font
+            ctx, rarityConfig[curBoar.rarity-1].name.toUpperCase(), indivRarityPos,
+            mediumFont, "center", curBoar.color
+        );
+
+        CanvasUtils.drawText(
+            ctx, curBoar.name, nums.collBoarNamePos, bigFont,
+            "center", colorConfig.font, nums.collBoarNameWidth
+        );
+
+        CanvasUtils.drawText(
+            ctx, numCollectedString, nums.collIndivTotalPos, smallMediumFont, "center", colorConfig.font
         );
 
         CanvasUtils.drawText(

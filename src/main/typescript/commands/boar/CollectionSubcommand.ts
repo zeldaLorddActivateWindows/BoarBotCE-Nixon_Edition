@@ -50,8 +50,8 @@ export default class CollectionSubcommand implements Subcommand {
     private allBoars: any[] = [];
     private boarUser: BoarUser = {} as BoarUser;
     private baseRows: ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>[] = [];
-    private optionalRow: ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder> =
-        {} as ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>;
+    private optionalButtons: ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder> =
+        new ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>;
     private curView: View = View.Normal;
     private curPage: number = 0;
     private maxPageNormal: number = 0;
@@ -117,7 +117,8 @@ export default class CollectionSubcommand implements Subcommand {
                 rightPage: collRowConfig[0][0].components[2],
                 normalView: collRowConfig[0][1].components[0],
                 detailedView: collRowConfig[0][1].components[1],
-                powerupView: collRowConfig[0][1].components[2]
+                powerupView: collRowConfig[0][1].components[2],
+                favorite: collRowConfig[1][0].components[0]
             };
 
             // User wants to input a page manually
@@ -148,6 +149,13 @@ export default class CollectionSubcommand implements Subcommand {
                 case collComponents.detailedView.customId:
                     this.curView = View.Detailed;
                     this.curPage = 0;
+                    break;
+
+                case collComponents.favorite.customId:
+                    await Queue.addQueue(() => {
+                        this.boarUser.favoriteBoar = this.allBoars[this.curPage].id;
+                        this.boarUser.updateUserData();
+                    }, inter.id + this.boarUser.user.id);
                     break;
             }
 
@@ -230,7 +238,7 @@ export default class CollectionSubcommand implements Subcommand {
             if (this.curView == View.Normal) {
                 this.curPage = Math.max(Math.min(submittedPageInt-1, this.maxPageNormal), 0);
             } else if (this.curView == View.Detailed) {
-                this.curPage = Math.max(Math.min(submittedPageInt-1, this.allBoars.length), 0);
+                this.curPage = Math.max(Math.min(submittedPageInt-1, this.allBoars.length-1), 0);
             }
 
             await this.showCollection();
@@ -275,6 +283,9 @@ export default class CollectionSubcommand implements Subcommand {
             for (const boarID of Object.keys(this.boarUser.boarCollection)) {
                 // Local user boar information
                 const boarInfo = this.boarUser.boarCollection[boarID];
+
+                if (boarInfo.num == 0) continue;
+
                 const rarity: number = BoarUtils.findRarity(boarID);
 
                 // Global boar information
@@ -289,7 +300,7 @@ export default class CollectionSubcommand implements Subcommand {
                     firstObtained: boarInfo.firstObtained,
                     lastObtained: boarInfo.lastObtained,
                     rarity: rarity,
-                    color: this.config.colorConfig[rarity],
+                    color: this.config.colorConfig["rarity" + rarity],
                     description: boarDetails.description
                 });
             }
@@ -304,6 +315,11 @@ export default class CollectionSubcommand implements Subcommand {
      * @private
      */
     private async showCollection() {
+        const optionalRow: ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder> =
+            new ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>;
+
+        this.disableButtons();
+
         if (!this.collectionImage.normalBaseMade()) {
             await this.collectionImage.createNormalBase();
             this.initButtons();
@@ -319,9 +335,8 @@ export default class CollectionSubcommand implements Subcommand {
             finalImage = await this.collectionImage.finalizeNormalImage(this.curPage);
         } else if (this.curView == View.Detailed) {
             finalImage = await this.collectionImage.finalizeDetailedImage(this.curPage);
+            optionalRow.addComponents(this.optionalButtons.components[0].setDisabled(false));
         }
-
-        this.disableButtons();
 
         // Enables next button if there's more than one page
         if (
@@ -359,7 +374,11 @@ export default class CollectionSubcommand implements Subcommand {
             this.baseRows[1].components[2].setDisabled(false);
         }
 
-        await this.firstInter.editReply({ files: [finalImage], components: this.baseRows });
+        if (optionalRow.components.length > 0) {
+            await this.firstInter.editReply({ files: [finalImage], components: [...this.baseRows, optionalRow] });
+        } else {
+            await this.firstInter.editReply({ files: [finalImage], components: this.baseRows });
+        }
     }
 
     private initButtons(): void {
@@ -374,7 +393,7 @@ export default class CollectionSubcommand implements Subcommand {
                 if (i == 0) {
                     this.baseRows.push(newRow);
                 } else {
-                    this.optionalRow = newRow;
+                    this.optionalButtons = newRow;
                 }
             }
         }
@@ -387,7 +406,7 @@ export default class CollectionSubcommand implements Subcommand {
             }
         }
 
-        for (const component of this.optionalRow.components) {
+        for (const component of this.optionalButtons.components) {
             component.setDisabled(true);
         }
     }

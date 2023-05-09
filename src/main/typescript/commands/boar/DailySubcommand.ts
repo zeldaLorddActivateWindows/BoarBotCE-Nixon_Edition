@@ -57,6 +57,7 @@ export default class DailySubcommand implements Subcommand {
             // New boar user object used for easier manipulation of data
             const boarUser = new BoarUser(this.interaction.user, true);
 
+            const nextBoarTime = Math.floor(new Date().setUTCHours(24,0,0,0));
             const canUseDaily = await this.canUseDaily(boarUser);
             if (!canUseDaily) return;
 
@@ -65,14 +66,16 @@ export default class DailySubcommand implements Subcommand {
             const userMultiplier: number = boarUser.powerups.multiplier;
             rarityWeights = this.applyMultiplier(userMultiplier, rarityWeights);
 
-            boarUser.lastDaily = Date.now();
-
             const boarID = await this.getDaily(rarityWeights);
 
             if (!boarID) {
                 await LogDebug.handleError(this.config.stringConfig.dailyNoBoarFound, this.interaction);
                 return;
             }
+
+            boarUser.boarStreak++;
+            boarUser.powerups.multiplier++;
+            boarUser.lastDaily = Date.now();
 
             await boarUser.addBoar(this.config, boarID, this.interaction);
         } catch (err: unknown) {
@@ -179,6 +182,8 @@ export default class DailySubcommand implements Subcommand {
             return prob;
         }));
 
+        LogDebug.sendDebug(`Probabilities: ${[...probabilities]}`, this.config, this.interaction);
+
         // Finds the rarity that was rolled and adds a random boar from that rarity to user profile
         for (const probabilityInfo of probabilities) {
             const rarityIndex = probabilityInfo[0];
@@ -186,7 +191,7 @@ export default class DailySubcommand implements Subcommand {
 
             // Goes to next probability if randomRarity is higher
             // Keeps going if it's the rarity with the highest probability
-            if (randomRarity > probability && Math.max(...[...probabilities.values()]) !== probability)
+            if (randomRarity > probability && Math.max(...probabilities.values()) !== probability)
                 continue;
 
             const boarGotten = this.findValid(rarityIndex);
