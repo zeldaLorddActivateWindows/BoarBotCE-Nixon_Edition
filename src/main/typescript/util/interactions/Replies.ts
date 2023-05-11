@@ -8,6 +8,8 @@ import {
 import {BotConfig} from '../../bot/config/BotConfig';
 import {FormatStrings} from '../discord/FormatStrings';
 import {LogDebug} from '../logging/LogDebug';
+import {BoarBot} from '../../bot/BoarBot';
+import {BoarBotApp} from '../../BoarBotApp';
 
 /**
  * {@link Replies Replies.ts}
@@ -101,7 +103,7 @@ export class Replies {
     public static async handleReply(
         interaction: ChatInputCommandInteraction | MessageComponentInteraction | ModalSubmitInteraction,
         content: string,
-        color: ColorResolvable = 0x4F545C,
+        color: ColorResolvable = BoarBotApp.getBot().getConfig().colorConfig.baseEmbed as ColorResolvable,
         forceFollowup: boolean = false
     ): Promise<void> {
         const responseEmbed: EmbedBuilder = new EmbedBuilder()

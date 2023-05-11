@@ -7,7 +7,7 @@ import {LogDebug} from '../../util/logging/LogDebug';
 /**
  * {@link ConfigHandler ConfigHandler.ts}
  *
- * Handles loading, getting, and verifying config
+ * Handles loading, getting, and validating config
  * information for a bot instance.
  *
  * @license {@link http://www.apache.org/licenses/ Apache-2.0}
@@ -31,8 +31,8 @@ export class ConfigHandler {
             process.exit(-1);
         }
 
-        if (!await this.verifyConfig(parsedConfig)) {
-            LogDebug.sendDebug('Failed to verify config file, sticking with old/default version.', this.config);
+        if (!await this.validateConfig(parsedConfig)) {
+            LogDebug.sendDebug('Failed to validate config file, sticking with old/default version.', this.config);
             return;
         }
 
@@ -45,12 +45,12 @@ export class ConfigHandler {
     }
 
     /**
-     * Verifies the contents of the data in the configuration file
+     * Validates the contents of the data in the configuration file
      *
-     * @return passed - Whether the config file passed verification
+     * @return passed - Whether the config file passed validation
      * @private
      */
-    private async verifyConfig(parsedConfig: BotConfig): Promise<boolean> {
+    private async validateConfig(parsedConfig: BotConfig): Promise<boolean> {
         const rarities = parsedConfig.rarityConfigs;
         const boars = parsedConfig.boarItemConfigs;
         const boarIDs = Object.keys(boars);

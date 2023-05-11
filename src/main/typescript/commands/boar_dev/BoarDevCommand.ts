@@ -48,15 +48,15 @@ export default class BoarDevCommand implements Command {
         const exports = require(subcommand.data.path);
         const commandClass = new exports.default();
 
-        if (interaction.isChatInputCommand()) {
+        if (interaction.isAutocomplete()) {
             try {
-                await commandClass.execute(interaction);
+                await commandClass.autocomplete(interaction);
             } catch (err: unknown) {
                 await LogDebug.handleError(err, interaction);
             }
-        } else if (interaction.isAutocomplete()) {
+        } else if (interaction.isChatInputCommand()) {
             try {
-                await commandClass.autocomplete(interaction);
+                await commandClass.execute(interaction);
             } catch (err: unknown) {
                 await LogDebug.handleError(err, interaction);
             }

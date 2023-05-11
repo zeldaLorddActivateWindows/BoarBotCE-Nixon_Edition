@@ -14,6 +14,11 @@ export class ColorConfig {
 
     public readonly badge: string = '#000000';
 
+    public readonly editionEmbed: string = '#000000';
+    public readonly baseEmbed: string = '#000000';
+    public readonly maintenance: string = '#000000';
+    public readonly error: string = '#000000';
+
     public readonly rarity1: string = '#000000';
     public readonly rarity2: string = '#000000';
     public readonly rarity3: string = '#000000';

@@ -15,6 +15,13 @@ export class FormatStrings {
     public static toRelTime(timestamp: number) { return `<t:${timestamp}:R>`; }
 
     /**
+     * Converts a timestamp to long data and time using Discord's formatted strings
+     *
+     * @param timestamp - The timestamp to convert
+     */
+    public static toShortDateTime(timestamp: number) { return `<t:${timestamp}:f>`}
+
+    /**
      * Converts a channel ID into a clickable channel link using Discord's formatted strings
      *
      * @param id - The channel ID to convert

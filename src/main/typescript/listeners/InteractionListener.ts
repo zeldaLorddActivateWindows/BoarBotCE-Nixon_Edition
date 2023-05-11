@@ -1,6 +1,6 @@
 import {
     AutocompleteInteraction,
-    ChatInputCommandInteraction,
+    ChatInputCommandInteraction, ColorResolvable,
     EmbedBuilder,
     Events,
     Interaction,
@@ -67,7 +67,9 @@ export default class InteractionListener implements Listener {
         if (this.config.maintenanceMode && !this.interaction.isAutocomplete()
             && !this.config.devs.includes(this.interaction.user.id)
         ) {
-            await Replies.handleReply(this.interaction, strConfig.maintenance, 0xFFFF00);
+            await Replies.handleReply(
+                this.interaction, strConfig.maintenance, this.config.colorConfig.maintenance as ColorResolvable
+            );
             return false;
         }
 

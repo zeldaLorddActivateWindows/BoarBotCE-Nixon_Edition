@@ -79,6 +79,8 @@ export class StringConfig {
     public readonly collFirstObtainedLabel: string = ' ';
     public readonly collLastObtainedLabel: string = ' ';
     public readonly collDescriptionLabel: string = ' ';
+    public readonly collEditionTitle: string = ' ';
+    public readonly collEditionLine: string = ' ';
 
     // Miscellaneous strings
 

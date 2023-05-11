@@ -217,7 +217,7 @@ export default class SetupSubcommand implements Subcommand {
      *
      * @private
      */
-    private async doNext() {
+    private async doNext(): Promise<void> {
         const nextButton: ButtonBuilder = this.staticRow.components[2] as ButtonBuilder;
         nextButton.setDisabled(true);
 
@@ -236,7 +236,7 @@ export default class SetupSubcommand implements Subcommand {
      *
      * @private
      */
-    private async doTradeSelect() {
+    private async doTradeSelect(): Promise<void> {
         const selectInter = this.compInter as StringSelectMenuInteraction;
         this.userResponses.tradeChannelId = selectInter.values[0];
 
@@ -254,7 +254,7 @@ export default class SetupSubcommand implements Subcommand {
      *
      * @private
      */
-    private async doBoarSelect() {
+    private async doBoarSelect(): Promise<void> {
         const selectInter = this.compInter as StringSelectMenuInteraction;
 
         // Gets index to change based on ending number in select menu ID
@@ -278,7 +278,7 @@ export default class SetupSubcommand implements Subcommand {
      * @param setupComponents - Used to find if restarting and disabling the next button
      * @private
      */
-    private async doRefreshRestart(setupComponents: any) {
+    private async doRefreshRestart(setupComponents: any): Promise<void> {
         const strConfig = this.config.stringConfig;
         const isRestart = this.compInter.customId.startsWith(setupComponents.restart.customId);
         const nextButton: ButtonBuilder = this.staticRow.components[2] as ButtonBuilder;
@@ -318,7 +318,7 @@ export default class SetupSubcommand implements Subcommand {
      * @param setupComponents - Used to find what user chose and getting labels to display back
      * @private
      */
-    private async doSb(setupComponents: any) {
+    private async doSb(setupComponents: any): Promise<void> {
         const strConfig = this.config.stringConfig;
         this.userResponses.isSBServer = this.compInter.customId.startsWith(setupComponents.sbYes.customId);
 

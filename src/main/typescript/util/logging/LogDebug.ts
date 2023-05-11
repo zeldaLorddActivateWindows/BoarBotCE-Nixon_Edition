@@ -1,6 +1,6 @@
 import {
     AutocompleteInteraction,
-    ChatInputCommandInteraction,
+    ChatInputCommandInteraction, ColorResolvable,
     Message,
     ModalSubmitInteraction
 } from 'discord.js';
@@ -85,7 +85,7 @@ export class LogDebug {
 
             const errResponse = config.stringConfig.error;
 
-            await Replies.handleReply(interaction, errResponse, 0xED4245);
+            await Replies.handleReply(interaction, errResponse, config.colorConfig.error as ColorResolvable);
         } catch (err: unknown) {
             await this.handleError(err);
         }

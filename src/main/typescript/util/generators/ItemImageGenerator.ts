@@ -30,7 +30,7 @@ export class ItemImageGenerator {
     private userAvatar: string = '';
     private userTag: string = '';
     private itemInfo: BoarItemConfig | BadgeItemConfig = {} as BoarItemConfig;
-    private isBoar: boolean = true;
+    private isBadge: boolean = false;
 
     constructor(boarUser: BoarUser, config: BotConfig, id: string, title: string) {
         this.boarUser = boarUser;
@@ -52,14 +52,16 @@ export class ItemImageGenerator {
 
         let folderPath: string;
 
-        if (isBadge) {
+        this.isBadge = isBadge;
+
+        if (this.isBadge) {
             this.itemInfo = this.config.badgeItemConfigs[this.id];
             folderPath = pathConfig.badgeImages;
             this.rarityColorKey = 'badge';
         } else {
             this.itemInfo = this.config.boarItemConfigs[this.id];
             folderPath = pathConfig.boarImages;
-            this.rarityColorKey = 'rarity' + BoarUtils.findRarity(this.id);
+            this.rarityColorKey = 'rarity' + BoarUtils.findRarity(this.id)[0];
         }
 
         this.imageFilePath = folderPath + this.itemInfo.file;
@@ -107,7 +109,7 @@ export class ItemImageGenerator {
                     this.imageFilePath,
                     this.title,
                     this.itemInfo.name,
-                    this.isBoar.toString()
+                    this.isBadge.toString()
                 ]
             };
 
@@ -145,7 +147,7 @@ export class ItemImageGenerator {
         let mainPos: [number, number];
         let mainSize: [number, number];
 
-        if (!this.isBoar) {
+        if (this.isBadge) {
             mainPos = numConfig.itemBadgePos;
             mainSize = numConfig.itemBadgeSize;
         } else {

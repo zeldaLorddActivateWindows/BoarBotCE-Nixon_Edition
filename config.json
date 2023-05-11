@@ -91,6 +91,8 @@
         "collFirstObtainedLabel": "First Obtained",
         "collLastObtainedLabel": "Last Gotten",
         "collDescriptionLabel": "Description",
+        "collEditionTitle": "__Your editions for %@__",
+        "collEditionLine": "**Edition #%@:** %@\n",
         "noParentChannel": "NO CATEGORY",
         "notValidChannel": "This channel isn't valid! Try a different one! The channel should be:\n- A text channel\n- Not already chosen\n- Exists in this server",
         "defaultSelectPlaceholder": "UNSELECTED",
@@ -130,6 +132,33 @@
                         "description": "Check someone else's collection of boars",
                         "required": false,
                         "autocomplete": false,
+                        "choices": []
+                    },
+                    {
+                        "name": "view",
+                        "description": "What view to start off in (Normal, Detailed, Powerups)",
+                        "required": false,
+                        "autocomplete": "false",
+                        "choices": [
+                            {
+                                "name": "Normal",
+                                "value": 0
+                            },
+                            {
+                                "name": "Detailed",
+                                "value": 1
+                            },
+                            {
+                                "name": "Powerups",
+                                "value": 2
+                            }
+                        ]
+                    },
+                    {
+                        "name": "page",
+                        "description": "Page to start off on",
+                        "required": false,
+                        "autocomplete": "false",
                         "choices": []
                     }
                 ],
@@ -204,6 +233,13 @@
                                     "type": 2,
                                     "customId": "COLLECTION_GIFT",
                                     "emoji": "\uD83C\uDF81",
+                                    "style": 3,
+                                    "disabled": true
+                                },
+                                {
+                                    "type": 2,
+                                    "customId": "COLLECTION_EDITIONS",
+                                    "emoji": "\u23F1",
                                     "style": 3,
                                     "disabled": true
                                 }
@@ -476,7 +512,7 @@
         "fontSmallMedium": 40,
         "fontSmallest": 35,
         "maxUsernameLength": 16,
-        "maxTrackedEditions": 10,
+        "maxTrackedEditions": 100,
         "maxScore": 999999999999999999,
         "maxBoars": 99999999,
         "maxStreak": 99999999,
@@ -630,6 +666,7 @@
         "sphere": {
             "name": "Sphere Boar",
             "file": "SphereBoar.gif",
+            "staticFile": "SphereBoarSTATIC.png",
             "description": "After many millennia of the concretion process, this boar took the form of a perfect sphere. What's at its core? Nobody knows.",
             "isSB": false,
             "blacklisted": false
@@ -735,6 +772,7 @@
         "jumpscare": {
             "name": "Jumpscare Boar",
             "file": "JumpscareBoar.gif",
+            "staticFile": "JumpscareBoarSTATIC.png",
             "description": "Shoves its face into peoples' doorbell cameras to make them think it's a Creepy Boar. Creepy Boars abuse this to find new victims.",
             "isSB": false,
             "blacklisted": false
@@ -763,6 +801,7 @@
         "rickroll": {
             "name": "Rickroll Boar",
             "file": "RickrollBoar.gif",
+            "staticFile": "RickrollBoarSTATIC.png",
             "description": "Spreads the word of the God of All Boars. He'll never give you up, nor will he let you down. He'll never run around and... desert you.",
             "isSB": false,
             "blacklisted": false
@@ -792,6 +831,14 @@
             "name": "Curious Boarge",
             "file": "CuriousBoarge.png",
             "description": "With the extinction of all apes, a new mascot for the classic children's book was needed to appeal to modern society.",
+            "isSB": false,
+            "blacklisted": false
+        },
+        "gamebreaker": {
+            "name": "Gameboarker",
+            "file": "Gameboarker.gif",
+            "staticFile": "GameboarkerSTATIC.png",
+            "description": "This boar takes explosion to a whole other level, fusing its cells with gunpowder to create bigger explosions. Awarded to those who find and report several bugs.",
             "isSB": false,
             "blacklisted": false
         }
@@ -908,19 +955,33 @@
                 "imposter",
                 "curious"
             ]
+        },
+        {
+            "name": "Special",
+            "weight": 0,
+            "score": 0,
+            "fromDaily": false,
+            "boars": [
+                "gamebreaker"
+            ]
         }
     ],
     "colorConfig": {
         "foregroundGray": "#151518",
         "font": "#DEDEDE",
         "badge": "#4D4278",
+        "editionEmbed": "#248046",
+        "baseEmbed": "#4F545C",
+        "maintenance": "#FFFF00",
+        "error": "#ED4245",
         "rarity1": "#FFFFFF",
         "rarity2": "#00FF0F",
         "rarity3": "#0064FF",
         "rarity4": "#6400FF",
         "rarity5": "#FFC500",
         "rarity6": "#F300FF",
-        "rarity7": "#00FFFB"
+        "rarity7": "#00FFFB",
+        "rarity8": "#FF3136"
     },
     "unlimitedBoars": true,
     "debugMode": true,

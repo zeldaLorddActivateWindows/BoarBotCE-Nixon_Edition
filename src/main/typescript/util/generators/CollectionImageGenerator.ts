@@ -1,11 +1,11 @@
 import Canvas from 'canvas';
 import {BotConfig} from '../../bot/config/BotConfig';
 import {BoarUtils} from '../boar/BoarUtils';
-import {LogDebug} from '../logging/LogDebug';
 import {CanvasUtils} from './CanvasUtils';
 import {AttachmentBuilder} from 'discord.js';
 import {BoarUser} from '../boar/BoarUser';
 import moment from 'moment/moment';
+import {RarityConfig} from '../../bot/config/items/RarityConfig';
 
 /**
  * {@link CollectionImageGenerator CollectionImageGenerator.ts}
@@ -130,8 +130,8 @@ export class CollectionImageGenerator {
 
         const smallestFont = `${nums.fontSmallest}px ${strConfig.fontName}`;
 
-        const lastBoarRarity = BoarUtils.findRarity(this.boarUser.lastBoar);
-        const favBoarRarity = BoarUtils.findRarity(this.boarUser.favoriteBoar);
+        const lastBoarRarity: [number, RarityConfig] = BoarUtils.findRarity(this.boarUser.lastBoar);
+        const favBoarRarity: [number, RarityConfig] = BoarUtils.findRarity(this.boarUser.favoriteBoar);
 
         const curBoars = this.allBoars.slice(page * boarsPerPage, (page+1)*boarsPerPage);
 
@@ -160,18 +160,22 @@ export class CollectionImageGenerator {
                 Math.floor(i / nums.collBoarRows) * nums.collBoarSpacingY
             ];
 
-            const boarFile = boarsFolder + curBoars[i].file;
+            const boarFile = curBoars[i].staticFile
+                ? boarsFolder + curBoars[i].staticFile
+                : boarsFolder + curBoars[i].file;
 
             ctx.drawImage(await Canvas.loadImage(boarFile), ...boarImagePos, ...nums.collBoarSize);
             CanvasUtils.drawLine(
-                ctx, lineStartPos, lineEndPos, nums.collRarityWidth, colorConfig['rarity' + curBoars[i].rarity]
+                ctx, lineStartPos, lineEndPos, nums.collRarityWidth, curBoars[i].color
             );
         }
 
         // Draws last boar gotten and rarity
         if (this.boarUser.lastBoar !== '') {
             const lastBoarDetails = this.config.boarItemConfigs[this.boarUser.lastBoar];
-            const boarFile = boarsFolder + lastBoarDetails.file;
+            const boarFile = lastBoarDetails.staticFile
+                ? boarsFolder + lastBoarDetails.staticFile
+                : boarsFolder + lastBoarDetails.file;
 
             ctx.drawImage(await Canvas.loadImage(boarFile), ...nums.collLastBoarPos, ...nums.collLastBoarSize);
         }
@@ -179,7 +183,9 @@ export class CollectionImageGenerator {
         // Draws favorite boar and rarity
         if (this.boarUser.favoriteBoar !== '') {
             const favoriteBoarDetails = this.config.boarItemConfigs[this.boarUser.favoriteBoar];
-            const boarFile = boarsFolder + favoriteBoarDetails.file;
+            const boarFile = favoriteBoarDetails.staticFile
+                ? boarsFolder + favoriteBoarDetails.staticFile
+                : boarsFolder + favoriteBoarDetails.file;
 
             ctx.drawImage(await Canvas.loadImage(boarFile), ...nums.collFavBoarPos, ...nums.collFavBoarSize);
         }
@@ -188,14 +194,12 @@ export class CollectionImageGenerator {
 
         ctx.drawImage(await Canvas.loadImage(collectionOverlay), ...nums.originPos, ...nums.collImageSize);
         CanvasUtils.drawText(
-            ctx, strConfig.collFavLabel, nums.collFavLabelPos, smallestFont, 'center', favBoarRarity === 0
-                ? colorConfig.font
-                : colorConfig['rarity' + favBoarRarity]
+            ctx, strConfig.collFavLabel, nums.collFavLabelPos, smallestFont,
+            'center', favBoarRarity[0] === 0 ? colorConfig.font : colorConfig['rarity' + favBoarRarity[0]]
         );
         CanvasUtils.drawText(
-            ctx, strConfig.collRecentLabel, nums.collRecentLabelPos, smallestFont, 'center', lastBoarRarity === 0
-                ? colorConfig.font
-                : colorConfig['rarity' + lastBoarRarity]
+            ctx, strConfig.collRecentLabel, nums.collRecentLabelPos, smallestFont,
+            'center', lastBoarRarity[0] === 0 ? colorConfig.font : colorConfig['rarity' + lastBoarRarity[0]]
         );
 
         return new AttachmentBuilder(canvas.toBuffer());
@@ -279,7 +283,7 @@ export class CollectionImageGenerator {
 
         // Dynamic information (stats, images)
 
-        const boarFile = boarsFolder + curBoar.file;
+        const boarFile = curBoar.staticFile ? boarsFolder + curBoar.staticFile : boarsFolder + curBoar.file;
         const numCollectedString = Math.min(curBoar.num, nums.maxIndivBoars).toLocaleString();
         const firstObtainedDate = new Date(curBoar.firstObtained)
             .toLocaleString('en-US',{month:'long',day:'numeric',year:'numeric'});
@@ -303,7 +307,7 @@ export class CollectionImageGenerator {
             indivRarityPos[0] -= nums.collIndivFavSize[0] / 2 + 10;
             ctx.font = mediumFont;
             favoritePos = [
-                ctx.measureText(rarityConfig[curBoar.rarity-1].name.toUpperCase()).width / 2 + indivRarityPos[0] + 10,
+                ctx.measureText(curBoar.rarity.name.toUpperCase()).width / 2 + indivRarityPos[0] + 10,
                 nums.collIndivFavHeight
             ];
 
@@ -313,30 +317,30 @@ export class CollectionImageGenerator {
         // Draws stats
 
         CanvasUtils.drawText(
-            ctx, rarityConfig[curBoar.rarity-1].name.toUpperCase(), indivRarityPos,
-            mediumFont, "center", curBoar.color
+            ctx, curBoar.rarity.name.toUpperCase(), indivRarityPos,
+            mediumFont, 'center', curBoar.color
         );
 
         CanvasUtils.drawText(
             ctx, curBoar.name, nums.collBoarNamePos, bigFont,
-            "center", colorConfig.font, nums.collBoarNameWidth
+            'center', colorConfig.font, nums.collBoarNameWidth
         );
 
         CanvasUtils.drawText(
-            ctx, numCollectedString, nums.collIndivTotalPos, smallMediumFont, "center", colorConfig.font
+            ctx, numCollectedString, nums.collIndivTotalPos, smallMediumFont, 'center', colorConfig.font
         );
 
         CanvasUtils.drawText(
-            ctx, firstObtainedDate, nums.collFirstObtainedPos, smallMediumFont, "center", colorConfig.font
+            ctx, firstObtainedDate, nums.collFirstObtainedPos, smallMediumFont, 'center', colorConfig.font
         );
 
         CanvasUtils.drawText(
-            ctx, lastObtainedDate, nums.collLastObtainedPos, smallMediumFont, "center", colorConfig.font
+            ctx, lastObtainedDate, nums.collLastObtainedPos, smallMediumFont, 'center', colorConfig.font
         );
 
         CanvasUtils.drawText(
             ctx, curBoar.description, nums.collDescriptionPos, smallestFont,
-            "center", colorConfig.font, nums.collDescriptionWidth, true
+            'center', colorConfig.font, nums.collDescriptionWidth, true
         );
 
         ctx.drawImage(await Canvas.loadImage(collectionOverlay), ...nums.originPos, ...nums.collImageSize);

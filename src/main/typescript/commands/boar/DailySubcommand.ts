@@ -57,7 +57,6 @@ export default class DailySubcommand implements Subcommand {
             // New boar user object used for easier manipulation of data
             const boarUser = new BoarUser(this.interaction.user, true);
 
-            const nextBoarTime = Math.floor(new Date().setUTCHours(24,0,0,0));
             const canUseDaily = await this.canUseDaily(boarUser);
             if (!canUseDaily) return;
 
@@ -76,6 +75,11 @@ export default class DailySubcommand implements Subcommand {
             boarUser.boarStreak++;
             boarUser.powerups.multiplier++;
             boarUser.lastDaily = Date.now();
+            boarUser.numDailies++;
+
+            if (boarUser.firstDaily === 0) {
+                boarUser.firstDaily = Date.now();
+            }
 
             await boarUser.addBoar(this.config, boarID, this.interaction);
         } catch (err: unknown) {
@@ -140,7 +144,7 @@ export default class DailySubcommand implements Subcommand {
         // Sorts from the highest weight to the lowest weight
         const newWeights = new Map([...rarityWeights.entries()].sort((a,b) => { return b[1] - a[1]; }));
 
-        const highestWeight = Math.max(...[...newWeights.values()]);
+        const highestWeight: number = newWeights.values().next().value;
         const rarityIncreaseConst = this.config.numberConfig.rarityIncreaseConst;
 
         // Increases probability by increasing weight
@@ -148,6 +152,8 @@ export default class DailySubcommand implements Subcommand {
         for (const weightInfo of newWeights) {
             const rarityIndex = weightInfo[0];
             const oldWeight = weightInfo[1];
+
+            if (oldWeight == 0) continue;
 
             newWeights.set(
                 rarityIndex,
@@ -215,30 +221,20 @@ export default class DailySubcommand implements Subcommand {
         let randomBoar = Math.random();
 
         // Stores the IDs of the current rarity being checked
-        const rarityBoars: string[] = rarities[rarityIndex].boars;
 
-        // Stores the ID that was chosen
-        let boarID = rarityBoars[Math.floor(randomBoar * rarityBoars.length)];
-        let isBlacklisted = boarIDs[boarID].blacklisted;
-        let isSB = boarIDs[boarID].isSB;
+        const validRarityBoars: string[] = [];
 
-        const maxLoops = 500;
-        let curLoop = 0;
+        for (const boarID of rarities[rarityIndex].boars) {
+            const isBlacklisted = boarIDs[boarID].blacklisted;
+            const isSB = boarIDs[boarID].isSB;
 
-        // Retries getting ID if blacklisted or SB boar in non-SB server
-        while ((isBlacklisted || !this.guildData.isSBServer && isSB) && curLoop < maxLoops) {
-            randomBoar = Math.random();
-
-            boarID = rarityBoars[Math.floor(randomBoar * rarityBoars.length)];
-
-            isBlacklisted = boarIDs[boarID].blacklisted;
-            isSB = boarIDs[boarID].isSB;
-
-            curLoop++;
+            if (isBlacklisted || (!this.guildData.isSBServer && isSB))
+                continue;
+            validRarityBoars.push(boarID);
         }
 
-        if (isBlacklisted || !this.guildData.isSBServer && isSB) return;
+        if (validRarityBoars.length == 0) return;
 
-        return boarID;
+        return validRarityBoars[Math.floor(randomBoar * validRarityBoars.length)];
     }
 }

@@ -170,7 +170,7 @@ export class BoarUser {
      * @param interaction - Interaction to reply to with image
      * @return success - The function fully executed
      */
-    public async addBoar(config: BotConfig, boarID: string, interaction: ChatInputCommandInteraction) {
+    public async addBoar(config: BotConfig, boarID: string, interaction: ChatInputCommandInteraction): Promise<void> {
         // Config aliases
         const pathConfig = config.pathConfig;
         const strConfig = config.stringConfig;
@@ -190,7 +190,7 @@ export class BoarUser {
 
         if (rarityIndex === -1) {
             await LogDebug.handleError(strConfig.dailyNoBoarFound, interaction);
-            return false;
+            return;
         }
 
         const rarityInfo = rarities[rarityIndex];
@@ -234,10 +234,6 @@ export class BoarUser {
             fs.writeFileSync(pathConfig.globalDataFile, JSON.stringify(globalData));
         }, interaction.id + 'global');
 
-        // Updating user data
-        if (!wasGiven && this.firstDaily === 0)
-            this.firstDaily = Date.now();
-
         if (!this.boarCollection[boarID]) {
             this.boarCollection[boarID] = {
                 num: 0,
@@ -254,18 +250,17 @@ export class BoarUser {
 
         if (boarEdition <= numConfig.maxTrackedEditions || !rarityInfo.fromDaily) {
             this.boarCollection[boarID].editions.push(boarEdition);
+            this.boarCollection[boarID].editions.sort((a, b) => a-b);
             this.boarCollection[boarID].editionDates.push(Date.now());
+            this.boarCollection[boarID].editionDates.sort((a, b) => a-b);
         }
 
         this.lastBoar = boarID;
         this.boarScore += config.rarityConfigs[rarityIndex].score;
         this.totalBoars++;
-        this.numDailies++;
 
         this.updateUserData();
         await this.orderBoars(config, interaction);
-
-        return true;
     }
 
     /**
@@ -275,7 +270,7 @@ export class BoarUser {
      * @param interaction - Interaction to reply to with image
      * @return success - The function fully executed
      */
-    public async addBadge(config: BotConfig, badgeID: string, interaction: ChatInputCommandInteraction) {
+    public async addBadge(config: BotConfig, badgeID: string, interaction: ChatInputCommandInteraction): Promise<void> {
         const strConfig = config.stringConfig;
         const giveCommandConfig = config.commandConfigs.boarDev.give;
 
@@ -284,11 +279,11 @@ export class BoarUser {
 
         if (hasBadge && wasGiven) {
             await Replies.handleReply(interaction, strConfig.giveBadgeHas);
-            return false;
+            return;
         }
 
         if (hasBadge && !wasGiven)
-            return false;
+            return;
 
         const attachmentTitle = wasGiven
             ? strConfig.giveBadgeTitle
@@ -308,8 +303,13 @@ export class BoarUser {
         this.badges.push(badgeID);
 
         this.updateUserData();
+    }
 
-        return true;
+    public removeBadge(config: BotConfig, badgeID: string): void {
+        if (!this.badges.includes(badgeID)) return;
+
+        this.badges.splice(this.badges.indexOf(badgeID), 1);
+        this.updateUserData();
     }
 
     /**
@@ -317,15 +317,19 @@ export class BoarUser {
      * @param config - Global config data parsed from JSON
      * @param interaction - Used to give badge if user has max uniques
      */
-    public async orderBoars(config: BotConfig, interaction: ChatInputCommandInteraction) {
+    public async orderBoars(config: BotConfig, interaction: ChatInputCommandInteraction): Promise<void> {
         const orderedRarities: RarityConfig[] = [...config.rarityConfigs]
             .sort((rarity1, rarity2) => { return rarity1.weight - rarity2.weight; });
         const obtainedBoars = Object.keys(this.boarCollection);
+        let numSpecial = 0;
+        let numZeroBoars = 0;
 
         let maxUniques = 0;
 
         for (const rarity of orderedRarities) {
-            maxUniques += rarity.boars.length;
+            if (rarity.name !== 'Special') {
+                maxUniques += rarity.boars.length;
+            }
         }
 
         // Looping through all boar classes (Common -> Very Special)
@@ -346,13 +350,23 @@ export class BoarUser {
                 delete this.boarCollection[curBoarID];
                 this.boarCollection[curBoarID] = curBoarData;
 
+                if (rarity.name == 'Special') {
+                    numSpecial++;
+                }
+
+                if (this.boarCollection[curBoarID].num == 0) {
+                    numZeroBoars++;
+                }
+
                 orderedBoars.push(curBoarID);
                 j--;
             }
         }
 
-        if (obtainedBoars.length >= maxUniques) {
+        if (obtainedBoars.length-numSpecial-numZeroBoars >= maxUniques) {
             await this.addBadge(config, 'hunter', interaction);
+        } else {
+            await this.removeBadge(config, 'hunter');
         }
 
         this.updateUserData();

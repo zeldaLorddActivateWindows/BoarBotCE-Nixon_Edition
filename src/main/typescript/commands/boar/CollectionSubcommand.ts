@@ -2,8 +2,7 @@ import {
     ActionRowBuilder, AttachmentBuilder,
     ButtonBuilder,
     ButtonInteraction,
-    ChatInputCommandInteraction,
-    ColorResolvable,
+    ChatInputCommandInteraction, ColorResolvable, EmbedBuilder,
     Events,
     Interaction,
     InteractionCollector,
@@ -14,7 +13,6 @@ import {
     User
 } from 'discord.js';
 import {BoarUser} from '../../util/boar/BoarUser';
-import Canvas from 'canvas';
 import {BoarBotApp} from '../../BoarBotApp';
 import {Subcommand} from '../../api/commands/Subcommand';
 import {Queue} from '../../util/interactions/Queue';
@@ -25,6 +23,8 @@ import {ComponentUtils} from '../../util/discord/ComponentUtils';
 import {BoarUtils} from '../../util/boar/BoarUtils';
 import {CollectionImageGenerator} from '../../util/generators/CollectionImageGenerator';
 import {Replies} from '../../util/interactions/Replies';
+import {FormatStrings} from '../../util/discord/FormatStrings';
+import {RarityConfig} from '../../bot/config/items/RarityConfig';
 
 enum View {
     Normal,
@@ -82,13 +82,26 @@ export default class CollectionSubcommand implements Subcommand {
         this.firstInter = interaction;
 
         // Gets user to interact with
-        const userInput = (interaction.options.getUser(this.subcommandInfo.args[0].name)
-            ? interaction.options.getUser(this.subcommandInfo.args[0].name)
-            : interaction.user) as User;
+        const userInput = interaction.options.getUser(this.subcommandInfo.args[0].name)
+            ? interaction.options.getUser(this.subcommandInfo.args[0].name) as User
+            : interaction.user;
+        const viewInput = interaction.options.getInteger(this.subcommandInfo.args[1].name)
+            ? interaction.options.getInteger(this.subcommandInfo.args[1].name) as View
+            : View.Normal;
+        const pageInput = interaction.options.getInteger(this.subcommandInfo.args[2].name)
+            ? interaction.options.getInteger(this.subcommandInfo.args[2].name) as number
+            : 0;
 
         await Queue.addQueue(() => this.getUserInfo(userInput), interaction.id + userInput.id);
 
         this.maxPageNormal = Math.floor(Object.keys(this.allBoars).length / config.numberConfig.collBoarsPerPage);
+        this.curView = viewInput;
+
+        if (this.curView == View.Normal) {
+            this.curPage = Math.max(Math.min(pageInput-1, this.maxPageNormal), 0);
+        } else if (this.curView == View.Detailed) {
+            this.curPage = Math.max(Math.min(pageInput-1, this.allBoars.length-1), 0);
+        }
 
         this.collector = await CollectorUtils.createCollector(interaction, interaction.id + interaction.user.id);
 
@@ -118,7 +131,9 @@ export default class CollectionSubcommand implements Subcommand {
                 normalView: collRowConfig[0][1].components[0],
                 detailedView: collRowConfig[0][1].components[1],
                 powerupView: collRowConfig[0][1].components[2],
-                favorite: collRowConfig[1][0].components[0]
+                favorite: collRowConfig[1][0].components[0],
+                gift: collRowConfig[1][0].components[1],
+                editions: collRowConfig[1][0].components[2]
             };
 
             // User wants to input a page manually
@@ -157,6 +172,10 @@ export default class CollectionSubcommand implements Subcommand {
                         this.boarUser.updateUserData();
                     }, inter.id + this.boarUser.user.id);
                     break;
+
+                case collComponents.editions.customId:
+                    await this.doEditions();
+                    break;
             }
 
             await this.showCollection();
@@ -166,6 +185,31 @@ export default class CollectionSubcommand implements Subcommand {
         }
 
         clearInterval(this.timerVars.updateTime);
+    }
+
+    private async doEditions(): Promise<void> {
+        const strConfig = this.config.stringConfig;
+        let replyString = '';
+
+        for (let i=0; i<this.allBoars[this.curPage].editions.length; i++) {
+            const edition = this.allBoars[this.curPage].editions[i];
+            const editionDate = Math.floor(this.allBoars[this.curPage].editionDates[i] / 1000);
+
+            replyString += strConfig.collEditionLine
+                .replace('%@', edition)
+                .replace('%@', FormatStrings.toShortDateTime(editionDate));
+        }
+
+        replyString = replyString.substring(0, replyString.length-1);
+        await this.compInter.followUp({
+            embeds: [
+                new EmbedBuilder()
+                    .setTitle(strConfig.collEditionTitle.replace('%@', this.allBoars[this.curPage].name))
+                    .setDescription(replyString)
+                    .setColor(this.config.colorConfig.editionEmbed as ColorResolvable)
+            ],
+            ephemeral: true
+        });
     }
 
     /**
@@ -256,7 +300,10 @@ export default class CollectionSubcommand implements Subcommand {
             LogDebug.sendDebug('Ended collection with reason: ' + reason, this.config, this.firstInter);
 
             if (reason == CollectorUtils.Reasons.Error) {
-                await Replies.handleReply(this.firstInter, this.config.stringConfig.setupError, 0xED4245, true);
+                await Replies.handleReply(
+                    this.firstInter, this.config.stringConfig.setupError,
+                    this.config.colorConfig.error as ColorResolvable, true
+                );
             }
 
             await this.firstInter.editReply({
@@ -283,10 +330,10 @@ export default class CollectionSubcommand implements Subcommand {
             for (const boarID of Object.keys(this.boarUser.boarCollection)) {
                 // Local user boar information
                 const boarInfo = this.boarUser.boarCollection[boarID];
+                if (boarInfo.num === 0) continue;
 
-                if (boarInfo.num == 0) continue;
-
-                const rarity: number = BoarUtils.findRarity(boarID);
+                const rarity: [number, RarityConfig] = BoarUtils.findRarity(boarID);
+                if (rarity[0] === 0) continue;
 
                 // Global boar information
                 const boarDetails = this.config.boarItemConfigs[boarID];
@@ -295,12 +342,14 @@ export default class CollectionSubcommand implements Subcommand {
                     id: boarID,
                     name: boarDetails.name,
                     file: boarDetails.file,
+                    staticFile: boarDetails.staticFile,
                     num: boarInfo.num,
                     editions: boarInfo.editions,
+                    editionDates: boarInfo.editionDates,
                     firstObtained: boarInfo.firstObtained,
                     lastObtained: boarInfo.lastObtained,
-                    rarity: rarity,
-                    color: this.config.colorConfig["rarity" + rarity],
+                    rarity: rarity[1],
+                    color: this.config.colorConfig['rarity' + rarity[0]],
                     description: boarDetails.description
                 });
             }
@@ -320,9 +369,12 @@ export default class CollectionSubcommand implements Subcommand {
 
         this.disableButtons();
 
-        if (!this.collectionImage.normalBaseMade()) {
-            await this.collectionImage.createNormalBase();
+        if (!this.collectionImage.normalBaseMade() && !this.collectionImage.detailedBaseMade()) {
             this.initButtons();
+        }
+
+        if (this.curView == View.Normal && !this.collectionImage.normalBaseMade()) {
+            await this.collectionImage.createNormalBase();
         }
 
         if (this.curView == View.Detailed && !this.collectionImage.detailedBaseMade()) {
@@ -372,6 +424,10 @@ export default class CollectionSubcommand implements Subcommand {
         // Allows pressing Powerup view if not currently on it
         if (this.curView !== View.Powerup) {
             this.baseRows[1].components[2].setDisabled(false);
+        }
+
+        if (this.curView == View.Detailed && !this.allBoars[this.curPage].rarity.fromDaily) {
+            optionalRow.addComponents(this.optionalButtons.components[2].setDisabled(false));
         }
 
         if (optionalRow.components.length > 0) {

@@ -34,25 +34,25 @@ export class CanvasUtils {
     ): void {
         ctx.font = font;
         ctx.textAlign = align;
-        ctx.textBaseline = "alphabetic";
+        ctx.textBaseline = 'alphabetic';
         ctx.fillStyle = color;
 
         if (width != undefined && wrap) {
-            const words: string[] = text.split(" ");
-            const lineHeight: number = (ctx.measureText("Sp").actualBoundingBoxAscent +
-                ctx.measureText("Sp").actualBoundingBoxDescent) * 1.1;
+            const words: string[] = text.split(' ');
+            const lineHeight: number = (ctx.measureText('Sp').actualBoundingBoxAscent +
+                ctx.measureText('Sp').actualBoundingBoxDescent) * 1.1;
             let newHeight = pos[1];
             let lines: string[] = [];
-            let curLine: string = "";
+            let curLine: string = '';
 
             for (let i=0; i<words.length; i++) {
                 const word: string = words[i];
 
-                if (ctx.measureText(curLine + word + " ").width < width) {
-                    curLine += word + " ";
+                if (ctx.measureText(curLine + word + ' ').width < width) {
+                    curLine += word + ' ';
                 } else {
                     lines.push(curLine.substring(0, curLine.length-1));
-                    curLine = word + " ";
+                    curLine = word + ' ';
                 }
             }
 
@@ -66,10 +66,10 @@ export class CanvasUtils {
             }
         } else if (width != undefined) {
             while (ctx.measureText(text).width > width) {
-                font = (parseInt(font)-1) + font.substring(font.indexOf("px"));
+                font = (parseInt(font)-1) + font.substring(font.indexOf('px'));
                 ctx.font = font;
             }
-            ctx.textBaseline = "middle";
+            ctx.textBaseline = 'middle';
             ctx.fillText(text, pos[0], pos[1]);
         } else {
             ctx.fillText(text, pos[0], pos[1]);
