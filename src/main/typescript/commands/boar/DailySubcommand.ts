@@ -51,40 +51,36 @@ export default class DailySubcommand implements Subcommand {
      * @private
      */
     private async doDaily(): Promise<void> {
-        try {
-            if (!this.interaction.guild || !this.interaction.channel) return;
+        if (!this.interaction.guild || !this.interaction.channel) return;
 
-            // New boar user object used for easier manipulation of data
-            const boarUser = new BoarUser(this.interaction.user, true);
+        // New boar user object used for easier manipulation of data
+        const boarUser = new BoarUser(this.interaction.user, true);
 
-            const canUseDaily = await this.canUseDaily(boarUser);
-            if (!canUseDaily) return;
+        const canUseDaily = await this.canUseDaily(boarUser);
+        if (!canUseDaily) return;
 
-            // Map of rarity index keys and weight values
-            let rarityWeights = this.getRarityWeights();
-            const userMultiplier: number = boarUser.powerups.multiplier;
-            rarityWeights = this.applyMultiplier(userMultiplier, rarityWeights);
+        // Map of rarity index keys and weight values
+        let rarityWeights = this.getRarityWeights();
+        const userMultiplier: number = boarUser.powerups.multiplier;
+        rarityWeights = this.applyMultiplier(userMultiplier, rarityWeights);
 
-            const boarID = await this.getDaily(rarityWeights);
+        const boarID = await this.getDaily(rarityWeights);
 
-            if (!boarID) {
-                await LogDebug.handleError(this.config.stringConfig.dailyNoBoarFound, this.interaction);
-                return;
-            }
-
-            boarUser.boarStreak++;
-            boarUser.powerups.multiplier++;
-            boarUser.lastDaily = Date.now();
-            boarUser.numDailies++;
-
-            if (boarUser.firstDaily === 0) {
-                boarUser.firstDaily = Date.now();
-            }
-
-            await boarUser.addBoar(this.config, boarID, this.interaction);
-        } catch (err: unknown) {
-            await LogDebug.handleError(err, this.interaction);
+        if (!boarID) {
+            await LogDebug.handleError(this.config.stringConfig.dailyNoBoarFound, this.interaction);
+            return;
         }
+
+        boarUser.boarStreak++;
+        boarUser.powerups.multiplier++;
+        boarUser.lastDaily = Date.now();
+        boarUser.numDailies++;
+
+        if (boarUser.firstDaily === 0) {
+            boarUser.firstDaily = Date.now();
+        }
+
+        await boarUser.addBoar(this.config, boarID, this.interaction);
     }
 
     /**

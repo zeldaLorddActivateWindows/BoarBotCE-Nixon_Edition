@@ -31,6 +31,7 @@ export class BoarUser {
     public lastBoar: string = '';
     public firstDaily: number = 0;
     public powerupsWon: number = 0;
+    public powerupAttempts: number = 0;
     public boarStreak: number = 0;
     public boarCollection: Record<string, CollectedBoar> = {};
     public powerups: PowerupData = new PowerupData;
@@ -57,6 +58,7 @@ export class BoarUser {
         this.lastBoar = userData.lastBoar;
         this.firstDaily = userData.firstDaily;
         this.powerupsWon = userData.powerupsWon;
+        this.powerupAttempts = userData.powerupAttempts;
         this.boarStreak = userData.boarStreak;
         this.boarCollection = userData.boarCollection;
         this.powerups = userData.powerups;
@@ -113,6 +115,7 @@ export class BoarUser {
         userData.lastBoar = this.lastBoar;
         userData.firstDaily = this.firstDaily;
         userData.powerupsWon = this.powerupsWon;
+        userData.powerupAttempts = this.powerupAttempts;
         userData.boarStreak = this.boarStreak;
         userData.powerups = this.powerups;
         userData.theme = this.theme;

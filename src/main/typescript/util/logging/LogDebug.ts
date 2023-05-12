@@ -131,7 +131,7 @@ export class LogDebug {
         if (BoarBotApp.getBot().getClient().isReady()) {
             InteractionUtils.getTextChannel(config, config.logChannel).then(async (logChannel) => {
                 if (!logChannel) return;
-                await logChannel.send('```ansi\n' + message + '```');
+                await logChannel.send('```ansi\n' + message.substring(0, 1900) + '```');
             });
         }
     }

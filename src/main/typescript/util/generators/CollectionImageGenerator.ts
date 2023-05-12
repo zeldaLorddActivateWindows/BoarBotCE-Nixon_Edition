@@ -202,7 +202,7 @@ export class CollectionImageGenerator {
             'center', lastBoarRarity[0] === 0 ? colorConfig.font : colorConfig['rarity' + lastBoarRarity[0]]
         );
 
-        return new AttachmentBuilder(canvas.toBuffer());
+        return new AttachmentBuilder(canvas.toBuffer(), { name:`${strConfig.imageName}.png` });
     }
 
     /**
@@ -265,7 +265,6 @@ export class CollectionImageGenerator {
         const pathConfig = this.config.pathConfig;
         const nums = this.config.numberConfig;
         const colorConfig = this.config.colorConfig;
-        const rarityConfig = this.config.rarityConfigs;
 
         // Asset path info
 
@@ -345,7 +344,7 @@ export class CollectionImageGenerator {
 
         ctx.drawImage(await Canvas.loadImage(collectionOverlay), ...nums.originPos, ...nums.collImageSize);
 
-        return new AttachmentBuilder(canvas.toBuffer());
+        return new AttachmentBuilder(canvas.toBuffer(), { name:`${strConfig.imageName}.png` });
     }
 
     /**

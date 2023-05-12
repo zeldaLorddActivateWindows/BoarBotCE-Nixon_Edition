@@ -13,7 +13,7 @@ import {LogDebug} from '../logging/LogDebug';
 export class Queue {
     // [1-10] are queues for users based on last digit of ID
     // [0] is a queue for global changes
-    private static queue: Record<string, () => void>[] = [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}];
+    private static queues: Record<string, () => void>[] = [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}];
     private static queueRunning = [false, false, false, false, false, false, false, false, false, false];
 
     /**
@@ -24,7 +24,7 @@ export class Queue {
      */
     public static async addQueue(func: () => void, id: string): Promise<unknown> {
         const queueIndex = id.endsWith('global') ? 0 : parseInt(id[id.length-1]) + 1;
-        Queue.queue[queueIndex][id] = func;
+        Queue.queues[queueIndex][id] = func;
 
         if (!Queue.queueRunning[queueIndex]) {
             Queue.queueRunning[queueIndex] = true;
@@ -37,7 +37,7 @@ export class Queue {
             }, 30000);
 
             setInterval(() => {
-                if (!Queue.queue[queueIndex][id])
+                if (!Queue.queues[queueIndex][id])
                     resolve('Queue item successfully processed.');
             }, 100);
         })
@@ -50,19 +50,20 @@ export class Queue {
      * @private
      */
     private static async runQueue(queueIndex: number): Promise<void> {
-        if (Object.keys(Queue.queue[queueIndex]).length === 0) {
+        if (Object.keys(Queue.queues[queueIndex]).length === 0) {
             Queue.queueRunning[queueIndex] = false
         }
-        if (Object.keys(Queue.queue[queueIndex]).length > 0) {
+
+        if (Object.keys(Queue.queues[queueIndex]).length > 0) {
             Queue.queueRunning[queueIndex] = true;
 
             try {
-                await Queue.queue[queueIndex][Object.keys(Queue.queue[queueIndex])[0]]();
+                await Queue.queues[queueIndex][Object.keys(Queue.queues[queueIndex])[0]]();
             } catch (err: unknown) {
                 await LogDebug.handleError(err);
             }
 
-            delete Queue.queue[queueIndex][Object.keys(Queue.queue[queueIndex])[0]];
+            delete Queue.queues[queueIndex][Object.keys(Queue.queues[queueIndex])[0]];
 
             Queue.runQueue(queueIndex);
         }

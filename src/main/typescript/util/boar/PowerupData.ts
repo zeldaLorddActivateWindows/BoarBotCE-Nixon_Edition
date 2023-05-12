@@ -10,4 +10,5 @@ export class PowerupData {
     public multiplier: number = 1;
     public enhancers: number = 0;
     public gifts: number = 0;
+    public extraBoar: number = 0;
 }

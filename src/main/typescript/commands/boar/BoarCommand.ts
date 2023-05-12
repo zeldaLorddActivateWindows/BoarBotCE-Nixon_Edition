@@ -36,7 +36,7 @@ export default class BoarCommand implements Command {
                 .setRequired(this.commandInfo.collection.args[1].required)
                 .setChoices(...this.commandInfo.collection.args[1].choices)
             )
-            .addIntegerOption(option => option.setName(this.commandInfo.collection.args[2].name)
+            .addStringOption(option => option.setName(this.commandInfo.collection.args[2].name)
                 .setDescription(this.commandInfo.collection.args[2].description)
                 .setRequired(this.commandInfo.collection.args[2].required)
             )

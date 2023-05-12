@@ -88,24 +88,20 @@ export default class GiveSubcommand implements Subcommand {
      * @private
      */
     private async doGive() {
-        try {
-            if (!this.interaction.guild || !this.interaction.channel) return;
+        if (!this.interaction.guild || !this.interaction.channel) return;
 
-            const strConfig = this.config.stringConfig;
+        const strConfig = this.config.stringConfig;
 
-            const boarUser = new BoarUser(this.userInput, true);
+        const boarUser = new BoarUser(this.userInput, true);
 
-            LogDebug.sendDebug('Gave \'' + this.idInput + '\' to ' + this.userInput.tag, this.config, this.interaction);
+        LogDebug.sendDebug('Gave \'' + this.idInput + '\' to ' + this.userInput.tag, this.config, this.interaction);
 
-            if (this.idInput.endsWith(strConfig.giveBoarChoiceTag)) {
-                await boarUser.addBoar(this.config, this.idInput.split(' ')[0], this.interaction);
-            } else if (this.idInput.endsWith(strConfig.giveBadgeChoiceTag)) {
-                await boarUser.addBadge(this.config, this.idInput.split(' ')[0], this.interaction);
-            } else {
-                await Replies.handleReply(this.interaction, strConfig.giveBadID);
-            }
-        } catch (err: unknown) {
-            await LogDebug.handleError(err, this.interaction);
+        if (this.idInput.endsWith(strConfig.giveBoarChoiceTag)) {
+            await boarUser.addBoar(this.config, this.idInput.split(' ')[0], this.interaction);
+        } else if (this.idInput.endsWith(strConfig.giveBadgeChoiceTag)) {
+            await boarUser.addBadge(this.config, this.idInput.split(' ')[0], this.interaction);
+        } else {
+            await Replies.handleReply(this.interaction, strConfig.giveBadID);
         }
     }
 }

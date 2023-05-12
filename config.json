@@ -156,7 +156,7 @@
                     },
                     {
                         "name": "page",
-                        "description": "Page to start off on",
+                        "description": "Page to start off on. Accepts boar names.",
                         "required": false,
                         "autocomplete": "false",
                         "choices": []
@@ -258,7 +258,7 @@
                                     {
                                         "type": 4,
                                         "customId": "PAGE_INPUT",
-                                        "label": "PAGE NUMBER",
+                                        "label": "PAGE NUMBER/BOAR NAME",
                                         "style": 1,
                                         "required": true
                                     }
