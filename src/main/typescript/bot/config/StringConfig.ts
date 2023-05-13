@@ -79,6 +79,16 @@ export class StringConfig {
     public readonly collFirstObtainedLabel: string = ' ';
     public readonly collLastObtainedLabel: string = ' ';
     public readonly collDescriptionLabel: string = ' ';
+    public readonly collAttemptsLabel: string = ' ';
+    public readonly collAttempts50Label: string = ' ';
+    public readonly collAttempts10Label: string = ' ';
+    public readonly collAttempts1Label: string = ' ';
+    public readonly collMostClaimedLabel: string = ' ';
+    public readonly collBestPromptLabel: string = ' ';
+    public readonly collMultiplierLabel: string = ' ';
+    public readonly collGiftsLabel: string = ' ';
+    public readonly collExtraBoarLabel: string = ' ';
+    public readonly collEnhancerLabel: string = ' ';
     public readonly collEditionTitle: string = ' ';
     public readonly collEditionLine: string = ' ';
 

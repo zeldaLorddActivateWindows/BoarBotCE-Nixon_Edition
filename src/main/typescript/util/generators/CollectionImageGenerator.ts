@@ -352,7 +352,44 @@ export class CollectionImageGenerator {
      *
      * @private
      */
-    public async createPowerupsBase(): Promise<void> {}
+    public async createPowerupsBase(): Promise<void> {
+        // Config aliases
+
+        const strConfig = this.config.stringConfig;
+        const nums = this.config.numberConfig;
+        const colorConfig = this.config.colorConfig;
+
+        const collectionUnderlay = this.config.pathConfig.collAssets + this.config.pathConfig.collPowerUnderlay;
+
+        const mediumFont = `${nums.fontMedium}px ${strConfig.fontName}`;
+
+        const canvas = Canvas.createCanvas(nums.collImageSize[0], nums.collImageSize[1]);
+        const ctx = canvas.getContext('2d');
+
+        ctx.drawImage(await Canvas.loadImage(collectionUnderlay), ...nums.originPos, ...nums.collImageSize);
+        await this.drawTopBar(ctx);
+
+        this.powerupsBase = canvas.toBuffer();
+    }
+
+    public powerupsBaseMade(): boolean {
+        return Object.keys(this.powerupsBase).length !== 0;
+    }
+
+    public async finalizePowerupsImage(): Promise<AttachmentBuilder> {
+        const nums = this.config.numberConfig;
+        const collectionOverlay = this.config.pathConfig.collAssets + this.config.pathConfig.collPowerOverlay;
+
+        const canvas = Canvas.createCanvas(nums.collImageSize[0], nums.collImageSize[1]);
+        const ctx = canvas.getContext('2d');
+
+        ctx.drawImage(await Canvas.loadImage(this.powerupsBase), ...nums.originPos, ...nums.collImageSize);
+        ctx.drawImage(canvas, ...nums.originPos, ...nums.collImageSize);
+
+        ctx.drawImage(await Canvas.loadImage(collectionOverlay), ...nums.originPos, ...nums.collImageSize);
+
+        return new AttachmentBuilder(canvas.toBuffer(), { name:`${this.config.stringConfig.imageName}.png` });
+    }
 
     public async drawTopBar(ctx: Canvas.CanvasRenderingContext2D,): Promise<void> {
         // Config aliases

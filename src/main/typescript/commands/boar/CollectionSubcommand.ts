@@ -30,7 +30,7 @@ import createRBTree, {Node, Tree} from 'functional-red-black-tree';
 enum View {
     Normal,
     Detailed,
-    Powerup
+    Powerups
 }
 
 /**
@@ -87,9 +87,7 @@ export default class CollectionSubcommand implements Subcommand {
         const userInput = interaction.options.getUser(this.subcommandInfo.args[0].name)
             ? interaction.options.getUser(this.subcommandInfo.args[0].name) as User
             : interaction.user;
-        const viewInput = interaction.options.getInteger(this.subcommandInfo.args[1].name)
-            ? interaction.options.getInteger(this.subcommandInfo.args[1].name) as View
-            : View.Normal;
+        const viewInput = interaction.options.getInteger(this.subcommandInfo.args[1].name) as View;
         const pageInput = interaction.options.getString(this.subcommandInfo.args[2].name)
             ? (interaction.options.getString(this.subcommandInfo.args[2].name) as string)
                 .toLowerCase().replace(/\s+/g, '')
@@ -98,9 +96,10 @@ export default class CollectionSubcommand implements Subcommand {
         await Queue.addQueue(() => this.getUserInfo(userInput), interaction.id + userInput.id);
 
         this.maxPageNormal = Math.floor(Object.keys(this.allBoars).length / config.numberConfig.collBoarsPerPage);
-        this.curView = this.allBoars.length > 0
-            ? viewInput
-            : View.Normal;
+
+        if (viewInput === View.Detailed && this.allBoars.length > 0 || viewInput === View.Powerups) {
+            this.curView = viewInput;
+        }
 
         let pageVal: number = 1;
         if (!Number.isNaN(parseInt(pageInput))) {
@@ -175,6 +174,11 @@ export default class CollectionSubcommand implements Subcommand {
 
                 case collComponents.detailedView.customId:
                     this.curView = View.Detailed;
+                    this.curPage = 0;
+                    break;
+
+                case collComponents.powerupView.customId:
+                    this.curView = View.Powerups;
                     this.curPage = 0;
                     break;
 
@@ -382,7 +386,10 @@ export default class CollectionSubcommand implements Subcommand {
 
         this.disableButtons();
 
-        if (!this.collectionImage.normalBaseMade() && !this.collectionImage.detailedBaseMade()) {
+        if (
+            !this.collectionImage.normalBaseMade() && !this.collectionImage.detailedBaseMade()
+            && !this.collectionImage.powerupsBaseMade()
+        ) {
             this.initButtons();
         }
 
@@ -394,6 +401,10 @@ export default class CollectionSubcommand implements Subcommand {
             await this.collectionImage.createDetailedBase();
         }
 
+        if (this.curView == View.Powerups && !this.collectionImage.powerupsBaseMade()) {
+            await this.collectionImage.createPowerupsBase();
+        }
+
         let finalImage: AttachmentBuilder = new AttachmentBuilder(Buffer.from([0x00]));
 
         if (this.curView == View.Normal) {
@@ -401,6 +412,8 @@ export default class CollectionSubcommand implements Subcommand {
         } else if (this.curView == View.Detailed) {
             finalImage = await this.collectionImage.finalizeDetailedImage(this.curPage);
             optionalRow.addComponents(this.optionalButtons.components[0].setDisabled(false));
+        } else {
+            finalImage = await this.collectionImage.finalizePowerupsImage();
         }
 
         // Enables next button if there's more than one page
@@ -419,7 +432,7 @@ export default class CollectionSubcommand implements Subcommand {
         // Enables manual input button if there's more than one page
         if (
             this.curView == View.Normal && this.maxPageNormal > 0 ||
-            this.curView == View.Detailed && this.allBoars.length > 0
+            this.curView == View.Detailed && this.allBoars.length > 1
         ) {
             this.baseRows[0].components[1].setDisabled(false);
         }
@@ -435,11 +448,11 @@ export default class CollectionSubcommand implements Subcommand {
         }
 
         // Allows pressing Powerup view if not currently on it
-        if (this.curView !== View.Powerup) {
+        if (this.curView !== View.Powerups) {
             this.baseRows[1].components[2].setDisabled(false);
         }
 
-        if (this.curView == View.Detailed && !this.allBoars[this.curPage].rarity.fromDaily) {
+        if (this.curView == View.Detailed && this.allBoars[this.curPage].rarity.score !== 0) {
             optionalRow.addComponents(this.optionalButtons.components[2].setDisabled(false));
         }
 

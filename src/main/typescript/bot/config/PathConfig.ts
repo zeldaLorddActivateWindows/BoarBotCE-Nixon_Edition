@@ -40,6 +40,8 @@ export class PathConfig {
     public readonly collUnderlay: string = '';
     public readonly collDetailOverlay: string = '';
     public readonly collDetailUnderlay: string = '';
+    public readonly collPowerOverlay: string = '';
+    public readonly collPowerUnderlay: string = '';
     public readonly clanNone: string = '';
     public readonly enhancerOn: string = '';
     public readonly enhancerOff: string = '';
