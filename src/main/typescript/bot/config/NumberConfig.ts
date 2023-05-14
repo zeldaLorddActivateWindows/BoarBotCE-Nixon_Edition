@@ -26,6 +26,12 @@ export class NumberConfig {
     public readonly maxDailies: number = 0;
     public readonly maxStreak: number = 0;
     public readonly maxIndivBoars: number = 0;
+    public readonly maxAttempts: number = 0;
+    public readonly maxMulti: number = 0;
+    public readonly maxMultiBoost: number = 0;
+    public readonly maxGifts: number = 0;
+    public readonly maxExtraChance: number = 0;
+    public readonly maxEnhancers: number = 0;
 
     // A constant used to determine how quickly to increase rarity
     public readonly rarityIncreaseConst: number = 0;
@@ -88,12 +94,30 @@ export class NumberConfig {
     public readonly collDescriptionLabelPos: [number, number] = [0, 0];
     public readonly collDescriptionPos: [number, number] = [0, 0];
     public readonly collDescriptionWidth: number = 0;
+    public readonly collAttemptsLabelPos: [number, number] = [0, 0];
+    public readonly collAttemptsPos: [number, number] = [0, 0];
+    public readonly collAttempts1LabelPos: [number, number] = [0, 0];
+    public readonly collAttempts1Pos: [number, number] = [0, 0];
+    public readonly collAttempts10LabelPos: [number, number] = [0, 0];
+    public readonly collAttempts10Pos: [number, number] = [0, 0];
+    public readonly collAttempts50LabelPos: [number, number] = [0, 0];
+    public readonly collAttempts50Pos: [number, number] = [0, 0];
+    public readonly collMostClaimedLabelPos: [number, number] = [0, 0];
+    public readonly collMostClaimedPos: [number, number] = [0, 0];
+    public readonly collBestPromptLabelPos: [number, number] = [0, 0];
+    public readonly collBestPromptPos: [number, number] = [0, 0];
+    public readonly collMultiLabelPos: [number, number] = [0, 0];
+    public readonly collMultiPos: [number, number] = [0, 0];
+    public readonly collGiftsLabelPos: [number, number] = [0, 0];
+    public readonly collGiftsPos: [number, number] = [0, 0];
+    public readonly collExtraChanceLabelPos: [number, number] = [0, 0];
+    public readonly collExtraChancePos: [number, number] = [0, 0];
+    public readonly collEnhancerLabelPos: [number, number] = [0, 0];
     public readonly collBoarStartX: number = 0;
     public readonly collBoarStartY: number = 0;
     public readonly collBoarSpacingX: number = 0;
     public readonly collBoarSpacingY: number = 0;
     public readonly collBoarCols: number = 0;
-    public readonly collBoarRows: number = 0;
     public readonly collBoarSize: [number, number] = [0, 0];
     public readonly collRarityStartX: number = 0;
     public readonly collRarityStartY: number = 0;
@@ -107,4 +131,10 @@ export class NumberConfig {
     public readonly collFavLabelPos: [number, number] = [0, 0];
     public readonly collIndivBoarPos: [number, number] = [0, 0];
     public readonly collIndivBoarSize: [number, number] = [0, 0];
+    public readonly collEnhancerStartX: number = 0;
+    public readonly collEnhancerStartY: number = 0;
+    public readonly collEnhancerSpacingX: number = 0;
+    public readonly collEnhancerSpacingY: number = 0;
+    public readonly collEnhancerCols: number = 0;
+    public readonly collEnhancerSize: [number, number] = [0, 0];
 }

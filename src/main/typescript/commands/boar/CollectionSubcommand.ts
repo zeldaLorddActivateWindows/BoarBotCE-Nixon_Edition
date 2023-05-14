@@ -405,7 +405,7 @@ export default class CollectionSubcommand implements Subcommand {
             await this.collectionImage.createPowerupsBase();
         }
 
-        let finalImage: AttachmentBuilder = new AttachmentBuilder(Buffer.from([0x00]));
+        let finalImage: AttachmentBuilder;
 
         if (this.curView == View.Normal) {
             finalImage = await this.collectionImage.finalizeNormalImage(this.curPage);
@@ -419,7 +419,7 @@ export default class CollectionSubcommand implements Subcommand {
         // Enables next button if there's more than one page
         if (
             this.curView == View.Normal && this.maxPageNormal > this.curPage ||
-            this.curView == View.Detailed && this.allBoars.length > this.curPage
+            this.curView == View.Detailed && this.allBoars.length > this.curPage + 1
         ) {
             this.baseRows[0].components[2].setDisabled(false);
         }
@@ -452,7 +452,7 @@ export default class CollectionSubcommand implements Subcommand {
             this.baseRows[1].components[2].setDisabled(false);
         }
 
-        if (this.curView == View.Detailed && this.allBoars[this.curPage].rarity.score !== 0) {
+        if (this.curView == View.Detailed && this.allBoars[this.curPage].rarity.score === 0) {
             optionalRow.addComponents(this.optionalButtons.components[2].setDisabled(false));
         }
 

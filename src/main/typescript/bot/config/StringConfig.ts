@@ -92,6 +92,14 @@ export class StringConfig {
     public readonly collEditionTitle: string = ' ';
     public readonly collEditionLine: string = ' ';
 
+    // Powerup strings
+
+    public readonly powerupMultiplierBoost: string = ' ';
+    public readonly powerupGift: string = ' ';
+    public readonly powerupExtraChance: string = ' ';
+    public readonly powerupEnhancer: string = ' ';
+
+
     // Miscellaneous strings
 
     public readonly noParentChannel: string = ' ';

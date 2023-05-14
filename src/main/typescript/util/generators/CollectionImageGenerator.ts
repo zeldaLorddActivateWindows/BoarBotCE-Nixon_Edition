@@ -146,18 +146,18 @@ export class CollectionImageGenerator {
         for (let i=0; i<curBoars.length; i++) {
             const boarImagePos: [number, number] = [
                 nums.collBoarStartX + (i % nums.collBoarCols) * nums.collBoarSpacingX,
-                nums.collBoarStartY + Math.floor(i / nums.collBoarRows) * nums.collBoarSpacingY
+                nums.collBoarStartY + Math.floor(i / nums.collBoarCols) * nums.collBoarSpacingY
             ];
 
             const lineStartPos = [
                 nums.collRarityStartX + (i % nums.collBoarCols) * nums.collBoarSpacingX,
-                nums.collRarityStartY + Math.floor(i / nums.collBoarRows) * nums.collBoarSpacingY
+                nums.collRarityStartY + Math.floor(i / nums.collBoarCols) * nums.collBoarSpacingY
             ];
 
             const lineEndPos = [
                 nums.collRarityStartX + nums.collRarityEndDiff + (i % nums.collBoarCols) * nums.collBoarSpacingX,
                 nums.collRarityStartY - nums.collRarityEndDiff +
-                Math.floor(i / nums.collBoarRows) * nums.collBoarSpacingY
+                Math.floor(i / nums.collBoarCols) * nums.collBoarSpacingY
             ];
 
             const boarFile = curBoars[i].staticFile
@@ -357,17 +357,112 @@ export class CollectionImageGenerator {
 
         const strConfig = this.config.stringConfig;
         const nums = this.config.numberConfig;
+        const pathConfig = this.config.pathConfig;
         const colorConfig = this.config.colorConfig;
 
-        const collectionUnderlay = this.config.pathConfig.collAssets + this.config.pathConfig.collPowerUnderlay;
+        const collectionUnderlay = pathConfig.collAssets + pathConfig.collPowerUnderlay;
+        const enhancerActive = pathConfig.collAssets + pathConfig.enhancerOn;
+        const enhancerInactive = pathConfig.collAssets + pathConfig.enhancerOff;
 
         const mediumFont = `${nums.fontMedium}px ${strConfig.fontName}`;
+        const smallMedium = `${nums.fontSmallMedium}px ${strConfig.fontName}`;
+
+        const powerupData = this.boarUser.powerups;
+        const totalAttempts = Math.min(powerupData.powerupAttempts, nums.maxAttempts).toLocaleString();
+        const totalAttempts1 = Math.min(powerupData.powerupAttempts1, nums.maxAttempts).toLocaleString();
+        const totalAttempts10 = Math.min(powerupData.powerupAttempts10, nums.maxAttempts).toLocaleString();
+        const totalAttempts50 = Math.min(powerupData.powerupAttempts50, nums.maxAttempts).toLocaleString();
+
+        const claimedMap: Map<string, number> = new Map<string, number>([
+            [strConfig.powerupMultiplierBoost, powerupData.multiBoostsClaimed],
+            [strConfig.powerupGift, powerupData.giftsClaimed],
+            [strConfig.powerupExtraChance, powerupData.extraChancesClaimed],
+            [strConfig.powerupEnhancer, powerupData.enhancersClaimed]
+        ]);
+
+        let mostClaimed: [string, number] = [strConfig.unavailable, 0];
+        for (const [key, val] of claimedMap) {
+            if (val > mostClaimed[1]) {
+                mostClaimed = [key, val];
+            }
+        }
+
+        const bestPrompt: [string, number] = [strConfig.unavailable, 0];
+
+        const multiplier = Math.min(powerupData.multiplier, nums.maxMulti).toLocaleString() + 'x';
+        const gifts = Math.min(powerupData.numGifts, nums.maxGifts).toLocaleString();
+        const extraChance = Math.min(powerupData.extraChanceTotal, nums.maxExtraChance).toLocaleString() + '%';
 
         const canvas = Canvas.createCanvas(nums.collImageSize[0], nums.collImageSize[1]);
         const ctx = canvas.getContext('2d');
 
         ctx.drawImage(await Canvas.loadImage(collectionUnderlay), ...nums.originPos, ...nums.collImageSize);
         await this.drawTopBar(ctx);
+
+        // Draws stats info
+
+        CanvasUtils.drawText(
+            ctx, strConfig.collAttemptsLabel, nums.collAttemptsLabelPos, mediumFont, 'center', colorConfig.font
+        );
+        CanvasUtils.drawText(ctx, totalAttempts, nums.collAttemptsPos, smallMedium, 'center', colorConfig.font);
+
+        CanvasUtils.drawText(
+            ctx, strConfig.collAttempts50Label, nums.collAttempts50LabelPos, mediumFont, 'center', colorConfig.font
+        );
+        CanvasUtils.drawText(ctx, totalAttempts50, nums.collAttempts50Pos, smallMedium, 'center', colorConfig.font);
+
+        CanvasUtils.drawText(
+            ctx, strConfig.collAttempts10Label, nums.collAttempts10LabelPos, mediumFont, 'center', colorConfig.font
+        );
+        CanvasUtils.drawText(ctx, totalAttempts10, nums.collAttempts10Pos, smallMedium, 'center', colorConfig.font);
+
+        CanvasUtils.drawText(
+            ctx, strConfig.collAttempts1Label, nums.collAttempts1LabelPos, mediumFont, 'center', colorConfig.font
+        );
+        CanvasUtils.drawText(ctx, totalAttempts1, nums.collAttempts1Pos, smallMedium, 'center', colorConfig.font);
+
+        CanvasUtils.drawText(
+            ctx, strConfig.collMostClaimedLabel, nums.collMostClaimedLabelPos, mediumFont, 'center', colorConfig.font
+        );
+        CanvasUtils.drawText(ctx, mostClaimed[0], nums.collMostClaimedPos, smallMedium, 'center', colorConfig.font);
+
+        CanvasUtils.drawText(
+            ctx, strConfig.collBestPromptLabel, nums.collBestPromptLabelPos, mediumFont, 'center', colorConfig.font
+        );
+        CanvasUtils.drawText(ctx, bestPrompt[0], nums.collBestPromptPos, smallMedium, 'center', colorConfig.font);
+
+        CanvasUtils.drawText(
+            ctx, strConfig.collMultiplierLabel, nums.collMultiLabelPos, mediumFont, 'center', colorConfig.font
+        );
+        CanvasUtils.drawText(ctx, multiplier, nums.collMultiPos, smallMedium, 'center', colorConfig.font);
+
+        CanvasUtils.drawText(
+            ctx, strConfig.collGiftsLabel, nums.collGiftsLabelPos, mediumFont, 'center', colorConfig.font
+        );
+        CanvasUtils.drawText(ctx, gifts, nums.collGiftsPos, smallMedium, 'center', colorConfig.font);
+
+        CanvasUtils.drawText(
+            ctx, strConfig.collExtraBoarLabel, nums.collExtraChanceLabelPos, mediumFont, 'center', colorConfig.font
+        );
+        CanvasUtils.drawText(ctx, extraChance, nums.collExtraChancePos, smallMedium, 'center', colorConfig.font);
+
+        CanvasUtils.drawText(
+            ctx, strConfig.collEnhancerLabel, nums.collEnhancerLabelPos, mediumFont, 'center', colorConfig.font
+        );
+
+        // Draws enhancers
+        for (let i=0; i<nums.maxEnhancers; i++) {
+            const enhancerImagePos: [number, number] = [
+                nums.collEnhancerStartX + (i % nums.collEnhancerCols) * nums.collEnhancerSpacingX,
+                nums.collEnhancerStartY + Math.floor(i / nums.collEnhancerCols) * nums.collEnhancerSpacingY
+            ];
+
+            const enhancerFile = i < powerupData.numEnhancers
+                ? enhancerActive
+                : enhancerInactive;
+
+            ctx.drawImage(await Canvas.loadImage(enhancerFile), ...enhancerImagePos, ...nums.collEnhancerSize);
+        }
 
         this.powerupsBase = canvas.toBuffer();
     }

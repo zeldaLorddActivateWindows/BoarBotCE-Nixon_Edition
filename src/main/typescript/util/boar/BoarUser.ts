@@ -30,14 +30,12 @@ export class BoarUser {
     public favoriteBoar: string = '';
     public lastBoar: string = '';
     public firstDaily: number = 0;
-    public powerupsWon: number = 0;
-    public powerupAttempts: number = 0;
     public boarStreak: number = 0;
-    public boarCollection: Record<string, CollectedBoar> = {};
     public powerups: PowerupData = new PowerupData;
     public theme: string = 'normal';
     public themes: string[] = ['normal'];
     public badges: string[] = [];
+    public boarCollection: Record<string, CollectedBoar> = {};
 
     /**
      * Creates a new BoarUser from data file.
@@ -57,14 +55,12 @@ export class BoarUser {
         this.favoriteBoar = userData.favoriteBoar;
         this.lastBoar = userData.lastBoar;
         this.firstDaily = userData.firstDaily;
-        this.powerupsWon = userData.powerupsWon;
-        this.powerupAttempts = userData.powerupAttempts;
         this.boarStreak = userData.boarStreak;
-        this.boarCollection = userData.boarCollection;
         this.powerups = userData.powerups;
         this.theme = userData.theme;
         this.themes = userData.themes;
         this.badges = userData.badges;
+        this.boarCollection = userData.boarCollection;
 
         if (createFile || this.boarStreak > 0) {
             this.fixUserData(userData);
@@ -110,17 +106,15 @@ export class BoarUser {
         userData.numDailies = this.numDailies;
         userData.boarScore = this.boarScore;
         userData.totalBoars = this.totalBoars;
-        userData.boarCollection = this.boarCollection;
         userData.favoriteBoar = this.favoriteBoar;
         userData.lastBoar = this.lastBoar;
         userData.firstDaily = this.firstDaily;
-        userData.powerupsWon = this.powerupsWon;
-        userData.powerupAttempts = this.powerupAttempts;
         userData.boarStreak = this.boarStreak;
         userData.powerups = this.powerups;
         userData.theme = this.theme;
         userData.themes = this.themes;
         userData.badges = this.badges;
+        userData.boarCollection = this.boarCollection;
 
         this.fixUserData(userData);
     }
