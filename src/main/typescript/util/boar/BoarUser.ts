@@ -10,6 +10,7 @@ import {CollectedBoar} from './CollectedBoar';
 import {PowerupData} from './PowerupData';
 import {ItemImageGenerator} from '../generators/ItemImageGenerator';
 import {Replies} from '../interactions/Replies';
+import {PromptTypeData} from './PromptTypeData';
 
 /**
  * {@link BoarUser BoarUser.ts}
@@ -146,10 +147,29 @@ export class BoarUser {
                 this.favoriteBoar = '';
         }
 
+        for (const promptType of Object.keys(this.powerups.promptData)) {
+            if (!config.powerupConfig.promptTypes[promptType]) {
+                delete this.powerups.promptData[promptType];
+            }
+
+            for (const promptID of Object.keys(this.powerups.promptData[promptType])) {
+                if (!this.promptExists(promptType, promptID, config)) {
+                    delete this.powerups.promptData[promptType][promptID];
+                }
+            }
+        }
+
+        for (const promptType of Object.keys(config.powerupConfig.promptTypes)) {
+            if (!this.powerups.promptData[promptType]) {
+                this.powerups.promptData[promptType] = new PromptTypeData;
+            }
+        }
+
         userData.boarCollection = this.boarCollection;
         userData.totalBoars = this.totalBoars;
         userData.favoriteBoar = this.favoriteBoar;
         userData.lastBoar = this.lastBoar;
+        userData.powerups = this.powerups;
 
         if (this.lastDaily < twoDailiesAgo) {
             userData.powerups.multiplier = this.powerups.multiplier -= this.boarStreak;
@@ -157,6 +177,24 @@ export class BoarUser {
         }
 
         fs.writeFileSync(userFile, JSON.stringify(userData));
+    }
+
+    /**
+     * Returns whether a given prompt type and id in that prompt type exist in config
+     *
+     * @param promptType - The type of prompt to search through
+     * @param promptID - The ID to find
+     * @param config - Used to get prompt data
+     * @private
+     */
+    private promptExists(promptType: string, promptID: string, config: BotConfig): boolean {
+        const promptIDs: string[] = Object.keys(config.powerupConfig.promptTypes[promptType]);
+
+        for (let i=0; i<promptIDs.length; i++) {
+            if (promptIDs[i] === promptID) return true;
+        }
+
+        return false;
     }
 
     /**

@@ -196,9 +196,9 @@
         "collAttempts50LabelPos": [486, 817],
         "collAttempts50Pos": [486, 888],
         "collMostClaimedLabelPos": [486, 985],
-        "collMostClaimedPos": [486, 1056],
+        "collMostClaimedPos": [486, 1042],
         "collBestPromptLabelPos": [486, 1153],
-        "collBestPromptPos": [486, 1224],
+        "collBestPromptPos": [486, 1210],
         "collMultiLabelPos": [1441, 425],
         "collMultiPos": [1441, 496],
         "collGiftsLabelPos": [1441, 593],
@@ -206,6 +206,7 @@
         "collExtraChanceLabelPos": [1441, 761],
         "collExtraChancePos": [1441, 832],
         "collEnhancerLabelPos": [1441, 929],
+        "collPowDataWidth": 560,
         "collBoarsPerPage": 16,
         "collBoarStartX": 740,
         "collBoarStartY": 210,
@@ -239,18 +240,11 @@
             "help": {
                 "name": "help",
                 "description": "See all boar command information",
-                "args": [],
-                "cooldown": true,
-                "componentFields": [],
-                "modals": []
+                "cooldown": true
             },
             "daily": {
                 "name": "daily",
-                "description": "Get your daily boar",
-                "args": [],
-                "cooldown": false,
-                "componentFields": [],
-                "modals": []
+                "description": "Get your daily boar"
             },
             "collection": {
                 "name": "collection",
@@ -258,16 +252,11 @@
                 "args": [
                     {
                         "name": "user",
-                        "description": "Check someone else's collection of boars",
-                        "required": false,
-                        "autocomplete": false,
-                        "choices": []
+                        "description": "Check someone else's collection of boars"
                     },
                     {
                         "name": "view",
                         "description": "What view to start off in (Normal, Detailed, Powerups)",
-                        "required": false,
-                        "autocomplete": "false",
                         "choices": [
                             {
                                 "name": "Normal",
@@ -285,10 +274,7 @@
                     },
                     {
                         "name": "page",
-                        "description": "Page to start off on. Accepts boar names.",
-                        "required": false,
-                        "autocomplete": "false",
-                        "choices": []
+                        "description": "Page to start off on. Accepts boar names."
                     }
                 ],
                 "cooldown": true,
@@ -402,13 +388,9 @@
             "name": "boar-manage",
             "perms": 32,
             "description": "Commands to manage BoarBot",
-            "staffOnly": true,
-            "devOnly": false,
             "setup": {
                 "name": "setup",
                 "description": "Set the bot up to your liking",
-                "args": [],
-                "adminOnly": true,
                 "cooldown": true,
                 "componentFields": [
                     [
@@ -440,7 +422,7 @@
                                 {
                                     "type": 2,
                                     "customId": "SETUP_INFO_TRADE_CHANNEL",
-                                    "emoji": "❔",
+                                    "emoji": "\u2754",
                                     "style": 2
                                 }
                             ]
@@ -495,7 +477,7 @@
                                 {
                                     "type": 2,
                                     "customId": "SETUP_INFO_BOAR_CHANNELS",
-                                    "emoji": "❔",
+                                    "emoji": "\u2754",
                                     "style": 2
                                 }
                             ]
@@ -520,7 +502,7 @@
                                 {
                                     "type": 2,
                                     "customId": "SETUP_INFO_SB",
-                                    "emoji": "❔",
+                                    "emoji": "\u2754",
                                     "style": 2
                                 }
                             ]
@@ -599,8 +581,6 @@
             "name": "boar-dev",
             "perms": 0,
             "description": "Commands exclusive to developers of BoarBot",
-            "staffOnly": true,
-            "devOnly": true,
             "give": {
                 "name": "give",
                 "description": "Give a user a boar/badge",
@@ -608,29 +588,19 @@
                     {
                         "name": "user",
                         "description": "User you'd like to give the item to",
-                        "required": true,
-                        "autocomplete": false,
-                        "choices": []
+                        "required": true
                     },
                     {
                         "name": "id",
                         "description": "ID of item to give",
                         "required": true,
-                        "autocomplete": true,
-                        "choices": []
+                        "autocomplete": true
                     }
-                ],
-                "cooldown": false,
-                "componentFields": [],
-                "modals": []
+                ]
             },
             "configRefresh": {
                 "name": "config-refresh",
-                "description": "Refresh the bot's config",
-                "args": [],
-                "cooldown": false,
-                "components": [],
-                "modals": []
+                "description": "Refresh the bot's config"
             }
         }
     },
@@ -655,12 +625,12 @@
             "description": "Can be used to enhance a boar to a random boar of the next rarity. Capped at 16. Divine is the maximum rarity that can be enhanced.",
             "tiers": [10, 25, 100]
         },
-        "prompts": {
+        "promptTypes": {
             "emojiFind": {
                 "name": "Emoji Find",
                 "description": "Click the emoji that's different from the others!",
-                "frown": {
-                    "name": "Frowning Face",
+                "frown1": {
+                    "name": "Frown Face",
                     "emoji1": "\uD83D\uDE41",
                     "emoji2": "\u2639"
                 }
@@ -682,7 +652,7 @@
             "jitter": {
                 "name": "Spam Click",
                 "description": "Click the green button as many times as you can!",
-                "oneButton": {
+                "one": {
                     "name": "One button",
                     "numButtons": 1
                 }
@@ -690,7 +660,7 @@
             "fast": {
                 "name": "Quick Click",
                 "description": "Click the green button as fast as you can!",
-                "oneButton": {
+                "one": {
                     "name": "One button",
                     "numButtons": 1
                 }
@@ -1075,6 +1045,7 @@
         "foregroundGray": "#151518",
         "font": "#DEDEDE",
         "badge": "#4D4278",
+        "powerup": "#40DEA9",
         "editionEmbed": "#248046",
         "baseEmbed": "#4F545C",
         "maintenance": "#FFFF00",

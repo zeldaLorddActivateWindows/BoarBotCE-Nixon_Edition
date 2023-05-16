@@ -113,6 +113,7 @@ export class NumberConfig {
     public readonly collExtraChanceLabelPos: [number, number] = [0, 0];
     public readonly collExtraChancePos: [number, number] = [0, 0];
     public readonly collEnhancerLabelPos: [number, number] = [0, 0];
+    public readonly collPowDataWidth: number = 0;
     public readonly collBoarStartX: number = 0;
     public readonly collBoarStartY: number = 0;
     public readonly collBoarSpacingX: number = 0;

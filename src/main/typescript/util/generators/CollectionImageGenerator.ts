@@ -6,6 +6,7 @@ import {AttachmentBuilder} from 'discord.js';
 import {BoarUser} from '../boar/BoarUser';
 import moment from 'moment/moment';
 import {RarityConfig} from '../../bot/config/items/RarityConfig';
+import {PromptConfig} from '../../bot/config/powerups/PromptConfig';
 
 /**
  * {@link CollectionImageGenerator CollectionImageGenerator.ts}
@@ -359,6 +360,7 @@ export class CollectionImageGenerator {
         const nums = this.config.numberConfig;
         const pathConfig = this.config.pathConfig;
         const colorConfig = this.config.colorConfig;
+        const powConfig = this.config.powerupConfig;
 
         const collectionUnderlay = pathConfig.collAssets + pathConfig.collPowerUnderlay;
         const enhancerActive = pathConfig.collAssets + pathConfig.enhancerOn;
@@ -374,10 +376,10 @@ export class CollectionImageGenerator {
         const totalAttempts50 = Math.min(powerupData.powerupAttempts50, nums.maxAttempts).toLocaleString();
 
         const claimedMap: Map<string, number> = new Map<string, number>([
-            [strConfig.powerupMultiplierBoost, powerupData.multiBoostsClaimed],
-            [strConfig.powerupGift, powerupData.giftsClaimed],
-            [strConfig.powerupExtraChance, powerupData.extraChancesClaimed],
-            [strConfig.powerupEnhancer, powerupData.enhancersClaimed]
+            [powConfig.multiBoost.name, powerupData.multiBoostsClaimed],
+            [powConfig.gift.name, powerupData.giftsClaimed],
+            [powConfig.extraChance.name, powerupData.extraChancesClaimed],
+            [powConfig.enhancer.name, powerupData.enhancersClaimed]
         ]);
 
         let mostClaimed: [string, number] = [strConfig.unavailable, 0];
@@ -387,9 +389,27 @@ export class CollectionImageGenerator {
             }
         }
 
-        const bestPrompt: [string, number] = [strConfig.unavailable, 0];
+        const promptMap: Map<string, number> = new Map<string, number>();
+        for (const promptType of Object.keys(powerupData.promptData)) {
+            const typeName = powConfig.promptTypes[promptType].name;
+            for (const prompt of Object.keys(powerupData.promptData[promptType])) {
+                if (typeof powConfig.promptTypes[promptType][prompt] === 'string') continue;
+
+                const promptName = (powConfig.promptTypes[promptType][prompt] as PromptConfig).name;
+
+                promptMap.set(typeName + ' - ' + promptName, powerupData.promptData[promptType][prompt].avg);
+            }
+        }
+
+        let bestPrompt: [string, number] = [strConfig.unavailable, 100];
+        for (const [key, val] of promptMap) {
+            if (val < bestPrompt[1]) {
+                bestPrompt = [key, val];
+            }
+        }
 
         const multiplier = Math.min(powerupData.multiplier, nums.maxMulti).toLocaleString() + 'x';
+        const multiBoost = '+' + Math.min(powerupData.multiBoostTotal, nums.maxMultiBoost).toLocaleString();
         const gifts = Math.min(powerupData.numGifts, nums.maxGifts).toLocaleString();
         const extraChance = Math.min(powerupData.extraChanceTotal, nums.maxExtraChance).toLocaleString() + '%';
 
@@ -424,17 +444,30 @@ export class CollectionImageGenerator {
         CanvasUtils.drawText(
             ctx, strConfig.collMostClaimedLabel, nums.collMostClaimedLabelPos, mediumFont, 'center', colorConfig.font
         );
-        CanvasUtils.drawText(ctx, mostClaimed[0], nums.collMostClaimedPos, smallMedium, 'center', colorConfig.font);
+        CanvasUtils.drawText(
+            ctx, mostClaimed[0], nums.collMostClaimedPos, smallMedium,
+            'center', colorConfig.font, nums.collPowDataWidth
+        );
 
         CanvasUtils.drawText(
             ctx, strConfig.collBestPromptLabel, nums.collBestPromptLabelPos, mediumFont, 'center', colorConfig.font
         );
-        CanvasUtils.drawText(ctx, bestPrompt[0], nums.collBestPromptPos, smallMedium, 'center', colorConfig.font);
+        CanvasUtils.drawText(
+            ctx, bestPrompt[0], nums.collBestPromptPos, smallMedium, 'center', colorConfig.font, nums.collPowDataWidth
+        );
 
         CanvasUtils.drawText(
             ctx, strConfig.collMultiplierLabel, nums.collMultiLabelPos, mediumFont, 'center', colorConfig.font
         );
-        CanvasUtils.drawText(ctx, multiplier, nums.collMultiPos, smallMedium, 'center', colorConfig.font);
+        if (powerupData.multiBoostTotal > 0) {
+            CanvasUtils.drawText(
+                ctx, multiplier + ' (%@)', nums.collMultiPos, smallMedium,
+                'center', colorConfig.font, undefined, false, multiBoost, colorConfig.powerup
+            );
+        } else {
+            CanvasUtils.drawText(ctx, multiplier, nums.collMultiPos, smallMedium, 'center', colorConfig.font);
+        }
+
 
         CanvasUtils.drawText(
             ctx, strConfig.collGiftsLabel, nums.collGiftsLabelPos, mediumFont, 'center', colorConfig.font
