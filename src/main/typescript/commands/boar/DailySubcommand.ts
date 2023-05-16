@@ -41,7 +41,7 @@ export default class DailySubcommand implements Subcommand {
         await interaction.deferReply();
         this.interaction = interaction;
 
-        await Queue.addQueue(() => this.doDaily(), interaction.id + interaction.user.id);
+        await this.doDaily();
     }
 
     /**
@@ -53,34 +53,43 @@ export default class DailySubcommand implements Subcommand {
     private async doDaily(): Promise<void> {
         if (!this.interaction.guild || !this.interaction.channel) return;
 
-        // New boar user object used for easier manipulation of data
-        const boarUser = new BoarUser(this.interaction.user, true);
+        let boarUser: BoarUser = {} as BoarUser;
+        let boarID: string | undefined;
 
-        const canUseDaily = await this.canUseDaily(boarUser);
-        if (!canUseDaily) return;
+        await Queue.addQueue(async () => {
+            // New boar user object used for easier manipulation of data
+            boarUser = new BoarUser(this.interaction.user, true);
 
-        // Map of rarity index keys and weight values
-        let rarityWeights = this.getRarityWeights();
-        const userMultiplier: number = boarUser.powerups.multiplier;
-        rarityWeights = this.applyMultiplier(userMultiplier, rarityWeights);
+            const canUseDaily = await this.canUseDaily(boarUser);
+            if (!canUseDaily) return;
 
-        const boarID = await this.getDaily(rarityWeights);
+            // Map of rarity index keys and weight values
+            let rarityWeights = this.getRarityWeights();
+            const userMultiplier: number = boarUser.powerups.multiplier;
+            rarityWeights = this.applyMultiplier(userMultiplier, rarityWeights);
 
-        if (!boarID) {
-            await LogDebug.handleError(this.config.stringConfig.dailyNoBoarFound, this.interaction);
-            return;
-        }
+            boarID = await this.getDaily(rarityWeights);
 
-        boarUser.boarStreak++;
-        boarUser.powerups.multiplier++;
-        boarUser.lastDaily = Date.now();
-        boarUser.numDailies++;
+            if (!boarID) {
+                await LogDebug.handleError(this.config.stringConfig.dailyNoBoarFound, this.interaction);
+                return;
+            }
 
-        if (boarUser.firstDaily === 0) {
-            boarUser.firstDaily = Date.now();
-        }
+            boarUser.boarStreak++;
+            boarUser.powerups.multiplier++;
+            boarUser.lastDaily = Date.now();
+            boarUser.numDailies++;
 
-        await boarUser.addBoar(this.config, boarID, this.interaction);
+            if (boarUser.firstDaily === 0) {
+                boarUser.firstDaily = Date.now();
+            }
+
+            boarUser.updateUserData();
+        }, this.interaction.id + this.interaction.user.id);
+
+        if (!boarID) return;
+
+        await boarUser.addBoar(this.config, boarID as string, this.interaction);
     }
 
     /**

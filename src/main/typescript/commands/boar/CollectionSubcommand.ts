@@ -93,6 +93,11 @@ export default class CollectionSubcommand implements Subcommand {
                 .toLowerCase().replace(/\s+/g, '')
             : "1";
 
+        LogDebug.sendDebug(
+            `User: ${userInput}, View: ${viewInput}, Page: ${pageInput}`,
+            this.config, this.firstInter
+        );
+
         await Queue.addQueue(() => this.getUserInfo(userInput), interaction.id + userInput.id);
 
         this.maxPageNormal = Math.floor(Object.keys(this.allBoars).length / config.numberConfig.collBoarsPerPage);
@@ -112,6 +117,8 @@ export default class CollectionSubcommand implements Subcommand {
             this.curPage = Math.max(Math.min(pageVal-1, this.maxPageNormal), 0);
         } else if (this.curView == View.Detailed) {
             this.curPage = Math.max(Math.min(pageVal-1, this.allBoars.length-1), 0);
+        } else {
+            this.curPage = Math.max(Math.min(pageVal-1, this.config.numberConfig.maxPowPages-1), 0);
         }
 
         this.collector = await CollectorUtils.createCollector(interaction, interaction.id + interaction.user.id);
@@ -132,7 +139,10 @@ export default class CollectionSubcommand implements Subcommand {
 
             this.compInter = inter;
 
-            LogDebug.sendDebug(`${inter.customId.split('|')[0]} on page ${this.curPage}`, this.config, this.firstInter);
+            LogDebug.sendDebug(
+                `${inter.customId.split('|')[0]} on page ${this.curPage} in view ${this.curView}`,
+                this.config, this.firstInter
+            );
 
             const collRowConfig = this.config.commandConfigs.boar.collection.componentFields;
             const collComponents = {
@@ -300,6 +310,8 @@ export default class CollectionSubcommand implements Subcommand {
                 this.curPage = Math.max(Math.min(pageVal-1, this.maxPageNormal), 0);
             } else if (this.curView === View.Detailed) {
                 this.curPage = Math.max(Math.min(pageVal-1, this.allBoars.length-1), 0);
+            } else {
+                this.curPage = Math.max(Math.min(pageVal-1, this.config.numberConfig.maxPowPages-1), 0);
             }
 
             await this.showCollection();
@@ -401,8 +413,8 @@ export default class CollectionSubcommand implements Subcommand {
             await this.collectionImage.createDetailedBase();
         }
 
-        if (this.curView == View.Powerups && !this.collectionImage.powerupsBaseMade()) {
-            await this.collectionImage.createPowerupsBase();
+        if (this.curView == View.Powerups) {
+            await this.collectionImage.createPowerupsBase(this.curPage);
         }
 
         let finalImage: AttachmentBuilder;
@@ -419,7 +431,8 @@ export default class CollectionSubcommand implements Subcommand {
         // Enables next button if there's more than one page
         if (
             this.curView == View.Normal && this.maxPageNormal > this.curPage ||
-            this.curView == View.Detailed && this.allBoars.length > this.curPage + 1
+            this.curView == View.Detailed && this.allBoars.length > this.curPage + 1 ||
+            this.curView == View.Powerups && this.config.numberConfig.maxPowPages > this.curPage + 1
         ) {
             this.baseRows[0].components[2].setDisabled(false);
         }

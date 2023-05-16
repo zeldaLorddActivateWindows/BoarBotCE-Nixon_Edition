@@ -89,6 +89,19 @@ export class StringConfig {
     public readonly collGiftsLabel: string = ' ';
     public readonly collExtraBoarLabel: string = ' ';
     public readonly collEnhancerLabel: string = ' ';
+    public readonly collBoostsClaimedLabel: string = ' ';
+    public readonly collBoostsUsedLabel: string = ' ';
+    public readonly collHighestMultiLabel: string = ' ';
+    public readonly collHighestBoostLabel: string = ' ';
+    public readonly collGiftsClaimedLabel: string = ' ';
+    public readonly collGiftsUsedLabel: string = ' ';
+    public readonly collGiftsOpenedLabel: string = ' ';
+    public readonly collMostGiftsLabel: string = ' ';
+    public readonly collChancesClaimedLabel: string = ' ';
+    public readonly collChancesUsedLabel: string = ' ';
+    public readonly collChanceHighestLabel: string = ' ';
+    public readonly collEnhancersClaimedLabel: string = ' ';
+    public readonly collEnhancedLabel: string = ' ';
     public readonly collEditionTitle: string = ' ';
     public readonly collEditionLine: string = ' ';
 

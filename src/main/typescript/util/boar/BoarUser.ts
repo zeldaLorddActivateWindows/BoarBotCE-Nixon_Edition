@@ -49,19 +49,7 @@ export class BoarUser {
 
         const userData = this.getUserData(createFile);
 
-        this.lastDaily = userData.lastDaily;
-        this.numDailies = userData.numDailies;
-        this.totalBoars = userData.totalBoars;
-        this.boarScore = userData.boarScore;
-        this.favoriteBoar = userData.favoriteBoar;
-        this.lastBoar = userData.lastBoar;
-        this.firstDaily = userData.firstDaily;
-        this.boarStreak = userData.boarStreak;
-        this.powerups = userData.powerups;
-        this.theme = userData.theme;
-        this.themes = userData.themes;
-        this.badges = userData.badges;
-        this.boarCollection = userData.boarCollection;
+        this.refreshUserData(userData);
 
         if (createFile || this.boarStreak > 0) {
             this.fixUserData(userData);
@@ -79,7 +67,7 @@ export class BoarUser {
     private getUserData(createFile?: boolean): any {
         let userDataJSON: string;
         const config = BoarBotApp.getBot().getConfig();
-        const userFile = config.pathConfig.userDataFolder + this.user?.id + '.json';
+        const userFile = config.pathConfig.userDataFolder + this.user.id + '.json';
 
         try {
             userDataJSON = fs.readFileSync(userFile, 'utf-8');
@@ -101,7 +89,7 @@ export class BoarUser {
      * Updates user data in JSON file and in this instance
      */
     public updateUserData(): void {
-        let userData = this.getUserData();
+        const userData = this.getUserData();
 
         userData.lastDaily = this.lastDaily;
         userData.numDailies = this.numDailies;
@@ -118,6 +106,22 @@ export class BoarUser {
         userData.boarCollection = this.boarCollection;
 
         this.fixUserData(userData);
+    }
+
+    public refreshUserData(userData: any): void {
+        this.lastDaily = userData.lastDaily;
+        this.numDailies = userData.numDailies;
+        this.totalBoars = userData.totalBoars;
+        this.boarScore = userData.boarScore;
+        this.favoriteBoar = userData.favoriteBoar;
+        this.lastBoar = userData.lastBoar;
+        this.firstDaily = userData.firstDaily;
+        this.boarStreak = userData.boarStreak;
+        this.powerups = userData.powerups;
+        this.theme = userData.theme;
+        this.themes = userData.themes;
+        this.badges = userData.badges;
+        this.boarCollection = userData.boarCollection;
     }
 
     /**
@@ -233,6 +237,59 @@ export class BoarUser {
         // Information about interaction
         const wasGiven = interaction.options.getSubcommand() === giveCommandConfig.name;
 
+        let boarEdition: number = 0;
+
+        // Updates global edition data
+        await Queue.addQueue(() => {
+            LogDebug.sendDebug('Updating global edition info...', config, interaction);
+
+            const globalData = DataHandlers.getGlobalData();
+
+            // Sets edition number
+            if (!globalData.editions[boarID])
+                globalData.editions[boarID] = 0;
+            boarEdition = ++globalData.editions[boarID];
+
+            fs.writeFileSync(pathConfig.globalDataFile, JSON.stringify(globalData));
+
+            LogDebug.sendDebug('Finished updating global edition info.', config, interaction);
+        }, interaction.id + 'global');
+
+        await Queue.addQueue(async () => {
+            LogDebug.sendDebug('Updating user info...', config, interaction);
+
+            this.refreshUserData(this.getUserData());
+
+            if (!this.boarCollection[boarID]) {
+                this.boarCollection[boarID] = {
+                    num: 0,
+                    editions: [],
+                    editionDates: [],
+                    firstObtained: 0,
+                    lastObtained: 0
+                };
+                this.boarCollection[boarID].firstObtained = Date.now();
+            }
+
+            this.boarCollection[boarID].num++;
+            this.boarCollection[boarID].lastObtained = Date.now();
+
+            if (boarEdition <= numConfig.maxTrackedEditions || !rarityInfo.fromDaily) {
+                this.boarCollection[boarID].editions.push(boarEdition);
+                this.boarCollection[boarID].editions.sort((a, b) => a-b);
+                this.boarCollection[boarID].editionDates.push(Date.now());
+                this.boarCollection[boarID].editionDates.sort((a, b) => a-b);
+            }
+
+            this.lastBoar = boarID;
+            this.boarScore += config.rarityConfigs[rarityIndex].score;
+            this.totalBoars++;
+
+            this.updateUserData();
+            await this.orderBoars(config, interaction);
+            LogDebug.sendDebug('Finished updating user info.', config, interaction);
+        }, interaction.id + interaction.user.id);
+
         // Image elements to be combined into one final image
         let attachmentTitle = strConfig.dailyTitle;
 
@@ -243,8 +300,10 @@ export class BoarUser {
             attachmentTitle = strConfig.giveTitle;
         }
 
+        LogDebug.sendDebug('Creating image...', config, interaction);
         // Get the image attachment from ID
         const attachment = await new ItemImageGenerator(this, config, boarID, attachmentTitle).handleImageCreate(false);
+        LogDebug.sendDebug('Image created', config, interaction);
 
         // If regular boar on '/boar daily', reply to interaction with attachment
         // If given, send as separate message and reply to interaction with success
@@ -254,48 +313,6 @@ export class BoarUser {
             await Replies.handleReply(interaction, strConfig.giveBoar);
             await interaction.followUp({ files: [attachment] });
         }
-
-        let boarEdition: number = 0;
-
-        // Updates global edition data
-        await Queue.addQueue(() => {
-            const globalData = DataHandlers.getGlobalData();
-
-            // Sets edition number
-            if (!globalData.editions[boarID])
-                globalData.editions[boarID] = 0;
-            boarEdition = ++globalData.editions[boarID];
-
-            fs.writeFileSync(pathConfig.globalDataFile, JSON.stringify(globalData));
-        }, interaction.id + 'global');
-
-        if (!this.boarCollection[boarID]) {
-            this.boarCollection[boarID] = {
-                num: 0,
-                editions: [],
-                editionDates: [],
-                firstObtained: 0,
-                lastObtained: 0
-            };
-            this.boarCollection[boarID].firstObtained = Date.now();
-        }
-
-        this.boarCollection[boarID].num++;
-        this.boarCollection[boarID].lastObtained = Date.now();
-
-        if (boarEdition <= numConfig.maxTrackedEditions || !rarityInfo.fromDaily) {
-            this.boarCollection[boarID].editions.push(boarEdition);
-            this.boarCollection[boarID].editions.sort((a, b) => a-b);
-            this.boarCollection[boarID].editionDates.push(Date.now());
-            this.boarCollection[boarID].editionDates.sort((a, b) => a-b);
-        }
-
-        this.lastBoar = boarID;
-        this.boarScore += config.rarityConfigs[rarityIndex].score;
-        this.totalBoars++;
-
-        this.updateUserData();
-        await this.orderBoars(config, interaction);
     }
 
     /**

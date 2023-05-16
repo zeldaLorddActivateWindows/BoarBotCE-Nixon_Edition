@@ -353,7 +353,20 @@ export class CollectionImageGenerator {
      *
      * @private
      */
-    public async createPowerupsBase(): Promise<void> {
+    public async createPowerupsBase(page: number): Promise<void> {
+        switch (page) {
+            case 2:
+                await this.createBaseThree();
+                break;
+            case 1:
+                await this.createBaseTwo();
+                break;
+            default:
+                await this.createBaseOne();
+        }
+    }
+
+    private async createBaseOne(): Promise<void> {
         // Config aliases
 
         const strConfig = this.config.stringConfig;
@@ -370,10 +383,11 @@ export class CollectionImageGenerator {
         const smallMedium = `${nums.fontSmallMedium}px ${strConfig.fontName}`;
 
         const powerupData = this.boarUser.powerups;
-        const totalAttempts = Math.min(powerupData.powerupAttempts, nums.maxAttempts).toLocaleString();
-        const totalAttempts1 = Math.min(powerupData.powerupAttempts1, nums.maxAttempts).toLocaleString();
-        const totalAttempts10 = Math.min(powerupData.powerupAttempts10, nums.maxAttempts).toLocaleString();
-        const totalAttempts50 = Math.min(powerupData.powerupAttempts50, nums.maxAttempts).toLocaleString();
+
+        const totalAttempts = Math.min(powerupData.powerupAttempts, nums.maxPowBase).toLocaleString();
+        const totalAttempts1 = Math.min(powerupData.powerupAttempts1, nums.maxPowBase).toLocaleString();
+        const totalAttempts10 = Math.min(powerupData.powerupAttempts10, nums.maxPowBase).toLocaleString();
+        const totalAttempts50 = Math.min(powerupData.powerupAttempts50, nums.maxPowBase).toLocaleString();
 
         const claimedMap: Map<string, number> = new Map<string, number>([
             [powConfig.multiBoost.name, powerupData.multiBoostsClaimed],
@@ -410,7 +424,7 @@ export class CollectionImageGenerator {
 
         const multiplier = Math.min(powerupData.multiplier, nums.maxMulti).toLocaleString() + 'x';
         const multiBoost = '+' + Math.min(powerupData.multiBoostTotal, nums.maxMultiBoost).toLocaleString();
-        const gifts = Math.min(powerupData.numGifts, nums.maxGifts).toLocaleString();
+        const gifts = Math.min(powerupData.numGifts, nums.maxPowBase).toLocaleString();
         const extraChance = Math.min(powerupData.extraChanceTotal, nums.maxExtraChance).toLocaleString() + '%';
 
         const canvas = Canvas.createCanvas(nums.collImageSize[0], nums.collImageSize[1]);
@@ -495,6 +509,173 @@ export class CollectionImageGenerator {
                 : enhancerInactive;
 
             ctx.drawImage(await Canvas.loadImage(enhancerFile), ...enhancerImagePos, ...nums.collEnhancerSize);
+        }
+
+        this.powerupsBase = canvas.toBuffer();
+    }
+
+    private async createBaseTwo(): Promise<void> {
+        // Config aliases
+
+        const strConfig = this.config.stringConfig;
+        const nums = this.config.numberConfig;
+        const pathConfig = this.config.pathConfig;
+        const colorConfig = this.config.colorConfig;
+
+        const collectionUnderlay = pathConfig.collAssets + pathConfig.collPowerUnderlay2;
+
+        const mediumFont = `${nums.fontMedium}px ${strConfig.fontName}`;
+        const smallMedium = `${nums.fontSmallMedium}px ${strConfig.fontName}`;
+
+        const powerupData = this.boarUser.powerups;
+
+        const multiBoostClaimed = Math.min(powerupData.multiBoostsClaimed, nums.maxPowBase).toLocaleString();
+        const multiBoostsUsed = Math.min(powerupData.multiBoostsUsed, nums.maxPowBase).toLocaleString();
+        const highestMulti = Math.min(powerupData.highestMulti, nums.maxMulti).toLocaleString() + 'x';
+        const highestMultiBoost = '+' + Math.min(powerupData.highestMultiBoost, nums.maxMultiBoost).toLocaleString();
+        const giftsClaimed = Math.min(powerupData.giftsClaimed, nums.maxPowBase).toLocaleString();
+        const giftsUsed = Math.min(powerupData.giftsUsed, nums.maxPowBase).toLocaleString();
+        const giftsOpened = Math.min(powerupData.giftsOpened, nums.maxPowBase).toLocaleString();
+        const giftsMost = Math.min(powerupData.mostGifts, nums.maxPowBase).toLocaleString();
+
+        const canvas = Canvas.createCanvas(nums.collImageSize[0], nums.collImageSize[1]);
+        const ctx = canvas.getContext('2d');
+
+        ctx.drawImage(await Canvas.loadImage(collectionUnderlay), ...nums.originPos, ...nums.collImageSize);
+        await this.drawTopBar(ctx);
+
+        // Draws stats info
+
+        CanvasUtils.drawText(
+            ctx, strConfig.collBoostsClaimedLabel, nums.collBoostClaimedLabelPos, mediumFont, 'center', colorConfig.font
+        );
+        CanvasUtils.drawText(ctx, multiBoostClaimed, nums.collBoostClaimedPos, smallMedium, 'center', colorConfig.font);
+
+        CanvasUtils.drawText(
+            ctx, strConfig.collBoostsUsedLabel, nums.collBoostUsedLabelPos, mediumFont, 'center', colorConfig.font
+        );
+        CanvasUtils.drawText(ctx, multiBoostsUsed, nums.collBoostUsedPos, smallMedium, 'center', colorConfig.font);
+
+        CanvasUtils.drawText(
+            ctx, strConfig.collHighestMultiLabel, nums.collHighestMultiLabelPos, mediumFont, 'center', colorConfig.font
+        );
+        CanvasUtils.drawText(ctx, highestMulti, nums.collHighestMultiPos, smallMedium, 'center', colorConfig.font);
+
+        CanvasUtils.drawText(
+            ctx, strConfig.collHighestBoostLabel, nums.collHighestBoostLabelPos, mediumFont, 'center', colorConfig.font
+        );
+        CanvasUtils.drawText(
+            ctx, highestMultiBoost, nums.collHighestBoostPos, smallMedium, 'center', colorConfig.powerup
+        );
+
+        CanvasUtils.drawText(
+            ctx, strConfig.collGiftsClaimedLabel, nums.collGiftsClaimedLabelPos, mediumFont, 'center', colorConfig.font
+        );
+        CanvasUtils.drawText(ctx, giftsClaimed, nums.collGiftsClaimedPos, smallMedium, 'center', colorConfig.font);
+
+        CanvasUtils.drawText(
+            ctx, strConfig.collGiftsUsedLabel, nums.collGiftsUsedLabelPos, mediumFont, 'center', colorConfig.font
+        );
+        CanvasUtils.drawText(ctx, giftsUsed, nums.collGiftsUsedPos, smallMedium, 'center', colorConfig.font);
+
+        CanvasUtils.drawText(
+            ctx, strConfig.collGiftsOpenedLabel, nums.collGiftsOpenedLabelPos, mediumFont, 'center', colorConfig.font
+        );
+        CanvasUtils.drawText(ctx, giftsOpened, nums.collGiftsOpenedPos, smallMedium, 'center', colorConfig.font);
+
+        CanvasUtils.drawText(
+            ctx, strConfig.collMostGiftsLabel, nums.collMostGiftsLabelPos, mediumFont, 'center', colorConfig.font
+        );
+        CanvasUtils.drawText(ctx, giftsMost, nums.collMostGiftsPos, smallMedium, 'center', colorConfig.font);
+
+        this.powerupsBase = canvas.toBuffer();
+    }
+
+    private async createBaseThree(): Promise<void> {
+        // Config aliases
+
+        const strConfig = this.config.stringConfig;
+        const nums = this.config.numberConfig;
+        const pathConfig = this.config.pathConfig;
+        const colorConfig = this.config.colorConfig;
+        const rarityConfig = this.config.rarityConfigs;
+
+        const collectionUnderlay = pathConfig.collAssets + pathConfig.collPowerUnderlay3;
+
+        const mediumFont = `${nums.fontMedium}px ${strConfig.fontName}`;
+        const smallMedium = `${nums.fontSmallMedium}px ${strConfig.fontName}`;
+
+        const powerupData = this.boarUser.powerups;
+
+        const extraChancesClaimed = Math.min(powerupData.extraChancesClaimed, nums.maxPowBase).toLocaleString();
+        const extraChancesUsed = Math.min(powerupData.extraChancesUsed, nums.maxPowBase).toLocaleString();
+        const highestExtraChance = Math.min(powerupData.highestExtraChance, nums.maxExtraChance).toLocaleString() + '%';
+        const enhancersClaimed = Math.min(powerupData.enhancersClaimed, nums.maxPowBase).toLocaleString();
+
+        const enhanced = [];
+        for (let i=0; i<powerupData.enhancedRarities.length; i++) {
+            if (i < 3) {
+                enhanced.push(Math.min(powerupData.enhancedRarities[i], nums.maxPowBase).toLocaleString())
+            } else {
+                enhanced.push(Math.min(powerupData.enhancedRarities[i], nums.maxSmallEnhanced).toLocaleString())
+            }
+        }
+
+        const canvas = Canvas.createCanvas(nums.collImageSize[0], nums.collImageSize[1]);
+        const ctx = canvas.getContext('2d');
+
+        ctx.drawImage(await Canvas.loadImage(collectionUnderlay), ...nums.originPos, ...nums.collImageSize);
+        await this.drawTopBar(ctx);
+
+        // Draws stats info
+
+        CanvasUtils.drawText(
+            ctx, strConfig.collChancesClaimedLabel, nums.collChancesClaimedLabelPos,
+            mediumFont, 'center', colorConfig.font
+        );
+        CanvasUtils.drawText(
+            ctx, extraChancesClaimed, nums.collChancesClaimedPos, smallMedium, 'center', colorConfig.font
+        );
+
+        CanvasUtils.drawText(
+            ctx, strConfig.collChancesUsedLabel, nums.collChancesUsedLabelPos, mediumFont, 'center', colorConfig.font
+        );
+        CanvasUtils.drawText(
+            ctx, extraChancesUsed, nums.collChancesUsedPos, smallMedium, 'center', colorConfig.font
+        );
+
+        CanvasUtils.drawText(
+            ctx, strConfig.collChanceHighestLabel, nums.collChanceHighestLabelPos,
+            mediumFont, 'center', colorConfig.font
+        );
+        CanvasUtils.drawText(
+            ctx, highestExtraChance, nums.collChanceHighestPos, smallMedium, 'center', colorConfig.font
+        );
+
+        CanvasUtils.drawText(
+            ctx, strConfig.collEnhancersClaimedLabel, nums.collEnhancersClaimedLabelPos,
+            mediumFont, 'center', colorConfig.font
+        );
+        CanvasUtils.drawText(
+            ctx, enhancersClaimed, nums.collEnhancersClaimedPos, smallMedium, 'center', colorConfig.font
+        );
+
+        for (let i=0; i<7; i++) {
+            if (i < 3) {
+                CanvasUtils.drawText(
+                    ctx, strConfig.collEnhancedLabel, nums.collEnhancedLabelPositions[i], mediumFont, 'center',
+                    colorConfig.font, undefined, false, rarityConfig[i].pluralName, colorConfig['rarity' + (i+1)]
+                );
+            } else {
+                CanvasUtils.drawText(
+                    ctx, rarityConfig[i].pluralName, nums.collEnhancedLabelPositions[i],
+                    mediumFont, 'center', colorConfig['rarity' + (i+1)]
+                );
+            }
+
+            CanvasUtils.drawText(
+                ctx, enhanced[i], nums.collEnhancedPositions[i], smallMedium, 'center', colorConfig.font
+            );
         }
 
         this.powerupsBase = canvas.toBuffer();
