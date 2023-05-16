@@ -38,9 +38,16 @@ export class PathConfig {
 
     public readonly collOverlay: string = '';
     public readonly collUnderlay: string = '';
+    public readonly collDetailOverlay: string = '';
+    public readonly collDetailUnderlay: string = '';
+    public readonly collPowerOverlay: string = '';
+    public readonly collPowerUnderlay: string = '';
+    public readonly collPowerUnderlay2: string = '';
+    public readonly collPowerUnderlay3: string = '';
     public readonly clanNone: string = '';
     public readonly enhancerOn: string = '';
     public readonly enhancerOff: string = '';
+    public readonly favorite: string = '';
 
     // Other image/asset file names
 

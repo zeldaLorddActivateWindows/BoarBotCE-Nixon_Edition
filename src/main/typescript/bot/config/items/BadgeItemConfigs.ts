@@ -11,9 +11,4 @@ import {BadgeItemConfig} from './BadgeItemConfig';
  */
 export class BadgeItemConfigs {
     [badgeKey: string]: BadgeItemConfig;
-
-    public readonly early_supporter: BadgeItemConfig = new BadgeItemConfig;
-    public readonly hunter: BadgeItemConfig = new BadgeItemConfig;
-    public readonly artist: BadgeItemConfig = new BadgeItemConfig;
-    public readonly athlete: BadgeItemConfig = new BadgeItemConfig;
 }

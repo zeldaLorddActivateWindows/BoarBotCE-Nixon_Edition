@@ -1,10 +1,7 @@
 import {
-    ActionRowBuilder, APISelectMenuOption,
+    ActionRowBuilder,
     ButtonBuilder,
-    ButtonInteraction,
-    ComponentType,
-    SelectMenuBuilder,
-    SelectMenuInteraction
+    ComponentType, SelectMenuComponentOptionData, StringSelectMenuBuilder
 } from 'discord.js';
 import {RowConfig} from '../../bot/config/components/RowConfig';
 
@@ -28,9 +25,9 @@ export class ComponentUtils {
      */
     public static addToIDs(
         rowConfig: RowConfig,
-        row: ActionRowBuilder<SelectMenuBuilder | ButtonBuilder>,
+        row: ActionRowBuilder<StringSelectMenuBuilder | ButtonBuilder>,
         addition: string
-    ): ActionRowBuilder<SelectMenuBuilder | ButtonBuilder> {
+    ): ActionRowBuilder<StringSelectMenuBuilder | ButtonBuilder> {
         for (const component in row.components) {
             const componentConfig = rowConfig.components[component];
             row.components[component].setCustomId(componentConfig.customId + '|' + addition);
@@ -46,11 +43,11 @@ export class ComponentUtils {
      * @param options - The options to add to the select menu
      */
     public static addOptionsToSelectRow(
-        row: ActionRowBuilder<ButtonBuilder | SelectMenuBuilder>,
-        options: APISelectMenuOption[]
-    ): ActionRowBuilder<ButtonBuilder | SelectMenuBuilder> {
-        if (row.components[0].data.type === ComponentType.SelectMenu) {
-            (row.components[0] as SelectMenuBuilder).setOptions(...options);
+        row: ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>,
+        options: SelectMenuComponentOptionData[]
+    ): ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder> {
+        if (row.components[0].data.type === ComponentType.StringSelect) {
+            (row.components[0] as StringSelectMenuBuilder).setOptions(...options);
         }
 
         return row;

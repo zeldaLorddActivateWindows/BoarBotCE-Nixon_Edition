@@ -18,7 +18,7 @@ import {LogDebug} from '../../util/logging/LogDebug';
 export default class ConfigRefreshSubcommand implements Subcommand {
     private config = BoarBotApp.getBot().getConfig();
     private subcommandInfo = this.config.commandConfigs.boarDev.configRefresh;
-    public readonly data = { name: this.subcommandInfo.name, path: __filename };
+    public readonly data = { name: this.subcommandInfo.name, path: __filename, cooldown: this.subcommandInfo.cooldown };
 
     /**
      * Handles the functionality for this subcommand
@@ -26,12 +26,8 @@ export default class ConfigRefreshSubcommand implements Subcommand {
      * @param interaction - The interaction that called the subcommand
      */
     public async execute(interaction: ChatInputCommandInteraction) {
-        LogDebug.sendDebug('Started interaction', this.config, interaction);
-
         BoarBotApp.getBot().loadConfig();
 
         await interaction.reply({ content: 'Successfully refreshed the config.', ephemeral: true });
-
-        LogDebug.sendDebug('End of interaction', this.config, interaction);
     }
 }

@@ -1,6 +1,7 @@
 import {BotConfig} from '../../bot/config/BotConfig';
 import {ChatInputCommandInteraction} from 'discord.js';
 import {Replies} from './Replies';
+import {BoarBotApp} from '../../BoarBotApp';
 
 /**
  * {@link Cooldown Cooldown.ts}
@@ -23,23 +24,26 @@ export class Cooldown {
         config: BotConfig,
         interaction: ChatInputCommandInteraction
     ): Promise<boolean> {
-        const commandName = interaction.commandName;
+        const subcommandName = interaction.options.getSubcommand();
+        const needsCooldown = BoarBotApp.getBot().getSubcommands().get(subcommandName)?.data.cooldown;
         const userID = interaction.user.id;
 
-        if (!this.cooldowns[commandName]) {
-            this.cooldowns[commandName] = [];
+        if (!needsCooldown) return false;
+
+        if (!this.cooldowns[subcommandName]) {
+            this.cooldowns[subcommandName] = [];
         }
 
-        if (this.cooldowns[commandName].includes(userID)) {
+        if (this.cooldowns[subcommandName].includes(userID)) {
             await Replies.onCooldownReply(config, interaction);
             return true;
         }
 
-        this.cooldowns[commandName].push(userID);
+        this.cooldowns[subcommandName].push(userID);
 
         setTimeout(() => {
-            const index = this.cooldowns[commandName].indexOf(userID);
-            this.cooldowns[commandName].splice(index, 1);
+            const index = this.cooldowns[subcommandName].indexOf(userID);
+            this.cooldowns[subcommandName].splice(index, 1);
         }, 5000);
 
         return false;

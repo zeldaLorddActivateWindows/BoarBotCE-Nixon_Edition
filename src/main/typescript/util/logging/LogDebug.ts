@@ -1,13 +1,13 @@
 import {
     AutocompleteInteraction,
-    ChatInputCommandInteraction,
-    EmbedBuilder,
+    ChatInputCommandInteraction, ColorResolvable,
     Message,
     ModalSubmitInteraction
 } from 'discord.js';
 import {BotConfig} from '../../bot/config/BotConfig';
 import {BoarBotApp} from '../../BoarBotApp';
 import {InteractionUtils} from '../interactions/InteractionUtils';
+import {Replies} from '../interactions/Replies';
 
 // Console colors
 enum Colors {
@@ -28,8 +28,6 @@ enum Colors {
  * @copyright WeslayCodes 2023
  */
 export class LogDebug {
-    public static readonly errorEmbed = new EmbedBuilder().setColor(0xFF0000);
-
     /**
      * Sends messages to the console
      *
@@ -40,7 +38,7 @@ export class LogDebug {
     public static sendDebug(
         debugMessage: any,
         config: BotConfig,
-        interaction?: ChatInputCommandInteraction
+        interaction?: ChatInputCommandInteraction | AutocompleteInteraction
     ): void {
         if (!config.debugMode) return;
 
@@ -61,7 +59,6 @@ export class LogDebug {
 
         const completeString = prefix + time + debugMessage;
 
-        console.log(prefix + time + debugMessage);
         this.sendLogMessage(config, completeString);
     }
 
@@ -82,28 +79,13 @@ export class LogDebug {
             const completeString = prefix + time + errString;
             const config = BoarBotApp.getBot().getConfig();
 
-            console.log(completeString);
             await this.sendLogMessage(config, completeString);
 
             if (!interaction || !interaction.isChatInputCommand()) return;
 
             const errResponse = config.stringConfig.error;
 
-            if (interaction.replied) {
-                await interaction.followUp({
-                    embeds: [LogDebug.errorEmbed.setTitle(errResponse)],
-                    ephemeral: true
-                });
-            } else if (interaction.deferred) {
-                await interaction.editReply({
-                    embeds: [LogDebug.errorEmbed.setTitle(errResponse)]
-                });
-            } else if (Date.now() - interaction.createdTimestamp < 3000) {
-                await interaction.reply({
-                    embeds: [LogDebug.errorEmbed.setTitle(errResponse)],
-                    ephemeral: true
-                });
-            }
+            await Replies.handleReply(interaction, errResponse, config.colorConfig.error as ColorResolvable);
         } catch (err: unknown) {
             await this.handleError(err);
         }
@@ -120,7 +102,6 @@ export class LogDebug {
         const time = LogDebug.getPrefixTime();
         const completeString = prefix + time + `${message.author.tag} sent: ` + message.content;
 
-        console.log(completeString);
         await this.sendLogMessage(config, completeString);
 
         await message.reply(config.stringConfig.dmReceived);
@@ -145,10 +126,12 @@ export class LogDebug {
     }
 
     private static async sendLogMessage(config: BotConfig, message: string): Promise<void> {
+        console.log(message);
+
         if (BoarBotApp.getBot().getClient().isReady()) {
             InteractionUtils.getTextChannel(config, config.logChannel).then(async (logChannel) => {
                 if (!logChannel) return;
-                await logChannel.send('```ansi\n' + message + '```');
+                await logChannel.send('```ansi\n' + message.substring(0, 1900) + '```');
             });
         }
     }

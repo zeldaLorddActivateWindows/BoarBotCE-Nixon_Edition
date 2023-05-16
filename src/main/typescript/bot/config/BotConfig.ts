@@ -1,7 +1,6 @@
 import {
     User,
-    TextChannel,
-    APISelectMenuOption,
+    TextChannel
 } from 'discord.js';
 import {PathConfig} from './PathConfig';
 import {StringConfig} from './StringConfig';
@@ -11,6 +10,7 @@ import {BoarItemConfigs} from './items/BoarItemConfigs';
 import {BadgeItemConfigs} from './items/BadgeItemConfigs';
 import {RarityConfig} from './items/RarityConfig';
 import {ColorConfig} from './ColorConfig';
+import {PowerupConfigs} from './powerups/PowerupConfigs';
 
 /**
  * {@link BotConfig BotConfig.ts}
@@ -47,14 +47,19 @@ export class BotConfig {
     public readonly stringConfig: StringConfig = new StringConfig;
 
     /**
-     * Collection of {@link CommandConfig command configurations} the bot uses
-     */
-    public readonly commandConfigs: CommandConfigs = new CommandConfigs;
-
-    /**
      * Non-intuitive number constants the bot uses
      */
     public readonly numberConfig: NumberConfig = new NumberConfig;
+
+    /**
+     * Collection of information about powerups
+     */
+    public readonly powerupConfig: PowerupConfigs = new PowerupConfigs;
+
+    /**
+     * Collection of {@link CommandConfig command configurations} the bot uses
+     */
+    public readonly commandConfigs: CommandConfigs = new CommandConfigs;
 
     /**
      * Collection of {@link BoarItemConfig boar item configurations}

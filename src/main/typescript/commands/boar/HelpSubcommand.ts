@@ -16,7 +16,7 @@ import {LogDebug} from '../../util/logging/LogDebug';
 export default class HelpSubcommand implements Subcommand {
     private config = BoarBotApp.getBot().getConfig();
     private subcommandInfo = this.config.commandConfigs.boar.help;
-    public readonly data = { name: this.subcommandInfo.name, path: __filename };
+    public readonly data = { name: this.subcommandInfo.name, path: __filename, cooldown: this.subcommandInfo.cooldown };
 
     /**
      * Handles the functionality for this subcommand
@@ -35,7 +35,5 @@ export default class HelpSubcommand implements Subcommand {
         const helpImagePath = this.config.pathConfig.otherAssets + this.config.pathConfig.helpBackground;
 
         await interaction.editReply({ files: [fs.readFileSync(helpImagePath)] });
-
-        LogDebug.sendDebug('End of interaction', this.config, interaction);
     }
 }

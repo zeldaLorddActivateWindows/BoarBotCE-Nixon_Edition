@@ -10,6 +10,7 @@
 export class BoarItemConfig {
     public readonly name: string = '';
     public readonly file: string = '';
+    public readonly staticFile: string | undefined;
     public readonly description: string = '';
     public readonly isSB: boolean = false;
     public readonly blacklisted: boolean = false;

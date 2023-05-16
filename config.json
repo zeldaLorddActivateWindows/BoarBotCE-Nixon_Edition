@@ -22,9 +22,16 @@
         "itemNameplate": "DailyNameplate.png",
         "collOverlay": "BoarCollectionOverlay.png",
         "collUnderlay": "BoarCollectionUnderlay.png",
+        "collDetailOverlay": "BoarCollectionDetailedOverlay.png",
+        "collDetailUnderlay": "BoarCollectionDetailedUnderlay.png",
+        "collPowerOverlay": "BoarCollectionPowerupsOverlay.png",
+        "collPowerUnderlay": "BoarCollectionPowerupsUnderlay.png",
+        "collPowerUnderlay2": "BoarCollectionPowerupsUnderlay2.png",
+        "collPowerUnderlay3": "BoarCollectionPowerupsUnderlay3.png",
         "clanNone": "BoarClanNone.png",
         "enhancerOn": "EnhancerActive.png",
         "enhancerOff": "EnhancerInactive.png",
+        "favorite": "favorite.png",
         "thankYouImage": "BoarBotThanks.png",
         "mainFont": "MinecraftFont.ttf",
         "helpBackground": "Help.png",
@@ -43,14 +50,15 @@
         "noGuild": "This can only be used in a server!",
         "nullFound": "One or more inputs are `null`!",
         "invalidID": "Invalid ID input!",
+        "invalidPage": "Invalid Page input!",
         "onCooldown": "You're using this command too fast! Please wait 5 seconds!",
-        "noAttachmentPerms": ":exclamation: **WARNING:** The bot doesn't have attachment permissions, so some interactive images may not appear.",
-        "error": ":anger: Something went wrong! Please try again in a few minutes. If the issue persists, DM the bot with the issue!",
-        "maintenance": ":warning: BoarBot is currently in maintenance mode!",
-        "setupCancelled": ":x: **__Setup was cancelled!__**",
-        "setupError": ":exclamation: **__An error occurred while getting information! Try again later.__**",
-        "setupFinishedAll": ":white_check_mark: **__BoarBot has successfully been set up! Do </boar daily:1080193988046364733> in one of the boar channels you chose to get started.__**",
-        "setupExpired": ":question: **__You haven't interacted with the form for 2 minutes! Automatically terminating setup.__**",
+        "noAttachmentPerms": "BoarBot doesn't have attachment permissions, so some interactive images may not appear.",
+        "error": "Something went wrong! Please try again in a few minutes. If the issue persists, DM the bot with the issue!",
+        "maintenance": "BoarBot is currently in maintenance mode!",
+        "setupCancelled": "**Setup was cancelled!**",
+        "setupError": "**An error occurred while getting information! Try again later.**",
+        "setupFinishedAll": "**BoarBot has successfully been set up! Do </boar daily:1080193988046364733> in one of the boar channels you chose to get started.**",
+        "setupExpired": "**You haven't interacted with the form for 2 minutes! Automatically terminating setup.**",
         "setupUnfinished1": "**What channel can be used for trading?** \n*(Note: Threads will dynamically be created in this channel.)*",
         "setupUnfinished2": "**What channels can BoarBot commands be used in? [Max 3]** \n*(Note: If you have a lot of server members, these channels may get flooded.)*",
         "setupUnfinished3": "**Is this server a Hypixel Skyblock community?**",
@@ -83,6 +91,35 @@
         "collLastDailyLabel": "Last Daily",
         "collFavLabel": "FAVORITE",
         "collRecentLabel": "RECENT",
+        "collIndivTotalLabel": "Total Collected",
+        "collFirstObtainedLabel": "First Obtained",
+        "collLastObtainedLabel": "Last Gotten",
+        "collDescriptionLabel": "Description",
+        "collAttemptsLabel": "Total Attempts",
+        "collAttempts50Label": "Top 50% Attempts",
+        "collAttempts10Label": "Top 10% Attempts",
+        "collAttempts1Label": "Top 1% Attempts",
+        "collMostClaimedLabel": "Most Claimed",
+        "collBestPromptLabel": "Best Prompt",
+        "collMultiplierLabel": "Multiplier",
+        "collGiftsLabel": "Boar Gifts",
+        "collExtraBoarLabel": "Extra Boar Chance",
+        "collEnhancerLabel": "Boar Enhancers",
+        "collBoostsClaimedLabel": "Multiplier Boosts Claimed",
+        "collBoostsUsedLabel": "Multiplier Boosts Used",
+        "collHighestMultiLabel": "Highest Multiplier",
+        "collHighestBoostLabel": "Highest Multiplier Boost",
+        "collGiftsClaimedLabel": "Boar Gifts Claimed",
+        "collGiftsUsedLabel": "Boar Gifts Used",
+        "collGiftsOpenedLabel": "Boar Gifts Opened",
+        "collMostGiftsLabel": "Most Boar Gifts",
+        "collChancesClaimedLabel": "Extra Chances Claimed",
+        "collChancesUsedLabel": "Extra Chances Used",
+        "collChanceHighestLabel": "Highest Extra Chance",
+        "collEnhancersClaimedLabel": "Enhancers Claimed",
+        "collEnhancedLabel": "Enhanced %@",
+        "collEditionTitle": "__Your editions for %@__",
+        "collEditionLine": "**Edition #%@:** %@\n",
         "noParentChannel": "NO CATEGORY",
         "notValidChannel": "This channel isn't valid! Try a different one! The channel should be:\n- A text channel\n- Not already chosen\n- Exists in this server",
         "defaultSelectPlaceholder": "UNSELECTED",
@@ -93,6 +130,167 @@
         "fontName": "Minecraft",
         "commandDebugPrefix": "%@ [/%@ %@] | "
     },
+    "numberConfig": {
+        "originPos": [0, 0],
+        "fontBig": 60,
+        "fontMedium": 45,
+        "fontSmallMedium": 40,
+        "fontSmallest": 35,
+        "maxUsernameLength": 16,
+        "maxTrackedEditions": 100,
+        "maxScore": 999999999999999999,
+        "maxBoars": 99999999,
+        "maxStreak": 99999999,
+        "maxDailies": 99999999,
+        "maxIndivBoars": 999999999999999999,
+        "maxPowBase": 99999999999999999,
+        "maxMulti": 9999999,
+        "maxMultiBoost": 999999,
+        "maxExtraChance": 9999999999999999,
+        "maxEnhancers": 16,
+        "maxSmallEnhanced": 999999999,
+        "maxPowPages": 3,
+        "rarityIncreaseConst": 25000,
+        "itemImageSize": [930, 1080],
+        "itemBoarPos": [27, 169],
+        "itemBoarSize": [886, 886],
+        "itemBadgePos": [120, 250],
+        "itemBadgeSize": [700, 700],
+        "itemTitlePos": [464, 82],
+        "itemNamePos": [464, 138],
+        "itemNameplatePos": [102, 964],
+        "itemNameplatePadding": 120,
+        "itemNameplateHeight": 80,
+        "itemUserTagPos": [200, 1022],
+        "itemUserAvatarPos": [36, 894],
+        "itemUserAvatarWidth": 150,
+        "collImageSize": [1920, 1388],
+        "collUserAvatarPos": [24, 24],
+        "collUserAvatarSize": [156, 156],
+        "collUserTagPos": [225, 80],
+        "collClanPos": [1740, 24],
+        "collClanSize": [156,156],
+        "collDateLabelPos": [994, 78],
+        "collDatePos": [1005, 150],
+        "collNoBadgePos": [240, 150],
+        "collBadgeStart": 240,
+        "collBadgeSpacing": 70,
+        "collBadgeY": 105,
+        "collBadgeSize": [55, 55],
+        "collScoreLabelPos": [365, 289],
+        "collScorePos": [365, 359],
+        "collTotalLabelPos": [201, 472],
+        "collTotalPos": [201, 542],
+        "collUniquesLabelPos": [538, 472],
+        "collUniquePos": [538, 542],
+        "collDailiesLabelPos": [201, 656],
+        "collDailiesPos": [201, 726],
+        "collStreakLabelPos": [538, 656],
+        "collStreakPos": [538, 726],
+        "collLastDailyLabelPos": [370, 846],
+        "collLastDailyPos": [370, 946],
+        "collIndivRarityPos": [370, 290],
+        "collIndivFavHeight": 242,
+        "collIndivFavSize": [55, 55],
+        "collBoarNamePos": [370, 336],
+        "collBoarNameWidth": 635,
+        "collIndivTotalLabelPos": [370, 468],
+        "collIndivTotalPos": [370, 539],
+        "collFirstObtainedLabelPos": [370, 643],
+        "collFirstObtainedPos": [370, 714],
+        "collLastObtainedLabelPos": [370, 818],
+        "collLastObtainedPos": [370, 889],
+        "collDescriptionLabelPos": [370, 1003],
+        "collDescriptionPos": [370, 1230],
+        "collDescriptionWidth": 630,
+        "collAttemptsLabelPos": [486, 313],
+        "collAttemptsPos": [486, 384],
+        "collAttempts1LabelPos": [486, 481],
+        "collAttempts1Pos": [486, 552],
+        "collAttempts10LabelPos": [486, 649],
+        "collAttempts10Pos": [486, 720],
+        "collAttempts50LabelPos": [486, 817],
+        "collAttempts50Pos": [486, 888],
+        "collMostClaimedLabelPos": [486, 985],
+        "collMostClaimedPos": [486, 1042],
+        "collBestPromptLabelPos": [486, 1153],
+        "collBestPromptPos": [486, 1210],
+        "collMultiLabelPos": [1441, 425],
+        "collMultiPos": [1441, 496],
+        "collGiftsLabelPos": [1441, 593],
+        "collGiftsPos": [1441, 664],
+        "collExtraChanceLabelPos": [1441, 761],
+        "collExtraChancePos": [1441, 832],
+        "collEnhancerLabelPos": [1441, 929],
+        "collBoostClaimedLabelPos": [486, 480],
+        "collBoostClaimedPos": [486, 551],
+        "collBoostUsedLabelPos": [486, 648],
+        "collBoostUsedPos": [486, 719],
+        "collHighestMultiLabelPos": [486, 816],
+        "collHighestMultiPos": [486, 887],
+        "collHighestBoostLabelPos": [486, 984],
+        "collHighestBoostPos": [486, 1055],
+        "collGiftsClaimedLabelPos": [1441, 480],
+        "collGiftsClaimedPos": [1441, 551],
+        "collGiftsUsedLabelPos": [1441, 648],
+        "collGiftsUsedPos": [1441, 719],
+        "collGiftsOpenedLabelPos": [1441, 816],
+        "collGiftsOpenedPos": [1441, 887],
+        "collMostGiftsLabelPos": [1441, 984],
+        "collMostGiftsPos": [1441, 1055],
+        "collChancesClaimedLabelPos": [486, 565],
+        "collChancesClaimedPos": [486, 636],
+        "collChancesUsedLabelPos": [486, 733],
+        "collChancesUsedPos": [486, 804],
+        "collChanceHighestLabelPos": [486, 901],
+        "collChanceHighestPos": [486, 972],
+        "collEnhancersClaimedLabelPos": [1441, 313],
+        "collEnhancersClaimedPos": [1441, 384],
+        "collEnhancedLabelPositions": [
+            [1441, 481],
+            [1441, 649],
+            [1441, 817],
+            [1287, 985],
+            [1594, 985],
+            [1287, 1153],
+            [1594, 1153]
+        ],
+        "collEnhancedPositions": [
+            [1441, 552],
+            [1441, 720],
+            [1441, 888],
+            [1287, 1056],
+            [1594, 1056],
+            [1287, 1224],
+            [1594, 1224]
+        ],
+        "collPowDataWidth": 560,
+        "collBoarsPerPage": 16,
+        "collBoarStartX": 740,
+        "collBoarStartY": 210,
+        "collBoarSpacingX": 296,
+        "collBoarSpacingY": 295,
+        "collBoarCols": 4,
+        "collBoarSize": [268, 268],
+        "collRarityStartX": 730,
+        "collRarityStartY": 253,
+        "collRarityEndDiff": 53,
+        "collRarityWidth": 20,
+        "collLastBoarPos": [382, 1037],
+        "collLastBoarSize": [329, 329],
+        "collRecentLabelPos": [485, 1070],
+        "collFavBoarPos": [26, 1037],
+        "collFavBoarSize": [329, 329],
+        "collFavLabelPos": [130, 1070],
+        "collIndivBoarPos": [741, 210],
+        "collIndivBoarSize": [1156, 1156],
+        "collEnhancerStartX": 1166,
+        "collEnhancerStartY": 965,
+        "collEnhancerSpacingX": 70,
+        "collEnhancerSpacingY": 80,
+        "collEnhancerCols": 8,
+        "collEnhancerSize": [55, 64]
+    },
     "commandConfigs": {
         "boar": {
             "name": "boar",
@@ -100,18 +298,11 @@
             "help": {
                 "name": "help",
                 "description": "See all boar command information",
-                "args": [],
-                "cooldown": false,
-                "componentFields": [],
-                "modals": []
+                "cooldown": true
             },
             "daily": {
                 "name": "daily",
-                "description": "Get your daily boar",
-                "args": [],
-                "cooldown": false,
-                "componentFields": [],
-                "modals": []
+                "description": "Get your daily boar"
             },
             "collection": {
                 "name": "collection",
@@ -119,13 +310,32 @@
                 "args": [
                     {
                         "name": "user",
-                        "description": "Check someone else's collection of boars",
-                        "required": false,
-                        "autocomplete": false,
-                        "choices": []
+                        "description": "Check someone else's collection of boars"
+                    },
+                    {
+                        "name": "view",
+                        "description": "What view to start off in (Normal, Detailed, Powerups)",
+                        "choices": [
+                            {
+                                "name": "Normal",
+                                "value": 0
+                            },
+                            {
+                                "name": "Detailed",
+                                "value": 1
+                            },
+                            {
+                                "name": "Powerups",
+                                "value": 2
+                            }
+                        ]
+                    },
+                    {
+                        "name": "page",
+                        "description": "Page to start off on. Accepts boar names."
                     }
                 ],
-                "cooldown": false,
+                "cooldown": true,
                 "componentFields": [
                     [
                         {
@@ -198,25 +408,47 @@
                                     "emoji": "\uD83C\uDF81",
                                     "style": 3,
                                     "disabled": true
+                                },
+                                {
+                                    "type": 2,
+                                    "customId": "COLLECTION_EDITIONS",
+                                    "emoji": "\u23F1",
+                                    "style": 3,
+                                    "disabled": true
                                 }
                             ]
                         }
                     ]
                 ],
-                "modals": []
+                "modals": [
+                    {
+                        "title": "Input Page Number",
+                        "customId": "FIELD_ONE_MODAL",
+                        "components": [
+                            {
+                                "type": 1,
+                                "components": [
+                                    {
+                                        "type": 4,
+                                        "customId": "PAGE_INPUT",
+                                        "label": "PAGE NUMBER/BOAR NAME",
+                                        "style": 1,
+                                        "required": true
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
             }
         },
         "boarManage": {
             "name": "boar-manage",
             "perms": 32,
             "description": "Commands to manage BoarBot",
-            "staffOnly": true,
-            "devOnly": false,
             "setup": {
                 "name": "setup",
                 "description": "Set the bot up to your liking",
-                "args": [],
-                "adminOnly": true,
                 "cooldown": true,
                 "componentFields": [
                     [
@@ -248,7 +480,7 @@
                                 {
                                     "type": 2,
                                     "customId": "SETUP_INFO_TRADE_CHANNEL",
-                                    "emoji": "❔",
+                                    "emoji": "\u2754",
                                     "style": 2
                                 }
                             ]
@@ -303,7 +535,7 @@
                                 {
                                     "type": 2,
                                     "customId": "SETUP_INFO_BOAR_CHANNELS",
-                                    "emoji": "❔",
+                                    "emoji": "\u2754",
                                     "style": 2
                                 }
                             ]
@@ -328,7 +560,7 @@
                                 {
                                     "type": 2,
                                     "customId": "SETUP_INFO_SB",
-                                    "emoji": "❔",
+                                    "emoji": "\u2754",
                                     "style": 2
                                 }
                             ]
@@ -407,8 +639,6 @@
             "name": "boar-dev",
             "perms": 0,
             "description": "Commands exclusive to developers of BoarBot",
-            "staffOnly": true,
-            "devOnly": true,
             "give": {
                 "name": "give",
                 "description": "Give a user a boar/badge",
@@ -416,101 +646,84 @@
                     {
                         "name": "user",
                         "description": "User you'd like to give the item to",
-                        "required": true,
-                        "autocomplete": false,
-                        "choices": []
+                        "required": true
                     },
                     {
                         "name": "id",
                         "description": "ID of item to give",
                         "required": true,
-                        "autocomplete": true,
-                        "choices": []
+                        "autocomplete": true
                     }
-                ],
-                "cooldown": false,
-                "componentFields": [],
-                "modals": []
+                ]
             },
             "configRefresh": {
                 "name": "config-refresh",
-                "description": "Refresh the bot's config",
-                "args": [],
-                "cooldown": false,
-                "components": [],
-                "modals": []
+                "description": "Refresh the bot's config"
             }
         }
     },
-    "numberConfig": {
-        "originPos": [0, 0],
-        "fontBig": 60,
-        "fontMedium": 45,
-        "fontSmallMedium": 40,
-        "fontSmallest": 35,
-        "maxUsernameLength": 16,
-        "maxTrackedEditions": 10,
-        "maxScore": 999999999999999999,
-        "maxBoars": 99999999,
-        "maxStreak": 99999999,
-        "maxDailies": 99999999,
-        "rarityIncreaseConst": 25000,
-        "itemImageSize": [930, 1080],
-        "itemBoarPos": [27, 169],
-        "itemBoarSize": [886, 886],
-        "itemBadgePos": [120, 250],
-        "itemBadgeSize": [700, 700],
-        "itemTitlePos": [464, 82],
-        "itemNamePos": [464, 138],
-        "itemNameplatePos": [102, 964],
-        "itemNameplatePadding": 120,
-        "itemNameplateHeight": 80,
-        "itemUserTagPos": [200, 1022],
-        "itemUserAvatarPos": [36, 894],
-        "itemUserAvatarWidth": 150,
-        "collImageSize": [1920, 1388],
-        "collUserAvatarPos": [24, 24],
-        "collUserAvatarSize": [156, 156],
-        "collUserTagPos": [225, 80],
-        "collClanPos": [1740, 24],
-        "collClanSize": [156,156],
-        "collDateLabelPos": [994, 78],
-        "collDatePos": [1005, 150],
-        "collNoBadgePos": [240, 150],
-        "collBadgeStart": 240,
-        "collBadgeSpacing": 70,
-        "collBadgeY": 105,
-        "collBadgeSize": [55, 55],
-        "collScoreLabelPos": [365, 289],
-        "collScorePos": [365, 359],
-        "collTotalLabelPos": [201, 472],
-        "collTotalPos": [201, 542],
-        "collUniquesLabelPos": [538, 472],
-        "collUniquePos": [538, 542],
-        "collDailiesLabelPos": [201, 656],
-        "collDailiesPos": [201, 726],
-        "collStreakLabelPos": [538, 656],
-        "collStreakPos": [538, 726],
-        "collLastDailyLabelPos": [370, 846],
-        "collLastDailyPos": [370, 946],
-        "collBoarsPerPage": 16,
-        "collBoarStartX": 740,
-        "collBoarStartY": 210,
-        "collBoarSpacingX": 296,
-        "collBoarSpacingY": 295,
-        "collBoarCols": 4,
-        "collBoarRows": 4,
-        "collBoarSize": [268, 268],
-        "collRarityStartX": 730,
-        "collRarityStartY": 253,
-        "collRarityEndDiff": 53,
-        "collRarityWidth": 20,
-        "collLastBoarPos": [382, 1037],
-        "collLastBoarSize": [329, 329],
-        "collRecentLabelPos": [485, 1070],
-        "collFavBoarPos": [26, 1037],
-        "collFavBoarSize": [329, 329],
-        "collFavLabelPos": [130, 1070]
+    "powerupConfig": {
+        "multiBoost": {
+            "name": "Multiplier Boost",
+            "description": "Boosts your multiplier by adding to its current value, making it more likely to get rarer boars when you do /boar daily.",
+            "tiers": [10, 25, 100]
+        },
+        "gift": {
+            "name": "Boar Gift(s)",
+            "description": "A gift that you can be sent to and opened by other people. Contains boar bucks, boars, rare surprises, and more.",
+            "tiers": [1, 3, 5]
+        },
+        "extraChance": {
+            "name": "Extra Boar Chance",
+            "description": "Increases your chance of getting an extra boar when you do /boar daily. Capped at 300%. Multiplier boosts apply to all extra boars.",
+            "tiers": [1, 5, 10]
+        },
+        "enhancer": {
+            "name": "Boar Enhancer(s)",
+            "description": "Can be used to enhance a boar to a random boar of the next rarity. Capped at 16. Divine is the maximum rarity that can be enhanced.",
+            "tiers": [10, 25, 100]
+        },
+        "promptTypes": {
+            "emojiFind": {
+                "name": "Emoji Find",
+                "description": "Click the emoji that's different from the others!",
+                "frown1": {
+                    "name": "Frown Face",
+                    "emoji1": "\uD83D\uDE41",
+                    "emoji2": "\u2639"
+                }
+            },
+            "trivia": {
+                "name": "Boar Trivia",
+                "description": "Answer the trivia question about boars correctly!",
+                "normal1": {
+                    "name": "Normal Boar",
+                    "question": "What is normal boar?",
+                    "choices": [
+                        "Unremarkable",
+                        "Unexceptional",
+                        "Average",
+                        "Common"
+                    ]
+                }
+            },
+            "jitter": {
+                "name": "Spam Click",
+                "description": "Click the green button as many times as you can!",
+                "one": {
+                    "name": "One button",
+                    "numButtons": 1
+                }
+            },
+            "fast": {
+                "name": "Quick Click",
+                "description": "Click the green button as fast as you can!",
+                "one": {
+                    "name": "One button",
+                    "numButtons": 1
+                }
+            }
+        }
     },
     "boarItemConfigs": {
         "normal": {
@@ -523,10 +736,9 @@
         "explosionless": {
             "name": "Explosionless Boar",
             "file": "ExplosionlessBoar.png",
-            "description": "Its mind was blown so hard it refuses to ignite anymore. If it ever does, though, it's assumed its explosion would be cataclysmic.",
+            "description": "Its mind was blown so hard that it refuses to ignite anymore. If it ever does, though, it's assumed its explosion would be... cataclysmic.",
             "isSB": false,
-            "blacklisted": false,
-            "rarity": {"$ref":  "#/rarityConfigs/rarity1"}
+            "blacklisted": false
         },
         "tiny": {
             "name": "Tiny Boar",
@@ -587,6 +799,7 @@
         "sphere": {
             "name": "Sphere Boar",
             "file": "SphereBoar.gif",
+            "staticFile": "SphereBoarSTATIC.png",
             "description": "After many millennia of the concretion process, this boar took the form of a perfect sphere. What's at its core? Nobody knows.",
             "isSB": false,
             "blacklisted": false
@@ -608,7 +821,7 @@
         "fruit": {
             "name": "Fruit Boar",
             "file": "FruitBoar.png",
-            "description": "This boar is part of cult with shape-shifting abilities. Instead of doing anything cool, though, they only shape shift into various fruit.",
+            "description": "This boar is part of a cult with shape-shifting abilities. Instead of doing anything cool, though, they only shape shift into various fruits.",
             "isSB": false,
             "blacklisted": false
         },
@@ -629,7 +842,7 @@
         "creepy": {
             "name": "Creepy Boar",
             "file": "CreepyBoar.png",
-            "description": "Looks striking similar to a normal boar at first glance, but is actually a supernatural being that lives in the skin of recently perished boars.",
+            "description": "Looks strikingly similar to a normal boar at first glance, but is actually a paranormal being that lives in the skin of recently perished boars.",
             "isSB": false,
             "blacklisted": false
         },
@@ -692,6 +905,7 @@
         "jumpscare": {
             "name": "Jumpscare Boar",
             "file": "JumpscareBoar.gif",
+            "staticFile": "JumpscareBoarSTATIC.png",
             "description": "Shoves its face into peoples' doorbell cameras to make them think it's a Creepy Boar. Creepy Boars abuse this to find new victims.",
             "isSB": false,
             "blacklisted": false
@@ -720,6 +934,7 @@
         "rickroll": {
             "name": "Rickroll Boar",
             "file": "RickrollBoar.gif",
+            "staticFile": "RickrollBoarSTATIC.png",
             "description": "Spreads the word of the God of All Boars. He'll never give you up, nor will he let you down. He'll never run around and... desert you.",
             "isSB": false,
             "blacklisted": false
@@ -741,7 +956,7 @@
         "imposter": {
             "name": "Imposter Boar",
             "file": "ImposterBoar.png",
-            "description": "Kills its crew mates on the Internation Boar Station and frames it as a spacewalking accident. Its kill count is said to be in the dozens.",
+            "description": "Kills its crew mates on the International Boar Station and frames it as a spacewalking accident. Its kill count is said to be in the dozens.",
             "isSB": false,
             "blacklisted": false
         },
@@ -749,6 +964,14 @@
             "name": "Curious Boarge",
             "file": "CuriousBoarge.png",
             "description": "With the extinction of all apes, a new mascot for the classic children's book was needed to appeal to modern society.",
+            "isSB": false,
+            "blacklisted": false
+        },
+        "gamebreaker": {
+            "name": "Gameboarker",
+            "file": "Gameboarker.gif",
+            "staticFile": "GameboarkerSTATIC.png",
+            "description": "This boar takes explosion to a whole other level, fusing its cells with gunpowder to create bigger explosions. Awarded to those who find and report several bugs.",
             "isSB": false,
             "blacklisted": false
         }
@@ -778,7 +1001,8 @@
     "rarityConfigs": [
         {
             "name": "Common",
-            "weight": 1,
+            "pluralName": "Commons",
+            "weight": 825,
             "score": 1,
             "fromDaily": true,
             "boars": [
@@ -789,7 +1013,8 @@
         },
         {
             "name": "Uncommon",
-            "weight": 1,
+            "pluralName": "Uncommons",
+            "weight": 100,
             "score": 10,
             "fromDaily": true,
             "boars": [
@@ -803,7 +1028,8 @@
         },
         {
             "name": "Rare",
-            "weight": 1,
+            "pluralName": "Rares",
+            "weight": 40,
             "score": 25,
             "fromDaily": true,
             "boars": [
@@ -818,7 +1044,8 @@
         },
         {
             "name": "Epic",
-            "weight": 1,
+            "pluralName": "Epics",
+            "weight": 20,
             "score": 50,
             "fromDaily": true,
             "boars": [
@@ -833,7 +1060,8 @@
         },
         {
             "name": "Legendary",
-            "weight": 1,
+            "pluralName": "Legendaries",
+            "weight": 10,
             "score": 100,
             "fromDaily": true,
             "boars": [
@@ -844,7 +1072,8 @@
         },
         {
             "name": "Mythic",
-            "weight": 1,
+            "pluralName": "Mythics",
+            "weight": 4,
             "score": 250,
             "fromDaily": true,
             "boars": [
@@ -855,7 +1084,8 @@
         },
         {
             "name": "Divine",
-            "weight": 1000000,
+            "pluralName": "Divines",
+            "weight": 1,
             "score": 1000,
             "fromDaily": true,
             "boars": [
@@ -865,19 +1095,34 @@
                 "imposter",
                 "curious"
             ]
+        },
+        {
+            "name": "Special",
+            "weight": 0,
+            "score": 0,
+            "fromDaily": false,
+            "boars": [
+                "gamebreaker"
+            ]
         }
     ],
     "colorConfig": {
         "foregroundGray": "#151518",
         "font": "#DEDEDE",
         "badge": "#4D4278",
+        "powerup": "#40DEA9",
+        "editionEmbed": "#248046",
+        "baseEmbed": "#4F545C",
+        "maintenance": "#FFFF00",
+        "error": "#ED4245",
         "rarity1": "#FFFFFF",
         "rarity2": "#00FF0F",
         "rarity3": "#0064FF",
         "rarity4": "#6400FF",
         "rarity5": "#FFC500",
         "rarity6": "#F300FF",
-        "rarity7": "#00FFFB"
+        "rarity7": "#00FFFB",
+        "rarity8": "#FF3136"
     },
     "unlimitedBoars": true,
     "debugMode": true,

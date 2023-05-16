@@ -21,7 +21,7 @@ export default class GiveSubcommand implements Subcommand {
     private userInput: User = {} as User;
     private idInput: string = '';
     private subcommandInfo = this.config.commandConfigs.boarDev.give;
-    public readonly data = { name: this.subcommandInfo.name, path: __filename };
+    public readonly data = { name: this.subcommandInfo.name, path: __filename, cooldown: this.subcommandInfo.cooldown };
 
     /**
      * Handles the functionality for this subcommand
@@ -48,7 +48,7 @@ export default class GiveSubcommand implements Subcommand {
         const idInput = interaction.options.getString(this.subcommandInfo.args[1].name);
 
         if (!userInput || !idInput) {
-            await interaction.editReply(strConfig.nullFound);
+            await Replies.handleReply(interaction, strConfig.nullFound);
             return;
         }
 
@@ -56,8 +56,6 @@ export default class GiveSubcommand implements Subcommand {
         this.idInput = idInput;
 
         await Queue.addQueue(() => this.doGive(), interaction.id + userInput.id);
-
-        LogDebug.sendDebug('End of interaction', this.config, interaction);
     }
 
     /**
@@ -90,24 +88,20 @@ export default class GiveSubcommand implements Subcommand {
      * @private
      */
     private async doGive() {
-        try {
-            if (!this.interaction.guild || !this.interaction.channel) return;
+        if (!this.interaction.guild || !this.interaction.channel) return;
 
-            const strConfig = this.config.stringConfig;
+        const strConfig = this.config.stringConfig;
 
-            const boarUser = new BoarUser(this.userInput, true);
+        const boarUser = new BoarUser(this.userInput, true);
 
-            LogDebug.sendDebug(this.idInput, this.config);
+        LogDebug.sendDebug('Gave \'' + this.idInput + '\' to ' + this.userInput.tag, this.config, this.interaction);
 
-            if (this.idInput.endsWith(strConfig.giveBoarChoiceTag)) {
-                await boarUser.addBoar(this.config, this.idInput.split(' ')[0], this.interaction);
-            } else if (this.idInput.endsWith(strConfig.giveBadgeChoiceTag)) {
-                await boarUser.addBadge(this.config, this.idInput.split(' ')[0], this.interaction);
-            } else {
-                await this.interaction.editReply(strConfig.giveBadID);
-            }
-        } catch (err: unknown) {
-            await LogDebug.handleError(err, this.interaction);
+        if (this.idInput.endsWith(strConfig.giveBoarChoiceTag)) {
+            await boarUser.addBoar(this.config, this.idInput.split(' ')[0], this.interaction);
+        } else if (this.idInput.endsWith(strConfig.giveBadgeChoiceTag)) {
+            await boarUser.addBadge(this.config, this.idInput.split(' ')[0], this.interaction);
+        } else {
+            await Replies.handleReply(this.interaction, strConfig.giveBadID);
         }
     }
 }

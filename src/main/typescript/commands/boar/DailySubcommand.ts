@@ -10,6 +10,7 @@ import {InteractionUtils} from '../../util/interactions/InteractionUtils';
 import {LogDebug} from '../../util/logging/LogDebug';
 import {BotConfig} from '../../bot/config/BotConfig';
 import {SubcommandConfig} from '../../bot/config/commands/SubcommandConfig';
+import {Replies} from '../../util/interactions/Replies';
 
 /**
  * {@link DailySubcommand DailySubcommand.ts}
@@ -24,7 +25,7 @@ export default class DailySubcommand implements Subcommand {
     private subcommandInfo: SubcommandConfig = this.config.commandConfigs.boar.daily;
     private guildData: any = {};
     private interaction: ChatInputCommandInteraction = {} as ChatInputCommandInteraction;
-    public readonly data = { name: this.subcommandInfo.name, path: __filename };
+    public readonly data = { name: this.subcommandInfo.name, path: __filename, cooldown: this.subcommandInfo.cooldown };
 
     /**
      * Handles the functionality for this subcommand
@@ -40,9 +41,7 @@ export default class DailySubcommand implements Subcommand {
         await interaction.deferReply();
         this.interaction = interaction;
 
-        await Queue.addQueue(() => this.doDaily(), interaction.id + interaction.user.id);
-
-        LogDebug.sendDebug('End of interaction', this.config, interaction);
+        await this.doDaily();
     }
 
     /**
@@ -52,11 +51,14 @@ export default class DailySubcommand implements Subcommand {
      * @private
      */
     private async doDaily(): Promise<void> {
-        try {
-            if (!this.interaction.guild || !this.interaction.channel) return;
+        if (!this.interaction.guild || !this.interaction.channel) return;
 
+        let boarUser: BoarUser = {} as BoarUser;
+        let boarID: string | undefined;
+
+        await Queue.addQueue(async () => {
             // New boar user object used for easier manipulation of data
-            const boarUser = new BoarUser(this.interaction.user, true);
+            boarUser = new BoarUser(this.interaction.user, true);
 
             const canUseDaily = await this.canUseDaily(boarUser);
             if (!canUseDaily) return;
@@ -66,19 +68,28 @@ export default class DailySubcommand implements Subcommand {
             const userMultiplier: number = boarUser.powerups.multiplier;
             rarityWeights = this.applyMultiplier(userMultiplier, rarityWeights);
 
-            boarUser.lastDaily = Date.now();
-
-            const boarID = await this.getDaily(rarityWeights);
+            boarID = await this.getDaily(rarityWeights);
 
             if (!boarID) {
                 await LogDebug.handleError(this.config.stringConfig.dailyNoBoarFound, this.interaction);
                 return;
             }
 
-            await boarUser.addBoar(this.config, boarID, this.interaction);
-        } catch (err: unknown) {
-            await LogDebug.handleError(err, this.interaction);
-        }
+            boarUser.boarStreak++;
+            boarUser.powerups.multiplier++;
+            boarUser.lastDaily = Date.now();
+            boarUser.numDailies++;
+
+            if (boarUser.firstDaily === 0) {
+                boarUser.firstDaily = Date.now();
+            }
+
+            boarUser.updateUserData();
+        }, this.interaction.id + this.interaction.user.id);
+
+        if (!boarID) return;
+
+        await boarUser.addBoar(this.config, boarID as string, this.interaction);
     }
 
     /**
@@ -95,7 +106,8 @@ export default class DailySubcommand implements Subcommand {
 
         // Returns if user has already used their daily boar
         if (boarUser.lastDaily >= nextBoarTime - (1000 * 60 * 60 * 24) && !this.config.unlimitedBoars) {
-            await this.interaction.editReply(
+            await Replies.handleReply(
+                this.interaction,
                 this.config.stringConfig.dailyUsed + FormatStrings.toRelTime(nextBoarTime / 1000)
             );
             return false;
@@ -137,7 +149,7 @@ export default class DailySubcommand implements Subcommand {
         // Sorts from the highest weight to the lowest weight
         const newWeights = new Map([...rarityWeights.entries()].sort((a,b) => { return b[1] - a[1]; }));
 
-        const highestWeight = Math.max(...[...newWeights.values()]);
+        const highestWeight: number = newWeights.values().next().value;
         const rarityIncreaseConst = this.config.numberConfig.rarityIncreaseConst;
 
         // Increases probability by increasing weight
@@ -145,6 +157,8 @@ export default class DailySubcommand implements Subcommand {
         for (const weightInfo of newWeights) {
             const rarityIndex = weightInfo[0];
             const oldWeight = weightInfo[1];
+
+            if (oldWeight == 0) continue;
 
             newWeights.set(
                 rarityIndex,
@@ -179,6 +193,8 @@ export default class DailySubcommand implements Subcommand {
             return prob;
         }));
 
+        LogDebug.sendDebug(`Probabilities: ${[...probabilities]}`, this.config, this.interaction);
+
         // Finds the rarity that was rolled and adds a random boar from that rarity to user profile
         for (const probabilityInfo of probabilities) {
             const rarityIndex = probabilityInfo[0];
@@ -186,7 +202,7 @@ export default class DailySubcommand implements Subcommand {
 
             // Goes to next probability if randomRarity is higher
             // Keeps going if it's the rarity with the highest probability
-            if (randomRarity > probability && Math.max(...[...probabilities.values()]) !== probability)
+            if (randomRarity > probability && Math.max(...probabilities.values()) !== probability)
                 continue;
 
             const boarGotten = this.findValid(rarityIndex);
@@ -210,30 +226,20 @@ export default class DailySubcommand implements Subcommand {
         let randomBoar = Math.random();
 
         // Stores the IDs of the current rarity being checked
-        const rarityBoars: string[] = rarities[rarityIndex].boars;
 
-        // Stores the ID that was chosen
-        let boarID = rarityBoars[Math.floor(randomBoar * rarityBoars.length)];
-        let isBlacklisted = boarIDs[boarID].blacklisted;
-        let isSB = boarIDs[boarID].isSB;
+        const validRarityBoars: string[] = [];
 
-        const maxLoops = 500;
-        let curLoop = 0;
+        for (const boarID of rarities[rarityIndex].boars) {
+            const isBlacklisted = boarIDs[boarID].blacklisted;
+            const isSB = boarIDs[boarID].isSB;
 
-        // Retries getting ID if blacklisted or SB boar in non-SB server
-        while ((isBlacklisted || !this.guildData.isSBServer && isSB) && curLoop < maxLoops) {
-            randomBoar = Math.random();
-
-            boarID = rarityBoars[Math.floor(randomBoar * rarityBoars.length)];
-
-            isBlacklisted = boarIDs[boarID].blacklisted;
-            isSB = boarIDs[boarID].isSB;
-
-            curLoop++;
+            if (isBlacklisted || (!this.guildData.isSBServer && isSB))
+                continue;
+            validRarityBoars.push(boarID);
         }
 
-        if (isBlacklisted || !this.guildData.isSBServer && isSB) return;
+        if (validRarityBoars.length == 0) return;
 
-        return boarID;
+        return validRarityBoars[Math.floor(randomBoar * validRarityBoars.length)];
     }
 }

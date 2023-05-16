@@ -20,7 +20,7 @@ back_color_key = sys.argv[2]
 main_image_path = sys.argv[3]
 title = sys.argv[4]
 name = sys.argv[5]
-is_boar = sys.argv[6]
+is_badge = sys.argv[6]
 
 # Configured directory paths
 
@@ -57,7 +57,7 @@ text_medium = ImageFont.truetype(font_path, medium_font)
 
 image_size = tuple(num_config['itemImageSize'])
 
-if not is_boar:
+if is_badge == 'true':
     item_size = tuple(num_config['itemBadgeSize'])
     item_pos = tuple(num_config['itemBadgePos'])
 else:

@@ -16,22 +16,20 @@ export class BoarUtils {
      * @param boarID - Boar ID to get rarity for
      * @return rarity - Rarity of the boar in index form
      */
-    public static findRarity(boarID: string): number {
+    public static findRarity(boarID: string): [number, RarityConfig] {
         const config = BoarBotApp.getBot().getConfig();
 
         const orderedRarities: RarityConfig[] = [...config.rarityConfigs]
             .sort((rarity1, rarity2) => { return rarity2.weight - rarity1.weight; });
-        let foundRarity: number = 0;
 
         for (let i=0; i<orderedRarities.length; i++) {
             const boarExists: boolean = orderedRarities[i].boars.includes(boarID);
 
-            if (boarExists) {
-                foundRarity = i + 1;
-                break;
-            }
+            if (!boarExists) continue;
+
+            return [i + 1, orderedRarities[i]];
         }
 
-        return foundRarity;
+        return [0, orderedRarities[orderedRarities.length-1]]; // Shouldn't ever trigger with proper config validation
     }
 }

@@ -1,6 +1,6 @@
 import {
     AutocompleteInteraction,
-    ChatInputCommandInteraction,
+    ChatInputCommandInteraction, ColorResolvable,
     EmbedBuilder,
     Events,
     Interaction,
@@ -10,6 +10,8 @@ import {Listener} from '../api/listeners/Listener';
 import {BotConfig} from '../bot/config/BotConfig';
 import {BoarBotApp} from '../BoarBotApp';
 import {LogDebug} from '../util/logging/LogDebug';
+import {Cooldown} from '../util/interactions/Cooldown';
+import {Replies} from '../util/interactions/Replies';
 
 /**
  * {@link GuildAddListener GuildAddListener.ts}
@@ -22,10 +24,8 @@ import {LogDebug} from '../util/logging/LogDebug';
  */
 export default class InteractionListener implements Listener {
     public readonly eventName: Events = Events.InteractionCreate;
-    private interaction: ChatInputCommandInteraction | ModalSubmitInteraction | AutocompleteInteraction | null = null;
+    private interaction: ChatInputCommandInteraction | AutocompleteInteraction | null = null;
     private config: BotConfig | null = null;
-    public static maintenanceEmbed = new EmbedBuilder()
-        .setColor(0xFFFF00);
 
     public async execute(interaction: Interaction) {
         if (!interaction.isChatInputCommand() && !interaction.isAutocomplete()) return;
@@ -43,12 +43,19 @@ export default class InteractionListener implements Listener {
         const command = BoarBotApp.getBot().getCommands().get(interaction.commandName);
 
         if (command) {
+            LogDebug.sendDebug('Started interaction', this.config, interaction);
+
+            const onCooldown = await Cooldown.handleCooldown(this.config, interaction as ChatInputCommandInteraction);
+            if (onCooldown) return;
+
             try {
                 await command.execute(interaction);
             } catch (err: unknown) {
                 await LogDebug.handleError(err, interaction);
                 return;
             }
+
+            LogDebug.sendDebug('End of interaction', this.config, interaction);
         }
     }
 
@@ -57,13 +64,12 @@ export default class InteractionListener implements Listener {
 
         const strConfig = this.config.stringConfig;
 
-        if (this.config.maintenanceMode && this.interaction.isChatInputCommand() &&
-            !this.config.devs.includes(this.interaction.user.id)
+        if (this.config.maintenanceMode && !this.interaction.isAutocomplete()
+            && !this.config.devs.includes(this.interaction.user.id)
         ) {
-            await this.interaction.reply({
-                embeds: [InteractionListener.maintenanceEmbed.setTitle(strConfig.maintenance)],
-                ephemeral: true
-            });
+            await Replies.handleReply(
+                this.interaction, strConfig.maintenance, this.config.colorConfig.maintenance as ColorResolvable
+            );
             return false;
         }
 

@@ -19,20 +19,108 @@ export class CanvasUtils {
      * @param font - Font to use for text
      * @param align - Alignment of text
      * @param color - Color of text
+     * @param coloredText
+     * @param color2
+     * @param wrap
+     * @param width
      */
     public static drawText(
         ctx: Canvas.CanvasRenderingContext2D,
         text: string,
-        pos: number[],
+        pos: [number, number],
         font: string,
         align: CanvasTextAlign,
-        color: string
+        color: string,
+        width?: number,
+        wrap: boolean = false,
+        coloredText: string = '',
+        color2: string = color
     ): void {
         ctx.font = font;
         ctx.textAlign = align;
+        ctx.textBaseline = 'alphabetic';
         ctx.fillStyle = color;
 
-        ctx.fillText(text, pos[0], pos[1]);
+        const replaceIndex = text.indexOf('%@');
+        text = text.replace('%@', coloredText);
+
+        if (width != undefined && wrap) {
+            const words: string[] = text.split(' ');
+            const lineHeight: number = (ctx.measureText('Sp').actualBoundingBoxAscent +
+                ctx.measureText('Sp').actualBoundingBoxDescent) * 1.1;
+            let newHeight = pos[1];
+            let lines: string[] = [];
+            let curLine: string = '';
+
+            for (let i=0; i<words.length; i++) {
+                const word: string = words[i];
+
+                if (ctx.measureText(curLine + word + ' ').width < width) {
+                    curLine += word + ' ';
+                } else {
+                    lines.push(curLine.substring(0, curLine.length-1));
+                    curLine = word + ' ';
+                }
+            }
+
+            lines.push(curLine);
+
+            newHeight -= lineHeight * lines.length / 2;
+
+            let charIndex = 0;
+            for (const line of lines) {
+                let prevCharIndex = charIndex;
+                charIndex += line.length;
+
+                if (charIndex > replaceIndex && prevCharIndex < replaceIndex + coloredText.length) {
+                    const relReplaceIndex = replaceIndex-prevCharIndex;
+                    const textPart1 = line.substring(0, Math.min(relReplaceIndex, line.length));
+                    const textPart2 = line.substring(Math.min(relReplaceIndex+coloredText.length, line.length));
+
+                    ctx.fillText(textPart1, pos[0] - ctx.measureText(coloredText+textPart2).width/2, newHeight);
+                    ctx.fillStyle = color2;
+                    ctx.fillText(
+                        coloredText, pos[0] + ctx.measureText(textPart1).width/2 - ctx.measureText(textPart2).width/2, newHeight
+                    );
+                    ctx.fillStyle = color;
+                    ctx.fillText(textPart2, pos[0] + ctx.measureText(textPart1+coloredText).width/2, newHeight);
+                } else {
+                    ctx.fillText(line, pos[0], newHeight);
+                }
+
+                newHeight += lineHeight;
+            }
+        } else if (width != undefined) {
+            while (ctx.measureText(text).width > width) {
+                font = (parseInt(font)-1) + font.substring(font.indexOf('px'));
+                ctx.font = font;
+            }
+            ctx.textBaseline = 'middle';
+            this.drawColoredText(ctx, text, pos, replaceIndex, coloredText, color, color2);
+        } else {
+            this.drawColoredText(ctx, text, pos, replaceIndex, coloredText, color, color2);
+        }
+    }
+
+    private static drawColoredText(
+        ctx: Canvas.CanvasRenderingContext2D,
+        text: string,
+        pos: [number, number],
+        replaceIndex: number,
+        coloredText: string,
+        color: string,
+        color2: string
+    ): void {
+        const textPart1 = text.substring(0, replaceIndex);
+        const textPart2 = text.substring(replaceIndex+coloredText.length);
+
+        ctx.fillText(textPart1, pos[0] - ctx.measureText(coloredText+textPart2).width/2, pos[1]);
+        ctx.fillStyle = color2;
+        ctx.fillText(
+            coloredText, pos[0] + ctx.measureText(textPart1).width/2 - ctx.measureText(textPart2).width/2, pos[1]
+        );
+        ctx.fillStyle = color;
+        ctx.fillText(textPart2, pos[0] + ctx.measureText(textPart1+coloredText).width/2, pos[1]);
     }
 
     /**

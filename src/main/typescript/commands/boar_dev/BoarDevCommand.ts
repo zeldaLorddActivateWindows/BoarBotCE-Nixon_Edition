@@ -1,4 +1,4 @@
-import {AutocompleteInteraction, ChatInputCommandInteraction, Interaction, SlashCommandBuilder} from 'discord.js';
+import {AutocompleteInteraction, ChatInputCommandInteraction, SlashCommandBuilder} from 'discord.js';
 import {BoarBotApp} from '../../BoarBotApp';
 import {Command} from '../../api/commands/Command';
 import {LogDebug} from '../../util/logging/LogDebug';
@@ -23,12 +23,12 @@ export default class BoarDevCommand implements Command {
             .setDescription(this.commandInfo.give.description)
             .addUserOption(option => option.setName(this.commandInfo.give.args[0].name)
                 .setDescription(this.commandInfo.give.args[0].description)
-                .setRequired(this.commandInfo.give.args[0].required)
+                .setRequired(this.commandInfo.give.args[0].required !== undefined)
             )
             .addStringOption(option => option.setName(this.commandInfo.give.args[1].name)
                 .setDescription(this.commandInfo.give.args[1].description)
-                .setRequired(this.commandInfo.give.args[1].required)
-                .setAutocomplete(true)
+                .setRequired(this.commandInfo.give.args[1].required !== undefined)
+                .setAutocomplete(this.commandInfo.give.args[1].autocomplete)
             )
         )
         .addSubcommand(sub => sub.setName(this.commandInfo.configRefresh.name)
@@ -48,15 +48,15 @@ export default class BoarDevCommand implements Command {
         const exports = require(subcommand.data.path);
         const commandClass = new exports.default();
 
-        if (interaction.isChatInputCommand()) {
+        if (interaction.isAutocomplete()) {
             try {
-                await commandClass.execute(interaction);
+                await commandClass.autocomplete(interaction);
             } catch (err: unknown) {
                 await LogDebug.handleError(err, interaction);
             }
-        } else if (interaction.isAutocomplete()) {
+        } else if (interaction.isChatInputCommand()) {
             try {
-                await commandClass.autocomplete(interaction);
+                await commandClass.execute(interaction);
             } catch (err: unknown) {
                 await LogDebug.handleError(err, interaction);
             }

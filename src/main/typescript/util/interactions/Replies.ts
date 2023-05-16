@@ -1,7 +1,15 @@
-import {ChatInputCommandInteraction} from 'discord.js';
+import {
+    ChatInputCommandInteraction,
+    ColorResolvable,
+    EmbedBuilder,
+    MessageComponentInteraction,
+    ModalSubmitInteraction
+} from 'discord.js';
 import {BotConfig} from '../../bot/config/BotConfig';
 import {FormatStrings} from '../discord/FormatStrings';
 import {LogDebug} from '../logging/LogDebug';
+import {BoarBot} from '../../bot/BoarBot';
+import {BoarBotApp} from '../../BoarBotApp';
 
 /**
  * {@link Replies Replies.ts}
@@ -89,21 +97,45 @@ export class Replies {
      *
      * @param interaction - Interaction to reply to
      * @param content - Content of the reply
+     * @param color - Color of the embed
+     * @param forceFollowup - Forces interaction reply to be a followup
      */
     public static async handleReply(
-        interaction: ChatInputCommandInteraction,
-        content: string
+        interaction: ChatInputCommandInteraction | MessageComponentInteraction | ModalSubmitInteraction,
+        content: string,
+        color: ColorResolvable = BoarBotApp.getBot().getConfig().colorConfig.baseEmbed as ColorResolvable,
+        forceFollowup: boolean = false
     ): Promise<void> {
-        if (interaction.replied) {
+        const responseEmbed: EmbedBuilder = new EmbedBuilder()
+            .setColor(color);
+
+        if (content.length > 256) {
+            responseEmbed.setDescription(content);
+        } else {
+            responseEmbed.setTitle(content);
+        }
+
+        if (!forceFollowup && interaction.deferred && interaction.isChatInputCommand()) {
+            await interaction.editReply({
+                content: '',
+                files: [],
+                components: [],
+                embeds: [responseEmbed]
+            });
+        } else if (forceFollowup || interaction.replied || !interaction.isChatInputCommand()) {
             await interaction.followUp({
-                content: content,
+                content: '',
+                files: [],
+                components: [],
+                embeds: [responseEmbed],
                 ephemeral: true
             });
-        } else if (interaction.deferred) {
-            await interaction.editReply(content);
         } else {
             await interaction.reply({
-                content: content,
+                content: '',
+                files: [],
+                components: [],
+                embeds: [responseEmbed],
                 ephemeral: true
             });
         }

@@ -22,6 +22,7 @@ export class StringConfig {
     public readonly noGuild: string = ' ';
     public readonly nullFound: string = ' ';
     public readonly invalidID: string = ' ';
+    public readonly invalidPage: string = ' ';
     public readonly onCooldown: string = ' ';
     public readonly noAttachmentPerms: string = ' ';
     public readonly error: string = ' ';
@@ -74,6 +75,35 @@ export class StringConfig {
     public readonly collLastDailyLabel: string = ' ';
     public readonly collFavLabel: string = ' ';
     public readonly collRecentLabel: string = ' ';
+    public readonly collIndivTotalLabel: string = ' ';
+    public readonly collFirstObtainedLabel: string = ' ';
+    public readonly collLastObtainedLabel: string = ' ';
+    public readonly collDescriptionLabel: string = ' ';
+    public readonly collAttemptsLabel: string = ' ';
+    public readonly collAttempts50Label: string = ' ';
+    public readonly collAttempts10Label: string = ' ';
+    public readonly collAttempts1Label: string = ' ';
+    public readonly collMostClaimedLabel: string = ' ';
+    public readonly collBestPromptLabel: string = ' ';
+    public readonly collMultiplierLabel: string = ' ';
+    public readonly collGiftsLabel: string = ' ';
+    public readonly collExtraBoarLabel: string = ' ';
+    public readonly collEnhancerLabel: string = ' ';
+    public readonly collBoostsClaimedLabel: string = ' ';
+    public readonly collBoostsUsedLabel: string = ' ';
+    public readonly collHighestMultiLabel: string = ' ';
+    public readonly collHighestBoostLabel: string = ' ';
+    public readonly collGiftsClaimedLabel: string = ' ';
+    public readonly collGiftsUsedLabel: string = ' ';
+    public readonly collGiftsOpenedLabel: string = ' ';
+    public readonly collMostGiftsLabel: string = ' ';
+    public readonly collChancesClaimedLabel: string = ' ';
+    public readonly collChancesUsedLabel: string = ' ';
+    public readonly collChanceHighestLabel: string = ' ';
+    public readonly collEnhancersClaimedLabel: string = ' ';
+    public readonly collEnhancedLabel: string = ' ';
+    public readonly collEditionTitle: string = ' ';
+    public readonly collEditionLine: string = ' ';
 
     // Miscellaneous strings
 

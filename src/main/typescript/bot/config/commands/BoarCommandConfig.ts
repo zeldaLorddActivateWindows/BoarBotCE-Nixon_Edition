@@ -1,5 +1,7 @@
 import {SubcommandConfig} from './SubcommandConfig';
 import {CommandConfig} from './CommandConfig';
+import {BoarDevCommandConfig} from './BoarDevCommandConfig';
+import {BoarManageCommandConfig} from './BoarManageCommandConfig';
 
 /**
  * {@link BoarCommandConfig BoarCommandConfig.ts}
