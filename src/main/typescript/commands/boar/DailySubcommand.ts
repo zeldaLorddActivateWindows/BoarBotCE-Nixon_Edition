@@ -54,7 +54,7 @@ export default class DailySubcommand implements Subcommand {
         if (!this.interaction.guild || !this.interaction.channel) return;
 
         let boarUser: BoarUser = {} as BoarUser;
-        let boarID: string | undefined;
+        let boarIDs: string[] = [''];
 
         await Queue.addQueue(async () => {
             // New boar user object used for easier manipulation of data
@@ -63,16 +63,33 @@ export default class DailySubcommand implements Subcommand {
             const canUseDaily = await this.canUseDaily(boarUser);
             if (!canUseDaily) return;
 
+            // Gets whether to use boost
+            const boostInput: boolean | null = this.interaction.options.getBoolean(this.subcommandInfo.args[0].name);
+            const extraInput: boolean | null = this.interaction.options.getBoolean(this.subcommandInfo.args[1].name);
+
             // Map of rarity index keys and weight values
             let rarityWeights = this.getRarityWeights();
-            const userMultiplier: number = boarUser.powerups.multiplier;
+            let userMultiplier: number = boarUser.powerups.multiplier;
+
+            if (boostInput) {
+                userMultiplier += boarUser.powerups.multiBoostTotal;
+            }
+
             rarityWeights = this.applyMultiplier(userMultiplier, rarityWeights);
 
-            boarID = await this.getDaily(rarityWeights);
+            boarIDs = this.getDailies(rarityWeights, extraInput, boarUser.powerups.extraChanceTotal);
 
-            if (!boarID) {
+            if (boarIDs.includes('')) {
                 await LogDebug.handleError(this.config.stringConfig.dailyNoBoarFound, this.interaction);
                 return;
+            }
+
+            if (boostInput) {
+                boarUser.powerups.multiBoostTotal = 0;
+            }
+
+            if (extraInput) {
+                boarUser.powerups.extraChanceTotal = 0;
             }
 
             boarUser.boarStreak++;
@@ -87,9 +104,9 @@ export default class DailySubcommand implements Subcommand {
             boarUser.updateUserData();
         }, this.interaction.id + this.interaction.user.id);
 
-        if (!boarID) return;
+        if (boarIDs.includes('')) return;
 
-        await boarUser.addBoar(this.config, boarID as string, this.interaction);
+        await boarUser.addBoars(this.config, boarIDs, this.interaction);
     }
 
     /**
@@ -175,19 +192,26 @@ export default class DailySubcommand implements Subcommand {
      * Gets the boar to give to the user
      *
      * @param rarityWeights - Map of weights and their indexes
+     * @param extra - Whether to apply extra boar chance
+     * @param extraVal - User's chance of extra boar
      * @private
      */
-    private async getDaily(rarityWeights: Map<number, number>) {
-        const randomRarity: number = Math.random();
+    private getDailies(
+        rarityWeights: Map<number, number>,
+        extra: boolean | null,
+        extraVal: number
+    ): string[] {
+        const boarIDs: string[] = [];
+        let numBoars: number = 1;
 
         // Sorts from the lowest weight to the highest weight
         rarityWeights = new Map([...rarityWeights.entries()].sort((a, b) => { return a[1] - b[1]; }));
-        const weightTotal = [...rarityWeights.values()].reduce((curSum, weight) => curSum + weight);
+        const weightTotal: number = [...rarityWeights.values()].reduce((curSum, weight) => curSum + weight);
 
         // Sets probabilities by adding the previous probability to the current probability
 
-        let prevProb = 0;
-        const probabilities = new Map([...rarityWeights.entries()].map((val) => {
+        let prevProb: number = 0;
+        const probabilities: Map<number, number> = new Map([...rarityWeights.entries()].map((val) => {
             const prob: [number, number] = [val[0], val[1] / weightTotal + prevProb];
             prevProb = prob[1];
             return prob;
@@ -195,22 +219,38 @@ export default class DailySubcommand implements Subcommand {
 
         LogDebug.sendDebug(`Probabilities: ${[...probabilities]}`, this.config, this.interaction);
 
-        // Finds the rarity that was rolled and adds a random boar from that rarity to user profile
-        for (const probabilityInfo of probabilities) {
-            const rarityIndex = probabilityInfo[0];
-            const probability = probabilityInfo[1];
+        if (extra) {
+            numBoars += Math.floor(extraVal / 100);
+            extraVal -= (numBoars-1) * 100;
 
-            // Goes to next probability if randomRarity is higher
-            // Keeps going if it's the rarity with the highest probability
-            if (randomRarity > probability && Math.max(...probabilities.values()) !== probability)
-                continue;
-
-            const boarGotten = this.findValid(rarityIndex);
-
-            LogDebug.sendDebug(`Rolled boar with ID '${boarGotten}'`, this.config, this.interaction);
-
-            return boarGotten;
+            if (Math.random() < extraVal / 100) {
+                numBoars++;
+            }
         }
+
+        for (let i=0; i<numBoars; i++) {
+            const randomRarity: number = Math.random();
+
+            // Finds the rarity that was rolled and adds a random boar from that rarity to user profile
+            for (const probabilityInfo of probabilities) {
+                const rarityIndex = probabilityInfo[0];
+                const probability = probabilityInfo[1];
+
+                // Goes to next probability if randomRarity is higher
+                // Keeps going if it's the rarity with the highest probability
+                if (randomRarity > probability && Math.max(...probabilities.values()) !== probability)
+                    continue;
+
+                const boarGotten: string = this.findValid(rarityIndex);
+
+                LogDebug.sendDebug(`Rolled boar with ID '${boarGotten}'`, this.config, this.interaction);
+
+                boarIDs.push(boarGotten);
+                break;
+            }
+        }
+
+        return boarIDs;
     }
 
     /**
@@ -220,7 +260,7 @@ export default class DailySubcommand implements Subcommand {
      * @param rarityIndex - The rarity index that's being checked
      * @private
      */
-    private findValid(rarityIndex: number): string | undefined {
+    private findValid(rarityIndex: number): string {
         const rarities: RarityConfig[] = this.config.rarityConfigs;
         const boarIDs: BoarItemConfigs = this.config.boarItemConfigs;
         let randomBoar = Math.random();
@@ -238,7 +278,7 @@ export default class DailySubcommand implements Subcommand {
             validRarityBoars.push(boarID);
         }
 
-        if (validRarityBoars.length == 0) return;
+        if (validRarityBoars.length == 0) return '';
 
         return validRarityBoars[Math.floor(randomBoar * validRarityBoars.length)];
     }

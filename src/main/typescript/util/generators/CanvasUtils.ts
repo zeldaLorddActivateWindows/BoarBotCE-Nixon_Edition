@@ -41,7 +41,7 @@ export class CanvasUtils {
         ctx.textBaseline = 'alphabetic';
         ctx.fillStyle = color;
 
-        const replaceIndex = text.indexOf('%@');
+        let replaceIndex = text.indexOf('%@');
         text = text.replace('%@', coloredText);
 
         if (width != undefined && wrap) {
@@ -68,22 +68,32 @@ export class CanvasUtils {
             newHeight -= lineHeight * lines.length / 2;
 
             let charIndex = 0;
+            const originalColorLength = coloredText.length;
             for (const line of lines) {
                 let prevCharIndex = charIndex;
                 charIndex += line.length;
 
-                if (charIndex > replaceIndex && prevCharIndex < replaceIndex + coloredText.length) {
+                if (charIndex > replaceIndex && prevCharIndex < replaceIndex + originalColorLength) {
                     const relReplaceIndex = replaceIndex-prevCharIndex;
                     const textPart1 = line.substring(0, Math.min(relReplaceIndex, line.length));
                     const textPart2 = line.substring(Math.min(relReplaceIndex+coloredText.length, line.length));
+                    let coloredToPlace = coloredText;
 
-                    ctx.fillText(textPart1, pos[0] - ctx.measureText(coloredText+textPart2).width/2, newHeight);
+                    if (relReplaceIndex+coloredText.length > line.length) {
+                        coloredToPlace = line.substring(replaceIndex, line.length);
+                        replaceIndex = charIndex;
+                    }
+
+                    ctx.fillText(textPart1, pos[0] - ctx.measureText(coloredToPlace+textPart2).width/2, newHeight);
                     ctx.fillStyle = color2;
                     ctx.fillText(
-                        coloredText, pos[0] + ctx.measureText(textPart1).width/2 - ctx.measureText(textPart2).width/2, newHeight
+                        coloredToPlace, pos[0] + ctx.measureText(textPart1).width/2 -
+                        ctx.measureText(textPart2).width/2, newHeight
                     );
                     ctx.fillStyle = color;
-                    ctx.fillText(textPart2, pos[0] + ctx.measureText(textPart1+coloredText).width/2, newHeight);
+                    ctx.fillText(textPart2, pos[0] + ctx.measureText(textPart1+coloredToPlace).width/2, newHeight);
+
+                    coloredText = coloredText.replace(coloredToPlace + ' ', '');
                 } else {
                     ctx.fillText(line, pos[0], newHeight);
                 }

@@ -307,7 +307,7 @@ export class CollectionImageGenerator {
             indivRarityPos[0] -= nums.collIndivFavSize[0] / 2 + 10;
             ctx.font = mediumFont;
             favoritePos = [
-                ctx.measureText(curBoar.rarity.name.toUpperCase()).width / 2 + indivRarityPos[0] + 10,
+                ctx.measureText(curBoar.rarity[1].name.toUpperCase()).width / 2 + indivRarityPos[0] + 10,
                 nums.collIndivFavHeight
             ];
 
@@ -317,7 +317,7 @@ export class CollectionImageGenerator {
         // Draws stats
 
         CanvasUtils.drawText(
-            ctx, curBoar.rarity.name.toUpperCase(), indivRarityPos,
+            ctx, curBoar.rarity[1].name.toUpperCase(), indivRarityPos,
             mediumFont, 'center', curBoar.color
         );
 
@@ -356,17 +356,17 @@ export class CollectionImageGenerator {
     public async createPowerupsBase(page: number): Promise<void> {
         switch (page) {
             case 2:
-                await this.createBaseThree();
+                await this.createPowBaseThree();
                 break;
             case 1:
-                await this.createBaseTwo();
+                await this.createPowBaseTwo();
                 break;
             default:
-                await this.createBaseOne();
+                await this.createPowBaseOne();
         }
     }
 
-    private async createBaseOne(): Promise<void> {
+    private async createPowBaseOne(): Promise<void> {
         // Config aliases
 
         const strConfig = this.config.stringConfig;
@@ -514,7 +514,7 @@ export class CollectionImageGenerator {
         this.powerupsBase = canvas.toBuffer();
     }
 
-    private async createBaseTwo(): Promise<void> {
+    private async createPowBaseTwo(): Promise<void> {
         // Config aliases
 
         const strConfig = this.config.stringConfig;
@@ -591,7 +591,7 @@ export class CollectionImageGenerator {
         this.powerupsBase = canvas.toBuffer();
     }
 
-    private async createBaseThree(): Promise<void> {
+    private async createPowBaseThree(): Promise<void> {
         // Config aliases
 
         const strConfig = this.config.stringConfig;
@@ -745,5 +745,32 @@ export class CollectionImageGenerator {
 
             ctx.drawImage(await Canvas.loadImage(badgeFile), ...badgeXY, ...nums.collBadgeSize);
         }
+    }
+
+    public async finalizeEnhanceConfirm(page: number): Promise<AttachmentBuilder> {
+        // Config aliases
+
+        const strConfig = this.config.stringConfig;
+        const nums = this.config.numberConfig;
+        const pathConfig = this.config.pathConfig;
+        const colorConfig = this.config.colorConfig;
+
+        const mediumFont = `${nums.fontMedium}px ${strConfig.fontName}`;
+
+        const confirmUnderlay = pathConfig.collAssets + pathConfig.collEnhanceUnderlay;
+        const confirmOverlay = pathConfig.collAssets + pathConfig.collEnhanceOverlay;
+
+        const canvas = Canvas.createCanvas(...nums.collEnhanceImageSize);
+        const ctx = canvas.getContext('2d');
+
+        ctx.drawImage(await Canvas.loadImage(confirmUnderlay), ...nums.originPos, ...nums.collEnhanceImageSize);
+        ctx.drawImage(await Canvas.loadImage(confirmOverlay), ...nums.originPos, ...nums.collEnhanceImageSize);
+
+        CanvasUtils.drawText(
+            ctx, strConfig.collEnhanceDetails, nums.collEnhanceDetailsPos, mediumFont, 'center', colorConfig.font,
+            nums.collEnhanceDetailsWidth, true, this.allBoars[page].name, this.allBoars[page].color
+        );
+
+        return new AttachmentBuilder(canvas.toBuffer(), { name:`${this.config.stringConfig.imageName}.png` });
     }
 }

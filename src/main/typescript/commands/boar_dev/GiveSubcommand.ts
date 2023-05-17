@@ -55,7 +55,7 @@ export default class GiveSubcommand implements Subcommand {
         this.userInput = userInput;
         this.idInput = idInput;
 
-        await Queue.addQueue(() => this.doGive(), interaction.id + userInput.id);
+        await this.doGive();
     }
 
     /**
@@ -92,12 +92,16 @@ export default class GiveSubcommand implements Subcommand {
 
         const strConfig = this.config.stringConfig;
 
-        const boarUser = new BoarUser(this.userInput, true);
+        let boarUser = {} as BoarUser;
+
+        await Queue.addQueue(() => {
+            boarUser = new BoarUser(this.userInput, true);
+        }, this.interaction.id + this.interaction.user.id);
 
         LogDebug.sendDebug('Gave \'' + this.idInput + '\' to ' + this.userInput.tag, this.config, this.interaction);
 
         if (this.idInput.endsWith(strConfig.giveBoarChoiceTag)) {
-            await boarUser.addBoar(this.config, this.idInput.split(' ')[0], this.interaction);
+            await boarUser.addBoars(this.config, [this.idInput.split(' ')[0]], this.interaction);
         } else if (this.idInput.endsWith(strConfig.giveBadgeChoiceTag)) {
             await boarUser.addBadge(this.config, this.idInput.split(' ')[0], this.interaction);
         } else {

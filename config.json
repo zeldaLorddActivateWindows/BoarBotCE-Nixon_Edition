@@ -28,6 +28,8 @@
         "collPowerUnderlay": "BoarCollectionPowerupsUnderlay.png",
         "collPowerUnderlay2": "BoarCollectionPowerupsUnderlay2.png",
         "collPowerUnderlay3": "BoarCollectionPowerupsUnderlay3.png",
+        "collEnhanceOverlay": "BoarEnhancerOverlay.png",
+        "collEnhanceUnderlay": "BoarEnhancerUnderlay.png",
         "clanNone": "BoarClanNone.png",
         "enhancerOn": "EnhancerActive.png",
         "enhancerOff": "EnhancerInactive.png",
@@ -70,7 +72,8 @@
         "setupInfoResponse3": "**__SKYBLOCK COMMUNITY__**\n\nThis bot originated on a Discord server dedicated to Hypixel Skyblock. If you don't know what that is, no sweat! Just click \"No\". If you do and you're part of the community, I recommend you click \"Yes\".\n\n*This can be changed at any time using </boar-manage setup:1080193988046364734>.*",
         "dailyUsed": "You've already used your daily boar! The next time you can use the command is ",
         "dailyTitle": "Daily Boar!",
-        "dailyNoBoarFound": "Failed to find a valid boar!",
+        "extraTitle": "Extra Boar!",
+        "dailyNoBoarFound": "Failed to find one or more valid boars!",
         "giveBoarChoiceTag": " | BOAR",
         "giveBadgeChoiceTag": " | BADGE",
         "giveBoar": "Successfully given boar (If it didn't show, make sure perms are correct!)",
@@ -118,6 +121,7 @@
         "collChanceHighestLabel": "Highest Extra Chance",
         "collEnhancersClaimedLabel": "Enhancers Claimed",
         "collEnhancedLabel": "Enhanced %@",
+        "collEnhanceDetails": "This action will take your %@ and convert it into a random boar of the next rarity. The result of this interaction is shown above. Click \"Enhance\" again to confirm.",
         "collEditionTitle": "__Your editions for %@__",
         "collEditionLine": "**Edition #%@:** %@\n",
         "noParentChannel": "NO CATEGORY",
@@ -146,7 +150,7 @@
         "maxPowBase": 99999999999999999,
         "maxMulti": 9999999,
         "maxMultiBoost": 999999,
-        "maxExtraChance": 9999999999999999,
+        "maxExtraChance": 300,
         "maxEnhancers": 16,
         "maxSmallEnhanced": 999999999,
         "maxPowPages": 3,
@@ -165,6 +169,7 @@
         "itemUserAvatarPos": [36, 894],
         "itemUserAvatarWidth": 150,
         "collImageSize": [1920, 1388],
+        "collEnhanceImageSize": [1242, 1388],
         "collUserAvatarPos": [24, 24],
         "collUserAvatarSize": [156, 156],
         "collUserTagPos": [225, 80],
@@ -264,6 +269,8 @@
             [1287, 1224],
             [1594, 1224]
         ],
+        "collEnhanceDetailsPos": [621, 1245],
+        "collEnhanceDetailsWidth": 1160,
         "collPowDataWidth": 560,
         "collBoarsPerPage": 16,
         "collBoarStartX": 740,
@@ -302,7 +309,17 @@
             },
             "daily": {
                 "name": "daily",
-                "description": "Get your daily boar"
+                "description": "Get your daily boar",
+                "args": [
+                    {
+                        "name": "boost",
+                        "description": "Use your multiplier boost"
+                    },
+                    {
+                        "name": "extra-boar",
+                        "description": "Apply your extra boar chance"
+                    }
+                ]
             },
             "collection": {
                 "name": "collection",
@@ -413,6 +430,13 @@
                                     "type": 2,
                                     "customId": "COLLECTION_EDITIONS",
                                     "emoji": "\u23F1",
+                                    "style": 3,
+                                    "disabled": true
+                                },
+                                {
+                                    "type": 2,
+                                    "customId": "COLLECTION_ENHANCE",
+                                    "label": "Enhance",
                                     "style": 3,
                                     "disabled": true
                                 }
@@ -1005,6 +1029,7 @@
             "weight": 825,
             "score": 1,
             "fromDaily": true,
+            "enhancersNeeded": 1,
             "boars": [
                 "normal",
                 "explosionless",
@@ -1017,6 +1042,7 @@
             "weight": 100,
             "score": 10,
             "fromDaily": true,
+            "enhancersNeeded": 2,
             "boars": [
                 "carrot",
                 "buff",
@@ -1032,6 +1058,7 @@
             "weight": 40,
             "score": 25,
             "fromDaily": true,
+            "enhancersNeeded": 3,
             "boars": [
                 "clown",
                 "sphere",
@@ -1048,6 +1075,7 @@
             "weight": 20,
             "score": 50,
             "fromDaily": true,
+            "enhancersNeeded": 5,
             "boars": [
                 "creepy",
                 "robot",
@@ -1064,6 +1092,7 @@
             "weight": 10,
             "score": 100,
             "fromDaily": true,
+            "enhancersNeeded": 7,
             "boars": [
                 "minimumwage",
                 "backrooms",
@@ -1076,6 +1105,7 @@
             "weight": 4,
             "score": 250,
             "fromDaily": true,
+            "enhancersNeeded": 10,
             "boars": [
                 "cowboy",
                 "realistic",
@@ -1088,6 +1118,7 @@
             "weight": 1,
             "score": 1000,
             "fromDaily": true,
+            "enhancersNeeded": 16,
             "boars": [
                 "rickroll",
                 "morbius",
@@ -1097,10 +1128,20 @@
             ]
         },
         {
+            "name": "Immaculate",
+            "pluralName": "Immaculates",
+            "weight": 0,
+            "score": 2500,
+            "fromDaily": false,
+            "enhancersNeeded": 0,
+            "boars": []
+        },
+        {
             "name": "Special",
             "weight": 0,
             "score": 0,
             "fromDaily": false,
+            "enhancersNeeded": 0,
             "boars": [
                 "gamebreaker"
             ]
@@ -1122,7 +1163,8 @@
         "rarity5": "#FFC500",
         "rarity6": "#F300FF",
         "rarity7": "#00FFFB",
-        "rarity8": "#FF3136"
+        "rarity8": "#FFEEB0",
+        "rarity9": "#FF3136"
     },
     "unlimitedBoars": true,
     "debugMode": true,

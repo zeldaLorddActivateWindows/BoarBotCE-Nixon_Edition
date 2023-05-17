@@ -1,4 +1,4 @@
-import {ChatInputCommandInteraction, User} from 'discord.js';
+import {AttachmentBuilder, ChatInputCommandInteraction, User} from 'discord.js';
 import fs from 'fs';
 import {BoarBotApp} from '../../BoarBotApp';
 import {BotConfig} from '../../bot/config/BotConfig';
@@ -11,6 +11,7 @@ import {PowerupData} from './PowerupData';
 import {ItemImageGenerator} from '../generators/ItemImageGenerator';
 import {Replies} from '../interactions/Replies';
 import {PromptTypeData} from './PromptTypeData';
+import {BoarUtils} from './BoarUtils';
 
 /**
  * {@link BoarUser BoarUser.ts}
@@ -138,6 +139,8 @@ export class BoarUser {
         const boarsGottenIDs = Object.keys(this.boarCollection);
         const twoDailiesAgo = Math.floor(new Date().setUTCHours(24,0,0,0)) - (1000 * 60 * 60 * 24 * 2);
 
+        const nums = BoarBotApp.getBot().getConfig().numberConfig;
+
         for (const boarID of boarsGottenIDs) {
             if (boarID !in config.boarItemConfigs) continue;
 
@@ -168,6 +171,12 @@ export class BoarUser {
                 this.powerups.promptData[promptType] = new PromptTypeData;
             }
         }
+
+        this.powerups.multiplier = Math.min(this.powerups.multiplier, nums.maxMulti);
+        this.powerups.multiBoostTotal = Math.min(this.powerups.multiBoostTotal, nums.maxMultiBoost);
+        this.powerups.numGifts = Math.min(this.powerups.numGifts, nums.maxPowBase);
+        this.powerups.extraChanceTotal = Math.min(this.powerups.extraChanceTotal, nums.maxExtraChance);
+        this.powerups.numEnhancers = Math.min(this.powerups.numEnhancers, nums.maxEnhancers);
 
         userData.boarCollection = this.boarCollection;
         userData.totalBoars = this.totalBoars;
@@ -205,11 +214,14 @@ export class BoarUser {
      * Add a boar to a user's collection and send an image
      *
      * @param config - Global config data parsed from JSON
-     * @param boarID - ID of boar to add
+     * @param boarIDs - IDs of boars to add
      * @param interaction - Interaction to reply to with image
-     * @return success - The function fully executed
      */
-    public async addBoar(config: BotConfig, boarID: string, interaction: ChatInputCommandInteraction): Promise<void> {
+    public async addBoars(
+        config: BotConfig,
+        boarIDs: string[],
+        interaction: ChatInputCommandInteraction
+    ): Promise<void> {
         // Config aliases
         const pathConfig = config.pathConfig;
         const strConfig = config.stringConfig;
@@ -218,21 +230,24 @@ export class BoarUser {
 
         // Rarity information
         const rarities = config.rarityConfigs;
-        let rarityIndex: number = -1;
+        const rarityInfos: RarityConfig[] = [];
 
-        for (let i=0; i<rarities.length; i++) {
-            if (rarities[i].boars.includes(boarID)) {
-                rarityIndex = i;
-                break;
+        for (let i=0; i<boarIDs.length; i++) {
+            rarityInfos.push({} as RarityConfig);
+            for (const rarity of rarities) {
+                if (rarity.boars.includes(boarIDs[i])) {
+                    rarityInfos[i] = BoarUtils.findRarity(boarIDs[i])[1];
+                    break;
+                }
             }
         }
 
-        if (rarityIndex === -1) {
-            await LogDebug.handleError(strConfig.dailyNoBoarFound, interaction);
-            return;
+        for (const info of rarityInfos) {
+            if (Object.keys(info).length === 0 || boarIDs.length === 0) {
+                await LogDebug.handleError(strConfig.dailyNoBoarFound, interaction);
+                return;
+            }
         }
-
-        const rarityInfo = rarities[rarityIndex];
 
         // Information about interaction
         const wasGiven = interaction.options.getSubcommand() === giveCommandConfig.name;
@@ -245,10 +260,12 @@ export class BoarUser {
 
             const globalData = DataHandlers.getGlobalData();
 
-            // Sets edition number
-            if (!globalData.editions[boarID])
-                globalData.editions[boarID] = 0;
-            boarEdition = ++globalData.editions[boarID];
+            // Sets edition numbers
+            for (const boarID of boarIDs) {
+                if (!globalData.editions[boarID])
+                    globalData.editions[boarID] = 0;
+                boarEdition = ++globalData.editions[boarID];
+            }
 
             fs.writeFileSync(pathConfig.globalDataFile, JSON.stringify(globalData));
 
@@ -260,58 +277,81 @@ export class BoarUser {
 
             this.refreshUserData(this.getUserData());
 
-            if (!this.boarCollection[boarID]) {
-                this.boarCollection[boarID] = {
-                    num: 0,
-                    editions: [],
-                    editionDates: [],
-                    firstObtained: 0,
-                    lastObtained: 0
-                };
-                this.boarCollection[boarID].firstObtained = Date.now();
+            for (let i=0; i<boarIDs.length; i++) {
+                const boarID = boarIDs[i];
+
+                if (!this.boarCollection[boarID]) {
+                    this.boarCollection[boarID] = {
+                        num: 0,
+                        editions: [],
+                        editionDates: [],
+                        firstObtained: 0,
+                        lastObtained: 0
+                    };
+                    this.boarCollection[boarID].firstObtained = Date.now();
+                }
+
+                this.boarCollection[boarID].num++;
+                this.boarCollection[boarID].lastObtained = Date.now();
+
+                if (boarEdition <= numConfig.maxTrackedEditions || !rarityInfos[i].fromDaily) {
+                    this.boarCollection[boarID].editions.push(boarEdition);
+                    this.boarCollection[boarID].editions.sort((a, b) => a-b);
+                    this.boarCollection[boarID].editionDates.push(Date.now());
+                    this.boarCollection[boarID].editionDates.sort((a, b) => a-b);
+                }
+
+                this.lastBoar = boarID;
+                this.boarScore += rarityInfos[i].score;
             }
 
-            this.boarCollection[boarID].num++;
-            this.boarCollection[boarID].lastObtained = Date.now();
-
-            if (boarEdition <= numConfig.maxTrackedEditions || !rarityInfo.fromDaily) {
-                this.boarCollection[boarID].editions.push(boarEdition);
-                this.boarCollection[boarID].editions.sort((a, b) => a-b);
-                this.boarCollection[boarID].editionDates.push(Date.now());
-                this.boarCollection[boarID].editionDates.sort((a, b) => a-b);
-            }
-
-            this.lastBoar = boarID;
-            this.boarScore += config.rarityConfigs[rarityIndex].score;
-            this.totalBoars++;
+            this.totalBoars += boarIDs.length;
 
             this.updateUserData();
             await this.orderBoars(config, interaction);
             LogDebug.sendDebug('Finished updating user info.', config, interaction);
         }, interaction.id + interaction.user.id);
 
-        // Image elements to be combined into one final image
-        let attachmentTitle = strConfig.dailyTitle;
+        let attachmentTitles: string[] = [];
 
-        // If the boar being added is a special boar (Not from daily), change the title to reflect it
-        if (!rarityInfo.fromDaily) {
-            attachmentTitle = strConfig.giveSpecialTitle;
-        } else if (wasGiven) {
-            attachmentTitle = strConfig.giveTitle;
+        // If the boars being added are a special boar (not from daily), change the title to reflect it
+        for (let i=0; i<boarIDs.length; i++) {
+            if (i === 0) {
+                attachmentTitles.push(strConfig.dailyTitle);
+            } else {
+                attachmentTitles.push(strConfig.extraTitle);
+            }
+
+            if (rarityInfos[i].score === 0) {
+                attachmentTitles[i] = strConfig.giveSpecialTitle;
+            } else if (wasGiven) {
+                attachmentTitles[i] = strConfig.giveTitle;
+            }
         }
 
-        LogDebug.sendDebug('Creating image...', config, interaction);
-        // Get the image attachment from ID
-        const attachment = await new ItemImageGenerator(this, config, boarID, attachmentTitle).handleImageCreate(false);
-        LogDebug.sendDebug('Image created', config, interaction);
+        LogDebug.sendDebug('Creating images...', config, interaction);
+
+        const attachments: AttachmentBuilder[] = [];
+        for (let i=0; i<boarIDs.length; i++) {
+            attachments.push(
+                await new ItemImageGenerator(this, config, boarIDs[i], attachmentTitles[i]).handleImageCreate(false)
+            );
+        }
+
+        LogDebug.sendDebug('Images created', config, interaction);
 
         // If regular boar on '/boar daily', reply to interaction with attachment
         // If given, send as separate message and reply to interaction with success
-        if (!wasGiven) {
-            await interaction.editReply({ files: [attachment] });
-        } else {
-            await Replies.handleReply(interaction, strConfig.giveBoar);
-            await interaction.followUp({ files: [attachment] });
+        for (let i=0; i<boarIDs.length; i++) {
+            if (wasGiven) {
+                await Replies.handleReply(interaction, strConfig.giveBoar);
+            }
+
+            if (i === 0 && !wasGiven) {
+                await interaction.editReply({ files: [attachments[i]] });
+            } else {
+                await interaction.followUp({ files: [attachments[i]] });
+            }
         }
     }
 

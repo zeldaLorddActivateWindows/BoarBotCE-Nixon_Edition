@@ -68,7 +68,8 @@ export class ItemImageGenerator {
         const imageExtension = this.imageFilePath.split('.')[1];
         const isAnimated = imageExtension === 'gif';
 
-        this.tempPath = pathConfig.tempItemAssets + this.id + this.rarityColorKey + '.' + imageExtension;
+        this.tempPath = pathConfig.tempItemAssets + this.id + this.rarityColorKey +
+            this.title.toLowerCase().substring(0, 4) + '.' + imageExtension;
 
         const usernameLength = numConfig.maxUsernameLength;
 

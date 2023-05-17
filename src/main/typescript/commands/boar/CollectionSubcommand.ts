@@ -57,6 +57,7 @@ export default class CollectionSubcommand implements Subcommand {
     private curView: View = View.Normal;
     private curPage: number = 0;
     private maxPageNormal: number = 0;
+    private enhancingPage: number = -1;
     private timerVars = {
         timeUntilNextCollect: 0,
         updateTime: setTimeout(() => {})
@@ -154,7 +155,8 @@ export default class CollectionSubcommand implements Subcommand {
                 powerupView: collRowConfig[0][1].components[2],
                 favorite: collRowConfig[1][0].components[0],
                 gift: collRowConfig[1][0].components[1],
-                editions: collRowConfig[1][0].components[2]
+                editions: collRowConfig[1][0].components[2],
+                enhance: collRowConfig[1][0].components[3]
             };
 
             // User wants to input a page manually
@@ -201,6 +203,25 @@ export default class CollectionSubcommand implements Subcommand {
 
                 case collComponents.editions.customId:
                     await this.doEditions();
+                    break;
+
+                case collComponents.enhance.customId:
+                    if (this.enhancingPage !== this.curPage) {
+                        await this.firstInter.followUp({
+                            files: [await this.collectionImage.finalizeEnhanceConfirm(this.curPage)],
+                            ephemeral: true
+                        });
+                        this.enhancingPage = this.curPage;
+                    } else {
+                        await Queue.addQueue(() => {
+                            this.boarUser.powerups.numEnhancers -=
+                                this.allBoars[this.curPage].rarity[1].enhancersNeeded;
+                            this.boarUser.boarScore +=
+                                this.config.rarityConfigs[this.allBoars[this.curPage].rarity[0]].score -
+                                this.allBoars[this.curPage].rarity[1].score;
+                            this.boarUser.updateUserData();
+                        }, inter.id + this.boarUser.user.id);
+                    }
                     break;
             }
 
@@ -376,7 +397,7 @@ export default class CollectionSubcommand implements Subcommand {
                 editionDates: boarInfo.editionDates,
                 firstObtained: boarInfo.firstObtained,
                 lastObtained: boarInfo.lastObtained,
-                rarity: rarity[1],
+                rarity: rarity,
                 color: this.config.colorConfig['rarity' + rarity[0]],
                 description: boarDetails.description
             });
@@ -423,7 +444,7 @@ export default class CollectionSubcommand implements Subcommand {
             finalImage = await this.collectionImage.finalizeNormalImage(this.curPage);
         } else if (this.curView == View.Detailed) {
             finalImage = await this.collectionImage.finalizeDetailedImage(this.curPage);
-            optionalRow.addComponents(this.optionalButtons.components[0].setDisabled(false));
+            optionalRow.addComponents(this.optionalButtons.components[0].setDisabled(false)); // Favorite button
         } else {
             finalImage = await this.collectionImage.finalizePowerupsImage();
         }
@@ -465,8 +486,21 @@ export default class CollectionSubcommand implements Subcommand {
             this.baseRows[1].components[2].setDisabled(false);
         }
 
-        if (this.curView == View.Detailed && this.allBoars[this.curPage].rarity.score === 0) {
+        // Enables edition viewing on special boars
+        if (this.curView == View.Detailed && this.allBoars[this.curPage].rarity[1].score === 0) {
             optionalRow.addComponents(this.optionalButtons.components[2].setDisabled(false));
+        }
+
+        // Enables enhance button for daily boars
+        if (
+            this.curView == View.Detailed &&
+            this.allBoars[this.curPage].rarity[1].enhancersNeeded > 0
+        ) {
+            optionalRow.addComponents(this.optionalButtons.components[3]
+                .setDisabled(
+                    this.boarUser.powerups.numEnhancers < this.allBoars[this.curPage].rarity[1].enhancersNeeded
+                )
+            );
         }
 
         if (optionalRow.components.length > 0) {

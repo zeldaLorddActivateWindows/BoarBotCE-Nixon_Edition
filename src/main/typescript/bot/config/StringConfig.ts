@@ -48,6 +48,7 @@ export class StringConfig {
 
     public readonly dailyUsed: string = ' ';
     public readonly dailyTitle: string = ' ';
+    public readonly extraTitle: string = ' ';
     public readonly dailyNoBoarFound: string = ' ';
 
     // Give command messages/strings (also badges)
@@ -102,6 +103,7 @@ export class StringConfig {
     public readonly collChanceHighestLabel: string = ' ';
     public readonly collEnhancersClaimedLabel: string = ' ';
     public readonly collEnhancedLabel: string = ' ';
+    public readonly collEnhanceDetails: string = ' ';
     public readonly collEditionTitle: string = ' ';
     public readonly collEditionLine: string = ' ';
 

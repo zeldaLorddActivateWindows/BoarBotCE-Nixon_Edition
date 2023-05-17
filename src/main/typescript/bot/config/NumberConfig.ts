@@ -57,6 +57,7 @@ export class NumberConfig {
 
     public readonly collBoarsPerPage: number = 0;
     public readonly collImageSize: [number, number] = [0, 0];
+    public readonly collEnhanceImageSize: [number, number] = [0, 0];
     public readonly collUserAvatarPos: [number, number] = [0, 0];
     public readonly collUserAvatarSize: [number, number] = [0, 0];
     public readonly collUserTagPos: [number, number] = [0, 0];
@@ -140,6 +141,8 @@ export class NumberConfig {
     public readonly collEnhancersClaimedPos: [number, number] = [0, 0];
     public readonly collEnhancedLabelPositions: [number, number][] = [];
     public readonly collEnhancedPositions: [number, number][] = [];
+    public readonly collEnhanceDetailsPos: [number, number] = [0, 0];
+    public readonly collEnhanceDetailsWidth: number = 0;
     public readonly collPowDataWidth: number = 0;
     public readonly collBoarStartX: number = 0;
     public readonly collBoarStartY: number = 0;
