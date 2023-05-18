@@ -3,14 +3,13 @@ import {BoarUser} from '../../util/boar/BoarUser';
 import {BoarBotApp} from '../../BoarBotApp';
 import {FormatStrings} from '../../util/discord/FormatStrings';
 import {Subcommand} from '../../api/commands/Subcommand';
-import {RarityConfig} from '../../bot/config/items/RarityConfig';
-import {BoarItemConfigs} from '../../bot/config/items/BoarItemConfigs';
 import {Queue} from '../../util/interactions/Queue';
 import {InteractionUtils} from '../../util/interactions/InteractionUtils';
 import {LogDebug} from '../../util/logging/LogDebug';
 import {BotConfig} from '../../bot/config/BotConfig';
 import {SubcommandConfig} from '../../bot/config/commands/SubcommandConfig';
 import {Replies} from '../../util/interactions/Replies';
+import {BoarUtils} from '../../util/boar/BoarUtils';
 
 /**
  * {@link DailySubcommand DailySubcommand.ts}
@@ -106,7 +105,7 @@ export default class DailySubcommand implements Subcommand {
 
         if (boarIDs.includes('')) return;
 
-        await boarUser.addBoars(this.config, boarIDs, this.interaction);
+        await boarUser.addBoars(this.config, boarIDs, this.interaction, true);
     }
 
     /**
@@ -241,7 +240,7 @@ export default class DailySubcommand implements Subcommand {
                 if (randomRarity > probability && Math.max(...probabilities.values()) !== probability)
                     continue;
 
-                const boarGotten: string = this.findValid(rarityIndex);
+                const boarGotten: string = BoarUtils.findValid(rarityIndex, this.config, this.guildData);
 
                 LogDebug.sendDebug(`Rolled boar with ID '${boarGotten}'`, this.config, this.interaction);
 
@@ -251,35 +250,5 @@ export default class DailySubcommand implements Subcommand {
         }
 
         return boarIDs;
-    }
-
-    /**
-     * Finds a boar that meets the requirements of the
-     * guild and isn't blacklisted
-     *
-     * @param rarityIndex - The rarity index that's being checked
-     * @private
-     */
-    private findValid(rarityIndex: number): string {
-        const rarities: RarityConfig[] = this.config.rarityConfigs;
-        const boarIDs: BoarItemConfigs = this.config.boarItemConfigs;
-        let randomBoar = Math.random();
-
-        // Stores the IDs of the current rarity being checked
-
-        const validRarityBoars: string[] = [];
-
-        for (const boarID of rarities[rarityIndex].boars) {
-            const isBlacklisted = boarIDs[boarID].blacklisted;
-            const isSB = boarIDs[boarID].isSB;
-
-            if (isBlacklisted || (!this.guildData.isSBServer && isSB))
-                continue;
-            validRarityBoars.push(boarID);
-        }
-
-        if (validRarityBoars.length == 0) return '';
-
-        return validRarityBoars[Math.floor(randomBoar * validRarityBoars.length)];
     }
 }

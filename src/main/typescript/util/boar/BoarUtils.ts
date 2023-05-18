@@ -1,5 +1,7 @@
 import {BoarBotApp} from '../../BoarBotApp';
 import {RarityConfig} from '../../bot/config/items/RarityConfig';
+import {BoarItemConfigs} from '../../bot/config/items/BoarItemConfigs';
+import {BotConfig} from '../../bot/config/BotConfig';
 
 /**
  * {@link BoarUtils BoarUtils.ts}
@@ -31,5 +33,37 @@ export class BoarUtils {
         }
 
         return [0, orderedRarities[orderedRarities.length-1]]; // Shouldn't ever trigger with proper config validation
+    }
+
+    /**
+     * Finds a boar that meets the requirements of the
+     * guild and isn't blacklisted
+     *
+     * @param rarityIndex - The rarity index that's being checked
+     * @param config
+     * @param guildData
+     * @private
+     */
+    public static findValid(rarityIndex: number, config: BotConfig, guildData: any): string {
+        const rarities: RarityConfig[] = config.rarityConfigs;
+        const boarIDs: BoarItemConfigs = config.boarItemConfigs;
+        let randomBoar = Math.random();
+
+        // Stores the IDs of the current rarity being checked
+
+        const validRarityBoars: string[] = [];
+
+        for (const boarID of rarities[rarityIndex].boars) {
+            const isBlacklisted = boarIDs[boarID].blacklisted;
+            const isSB = boarIDs[boarID].isSB;
+
+            if (isBlacklisted || (!guildData.isSBServer && isSB))
+                continue;
+            validRarityBoars.push(boarID);
+        }
+
+        if (validRarityBoars.length == 0) return '';
+
+        return validRarityBoars[Math.floor(randomBoar * validRarityBoars.length)];
     }
 }

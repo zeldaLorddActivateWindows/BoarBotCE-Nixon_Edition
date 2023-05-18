@@ -28,8 +28,7 @@
         "collPowerUnderlay": "BoarCollectionPowerupsUnderlay.png",
         "collPowerUnderlay2": "BoarCollectionPowerupsUnderlay2.png",
         "collPowerUnderlay3": "BoarCollectionPowerupsUnderlay3.png",
-        "collEnhanceOverlay": "BoarEnhancerOverlay.png",
-        "collEnhanceUnderlay": "BoarEnhancerUnderlay.png",
+        "collEnhanceUnderlay": "BoarEnhanceUnderlay.png",
         "clanNone": "BoarClanNone.png",
         "enhancerOn": "EnhancerActive.png",
         "enhancerOff": "EnhancerInactive.png",
@@ -55,7 +54,7 @@
         "invalidPage": "Invalid Page input!",
         "onCooldown": "You're using this command too fast! Please wait 5 seconds!",
         "noAttachmentPerms": "BoarBot doesn't have attachment permissions, so some interactive images may not appear.",
-        "error": "Something went wrong! Please try again in a few minutes. If the issue persists, DM the bot with the issue!",
+        "error": "Something went wrong! Please try again in a few minutes. If the issue persists, DM BoarBot with the issue!",
         "maintenance": "BoarBot is currently in maintenance mode!",
         "setupCancelled": "**Setup was cancelled!**",
         "setupError": "**An error occurred while getting information! Try again later.**",
@@ -69,7 +68,7 @@
         "setupFinished3": "**Hypixel Skyblock community: **",
         "setupInfoResponse1": "**__TRADE CHANNEL__**\n\nThis bot has a trading system! In order for the trading system to work properly, it needs its own channel. Threads will dynamically be created and deleted in this channel unless the bot doesn't have permission to do so. If this is the case, trading will unfortunately be automatically disabled.\n\n*This channel can be changed at any time using </boar-manage setup:1080193988046364734>.*\n*Use :pencil: to enter a channel ID (right-click channel name, Copy ID) that isn't shown in the select box.*",
         "setupInfoResponse2": "**__BOAR CHANNELS__**\n\nObviously, this bot has slash commands. Slash commands can produce spammy content depending on how large your server is, so you'll need to decide which channels the bot is enabled in.\n\n*These channels can be changed at any time using </boar-manage setup:1080193988046364734>.*\n*Use :pencil: to enter a channel ID (right-click channel name, Copy ID) that isn't shown in the select box.*",
-        "setupInfoResponse3": "**__SKYBLOCK COMMUNITY__**\n\nThis bot originated on a Discord server dedicated to Hypixel Skyblock. If you don't know what that is, no sweat! Just click \"No\". If you do and you're part of the community, I recommend you click \"Yes\".\n\n*This can be changed at any time using </boar-manage setup:1080193988046364734>.*",
+        "setupInfoResponse3": "**__SKYBLOCK COMMUNITY__**\n\nThis bot originated on a Discord server dedicated to Hypixel Skyblock. If you don't know what that is, no sweat! Just click \"No\". If you do and you're part of the community, it's highly recommended that you click \"Yes\".\n\n*This can be changed at any time using </boar-manage setup:1080193988046364734>.*",
         "dailyUsed": "You've already used your daily boar! The next time you can use the command is ",
         "dailyTitle": "Daily Boar!",
         "extraTitle": "Extra Boar!",
@@ -86,7 +85,7 @@
         "obtainedBadgeTitle": "Badge Obtained!",
         "collNoBadges": "No Badges!",
         "collDateLabel": "Started collecting on",
-        "collScoreLabel": "Boar Score",
+        "collScoreLabel": "Boar Bucks",
         "collTotalLabel": "Total",
         "collUniquesLabel": "Uniques",
         "collDailiesLabel": "Dailies",
@@ -122,6 +121,8 @@
         "collEnhancersClaimedLabel": "Enhancers Claimed",
         "collEnhancedLabel": "Enhanced %@",
         "collEnhanceDetails": "This action will take your %@ and convert it into a random boar of the next rarity. The result of this interaction is shown above. Click \"Enhance\" again to confirm.",
+        "collEnhanceBoarLose": "-1 %@",
+        "collEnhanceBoarGain": "+1 %@ Boar",
         "collEditionTitle": "__Your editions for %@__",
         "collEditionLine": "**Edition #%@:** %@\n",
         "noParentChannel": "NO CATEGORY",
@@ -142,7 +143,7 @@
         "fontSmallest": 35,
         "maxUsernameLength": 16,
         "maxTrackedEditions": 100,
-        "maxScore": 999999999999999999,
+        "maxScore": 99999999999999999,
         "maxBoars": 99999999,
         "maxStreak": 99999999,
         "maxDailies": 99999999,
@@ -271,6 +272,11 @@
         ],
         "collEnhanceDetailsPos": [621, 1245],
         "collEnhanceDetailsWidth": 1160,
+        "collEnhanceBoarLosePos": [621, 302],
+        "collEnhanceBoarGainPos": [621, 447],
+        "collEnhanceLosePos": [621, 592],
+        "collEnhanceScoreGainPos": [621, 737],
+        "collEnhanceResultWidth": 750,
         "collPowDataWidth": 560,
         "collBoarsPerPage": 16,
         "collBoarStartX": 740,
@@ -472,7 +478,7 @@
             "description": "Commands to manage BoarBot",
             "setup": {
                 "name": "setup",
-                "description": "Set the bot up to your liking",
+                "description": "Set BoarBot up to your liking",
                 "cooldown": true,
                 "componentFields": [
                     [
@@ -682,7 +688,7 @@
             },
             "configRefresh": {
                 "name": "config-refresh",
-                "description": "Refresh the bot's config"
+                "description": "Refresh BoarBot's config"
             }
         }
     },
@@ -1152,6 +1158,7 @@
         "font": "#DEDEDE",
         "badge": "#4D4278",
         "powerup": "#40DEA9",
+        "bucks": "#14802A",
         "editionEmbed": "#248046",
         "baseEmbed": "#4F545C",
         "maintenance": "#FFFF00",

@@ -15,6 +15,7 @@ export class ColorConfig {
     public readonly badge: string = '#000000';
 
     public readonly powerup: string = '#000000';
+    public readonly bucks: string = '#000000';
 
     public readonly editionEmbed: string = '#000000';
     public readonly baseEmbed: string = '#000000';

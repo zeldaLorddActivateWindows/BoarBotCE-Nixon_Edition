@@ -48,9 +48,7 @@ export class BoarUser {
     constructor(user: User, createFile?: boolean) {
         this.user = user;
 
-        const userData = this.getUserData(createFile);
-
-        this.refreshUserData(userData);
+        const userData = this.refreshUserData(createFile);
 
         if (createFile || this.boarStreak > 0) {
             this.fixUserData(userData);
@@ -109,7 +107,9 @@ export class BoarUser {
         this.fixUserData(userData);
     }
 
-    public refreshUserData(userData: any): void {
+    public refreshUserData(createFile: boolean = false): any {
+        const userData = this.getUserData(createFile);
+
         this.lastDaily = userData.lastDaily;
         this.numDailies = userData.numDailies;
         this.totalBoars = userData.totalBoars;
@@ -123,6 +123,8 @@ export class BoarUser {
         this.themes = userData.themes;
         this.badges = userData.badges;
         this.boarCollection = userData.boarCollection;
+
+        return userData;
     }
 
     /**
@@ -216,11 +218,13 @@ export class BoarUser {
      * @param config - Global config data parsed from JSON
      * @param boarIDs - IDs of boars to add
      * @param interaction - Interaction to reply to with image
+     * @param sendAttachment
      */
     public async addBoars(
         config: BotConfig,
         boarIDs: string[],
-        interaction: ChatInputCommandInteraction
+        interaction: ChatInputCommandInteraction,
+        sendAttachment: boolean = false
     ): Promise<void> {
         // Config aliases
         const pathConfig = config.pathConfig;
@@ -249,9 +253,6 @@ export class BoarUser {
             }
         }
 
-        // Information about interaction
-        const wasGiven = interaction.options.getSubcommand() === giveCommandConfig.name;
-
         let boarEdition: number = 0;
 
         // Updates global edition data
@@ -275,26 +276,20 @@ export class BoarUser {
         await Queue.addQueue(async () => {
             LogDebug.sendDebug('Updating user info...', config, interaction);
 
-            this.refreshUserData(this.getUserData());
+            this.refreshUserData();
 
             for (let i=0; i<boarIDs.length; i++) {
                 const boarID = boarIDs[i];
 
                 if (!this.boarCollection[boarID]) {
-                    this.boarCollection[boarID] = {
-                        num: 0,
-                        editions: [],
-                        editionDates: [],
-                        firstObtained: 0,
-                        lastObtained: 0
-                    };
+                    this.boarCollection[boarID] = new CollectedBoar;
                     this.boarCollection[boarID].firstObtained = Date.now();
                 }
 
                 this.boarCollection[boarID].num++;
                 this.boarCollection[boarID].lastObtained = Date.now();
 
-                if (boarEdition <= numConfig.maxTrackedEditions || !rarityInfos[i].fromDaily) {
+                if (boarEdition <= numConfig.maxTrackedEditions || rarityInfos[i].name === 'Special') {
                     this.boarCollection[boarID].editions.push(boarEdition);
                     this.boarCollection[boarID].editions.sort((a, b) => a-b);
                     this.boarCollection[boarID].editionDates.push(Date.now());
@@ -312,45 +307,50 @@ export class BoarUser {
             LogDebug.sendDebug('Finished updating user info.', config, interaction);
         }, interaction.id + interaction.user.id);
 
-        let attachmentTitles: string[] = [];
+        // Information about interaction
+        const wasGiven = interaction.options.getSubcommand() === giveCommandConfig.name;
 
-        // If the boars being added are a special boar (not from daily), change the title to reflect it
-        for (let i=0; i<boarIDs.length; i++) {
-            if (i === 0) {
-                attachmentTitles.push(strConfig.dailyTitle);
-            } else {
-                attachmentTitles.push(strConfig.extraTitle);
+        if (sendAttachment) {
+            let attachmentTitles: string[] = [];
+
+            // If the boars being added are a special boar (not from daily), change the title to reflect it
+            for (let i=0; i<boarIDs.length; i++) {
+                if (i === 0) {
+                    attachmentTitles.push(strConfig.dailyTitle);
+                } else {
+                    attachmentTitles.push(strConfig.extraTitle);
+                }
+
+                if (rarityInfos[i].name === 'Special') {
+                    attachmentTitles[i] = strConfig.giveSpecialTitle;
+                } else if (wasGiven) {
+                    attachmentTitles[i] = strConfig.giveTitle;
+                }
             }
 
-            if (rarityInfos[i].score === 0) {
-                attachmentTitles[i] = strConfig.giveSpecialTitle;
-            } else if (wasGiven) {
-                attachmentTitles[i] = strConfig.giveTitle;
-            }
-        }
+            LogDebug.sendDebug('Creating images...', config, interaction);
 
-        LogDebug.sendDebug('Creating images...', config, interaction);
-
-        const attachments: AttachmentBuilder[] = [];
-        for (let i=0; i<boarIDs.length; i++) {
-            attachments.push(
-                await new ItemImageGenerator(this, config, boarIDs[i], attachmentTitles[i]).handleImageCreate(false)
-            );
-        }
-
-        LogDebug.sendDebug('Images created', config, interaction);
-
-        // If regular boar on '/boar daily', reply to interaction with attachment
-        // If given, send as separate message and reply to interaction with success
-        for (let i=0; i<boarIDs.length; i++) {
-            if (wasGiven) {
-                await Replies.handleReply(interaction, strConfig.giveBoar);
+            const attachments: AttachmentBuilder[] = [];
+            for (let i=0; i<boarIDs.length; i++) {
+                attachments.push(
+                    await new ItemImageGenerator(this, config, boarIDs[i], attachmentTitles[i]).handleImageCreate(false)
+                );
             }
 
-            if (i === 0 && !wasGiven) {
-                await interaction.editReply({ files: [attachments[i]] });
-            } else {
-                await interaction.followUp({ files: [attachments[i]] });
+            LogDebug.sendDebug('Images created', config, interaction);
+
+            // If regular boar on '/boar daily', reply to interaction with attachment
+            // If given, send as separate message and reply to interaction with success
+            for (let i=0; i<boarIDs.length; i++) {
+                if (wasGiven) {
+                    await Replies.handleReply(interaction, strConfig.giveBoar);
+                }
+
+                if (i === 0 && !wasGiven) {
+                    await interaction.editReply({ files: [attachments[i]] });
+                } else {
+                    await interaction.followUp({ files: [attachments[i]] });
+                }
             }
         }
     }
@@ -366,16 +366,27 @@ export class BoarUser {
         const strConfig = config.stringConfig;
         const giveCommandConfig = config.commandConfigs.boarDev.give;
 
-        const hasBadge = this.badges.includes(badgeID);
         const wasGiven = interaction.options.getSubcommand() === giveCommandConfig.name;
 
-        if (hasBadge && wasGiven) {
-            await Replies.handleReply(interaction, strConfig.giveBadgeHas);
-            return;
-        }
+        if (wasGiven) {
+            await Queue.addQueue(async () => {
+                this.refreshUserData();
+                const hasBadge = this.badges.includes(badgeID);
+                if (hasBadge) {
+                    await Replies.handleReply(interaction, strConfig.giveBadgeHas);
+                    return;
+                }
 
-        if (hasBadge && !wasGiven)
-            return;
+                this.badges.push(badgeID);
+                this.updateUserData();
+            }, interaction.id + interaction.user.id);
+        } else {
+            const hasBadge = this.badges.includes(badgeID);
+            if (hasBadge) return;
+
+            this.badges.push(badgeID);
+            this.updateUserData();
+        }
 
         const attachmentTitle = wasGiven
             ? strConfig.giveBadgeTitle
@@ -391,13 +402,12 @@ export class BoarUser {
             await Replies.handleReply(interaction, strConfig.giveBadge);
             await interaction.followUp({ files: [attachment] });
         }
-
-        this.badges.push(badgeID);
-
-        this.updateUserData();
     }
 
-    public removeBadge(config: BotConfig, badgeID: string): void {
+    public async removeBadge(
+        config: BotConfig,
+        badgeID: string
+    ): Promise<void> {
         if (!this.badges.includes(badgeID)) return;
 
         this.badges.splice(this.badges.indexOf(badgeID), 1);

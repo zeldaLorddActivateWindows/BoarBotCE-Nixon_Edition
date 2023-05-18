@@ -45,6 +45,7 @@ enum View {
 export default class CollectionSubcommand implements Subcommand {
     private config = BoarBotApp.getBot().getConfig();
     private subcommandInfo = this.config.commandConfigs.boar.collection;
+    private guildData: any = {};
     private firstInter: ChatInputCommandInteraction = {} as ChatInputCommandInteraction;
     private compInter: ButtonInteraction = {} as ButtonInteraction;
     private collectionImage = {} as CollectionImageGenerator;
@@ -78,8 +79,8 @@ export default class CollectionSubcommand implements Subcommand {
     public async execute(interaction: ChatInputCommandInteraction) {
         const config = BoarBotApp.getBot().getConfig();
 
-        const guildData = await InteractionUtils.handleStart(config, interaction);
-        if (!guildData) return;
+        this.guildData = await InteractionUtils.handleStart(config, interaction);
+        if (!this.guildData) return;
 
         await interaction.deferReply();
         this.firstInter = interaction;
@@ -213,14 +214,7 @@ export default class CollectionSubcommand implements Subcommand {
                         });
                         this.enhancingPage = this.curPage;
                     } else {
-                        await Queue.addQueue(() => {
-                            this.boarUser.powerups.numEnhancers -=
-                                this.allBoars[this.curPage].rarity[1].enhancersNeeded;
-                            this.boarUser.boarScore +=
-                                this.config.rarityConfigs[this.allBoars[this.curPage].rarity[0]].score -
-                                this.allBoars[this.curPage].rarity[1].score;
-                            this.boarUser.updateUserData();
-                        }, inter.id + this.boarUser.user.id);
+                        await this.doEnhance();
                     }
                     break;
             }
@@ -257,6 +251,38 @@ export default class CollectionSubcommand implements Subcommand {
             ],
             ephemeral: true
         });
+    }
+
+    private async doEnhance(): Promise<void> {
+        const enhancedBoar: string =
+            BoarUtils.findValid(this.allBoars[this.curPage].rarity[0], this.config, this.guildData);
+
+        if (enhancedBoar === '') {
+            await LogDebug.handleError(this.config.stringConfig.dailyNoBoarFound, this.firstInter);
+            return;
+        }
+
+        LogDebug.sendDebug(`Enhanced boar to '${enhancedBoar}'`, this.config, this.firstInter);
+
+        await Queue.addQueue(() => {
+            this.boarUser.refreshUserData();
+            this.boarUser.boarCollection[this.allBoars[this.curPage].id].num--;
+            this.boarUser.boarScore -= this.allBoars[this.curPage].rarity[1].score;
+            this.boarUser.powerups.numEnhancers -= this.allBoars[this.curPage].rarity[1].enhancersNeeded;
+            this.boarUser.powerups.enhancedRarities[this.allBoars[this.curPage].rarity[0]-1]++;
+            this.boarUser.updateUserData();
+        }, this.compInter.id + this.compInter.user.id);
+
+        await this.boarUser.addBoars(this.config, [enhancedBoar], this.firstInter, false);
+
+        await Queue.addQueue(() => this.getUserInfo(this.boarUser.user), this.compInter.id + this.boarUser.user.id);
+
+        this.curPage = this.getPageFromName(
+            this.config.boarItemConfigs[enhancedBoar].name.toLowerCase().replace(/\s+/g, ''), this.allBoarsTree.root
+        ) - 1;
+
+        this.collectionImage.updateInfo(this.boarUser, this.config, this.allBoars);
+        await this.collectionImage.createNormalBase();
     }
 
     /**
@@ -374,6 +400,7 @@ export default class CollectionSubcommand implements Subcommand {
         if (!this.firstInter.guild || !this.firstInter.channel) return;
 
         this.boarUser = new BoarUser(userInput);
+        this.allBoars = [];
 
         // Adds information about each boar in user's boar collection to an array
         for (const boarID of Object.keys(this.boarUser.boarCollection)) {
@@ -451,9 +478,9 @@ export default class CollectionSubcommand implements Subcommand {
 
         // Enables next button if there's more than one page
         if (
-            this.curView == View.Normal && this.maxPageNormal > this.curPage ||
-            this.curView == View.Detailed && this.allBoars.length > this.curPage + 1 ||
-            this.curView == View.Powerups && this.config.numberConfig.maxPowPages > this.curPage + 1
+            this.curView === View.Normal && this.maxPageNormal > this.curPage ||
+            this.curView === View.Detailed && this.allBoars.length > this.curPage + 1 ||
+            this.curView === View.Powerups && this.config.numberConfig.maxPowPages > this.curPage + 1
         ) {
             this.baseRows[0].components[2].setDisabled(false);
         }
@@ -465,8 +492,9 @@ export default class CollectionSubcommand implements Subcommand {
 
         // Enables manual input button if there's more than one page
         if (
-            this.curView == View.Normal && this.maxPageNormal > 0 ||
-            this.curView == View.Detailed && this.allBoars.length > 1
+            this.curView === View.Normal && this.maxPageNormal > 0 ||
+            this.curView === View.Detailed && this.allBoars.length > 1 ||
+            this.curView === View.Powerups
         ) {
             this.baseRows[0].components[1].setDisabled(false);
         }
@@ -487,7 +515,7 @@ export default class CollectionSubcommand implements Subcommand {
         }
 
         // Enables edition viewing on special boars
-        if (this.curView == View.Detailed && this.allBoars[this.curPage].rarity[1].score === 0) {
+        if (this.curView == View.Detailed && this.allBoars[this.curPage].rarity[1].name === 'Special') {
             optionalRow.addComponents(this.optionalButtons.components[2].setDisabled(false));
         }
 

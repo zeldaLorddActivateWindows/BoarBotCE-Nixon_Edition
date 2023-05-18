@@ -17,14 +17,20 @@ import {PromptConfig} from '../../bot/config/powerups/PromptConfig';
  * @copyright WeslayCodes 2023
  */
 export class CollectionImageGenerator {
-    private readonly boarUser: BoarUser = {} as BoarUser;
-    private readonly config: BotConfig = {} as BotConfig;
-    private readonly allBoars: any[] = [];
+    private boarUser: BoarUser = {} as BoarUser;
+    private config: BotConfig = {} as BotConfig;
+    private allBoars: any[] = [];
     private normalBase: Buffer = {} as Buffer;
     private detailedBase: Buffer = {} as Buffer;
     private powerupsBase: Buffer = {} as Buffer;
 
     constructor(boarUser: BoarUser, config: BotConfig, boars: any[]) {
+        this.boarUser = boarUser;
+        this.config = config;
+        this.allBoars = boars;
+    }
+
+    public updateInfo(boarUser: BoarUser, config: BotConfig, boars: any[]): void {
         this.boarUser = boarUser;
         this.config = config;
         this.allBoars = boars;
@@ -75,7 +81,10 @@ export class CollectionImageGenerator {
         CanvasUtils.drawText(
             ctx, strConfig.collScoreLabel, nums.collScoreLabelPos, mediumFont, 'center', colorConfig.font
         );
-        CanvasUtils.drawText(ctx, scoreString, nums.collScorePos, smallFont, 'center', colorConfig.font);
+        CanvasUtils.drawText(
+            ctx, '%@' + scoreString, nums.collScorePos, smallFont, 'center',
+            colorConfig.font, undefined, false, '$', colorConfig.bucks
+        );
 
         CanvasUtils.drawText(
             ctx, strConfig.collTotalLabel, nums.collTotalLabelPos, mediumFont, 'center', colorConfig.font
@@ -754,17 +763,44 @@ export class CollectionImageGenerator {
         const nums = this.config.numberConfig;
         const pathConfig = this.config.pathConfig;
         const colorConfig = this.config.colorConfig;
+        const rarityConfig = this.config.rarityConfigs;
+        const powConfig = this.config.powerupConfig;
 
+        const bigFont = `${nums.fontBig}px ${strConfig.fontName}`;
         const mediumFont = `${nums.fontMedium}px ${strConfig.fontName}`;
 
         const confirmUnderlay = pathConfig.collAssets + pathConfig.collEnhanceUnderlay;
-        const confirmOverlay = pathConfig.collAssets + pathConfig.collEnhanceOverlay;
+
+        const nextRarityIndex = this.allBoars[page].rarity[0];
+        const nextRarityName = rarityConfig[nextRarityIndex].name;
+        const nextRarityColor = colorConfig['rarity' + (nextRarityIndex + 1)];
+        const enhancersLost = this.allBoars[page].rarity[1].enhancersNeeded;
+        const scoreGained = rarityConfig[this.allBoars[page].rarity[0]].score - this.allBoars[page].rarity[1].score;
 
         const canvas = Canvas.createCanvas(...nums.collEnhanceImageSize);
         const ctx = canvas.getContext('2d');
 
         ctx.drawImage(await Canvas.loadImage(confirmUnderlay), ...nums.originPos, ...nums.collEnhanceImageSize);
-        ctx.drawImage(await Canvas.loadImage(confirmOverlay), ...nums.originPos, ...nums.collEnhanceImageSize);
+
+        CanvasUtils.drawText(
+            ctx, strConfig.collEnhanceBoarLose, nums.collEnhanceBoarLosePos, bigFont, 'center', colorConfig.font,
+            nums.collEnhanceResultWidth, false, this.allBoars[page].name, this.allBoars[page].color
+        );
+
+        CanvasUtils.drawText(
+            ctx, strConfig.collEnhanceBoarGain, nums.collEnhanceBoarGainPos, bigFont, 'center', colorConfig.font,
+            nums.collEnhanceResultWidth, false, nextRarityName, nextRarityColor
+        );
+
+        CanvasUtils.drawText(
+            ctx, '-' + enhancersLost + 'x %@', nums.collEnhanceLosePos, bigFont, 'center', colorConfig.font,
+            nums.collEnhanceResultWidth, false, powConfig.enhancer.name, colorConfig.powerup
+        );
+
+        CanvasUtils.drawText(
+            ctx, '+' + scoreGained + ' %@', nums.collEnhanceScoreGainPos, bigFont, 'center', colorConfig.font,
+            nums.collEnhanceResultWidth, false, strConfig.collScoreLabel, colorConfig.bucks
+        );
 
         CanvasUtils.drawText(
             ctx, strConfig.collEnhanceDetails, nums.collEnhanceDetailsPos, mediumFont, 'center', colorConfig.font,

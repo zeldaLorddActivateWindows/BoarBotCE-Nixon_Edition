@@ -76,14 +76,24 @@ export class LogDebug {
             let errString = typeof err === 'string' ? err : (err as Error).stack;
             const prefix = `[${Colors.Green}CAUGHT ERROR${Colors.White}] `;
             const time = LogDebug.getPrefixTime();
-            const completeString = prefix + time + errString;
             const config = BoarBotApp.getBot().getConfig();
+
+            let completeString = prefix + time;
+            if (interaction && interaction.isChatInputCommand()) {
+                completeString += config.stringConfig.commandDebugPrefix
+                    .replace('%@', interaction.user.tag)
+                    .replace('%@', interaction.commandName)
+                    .replace('%@', interaction.options.getSubcommand()) +
+                    errString;
+            } else {
+                completeString += errString;
+            }
 
             await this.sendLogMessage(config, completeString);
 
             if (!interaction || !interaction.isChatInputCommand()) return;
 
-            const errResponse = config.stringConfig.error;
+            let errResponse = config.stringConfig.error;
 
             await Replies.handleReply(interaction, errResponse, config.colorConfig.error as ColorResolvable);
         } catch (err: unknown) {

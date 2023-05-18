@@ -101,7 +101,7 @@ export default class GiveSubcommand implements Subcommand {
         LogDebug.sendDebug('Gave \'' + this.idInput + '\' to ' + this.userInput.tag, this.config, this.interaction);
 
         if (this.idInput.endsWith(strConfig.giveBoarChoiceTag)) {
-            await boarUser.addBoars(this.config, [this.idInput.split(' ')[0]], this.interaction);
+            await boarUser.addBoars(this.config, [this.idInput.split(' ')[0]], this.interaction, true);
         } else if (this.idInput.endsWith(strConfig.giveBadgeChoiceTag)) {
             await boarUser.addBadge(this.config, this.idInput.split(' ')[0], this.interaction);
         } else {

@@ -143,6 +143,11 @@ export class NumberConfig {
     public readonly collEnhancedPositions: [number, number][] = [];
     public readonly collEnhanceDetailsPos: [number, number] = [0, 0];
     public readonly collEnhanceDetailsWidth: number = 0;
+    public readonly collEnhanceBoarLosePos: [number, number] = [0, 0];
+    public readonly collEnhanceBoarGainPos: [number, number] = [0, 0];
+    public readonly collEnhanceLosePos: [number, number] = [0, 0];
+    public readonly collEnhanceScoreGainPos: [number, number] = [0, 0];
+    public readonly collEnhanceResultWidth: number = 0;
     public readonly collPowDataWidth: number = 0;
     public readonly collBoarStartX: number = 0;
     public readonly collBoarStartY: number = 0;
