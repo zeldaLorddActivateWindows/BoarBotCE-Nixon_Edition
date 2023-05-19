@@ -1,5 +1,3 @@
-import {LogDebug} from '../logging/LogDebug';
-
 /**
  * {@link Queue Queue.ts}
  *
@@ -57,12 +55,7 @@ export class Queue {
         if (Object.keys(Queue.queues[queueIndex]).length > 0) {
             Queue.queueRunning[queueIndex] = true;
 
-            try {
-                await Queue.queues[queueIndex][Object.keys(Queue.queues[queueIndex])[0]]();
-            } catch (err: unknown) {
-                await LogDebug.handleError(err);
-            }
-
+            await Queue.queues[queueIndex][Object.keys(Queue.queues[queueIndex])[0]]();
             delete Queue.queues[queueIndex][Object.keys(Queue.queues[queueIndex])[0]];
 
             Queue.runQueue(queueIndex);

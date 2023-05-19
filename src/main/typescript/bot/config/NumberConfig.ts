@@ -36,6 +36,10 @@ export class NumberConfig {
 
     // A constant used to determine how quickly to increase rarity
     public readonly rarityIncreaseConst: number = 0;
+    public readonly responseDetailsPos: [number, number] = [0, 0];
+    public readonly responseDetailsWidth: number = 0;
+
+    public readonly responseImageSize: [number, number] = [0, 0];
 
     // Item image positions, sizes, and values
 
@@ -57,7 +61,6 @@ export class NumberConfig {
 
     public readonly collBoarsPerPage: number = 0;
     public readonly collImageSize: [number, number] = [0, 0];
-    public readonly collEnhanceImageSize: [number, number] = [0, 0];
     public readonly collUserAvatarPos: [number, number] = [0, 0];
     public readonly collUserAvatarSize: [number, number] = [0, 0];
     public readonly collUserTagPos: [number, number] = [0, 0];
@@ -141,8 +144,6 @@ export class NumberConfig {
     public readonly collEnhancersClaimedPos: [number, number] = [0, 0];
     public readonly collEnhancedLabelPositions: [number, number][] = [];
     public readonly collEnhancedPositions: [number, number][] = [];
-    public readonly collEnhanceDetailsPos: [number, number] = [0, 0];
-    public readonly collEnhanceDetailsWidth: number = 0;
     public readonly collEnhanceBoarLosePos: [number, number] = [0, 0];
     public readonly collEnhanceBoarGainPos: [number, number] = [0, 0];
     public readonly collEnhanceLosePos: [number, number] = [0, 0];

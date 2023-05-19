@@ -400,9 +400,9 @@ export class CollectionImageGenerator {
 
         const claimedMap: Map<string, number> = new Map<string, number>([
             [powConfig.multiBoost.name, powerupData.multiBoostsClaimed],
-            [powConfig.gift.name, powerupData.giftsClaimed],
+            [powConfig.gift.pluralName, powerupData.giftsClaimed],
             [powConfig.extraChance.name, powerupData.extraChancesClaimed],
-            [powConfig.enhancer.name, powerupData.enhancersClaimed]
+            [powConfig.enhancer.pluralName, powerupData.enhancersClaimed]
         ]);
 
         let mostClaimed: [string, number] = [strConfig.unavailable, 0];
@@ -775,12 +775,12 @@ export class CollectionImageGenerator {
         const nextRarityName = rarityConfig[nextRarityIndex].name;
         const nextRarityColor = colorConfig['rarity' + (nextRarityIndex + 1)];
         const enhancersLost = this.allBoars[page].rarity[1].enhancersNeeded;
-        const scoreGained = rarityConfig[this.allBoars[page].rarity[0]].score - this.allBoars[page].rarity[1].score;
+        const scoreGained = enhancersLost * 5;
 
-        const canvas = Canvas.createCanvas(...nums.collEnhanceImageSize);
+        const canvas = Canvas.createCanvas(...nums.responseImageSize);
         const ctx = canvas.getContext('2d');
 
-        ctx.drawImage(await Canvas.loadImage(confirmUnderlay), ...nums.originPos, ...nums.collEnhanceImageSize);
+        ctx.drawImage(await Canvas.loadImage(confirmUnderlay), ...nums.originPos, ...nums.responseImageSize);
 
         CanvasUtils.drawText(
             ctx, strConfig.collEnhanceBoarLose, nums.collEnhanceBoarLosePos, bigFont, 'center', colorConfig.font,
@@ -794,7 +794,7 @@ export class CollectionImageGenerator {
 
         CanvasUtils.drawText(
             ctx, '-' + enhancersLost + 'x %@', nums.collEnhanceLosePos, bigFont, 'center', colorConfig.font,
-            nums.collEnhanceResultWidth, false, powConfig.enhancer.name, colorConfig.powerup
+            nums.collEnhanceResultWidth, false, powConfig.enhancer.pluralName, colorConfig.powerup
         );
 
         CanvasUtils.drawText(
@@ -803,8 +803,36 @@ export class CollectionImageGenerator {
         );
 
         CanvasUtils.drawText(
-            ctx, strConfig.collEnhanceDetails, nums.collEnhanceDetailsPos, mediumFont, 'center', colorConfig.font,
-            nums.collEnhanceDetailsWidth, true, this.allBoars[page].name, this.allBoars[page].color
+            ctx, strConfig.collEnhanceDetails, nums.responseDetailsPos, mediumFont, 'center', colorConfig.font,
+            nums.responseDetailsWidth, true, this.allBoars[page].name, this.allBoars[page].color
+        );
+
+        return new AttachmentBuilder(canvas.toBuffer(), { name:`${this.config.stringConfig.imageName}.png` });
+    }
+
+    public async finalizeGift(): Promise<AttachmentBuilder> {
+        // Config aliases
+
+        const strConfig = this.config.stringConfig;
+        const nums = this.config.numberConfig;
+        const pathConfig = this.config.pathConfig;
+        const colorConfig = this.config.colorConfig;
+        const powConfig = this.config.powerupConfig;
+
+        const mediumFont = `${nums.fontMedium}px ${strConfig.fontName}`;
+
+        const confirmUnderlay = pathConfig.collAssets + pathConfig.collGiftUnderlay;
+        const userTag = this.boarUser.user.username.substring(0, nums.maxUsernameLength) + '#' +
+            this.boarUser.user.discriminator;
+
+        const canvas = Canvas.createCanvas(...nums.responseImageSize);
+        const ctx = canvas.getContext('2d');
+
+        ctx.drawImage(await Canvas.loadImage(confirmUnderlay), ...nums.originPos, ...nums.responseImageSize);
+
+        CanvasUtils.drawText(
+            ctx, userTag + strConfig.collGiftDetails, nums.responseDetailsPos, mediumFont, 'center', colorConfig.font,
+            nums.responseDetailsWidth, true, powConfig.gift.name, colorConfig.powerup
         );
 
         return new AttachmentBuilder(canvas.toBuffer(), { name:`${this.config.stringConfig.imageName}.png` });

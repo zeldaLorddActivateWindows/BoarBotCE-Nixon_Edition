@@ -8,7 +8,6 @@ import {
 import {BotConfig} from '../../bot/config/BotConfig';
 import {FormatStrings} from '../discord/FormatStrings';
 import {LogDebug} from '../logging/LogDebug';
-import {BoarBot} from '../../bot/BoarBot';
 import {BoarBotApp} from '../../BoarBotApp';
 
 /**

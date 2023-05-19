@@ -106,6 +106,7 @@ export class StringConfig {
     public readonly collEnhanceDetails: string = ' ';
     public readonly collEnhanceBoarLose: string = ' ';
     public readonly collEnhanceBoarGain: string = ' ';
+    public readonly collGiftDetails: string = ' ';
     public readonly collEditionTitle: string = ' ';
     public readonly collEditionLine: string = ' ';
 

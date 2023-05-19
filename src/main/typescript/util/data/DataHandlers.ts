@@ -2,6 +2,7 @@ import fs from 'fs';
 import {ChatInputCommandInteraction} from 'discord.js';
 import {BoarBotApp} from '../../BoarBotApp';
 import {LogDebug} from '../logging/LogDebug';
+import {Replies} from '../interactions/Replies';
 
 /**
  * {@link DataHandlers DataHandlers.ts}
@@ -57,12 +58,9 @@ export class DataHandlers {
 
             LogDebug.sendDebug('Setup not configured', config, interaction);
 
-            await interaction.reply({
-                content: strConfig.noSetup,
-                ephemeral: true
-            });
+            await Replies.handleReply(interaction, strConfig.noSetup);
 
-            return undefined;
+            return;
         }
     }
 

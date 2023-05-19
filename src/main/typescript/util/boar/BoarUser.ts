@@ -230,7 +230,6 @@ export class BoarUser {
         const pathConfig = config.pathConfig;
         const strConfig = config.stringConfig;
         const numConfig = config.numberConfig;
-        const giveCommandConfig = config.commandConfigs.boarDev.give;
 
         // Rarity information
         const rarities = config.rarityConfigs;
@@ -275,6 +274,7 @@ export class BoarUser {
 
         await Queue.addQueue(async () => {
             LogDebug.sendDebug('Updating user info...', config, interaction);
+            const isDaily = interaction.options.getSubcommand() === config.commandConfigs.boar.daily.name;
 
             this.refreshUserData();
 
@@ -297,7 +297,11 @@ export class BoarUser {
                 }
 
                 this.lastBoar = boarID;
-                this.boarScore += rarityInfos[i].score;
+
+                if (isDaily) {
+                    const randScore = Math.round(rarityInfos[i].baseScore * (Math.random() * (1.1 - .9) + .9));
+                    this.boarScore += randScore;
+                }
             }
 
             this.totalBoars += boarIDs.length;
@@ -308,7 +312,7 @@ export class BoarUser {
         }, interaction.id + interaction.user.id);
 
         // Information about interaction
-        const wasGiven = interaction.options.getSubcommand() === giveCommandConfig.name;
+        const wasGiven = interaction.options.getSubcommand() === config.commandConfigs.boarDev.give.name;
 
         if (sendAttachment) {
             let attachmentTitles: string[] = [];

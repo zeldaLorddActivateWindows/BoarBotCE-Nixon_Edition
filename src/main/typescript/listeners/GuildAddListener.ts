@@ -35,7 +35,7 @@ export default class GuildAddListener implements Listener {
     }
 
     private async getBotAddLogInfo(): Promise<GuildAuditLogsEntry<AuditLogEvent.BotAdd> | undefined> {
-        if (!this.guild) return undefined;
+        if (!this.guild) return;
 
         const log = await this.guild.fetchAuditLogs({ type: AuditLogEvent.BotAdd, limit: 1 });
         return log.entries.first();

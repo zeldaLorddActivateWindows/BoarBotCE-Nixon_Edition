@@ -1,10 +1,8 @@
 import {
     AutocompleteInteraction,
     ChatInputCommandInteraction, ColorResolvable,
-    EmbedBuilder,
     Events,
     Interaction,
-    ModalSubmitInteraction
 } from 'discord.js';
 import {Listener} from '../api/listeners/Listener';
 import {BotConfig} from '../bot/config/BotConfig';
@@ -49,7 +47,7 @@ export default class InteractionListener implements Listener {
             if (onCooldown) return;
 
             try {
-                await command.execute(interaction);
+                command.execute(interaction);
             } catch (err: unknown) {
                 await LogDebug.handleError(err, interaction);
                 return;

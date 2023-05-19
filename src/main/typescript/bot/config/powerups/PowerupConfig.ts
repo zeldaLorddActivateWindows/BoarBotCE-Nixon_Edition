@@ -8,6 +8,7 @@
  */
 export class PowerupConfig {
     public readonly name: string = ' ';
+    public readonly pluralName: string = ' ';
     public readonly description: string = ' ';
     public readonly tiers: number[] = [0, 0, 0];
 }

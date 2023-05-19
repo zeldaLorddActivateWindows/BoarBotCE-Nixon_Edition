@@ -61,19 +61,19 @@ export class InteractionUtils {
                 'Bot cannot find the channel.\nIs the channel ID \'' + channelID +
                 '\' correct? Does the bot have view channel permissions?'
             );
-            return undefined;
+            return;
         }
 
         const memberMe = channel.guild.members.me;
         if (!memberMe) {
             LogDebug.handleError('Bot doesn\'t exist in the server the channel is in.');
-            return undefined;
+            return;
         }
 
         const memberMePerms = memberMe.permissions.toArray();
         if (!memberMePerms.includes('SendMessages')) {
             LogDebug.handleError('Bot doesn\'t have permission to send messages to channel.');
-            return undefined;
+            return;
         }
 
         return channel;

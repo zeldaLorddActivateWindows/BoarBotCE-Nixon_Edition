@@ -83,16 +83,21 @@ export default class DailySubcommand implements Subcommand {
                 return;
             }
 
-            if (boostInput) {
+            if (boostInput && boarUser.powerups.multiBoostTotal > 0) {
                 boarUser.powerups.multiBoostTotal = 0;
+                boarUser.powerups.multiBoostsUsed++;
             }
 
-            if (extraInput) {
+            if (extraInput && boarUser.powerups.extraChanceTotal > 0) {
                 boarUser.powerups.extraChanceTotal = 0;
+                boarUser.powerups.extraChancesUsed++;
             }
 
             boarUser.boarStreak++;
             boarUser.powerups.multiplier++;
+
+            boarUser.powerups.highestMulti = Math.max(boarUser.powerups.multiplier, boarUser.powerups.highestMulti);
+
             boarUser.lastDaily = Date.now();
             boarUser.numDailies++;
 

@@ -11,7 +11,7 @@ export class RarityConfig {
     public readonly name: string = '';
     public readonly pluralName: string = '';
     public readonly weight: number = 0;
-    public readonly score: number = 0;
+    public readonly baseScore: number = 0;
     public readonly fromDaily: boolean = false;
     public readonly enhancersNeeded: number = 0;
     public readonly boars: string[] = [];

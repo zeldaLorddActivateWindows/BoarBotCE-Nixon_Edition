@@ -3,8 +3,6 @@ import {
     ChatInputCommandInteraction,
     InteractionCollector, MessageComponentInteraction, StringSelectMenuInteraction,
 } from 'discord.js';
-import {LogDebug} from '../logging/LogDebug';
-import {BoarBotApp} from '../../BoarBotApp';
 
 // Reasons for ending collection
 enum Reasons {
@@ -56,16 +54,28 @@ export class CollectorUtils {
      * Creates and returns a message component collector
      *
      * @param interaction - The interaction to create the collector with
-     * @param addition - What should be found at the end of custom ID
+     * @param include - What should be found in the custom ID
+     * @param exclude - What shouldn't be found in the custom ID
      * @private
      */
     public static async createCollector(
-        interaction: ChatInputCommandInteraction,
-        addition: string
+        interaction: ChatInputCommandInteraction | MessageComponentInteraction,
+        include?: string,
+        exclude?: string
     ): Promise<InteractionCollector<ButtonInteraction | StringSelectMenuInteraction>> {
         // Only allows button presses from current interaction
-        const filter = (compInter: MessageComponentInteraction) => {
-            return compInter.customId.endsWith(addition);
+        const filter = async (compInter: MessageComponentInteraction) => {
+            let returnVal = true;
+
+            if (include) {
+                returnVal = returnVal && compInter.customId.includes(include);
+            }
+
+            if (exclude) {
+                returnVal = returnVal && !compInter.customId.includes(exclude);
+            }
+
+            return returnVal;
         };
 
         return interaction.channel?.createMessageComponentCollector({
