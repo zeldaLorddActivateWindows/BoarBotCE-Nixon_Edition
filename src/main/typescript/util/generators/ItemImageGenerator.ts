@@ -45,10 +45,9 @@ export class ItemImageGenerator {
      * @return attachment - AttachmentBuilder object containing image
      * @private
      */
-    public async handleImageCreate(isBadge: boolean): Promise<AttachmentBuilder> {
+    public async handleImageCreate(isBadge: boolean, score?: number): Promise<AttachmentBuilder> {
         const strConfig = this.config.stringConfig;
         const pathConfig = this.config.pathConfig;
-        const numConfig = this.config.numberConfig;
 
         let folderPath: string;
 
@@ -68,14 +67,13 @@ export class ItemImageGenerator {
         const imageExtension = this.imageFilePath.split('.')[1];
         const isAnimated = imageExtension === 'gif';
 
+        const usernameLength = this.config.numberConfig.maxUsernameLength;
+
         this.tempPath = pathConfig.tempItemAssets + this.id + this.rarityColorKey +
             this.title.toLowerCase().substring(0, 4) + '.' + imageExtension;
 
-        const usernameLength = numConfig.maxUsernameLength;
-
         this.userAvatar = this.boarUser.user.displayAvatarURL({ extension: 'png' });
-        this.userTag = this.boarUser.user.username.substring(0, usernameLength) +
-            '#' + this.boarUser.user.discriminator;
+        this.userTag = this.boarUser.user.username.substring(0, usernameLength);
 
         // Creates base response attachment depending on the boar's image type
         if (!fs.existsSync(this.tempPath)) {
@@ -90,9 +88,9 @@ export class ItemImageGenerator {
         }
 
         if (isAnimated) {
-            await this.addAnimatedProfile();
+            await this.addAnimatedProfile(score);
         } else {
-            await this.addStaticProfile();
+            await this.addStaticProfile(score);
         }
 
         return new AttachmentBuilder(this.buffer, { name:`${strConfig.imageName}.${imageExtension}` });
@@ -105,7 +103,9 @@ export class ItemImageGenerator {
         await new Promise((resolve, reject) => {
             const scriptOptions: Options = {
                 args: [
-                    JSON.stringify(this.config),
+                    JSON.stringify(this.config.pathConfig),
+                    JSON.stringify(this.config.colorConfig),
+                    JSON.stringify(this.config.numberConfig),
                     this.rarityColorKey,
                     this.imageFilePath,
                     this.title,
@@ -131,7 +131,7 @@ export class ItemImageGenerator {
 
     private async makeStatic() {
         const strConfig = this.config.stringConfig;
-        const numConfig = this.config.numberConfig;
+        const nums = this.config.numberConfig;
         const pathConfig = this.config.pathConfig;
         const colorConfig = this.config.colorConfig;
 
@@ -142,25 +142,24 @@ export class ItemImageGenerator {
 
         // Positioning and dimension info
 
-        const origin = numConfig.originPos;
-        const imageSize = numConfig.itemImageSize;
+        const origin = nums.originPos;
+        const imageSize = nums.itemImageSize;
 
         let mainPos: [number, number];
         let mainSize: [number, number];
 
         if (this.isBadge) {
-            mainPos = numConfig.itemBadgePos;
-            mainSize = numConfig.itemBadgeSize;
+            mainPos = nums.itemBadgePos;
+            mainSize = nums.itemBadgeSize;
         } else {
-            mainPos = numConfig.itemBoarPos;
-            mainSize = numConfig.itemBoarSize;
+            mainPos = nums.itemBoarPos;
+            mainSize = nums.itemBoarSize;
         }
 
         // Font info
 
         const fontName = strConfig.fontName;
-        const bigFont = `${numConfig.fontBig}px ${fontName}`;
-        const mediumFont = `${numConfig.fontMedium}px ${fontName}`;
+        const mediumFont = `${nums.fontMedium}px ${fontName}`;
 
         const canvas = Canvas.createCanvas(imageSize[0], imageSize[1]);
         const ctx = canvas.getContext('2d');
@@ -174,31 +173,34 @@ export class ItemImageGenerator {
 
         // Draws item and overlay
 
-        ctx.drawImage(await Canvas.loadImage(backplatePath), ...origin, ...imageSize);
+        ctx.drawImage(await Canvas.loadImage(backplatePath), ...origin);
         ctx.drawImage(await Canvas.loadImage(this.imageFilePath), ...mainPos, ...mainSize);
-        ctx.drawImage(await Canvas.loadImage(overlay), ...origin, ...imageSize);
+        ctx.drawImage(await Canvas.loadImage(overlay), ...origin);
 
         // Draws method of delivery and name of item
 
-        CanvasUtils.drawText(ctx, this.title, numConfig.itemTitlePos, bigFont, 'center', colorConfig.font);
+        CanvasUtils.drawText(ctx, this.title, nums.itemTitlePos, mediumFont, 'center', colorConfig.font);
         CanvasUtils.drawText(
-            ctx, this.itemInfo.name, numConfig.itemNamePos, mediumFont, 'center', colorConfig.font
+            ctx, this.itemInfo.name, nums.itemNamePos, mediumFont, 'center', colorConfig[this.rarityColorKey]
         );
 
         this.buffer = canvas.toBuffer();
     }
 
-    private async addAnimatedProfile() {
+    private async addAnimatedProfile(score?: number) {
         const script = this.config.pathConfig.userOverlayScript;
 
         // Waits for python code to execute before continuing
         await new Promise((resolve, reject) => {
             const scriptOptions: Options = {
                 args: [
-                    JSON.stringify(this.config),
+                    JSON.stringify(this.config.pathConfig),
+                    JSON.stringify(this.config.colorConfig),
+                    JSON.stringify(this.config.numberConfig),
                     this.tempPath,
                     this.userAvatar,
-                    this.userTag
+                    this.userTag,
+                    score === undefined ? '' : score.toLocaleString()
                 ]
             };
 
@@ -217,35 +219,49 @@ export class ItemImageGenerator {
         });
     }
 
-    private async addStaticProfile() {
-        const strConfig = this.config.stringConfig;
-        const pathConfig = this.config.pathConfig;
-        const numConfig = this.config.numberConfig;
+    private async addStaticProfile(score?: number) {
+        const nums = this.config.numberConfig;
         const colorConfig = this.config.colorConfig;
 
-        const nameplate = pathConfig.itemAssets + pathConfig.itemNameplate;
+        const smallMediumFont = `${nums.fontSmallMedium}px ${this.config.stringConfig.fontName}`;
 
-        const origin = numConfig.originPos;
-        const imageSize = numConfig.itemImageSize;
-
-        const mediumFont = `${numConfig.fontMedium}px ${strConfig.fontName}`;
+        const origin = nums.originPos;
+        const imageSize = nums.itemImageSize;
 
         const canvas = Canvas.createCanvas(imageSize[0], imageSize[1]);
         const ctx = canvas.getContext('2d');
 
         ctx.drawImage(await Canvas.loadImage(this.tempPath), ...origin, ...imageSize);
 
-        ctx.font = mediumFont;
+        ctx.font = smallMediumFont;
 
-        const nameplateSize: [number, number] = [
-            ctx.measureText(this.userTag).width + numConfig.itemNameplatePadding,
-            numConfig.itemNameplateHeight
-        ];
+        ctx.beginPath();
+        ctx.roundRect(
+            nums.itemUserBoxPos[0], nums.itemUserBoxPos[1],
+            ctx.measureText(this.userTag).width + nums.itemUserBoxExtra, nums.itemBoxHeight, nums.itemBorderRadius
+        );
+        ctx.fillStyle = this.config.colorConfig.foregroundGray;
+        ctx.fill();
 
-        ctx.drawImage(await Canvas.loadImage(nameplate), ...numConfig.itemNameplatePos, ...nameplateSize);
-        CanvasUtils.drawText(ctx, this.userTag, numConfig.itemUserTagPos, mediumFont, 'left', colorConfig.font);
+        CanvasUtils.drawText(ctx, this.userTag, nums.itemUserTagPos, smallMediumFont, 'left', colorConfig.font);
+
+        if (score) {
+            ctx.beginPath();
+            ctx.roundRect(
+                nums.itemBucksBoxPos[0], nums.itemBucksBoxPos[1],
+                ctx.measureText('+$' + score).width + nums.itemBucksBoxExtra, nums.itemBoxHeight, nums.itemBorderRadius
+            );
+            ctx.fillStyle = this.config.colorConfig.foregroundGray;
+            ctx.fill();
+
+            CanvasUtils.drawText(
+                ctx, '+%@' + score.toLocaleString(), nums.itemBucksPos, smallMediumFont, 'left',
+                colorConfig.font, undefined, false, '$', colorConfig.bucks
+            );
+        }
+
         CanvasUtils.drawCircleImage(
-            ctx, await Canvas.loadImage(this.userAvatar), numConfig.itemUserAvatarPos, numConfig.itemUserAvatarWidth
+            ctx, await Canvas.loadImage(this.userAvatar), nums.itemUserAvatarPos, nums.itemUserAvatarWidth
         );
 
         this.buffer = canvas.toBuffer();

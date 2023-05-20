@@ -1,7 +1,7 @@
 import {
     ActionRowBuilder,
-    ButtonBuilder,
-    ComponentType, SelectMenuComponentOptionData, StringSelectMenuBuilder
+    ButtonBuilder, ChatInputCommandInteraction,
+    ComponentType, MessageComponentInteraction, SelectMenuComponentOptionData, StringSelectMenuBuilder
 } from 'discord.js';
 import {RowConfig} from '../../bot/config/components/RowConfig';
 
@@ -20,17 +20,25 @@ export class ComponentUtils {
      *
      * @param rowConfig - The configuration of the row
      * @param row - The actual row
-     * @param addition - What to add
+     * @param interaction
+     * @param includeUser
      * @return row - Updated row with addition to ids
      */
     public static addToIDs(
         rowConfig: RowConfig,
         row: ActionRowBuilder<StringSelectMenuBuilder | ButtonBuilder>,
-        addition: string
+        interaction: ChatInputCommandInteraction | MessageComponentInteraction,
+        includeUser: boolean = false
     ): ActionRowBuilder<StringSelectMenuBuilder | ButtonBuilder> {
         for (const component in row.components) {
             const componentConfig = rowConfig.components[component];
-            row.components[component].setCustomId(componentConfig.customId + '|' + addition);
+            let curID = componentConfig.customId + '|' + interaction.id;
+
+            if (includeUser) {
+                curID += '|' + interaction.user.id;
+            }
+
+            row.components[component].setCustomId(curID);
         }
 
         return row;

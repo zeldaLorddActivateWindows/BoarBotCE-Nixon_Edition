@@ -1,4 +1,9 @@
-import {AttachmentBuilder, ChatInputCommandInteraction, User} from 'discord.js';
+import {
+    AttachmentBuilder,
+    ChatInputCommandInteraction,
+    MessageComponentInteraction,
+    User
+} from 'discord.js';
 import fs from 'fs';
 import {BoarBotApp} from '../../BoarBotApp';
 import {BotConfig} from '../../bot/config/BotConfig';
@@ -223,7 +228,7 @@ export class BoarUser {
     public async addBoars(
         config: BotConfig,
         boarIDs: string[],
-        interaction: ChatInputCommandInteraction,
+        interaction: ChatInputCommandInteraction | MessageComponentInteraction,
         sendAttachment: boolean = false
     ): Promise<void> {
         // Config aliases
@@ -234,6 +239,8 @@ export class BoarUser {
         // Rarity information
         const rarities = config.rarityConfigs;
         const rarityInfos: RarityConfig[] = [];
+
+        let randScores: number[] = [];
 
         for (let i=0; i<boarIDs.length; i++) {
             rarityInfos.push({} as RarityConfig);
@@ -274,7 +281,9 @@ export class BoarUser {
 
         await Queue.addQueue(async () => {
             LogDebug.sendDebug('Updating user info...', config, interaction);
-            const isDaily = interaction.options.getSubcommand() === config.commandConfigs.boar.daily.name;
+            const isDaily = interaction.isChatInputCommand()
+                ? interaction.options.getSubcommand() === config.commandConfigs.boar.daily.name
+                : false;
 
             this.refreshUserData();
 
@@ -299,8 +308,8 @@ export class BoarUser {
                 this.lastBoar = boarID;
 
                 if (isDaily) {
-                    const randScore = Math.round(rarityInfos[i].baseScore * (Math.random() * (1.1 - .9) + .9));
-                    this.boarScore += randScore;
+                    randScores.push(Math.round(rarityInfos[i].baseScore * (Math.random() * (1.1 - .9) + .9)));
+                    this.boarScore += randScores[randScores.length-1];
                 }
             }
 
@@ -312,7 +321,9 @@ export class BoarUser {
         }, interaction.id + interaction.user.id);
 
         // Information about interaction
-        const wasGiven = interaction.options.getSubcommand() === config.commandConfigs.boarDev.give.name;
+        const wasGiven = interaction.isChatInputCommand()
+            ? interaction.options.getSubcommand() === config.commandConfigs.boarDev.give.name
+            : false;
 
         if (sendAttachment) {
             let attachmentTitles: string[] = [];
@@ -337,7 +348,8 @@ export class BoarUser {
             const attachments: AttachmentBuilder[] = [];
             for (let i=0; i<boarIDs.length; i++) {
                 attachments.push(
-                    await new ItemImageGenerator(this, config, boarIDs[i], attachmentTitles[i]).handleImageCreate(false)
+                    await new ItemImageGenerator(this, config, boarIDs[i], attachmentTitles[i])
+                        .handleImageCreate(false, randScores[i])
                 );
             }
 
@@ -366,11 +378,17 @@ export class BoarUser {
      * @param interaction - Interaction to reply to with image
      * @return success - The function fully executed
      */
-    public async addBadge(config: BotConfig, badgeID: string, interaction: ChatInputCommandInteraction): Promise<void> {
+    public async addBadge(
+        config: BotConfig,
+        badgeID: string,
+        interaction: ChatInputCommandInteraction | MessageComponentInteraction
+    ): Promise<void> {
         const strConfig = config.stringConfig;
         const giveCommandConfig = config.commandConfigs.boarDev.give;
 
-        const wasGiven = interaction.options.getSubcommand() === giveCommandConfig.name;
+        const wasGiven = interaction.isChatInputCommand()
+            ? interaction.options.getSubcommand() === giveCommandConfig.name
+            : false;
 
         if (wasGiven) {
             await Queue.addQueue(async () => {
@@ -423,7 +441,10 @@ export class BoarUser {
      * @param config - Global config data parsed from JSON
      * @param interaction - Used to give badge if user has max uniques
      */
-    public async orderBoars(config: BotConfig, interaction: ChatInputCommandInteraction): Promise<void> {
+    public async orderBoars(
+        config: BotConfig,
+        interaction: ChatInputCommandInteraction | MessageComponentInteraction
+    ): Promise<void> {
         const orderedRarities: RarityConfig[] = [...config.rarityConfigs]
             .sort((rarity1, rarity2) => { return rarity1.weight - rarity2.weight; });
         const obtainedBoars = Object.keys(this.boarCollection);

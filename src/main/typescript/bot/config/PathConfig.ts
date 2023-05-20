@@ -32,7 +32,6 @@ export class PathConfig {
     public readonly itemOverlay: string = '';
     public readonly itemUnderlay: string = '';
     public readonly itemBackplate: string = '';
-    public readonly itemNameplate: string = '';
 
     // Image/asset file names for collection attachments
 

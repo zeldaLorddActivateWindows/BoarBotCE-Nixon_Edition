@@ -50,12 +50,16 @@ export class NumberConfig {
     public readonly itemBadgeSize: [number, number] = [0, 0];
     public readonly itemTitlePos: [number, number] = [0, 0];
     public readonly itemNamePos: [number, number] = [0, 0];
-    public readonly itemNameplatePos: [number, number] = [0, 0];
-    public readonly itemNameplatePadding: number = 0;
-    public readonly itemNameplateHeight: number = 0;
     public readonly itemUserTagPos: [number, number] = [0, 0];
     public readonly itemUserAvatarPos: [number, number] = [0, 0];
     public readonly itemUserAvatarWidth: number = 0;
+    public readonly itemUserBoxPos: [number, number] = [0, 0];
+    public readonly itemUserBoxExtra: number = 0;
+    public readonly itemBucksBoxPos: [number, number] = [0, 0];
+    public readonly itemBucksBoxExtra: number = 0;
+    public readonly itemBoxHeight: number = 0;
+    public readonly itemBucksPos: [number, number] = [0, 0];
+    public readonly itemBorderRadius: number = 0;
 
     // Collection image positions, sizes, and values
 

@@ -1,7 +1,7 @@
 import {
     AutocompleteInteraction,
     ChatInputCommandInteraction, ColorResolvable,
-    Message,
+    Message, MessageComponentInteraction,
     ModalSubmitInteraction
 } from 'discord.js';
 import {BotConfig} from '../../bot/config/BotConfig';
@@ -38,7 +38,7 @@ export class LogDebug {
     public static sendDebug(
         debugMessage: any,
         config: BotConfig,
-        interaction?: ChatInputCommandInteraction | AutocompleteInteraction
+        interaction?: ChatInputCommandInteraction | AutocompleteInteraction | MessageComponentInteraction
     ): void {
         if (!config.debugMode) return;
 
@@ -49,11 +49,17 @@ export class LogDebug {
             debugMessage = JSON.stringify(debugMessage);
         }
 
-        if (interaction) {
+        if (interaction && !interaction.isMessageComponent()) {
             debugMessage = config.stringConfig.commandDebugPrefix
                 .replace('%@', interaction.user.tag)
                 .replace('%@', interaction.commandName)
                 .replace('%@', interaction.options.getSubcommand()) +
+                debugMessage
+        } else if (interaction) {
+            debugMessage = config.stringConfig.commandDebugPrefix
+                .replace('%@', interaction.user.tag)
+                .replace('%@', interaction.customId.split('|')[0])
+                .replace('%@', '') +
                 debugMessage
         }
 
@@ -70,7 +76,8 @@ export class LogDebug {
      */
     public static async handleError(
         err: unknown | string,
-        interaction?: ChatInputCommandInteraction | ModalSubmitInteraction | AutocompleteInteraction
+        interaction?: ChatInputCommandInteraction | ModalSubmitInteraction |
+            AutocompleteInteraction | MessageComponentInteraction
     ): Promise<void> {
         try {
             let errString = typeof err === 'string' ? err : (err as Error).stack;

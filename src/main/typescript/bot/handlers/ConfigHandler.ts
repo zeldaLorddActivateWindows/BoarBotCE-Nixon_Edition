@@ -74,7 +74,6 @@ export class ConfigHandler {
             itemAssets + pathConfig.itemOverlay,
             itemAssets + pathConfig.itemUnderlay,
             itemAssets + pathConfig.itemBackplate,
-            itemAssets + pathConfig.itemNameplate,
             collAssets + pathConfig.collOverlay,
             collAssets + pathConfig.collUnderlay,
             collAssets + pathConfig.clanNone,

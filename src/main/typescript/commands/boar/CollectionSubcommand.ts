@@ -27,7 +27,6 @@ import {FormatStrings} from '../../util/discord/FormatStrings';
 import {RarityConfig} from '../../bot/config/items/RarityConfig';
 import createRBTree, {Node, Tree} from 'functional-red-black-tree';
 import {BoarGift} from '../../util/boar/BoarGift';
-import fs from 'fs';
 
 enum View {
     Normal,
@@ -120,7 +119,7 @@ export default class CollectionSubcommand implements Subcommand {
 
         this.setPage(pageVal);
 
-        this.collector = await CollectorUtils.createCollector(interaction, interaction.id + interaction.user.id);
+        this.collector = await CollectorUtils.createCollector(interaction);
 
         this.collectionImage = new CollectionImageGenerator(this.boarUser, this.config, this.allBoars);
         await this.showCollection();
@@ -139,8 +138,7 @@ export default class CollectionSubcommand implements Subcommand {
             this.compInter = inter;
 
             LogDebug.sendDebug(
-                `${inter.customId.split('|')[0]} on page ${this.curPage} in view ${this.curView}`,
-                this.config, this.firstInter
+                `${inter.customId} on page ${this.curPage} in view ${this.curView}`, this.config, this.firstInter
             );
 
             const collRowConfig = this.config.commandConfigs.boar.collection.componentFields;
@@ -217,19 +215,19 @@ export default class CollectionSubcommand implements Subcommand {
                     break;
 
                 case collComponents.gift.customId:
-                    if (this.giftStage !== 1) {
-                        const confirmFile = this.config.pathConfig.collAssets + this.config.pathConfig.collGiftConfirm;
-                        await this.firstInter.followUp({
-                            files: [
-                                new AttachmentBuilder(
-                                    Buffer.from(fs.readFileSync(confirmFile)),
-                                    { name:`${this.config.stringConfig.imageName}.png` }
-                                )
-                            ],
-                            ephemeral: true
-                        });
-                        this.giftStage = 2;
-                    } else {
+                    // if (this.giftStage === -1) {
+                    //     const confirmFile = this.config.pathConfig.collAssets + this.config.pathConfig.collGiftConfirm;
+                    //     await this.firstInter.followUp({
+                    //         files: [
+                    //             new AttachmentBuilder(
+                    //                 Buffer.from(fs.readFileSync(confirmFile)),
+                    //                 { name:`${this.config.stringConfig.imageName}.png` }
+                    //             )
+                    //         ],
+                    //         ephemeral: true
+                    //     });
+                    //     this.giftStage = 2;
+                    // } else {
                         await Queue.addQueue(() => {
                             this.boarUser.refreshUserData();
                             this.boarUser.powerups.numGifts--;
@@ -237,7 +235,7 @@ export default class CollectionSubcommand implements Subcommand {
                             this.boarUser.updateUserData();
                         }, inter.id + this.boarUser.user.id);
                         await new BoarGift(this.boarUser, this.config, this.collectionImage).sendMessage(inter);
-                    }
+                    // }
                     break;
             }
 
@@ -571,7 +569,7 @@ export default class CollectionSubcommand implements Subcommand {
             for (const rowConfig of collFieldConfigs[i]) {
                 let newRow = new ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>(rowConfig);
 
-                newRow = ComponentUtils.addToIDs(rowConfig, newRow, this.firstInter.id + this.firstInter.user.id);
+                newRow = ComponentUtils.addToIDs(rowConfig, newRow, this.firstInter, true);
 
                 if (i === 0) {
                     this.baseRows.push(newRow);

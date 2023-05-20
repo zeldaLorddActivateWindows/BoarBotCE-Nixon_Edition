@@ -54,25 +54,22 @@ export class CollectorUtils {
      * Creates and returns a message component collector
      *
      * @param interaction - The interaction to create the collector with
-     * @param include - What should be found in the custom ID
-     * @param exclude - What shouldn't be found in the custom ID
+     * @param excludeUser
      * @private
      */
     public static async createCollector(
         interaction: ChatInputCommandInteraction | MessageComponentInteraction,
-        include?: string,
-        exclude?: string
+        excludeUser: boolean = false
     ): Promise<InteractionCollector<ButtonInteraction | StringSelectMenuInteraction>> {
         // Only allows button presses from current interaction
         const filter = async (compInter: MessageComponentInteraction) => {
-            let returnVal = true;
+            const modifiers = compInter.customId.split('|').slice(1);
+            let returnVal = modifiers[0] === interaction.id;
 
-            if (include) {
-                returnVal = returnVal && compInter.customId.includes(include);
-            }
-
-            if (exclude) {
-                returnVal = returnVal && !compInter.customId.includes(exclude);
+            if (modifiers.length > 1 && excludeUser) {
+                return returnVal && modifiers[1] !== compInter.user.id;
+            } else if (modifiers.length > 1) {
+                return returnVal && modifiers[1] === compInter.user.id;
             }
 
             return returnVal;

@@ -63,7 +63,7 @@ export default class BoarCommand implements Command {
             const commandClass = new exports.default();
 
             try {
-                commandClass.execute(interaction);
+                await commandClass.execute(interaction);
             } catch (err: unknown) {
                 await LogDebug.handleError(err, interaction);
             }

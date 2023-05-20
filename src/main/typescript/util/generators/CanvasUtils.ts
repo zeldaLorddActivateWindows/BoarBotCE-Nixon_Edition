@@ -106,15 +106,16 @@ export class CanvasUtils {
                 ctx.font = font;
             }
             ctx.textBaseline = 'middle';
-            this.drawColoredText(ctx, text, pos, replaceIndex, coloredText, color, color2);
+            this.drawColoredText(ctx, text, align, pos, replaceIndex, coloredText, color, color2);
         } else {
-            this.drawColoredText(ctx, text, pos, replaceIndex, coloredText, color, color2);
+            this.drawColoredText(ctx, text, align, pos, replaceIndex, coloredText, color, color2);
         }
     }
 
     private static drawColoredText(
         ctx: Canvas.CanvasRenderingContext2D,
         text: string,
+        align: string,
         pos: [number, number],
         replaceIndex: number,
         coloredText: string,
@@ -124,13 +125,23 @@ export class CanvasUtils {
         const textPart1 = text.substring(0, replaceIndex);
         const textPart2 = text.substring(replaceIndex+coloredText.length);
 
-        ctx.fillText(textPart1, pos[0] - ctx.measureText(coloredText+textPart2).width/2, pos[1]);
-        ctx.fillStyle = color2;
-        ctx.fillText(
-            coloredText, pos[0] + ctx.measureText(textPart1).width/2 - ctx.measureText(textPart2).width/2, pos[1]
-        );
-        ctx.fillStyle = color;
-        ctx.fillText(textPart2, pos[0] + ctx.measureText(textPart1+coloredText).width/2, pos[1]);
+        if (align === 'center') {
+            ctx.fillText(textPart1, pos[0] - ctx.measureText(coloredText+textPart2).width/2, pos[1]);
+            ctx.fillStyle = color2;
+            ctx.fillText(
+                coloredText, pos[0] + ctx.measureText(textPart1).width/2 - ctx.measureText(textPart2).width/2, pos[1]
+            );
+            ctx.fillStyle = color;
+            ctx.fillText(textPart2, pos[0] + ctx.measureText(textPart1+coloredText).width/2, pos[1]);
+        } else if (align === 'left') {
+            ctx.fillText(textPart1, pos[0], pos[1]);
+            ctx.fillStyle = color2;
+            ctx.fillText(
+                coloredText, pos[0] + ctx.measureText(textPart1).width, pos[1]
+            );
+            ctx.fillStyle = color;
+            ctx.fillText(textPart2, pos[0] + ctx.measureText(textPart1+coloredText).width, pos[1]);
+        }
     }
 
     /**

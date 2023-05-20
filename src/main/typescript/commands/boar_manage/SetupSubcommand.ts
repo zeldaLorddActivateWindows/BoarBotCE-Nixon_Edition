@@ -81,7 +81,7 @@ export default class SetupSubcommand implements Subcommand {
         this.guildDataPath = this.config.pathConfig.guildDataFolder + interaction.guild.id + '.json';
         this.guildData = await DataHandlers.getGuildData(interaction, true);
         
-        this.collector = await CollectorUtils.createCollector(interaction, interaction.id)
+        this.collector = await CollectorUtils.createCollector(interaction)
             .catch(async (err: unknown) => {
                 await DataHandlers.removeGuildFile(this.guildDataPath, this.guildData);
                 throw err;
@@ -661,7 +661,7 @@ export default class SetupSubcommand implements Subcommand {
         const setupRowConfigs = this.config.commandConfigs.boarManage.setup.componentFields;
         let staticRow = new ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>(setupRowConfigs[3][0]);
 
-        staticRow = ComponentUtils.addToIDs(setupRowConfigs[3][0], staticRow, this.firstInter.id);
+        staticRow = ComponentUtils.addToIDs(setupRowConfigs[3][0], staticRow, this.firstInter);
 
         return staticRow;
     }
@@ -686,7 +686,7 @@ export default class SetupSubcommand implements Subcommand {
             for (const rowConfig of setupFieldConfigs[field]) {
                 let newRow = new ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>(rowConfig);
 
-                newRow = ComponentUtils.addToIDs(rowConfig, newRow, this.firstInter.id);
+                newRow = ComponentUtils.addToIDs(rowConfig, newRow, this.firstInter);
                 newRow = ComponentUtils.addOptionsToSelectRow(newRow, this.getTextChannels());
 
                 allFields[field].push(newRow);

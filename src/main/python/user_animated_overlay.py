@@ -16,46 +16,47 @@ import sys
 
 # Inputs from JS
 
-config = json.loads(sys.argv[1])
-image_path = sys.argv[2]
-avatar_url = sys.argv[3]
-user_tag = sys.argv[4]
+path_config = json.loads(sys.argv[1])
+color_config = json.loads(sys.argv[2])
+num_config = json.loads(sys.argv[3])
+image_path = sys.argv[4]
+avatar_url = sys.argv[5]
+user_tag = sys.argv[6]
+score = sys.argv[7]
 
 # Configured directory paths
 
-path_config = config['pathConfig']
 item_assets = path_config['itemAssets']
 other_assets = path_config['otherAssets']
 temp_item_assets = path_config['tempItemAssets']
 
 # Configured asset file paths
 
-nameplate_path = item_assets + path_config['itemNameplate']
 circle_mask_path = other_assets + path_config['circleMask']
 font_path = other_assets + path_config['mainFont']
 
 # Configured colors
 
-font_color = config['colorConfig']['font']
-
-# Number configurations
-
-num_config = config['numberConfig']
+font_color = color_config['font']
+bucks_color = color_config['bucks']
 
 # Setting font size from configurations
 
-medium_font = num_config['fontMedium'] // 3
-text_medium = ImageFont.truetype(font_path, medium_font)
+small_medium_font = num_config['fontSmallMedium'] // 3
+text_small_medium = ImageFont.truetype(font_path, small_medium_font)
 
 # Setting image positioning and sizes from configurations
 
 avatar_size = (num_config['itemUserAvatarWidth'] // 3, num_config['itemUserAvatarWidth'] // 3)
-nameplate_padding = num_config['itemNameplatePadding'] // 3
-nameplate_height = num_config['itemNameplateHeight'] // 3
 
-nameplate_pos = tuple(np.floor_divide(num_config['itemNameplatePos'], 3))
 user_avatar_pos = tuple(np.floor_divide(num_config['itemUserAvatarPos'], 3))
 user_tag_pos = tuple(np.floor_divide(num_config['itemUserTagPos'], 3))
+user_box_pos = tuple(np.floor_divide(num_config['itemUserBoxPos'], 3))
+user_box_extra = num_config['itemUserBoxExtra'] // 3
+bucks_pos = tuple(np.floor_divide(num_config['itemBucksPos'], 3))
+bucks_box_pos = tuple(np.floor_divide(num_config['itemBucksBoxPos'], 3))
+bucks_box_extra = num_config['itemBucksBoxExtra'] // 3
+box_height = num_config['itemBoxHeight'] // 3
 
 # Opening, converting, and resizing asset files
 
@@ -65,11 +66,6 @@ circle_mask = Image.open(circle_mask_path).convert('RGBA').resize(avatar_size)
 user_avatar = Image.open(BytesIO(requests.get(avatar_url).content)).convert('RGBA').resize(avatar_size)
 user_avatar.putalpha(ImageChops.multiply(user_avatar.getchannel('A'), circle_mask.getchannel('A')).convert('L'))
 
-# Adjusts nameplate width according to user's tag length
-nameplate = Image.open(nameplate_path).convert('RGBA').resize(
-    (int(text_medium.getlength(user_tag)) + nameplate_padding, nameplate_height)
-)
-
 # Stores all newly processed frames
 frames = []
 
@@ -78,19 +74,42 @@ for frame in ImageSequence.Iterator(image):
     # Places the nameplate image
 
     new_frame = frame.copy().convert('RGBA')
-    new_frame.paste(nameplate, nameplate_pos, mask=nameplate)
+    new_frame_draw = ImageDraw.Draw(new_frame)
+    new_frame_draw.rounded_rectangle(
+        xy=(
+            user_box_pos[0]+1, user_box_pos[1],
+            user_box_pos[0]+text_small_medium.getlength(user_tag)+user_box_extra,
+            user_box_pos[1]+box_height
+        ), radius=25/3, fill='#151518'
+    )
+    new_frame_draw.text(
+        user_tag_pos, user_tag.encode('utf-16').decode('utf-16'), font_color, font=text_small_medium, anchor='ls'
+    )
+
+    if score != '':
+        new_frame_draw.rounded_rectangle(
+            xy=(
+                bucks_box_pos[0]+1, bucks_box_pos[1],
+                bucks_box_pos[0]+text_small_medium.getlength('+$' + score)+bucks_box_extra,
+                bucks_box_pos[1]+box_height
+            ), radius=25/3, fill='#151518'
+        )
+        new_frame_draw.text(
+            bucks_pos, '+', font_color, font=text_small_medium, anchor='ls'
+        )
+        new_frame_draw.text(
+            (bucks_pos[0] + text_small_medium.getlength('+'),
+             bucks_pos[1]), '$', bucks_color, font=text_small_medium, anchor='ls'
+        )
+        new_frame_draw.text(
+            (bucks_pos[0] + text_small_medium.getlength('+$'),
+             bucks_pos[1]), score, font_color, font=text_small_medium, anchor='ls'
+        )
 
     # Places the user avatar image
 
     new_frame = new_frame.copy().convert('RGBA')
     new_frame.paste(user_avatar, user_avatar_pos, mask=user_avatar)
-
-    # Places user tag
-
-    new_frame_draw = ImageDraw.Draw(new_frame)
-    new_frame_draw.text(
-        user_tag_pos, user_tag.encode('utf-16').decode('utf-16'), font_color, font=text_medium, anchor='ls'
-    )
 
     frames.append(new_frame)
 

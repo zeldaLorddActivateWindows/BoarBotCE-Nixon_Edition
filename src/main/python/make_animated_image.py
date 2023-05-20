@@ -15,16 +15,17 @@ import sys
 
 # Inputs from JS
 
-config = json.loads(sys.argv[1])
-back_color_key = sys.argv[2]
-main_image_path = sys.argv[3]
-title = sys.argv[4]
-name = sys.argv[5]
-is_badge = sys.argv[6]
+path_config = json.loads(sys.argv[1])
+color_config = json.loads(sys.argv[2])
+num_config = json.loads(sys.argv[3])
+back_color_key = sys.argv[4]
+main_image_path = sys.argv[5]
+title = sys.argv[6]
+name = sys.argv[7]
+is_badge = sys.argv[8]
 
 # Configured directory paths
 
-path_config = config['pathConfig']
 item_assets = path_config['itemAssets']
 other_assets = path_config['otherAssets']
 temp_item_assets = path_config['tempItemAssets']
@@ -39,18 +40,12 @@ main_image_name = main_image_path.split('/').pop().split('.')[0]
 
 # Configured colors
 
-font_color = config['colorConfig']['font']
-back_color = config['colorConfig'][back_color_key]
-
-# Number configurations
-
-num_config = config['numberConfig']
+font_color = color_config['font']
+back_color = color_config[back_color_key]
 
 # Setting font size from configurations
 
-big_font = num_config['fontBig']
 medium_font = num_config['fontMedium']
-text_big = ImageFont.truetype(font_path, big_font)
 text_medium = ImageFont.truetype(font_path, medium_font)
 
 # Setting image positioning and sizes from configurations
@@ -102,7 +97,7 @@ for frame in ImageSequence.Iterator(main_image):
     # Places all text on the image
 
     new_frame_draw = ImageDraw.Draw(new_frame)
-    new_frame_draw.text(title_pos, title, font_color, font=text_big, anchor='ms')
+    new_frame_draw.text(title_pos, title, font_color, font=text_medium, anchor='ms')
     new_frame_draw.text(name_pos, name, font_color, font=text_medium, anchor='ms')
 
     frames.append(new_frame.resize((int(image_size[0] / 3), int(image_size[1] / 3))))
