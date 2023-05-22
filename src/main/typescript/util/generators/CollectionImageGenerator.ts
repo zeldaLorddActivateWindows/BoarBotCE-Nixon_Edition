@@ -24,13 +24,27 @@ export class CollectionImageGenerator {
     private detailedBase: Buffer = {} as Buffer;
     private powerupsBase: Buffer = {} as Buffer;
 
-    constructor(boarUser: BoarUser, config: BotConfig, boars: any[]) {
+    /**
+     * Creates a new collection image generator
+     *
+     * @param boarUser - The user that has their collection open
+     * @param boars - All boars and information about those boars that a user has
+     * @param config - Used to get strings, paths, and other information
+     */
+    constructor(boarUser: BoarUser, boars: any[], config: BotConfig) {
         this.boarUser = boarUser;
         this.config = config;
         this.allBoars = boars;
     }
 
-    public updateInfo(boarUser: BoarUser, config: BotConfig, boars: any[]): void {
+    /**
+     * Used when collection information needs to be updated internally
+     *
+     * @param boarUser - The user that has their collection open
+     * @param boars - All boars and information about those boars that a user has
+     * @param config - Used to get strings, paths, and other information
+     */
+    public updateInfo(boarUser: BoarUser, boars: any[], config: BotConfig): void {
         this.boarUser = boarUser;
         this.config = config;
         this.allBoars = boars;
@@ -38,8 +52,6 @@ export class CollectionImageGenerator {
 
     /**
      * Creates the base image of the Normal view
-     *
-     * @private
      */
     public async createNormalBase(): Promise<void> {
         // Config aliases
@@ -114,14 +126,15 @@ export class CollectionImageGenerator {
         this.normalBase = canvas.toBuffer();
     }
 
-    public normalBaseMade(): boolean {
-        return Object.keys(this.normalBase).length !== 0;
-    }
+    /**
+     * Returns whether the normal base has been made
+     */
+    public normalBaseMade(): boolean { return Object.keys(this.normalBase).length !== 0; }
 
     /**
      * Finalizes the Normal view image
      *
-     * @private
+     * @param page - The page to finalize
      */
     public async finalizeNormalImage(page: number): Promise<AttachmentBuilder> {
         // Config aliases
@@ -140,8 +153,8 @@ export class CollectionImageGenerator {
 
         const smallestFont = `${nums.fontSmallest}px ${strConfig.fontName}`;
 
-        const lastBoarRarity: [number, RarityConfig] = BoarUtils.findRarity(this.boarUser.lastBoar);
-        const favBoarRarity: [number, RarityConfig] = BoarUtils.findRarity(this.boarUser.favoriteBoar);
+        const lastBoarRarity: [number, RarityConfig] = BoarUtils.findRarity(this.boarUser.lastBoar, this.config);
+        const favBoarRarity: [number, RarityConfig] = BoarUtils.findRarity(this.boarUser.favoriteBoar, this.config);
 
         const curBoars = this.allBoars.slice(page * boarsPerPage, (page+1)*boarsPerPage);
 
@@ -217,8 +230,6 @@ export class CollectionImageGenerator {
 
     /**
      * Creates the base image of the Detailed view
-     *
-     * @private
      */
     public async createDetailedBase(): Promise<void> {
         // Config aliases
@@ -259,14 +270,15 @@ export class CollectionImageGenerator {
         this.detailedBase = canvas.toBuffer();
     }
 
-    public detailedBaseMade(): boolean {
-        return Object.keys(this.detailedBase).length !== 0;
-    }
+    /**
+     * Returns whether the detailed base has been made
+     */
+    public detailedBaseMade(): boolean { return Object.keys(this.detailedBase).length !== 0; }
 
     /**
      * Finalizes the Detailed view image
      *
-     * @private
+     * @param page - The page to finalize
      */
     public async finalizeDetailedImage(page: number): Promise<AttachmentBuilder> {
         // Config aliases
@@ -360,7 +372,7 @@ export class CollectionImageGenerator {
     /**
      * Creates the base image of the Powerups view
      *
-     * @private
+     * @param page - The page to make the base for
      */
     public async createPowerupsBase(page: number): Promise<void> {
         switch (page) {
@@ -375,6 +387,11 @@ export class CollectionImageGenerator {
         }
     }
 
+    /**
+     * Creates the base image for the first page of Powerups view
+     *
+     * @private
+     */
     private async createPowBaseOne(): Promise<void> {
         // Config aliases
 
@@ -523,6 +540,11 @@ export class CollectionImageGenerator {
         this.powerupsBase = canvas.toBuffer();
     }
 
+    /**
+     * Creates the base image for the second page of Powerups view
+     *
+     * @private
+     */
     private async createPowBaseTwo(): Promise<void> {
         // Config aliases
 
@@ -600,6 +622,11 @@ export class CollectionImageGenerator {
         this.powerupsBase = canvas.toBuffer();
     }
 
+    /**
+     * Creates the base image for the third page of Powerups view
+     *
+     * @private
+     */
     private async createPowBaseThree(): Promise<void> {
         // Config aliases
 
@@ -690,10 +717,14 @@ export class CollectionImageGenerator {
         this.powerupsBase = canvas.toBuffer();
     }
 
-    public powerupsBaseMade(): boolean {
-        return Object.keys(this.powerupsBase).length !== 0;
-    }
+    /**
+     * Returns whether a powerups base has been made
+     */
+    public powerupsBaseMade(): boolean { return Object.keys(this.powerupsBase).length !== 0; }
 
+    /**
+     * Finalizes the Powerups view image
+     */
     public async finalizePowerupsImage(): Promise<AttachmentBuilder> {
         const nums = this.config.numberConfig;
         const collectionOverlay = this.config.pathConfig.collAssets + this.config.pathConfig.collPowerOverlay;
@@ -709,6 +740,11 @@ export class CollectionImageGenerator {
         return new AttachmentBuilder(canvas.toBuffer(), { name:`${this.config.stringConfig.imageName}.png` });
     }
 
+    /**
+     * Creates the top bar present on all views
+     *
+     * @param ctx - CanvasRenderingContext2D
+     */
     public async drawTopBar(ctx: Canvas.CanvasRenderingContext2D,): Promise<void> {
         // Config aliases
 
@@ -756,6 +792,11 @@ export class CollectionImageGenerator {
         }
     }
 
+    /**
+     * Creates enhancer confirmation image
+     *
+     * @param page - The page of the boar that's being enhanced
+     */
     public async finalizeEnhanceConfirm(page: number): Promise<AttachmentBuilder> {
         // Config aliases
 
@@ -810,6 +851,9 @@ export class CollectionImageGenerator {
         return new AttachmentBuilder(canvas.toBuffer(), { name:`${this.config.stringConfig.imageName}.png` });
     }
 
+    /**
+     * Creates gift confirmation image
+     */
     public async finalizeGift(): Promise<AttachmentBuilder> {
         // Config aliases
 

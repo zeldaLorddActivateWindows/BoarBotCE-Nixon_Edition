@@ -23,8 +23,8 @@ export class InteractionUtils {
      * @return guildData - Guild data parsed from JSON
      */
     public static async handleStart(
-        config: BotConfig,
         interaction: ChatInputCommandInteraction,
+        config: BotConfig,
         includeTrade: boolean = false
     ): Promise<any> {
         if (!interaction.guild || !interaction.channel) return;
@@ -33,7 +33,7 @@ export class InteractionUtils {
         if (!guildData) return;
 
         if (!guildData.channels) {
-            await Replies.currentConfigReply(config, interaction);
+            await Replies.currentConfigReply(interaction, config);
             return;
         }
 
@@ -44,14 +44,19 @@ export class InteractionUtils {
         }
 
         if (!acceptableChannels.includes(interaction.channel.id)) {
-            await Replies.wrongChannelReply(config, interaction, guildData, includeTrade);
+            await Replies.wrongChannelReply(interaction, guildData, config, includeTrade);
             return;
         }
 
         return guildData;
     }
 
-    public static async getTextChannel(config: BotConfig, channelID: string): Promise<TextChannel | undefined> {
+    /**
+     * Gets a text channel from ID
+     *
+     * @param channelID - ID of channel
+     */
+    public static async getTextChannel(channelID: string): Promise<TextChannel | undefined> {
         let channel: TextChannel;
 
         try {

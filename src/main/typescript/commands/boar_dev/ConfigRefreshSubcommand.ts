@@ -21,7 +21,7 @@ export default class ConfigRefreshSubcommand implements Subcommand {
      *
      * @param interaction - The interaction that called the subcommand
      */
-    public async execute(interaction: ChatInputCommandInteraction) {
+    public async execute(interaction: ChatInputCommandInteraction): Promise<void> {
         BoarBotApp.getBot().loadConfig();
 
         await Replies.handleReply(interaction, 'Successfully refreshed the config.');

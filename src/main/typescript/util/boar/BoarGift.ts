@@ -16,6 +16,7 @@ import {Queue} from '../interactions/Queue';
 import {BoarUtils} from './BoarUtils';
 import {DataHandlers} from '../data/DataHandlers';
 import {ItemImageGenerator} from '../generators/ItemImageGenerator';
+import {LogDebug} from '../logging/LogDebug';
 
 /**
  * {@link BoarGift BoarGift.ts}
@@ -28,7 +29,7 @@ import {ItemImageGenerator} from '../generators/ItemImageGenerator';
  */
 
 export class BoarGift {
-    private config: BotConfig;
+    private readonly config: BotConfig;
     public boarUser: BoarUser;
     public giftedUser: BoarUser = {} as BoarUser;
     private imageGen: CollectionImageGenerator;
@@ -41,18 +42,23 @@ export class BoarGift {
     /**
      * Creates a new BoarUser from data file.
      *
-     * @param boarUser
-     * @param config
-     * @param imageGen
+     * @param boarUser - The information of the user that sent the gift
+     * @param imageGen - The image generator used to send attachments
+     * @param config - Used to get several configurations
      */
-    constructor(boarUser: BoarUser, config: BotConfig, imageGen: CollectionImageGenerator) {
+    constructor(boarUser: BoarUser, imageGen: CollectionImageGenerator, config: BotConfig) {
         this.boarUser = boarUser;
         this.config = config;
         this.imageGen = imageGen;
     }
 
-    public async sendMessage(interaction: MessageComponentInteraction) {
-        this.collector = await CollectorUtils.createCollector(interaction);
+    /**
+     * Sends the gift message that others can claim
+     *
+     * @param interaction - The interaction to follow up
+     */
+    public async sendMessage(interaction: MessageComponentInteraction): Promise<void> {
+        this.collector = await CollectorUtils.createCollector(interaction, true);
 
         this.firstInter = interaction;
 
@@ -75,37 +81,65 @@ export class BoarGift {
         this.collector.once('end', async (collected) => await this.handleEndCollect(collected));
     }
 
+    /**
+     * Handles when a user clicks the claim button
+     *
+     * @param inter - The interaction of the button press
+     * @private
+     */
     private async handleCollect(inter: ButtonInteraction): Promise<void> {
-        await inter.deferUpdate();
-        this.compInters.push(inter);
-        this.collector.stop();
+        try {
+            await inter.deferUpdate();
+            this.compInters.push(inter);
+            this.collector.stop();
+        } catch (err: unknown) {
+            await LogDebug.handleError(err);
+            this.collector.stop(CollectorUtils.Reasons.Error);
+        }
     }
 
+    /**
+     * Handles the logic of getting the first claimer and giving the gift to them
+     *
+     * @param collected - Collection of all collected information
+     * @private
+     */
     private async handleEndCollect(
         collected:  Collection<string, ButtonInteraction | StringSelectMenuInteraction>
     ): Promise<void> {
-        if (collected.size === 0) {
-            const expiredButton = new ButtonBuilder()
-                .setDisabled(true)
-                .setCustomId('GIFT_CLAIMED')
-                .setLabel('EXPIRED')
-                .setStyle(2);
+        try {
+            if (collected.size === 0) {
+                const expiredButton = new ButtonBuilder()
+                    .setDisabled(true)
+                    .setCustomId('GIFT_CLAIMED')
+                    .setLabel('EXPIRED')
+                    .setStyle(2);
 
-            await this.giftMessage.edit({
-                components: [new ActionRowBuilder<ButtonBuilder>().addComponents(expiredButton)]
-            });
+                await this.giftMessage.edit({
+                    components: [new ActionRowBuilder<ButtonBuilder>().addComponents(expiredButton)]
+                });
 
-            return;
-        }
-
-        for (const inter of this.compInters) {
-            if (inter.user.id === collected.at(0)?.user.id) {
-                await this.doGift(inter);
-                break;
+                return;
             }
+
+            for (const inter of this.compInters) {
+                if (inter.user.id === collected.at(0)?.user.id) {
+                    await this.doGift(inter);
+                    break;
+                }
+            }
+        } catch (err: unknown) {
+            await LogDebug.handleError(err);
+            this.collector.stop(CollectorUtils.Reasons.Error);
         }
     }
 
+    /**
+     * Handles giving the gift and responding
+     *
+     * @param inter - The button interaction of the first user that clicked claim
+     * @private
+     */
     private async doGift(inter: ButtonInteraction): Promise<void> {
         const outcome: number = this.getOutcome();
         let subOutcome: number = this.getOutcome(outcome);
@@ -141,6 +175,12 @@ export class BoarGift {
         }, inter.id + inter.user.id);
     }
 
+    /**
+     * Gets the index of an outcome or suboutcome based on weight
+     *
+     * @param outcomeVal - The outcome index, used to get suboutcomes
+     * @private
+     */
     private getOutcome(outcomeVal?: number): number {
         const outcomeConfig: OutcomeConfig[] = this.config.powerupConfig.gift.outcomes;
         const probabilities: number[] = [];
@@ -177,24 +217,38 @@ export class BoarGift {
         return probabilities.length-1;
     }
 
+    /**
+     * Handles the special boar category
+     *
+     * @param inter - The interaction to respond to
+     * @private
+     */
     private async giveSpecial(inter: ButtonInteraction): Promise<void> {
-        await this.giftedUser.addBoars(this.config, ['gamebreaker'], inter);
+        await this.giftedUser.addBoars(['gamebreaker'], inter, this.config);
 
         await inter.editReply({
             files: [
                 await new ItemImageGenerator(
-                    this.giftedUser,
-                    this.config,
+                    this.giftedUser.user,
                     'gamebreaker',
-                    'Gift Claimed!'
-                ).handleImageCreate(false)
+                    this.config.stringConfig.giftOpenTitle,
+                    this.config
+                ).handleImageCreate(false, this.firstInter.user)
             ],
             components: []
         });
     }
 
+    /**
+     * Handles the boar bucks category
+     *
+     * @param suboutcome - The chosen suboutcome to handle
+     * @param inter - The interaction to respond to
+     * @private
+     */
     private async giveBucks(suboutcome: number, inter: ButtonInteraction): Promise<void> {
         const outcomeConfig = this.config.powerupConfig.gift.outcomes[1];
+        let outcomeName = outcomeConfig.suboutcomes[suboutcome].name;
         let numBucks: number = 0;
 
         if (suboutcome === 0) {
@@ -205,6 +259,8 @@ export class BoarGift {
             numBucks = Math.round(Math.random() * (300 - 200) + 200)
         }
 
+        outcomeName = outcomeName.replace('%@', numBucks.toString());
+
         await Queue.addQueue(() => {
             this.giftedUser.refreshUserData();
             this.giftedUser.boarScore += numBucks;
@@ -214,15 +270,17 @@ export class BoarGift {
         await inter.editReply({
             files: [
                 await new ItemImageGenerator(
-                    this.giftedUser,
-                    this.config,
+                    this.giftedUser.user,
                     outcomeConfig.category.toLowerCase().replace(/\s+/g, '') + suboutcome,
-                    'Gift Claimed!'
+                    this.config.stringConfig.giftOpenTitle,
+                    this.config
                 ).handleImageCreate(
                     false,
+                    this.firstInter.user,
+                    outcomeName.substring(outcomeName.indexOf(' ')),
                     {
-                        name: outcomeConfig.suboutcomes[suboutcome].name.replace('%@', numBucks.toString()),
-                        file: 'BoarBucksGift.png',
+                        name: outcomeName,
+                        file: this.config.pathConfig.bucks,
                         colorKey: 'bucks'
                     }
                 )
@@ -231,8 +289,16 @@ export class BoarGift {
         });
     }
 
-    private async givePowerup(suboutcome: number, inter: ButtonInteraction) {
+    /**
+     * Handles the powerup category
+     *
+     * @param suboutcome - The chosen suboutcome to handle
+     * @param inter - The interaction to respond to
+     * @private
+     */
+    private async givePowerup(suboutcome: number, inter: ButtonInteraction): Promise<void> {
         const outcomeConfig = this.config.powerupConfig.gift.outcomes[2];
+        const outcomeName = outcomeConfig.suboutcomes[suboutcome].name;
 
         await Queue.addQueue(() => {
             this.giftedUser.refreshUserData();
@@ -257,15 +323,17 @@ export class BoarGift {
         await inter.editReply({
             files: [
                 await new ItemImageGenerator(
-                    this.giftedUser,
-                    this.config,
+                    this.giftedUser.user,
                     outcomeConfig.category.toLowerCase().replace(/\s+/g, '') + suboutcome,
-                    'Gift Claimed!'
+                    this.config.stringConfig.giftOpenTitle,
+                    this.config
                 ).handleImageCreate(
                     false,
+                    this.firstInter.user,
+                    outcomeName.substring(outcomeName.indexOf(' ')),
                     {
                         name: outcomeConfig.suboutcomes[suboutcome].name,
-                        file: 'BoarPowerup.png',
+                        file: this.config.pathConfig.powerup,
                         colorKey: 'powerup'
                     }
                 )
@@ -274,23 +342,29 @@ export class BoarGift {
         });
     }
 
-    private async giveBoar(inter: ButtonInteraction) {
+    /**
+     * Handles the regular boar category
+     *
+     * @param inter - The interaction to respond to
+     * @private
+     */
+    private async giveBoar(inter: ButtonInteraction): Promise<void> {
         const rarityWeights = BoarUtils.getBaseRarityWeights(this.config);
 
         const boarIDs = BoarUtils.getRandBoars(
-            this.config, DataHandlers.getGuildData(inter), inter, rarityWeights, false, 0
+            DataHandlers.getGuildData(inter), inter, rarityWeights, false, 0, this.config
         );
 
-        await this.giftedUser.addBoars(this.config, boarIDs, inter);
+        await this.giftedUser.addBoars(boarIDs, inter, this.config);
 
         await inter.editReply({
             files: [
                 await new ItemImageGenerator(
-                    this.giftedUser,
-                    this.config,
+                    this.giftedUser.user,
                     boarIDs[0],
-                    'Gift Claimed!'
-                ).handleImageCreate(false)
+                    this.config.stringConfig.giftOpenTitle,
+                    this.config
+                ).handleImageCreate(false, this.firstInter.user)
             ],
             components: []
         });

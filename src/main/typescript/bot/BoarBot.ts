@@ -1,6 +1,6 @@
 import dotenv from 'dotenv';
 import fs from 'fs';
-import {ActivityType, Client, Events, GatewayIntentBits, Partials} from 'discord.js';
+import {ActivityType, Client, Events, GatewayIntentBits, Partials, TextChannel} from 'discord.js';
 import {Bot} from '../api/bot/Bot';
 import {FormatStrings} from '../util/discord/FormatStrings';
 import {ConfigHandler} from './handlers/ConfigHandler';
@@ -103,7 +103,7 @@ export class BoarBot implements Bot {
 	/**
 	 * Registers event listeners from files
 	 */
-	public registerListeners() { this.eventHandler.registerListeners(); }
+	public registerListeners(): void { this.eventHandler.registerListeners(); }
 
 	/**
 	 * Logs the bot in using token
@@ -113,7 +113,7 @@ export class BoarBot implements Bot {
 			LogDebug.sendDebug('Logging in...', this.getConfig());
 			await this.client.login(process.env.TOKEN);
 		} catch {
-			LogDebug.handleError('Client wasn\'t initialized or you used an invalid token!');
+			await LogDebug.handleError('Client wasn\'t initialized or you used an invalid token!');
 			process.exit(-1);
 		}
 	}
@@ -128,9 +128,8 @@ export class BoarBot implements Bot {
 			LogDebug.sendDebug('Interaction Listeners: ' + this.client.listenerCount(Events.InteractionCreate), this.getConfig())
 		}, 600000);
 
-		const botStatusChannel = await InteractionUtils.getTextChannel(
-			this.getConfig(), this.getConfig().botStatusChannel
-		);
+		const botStatusChannel: TextChannel | undefined =
+			await InteractionUtils.getTextChannel(this.getConfig().botStatusChannel);
 
 		if (!botStatusChannel) return;
 
@@ -140,7 +139,7 @@ export class BoarBot implements Bot {
 				FormatStrings.toRelTime(Math.round(Date.now() / 1000))
 			);
 		} catch (err: unknown) {
-			LogDebug.handleError(err);
+			await LogDebug.handleError(err);
 		}
 
 		LogDebug.sendDebug('Successfully sent status message!', this.getConfig());
@@ -164,7 +163,7 @@ export class BoarBot implements Bot {
 		}
 
 		for (const guildData of guildDataFiles) {
-			const data = JSON.parse(fs.readFileSync(guildDataFolder + guildData, 'utf-8'));
+			const data: any = JSON.parse(fs.readFileSync(guildDataFolder + guildData, 'utf-8'));
 
 			if (Object.keys(data).length !== 0) continue;
 

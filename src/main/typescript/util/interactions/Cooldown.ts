@@ -21,8 +21,8 @@ export class Cooldown {
      * @param interaction - Interaction to reply to
      */
     public static async handleCooldown(
-        config: BotConfig,
-        interaction: ChatInputCommandInteraction
+        interaction: ChatInputCommandInteraction,
+        config: BotConfig
     ): Promise<boolean> {
         const subcommandName = interaction.options.getSubcommand();
         const needsCooldown = BoarBotApp.getBot().getSubcommands().get(subcommandName)?.data.cooldown;
@@ -35,7 +35,7 @@ export class Cooldown {
         }
 
         if (this.cooldowns[subcommandName].includes(userID)) {
-            await Replies.onCooldownReply(config, interaction);
+            await Replies.onCooldownReply(interaction, config);
             return true;
         }
 

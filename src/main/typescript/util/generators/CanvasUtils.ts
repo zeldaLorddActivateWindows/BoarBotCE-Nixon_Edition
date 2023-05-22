@@ -18,11 +18,11 @@ export class CanvasUtils {
      * @param pos - Position to place text
      * @param font - Font to use for text
      * @param align - Alignment of text
-     * @param color - Color of text
-     * @param coloredText
-     * @param color2
-     * @param wrap
-     * @param width
+     * @param color - Base color of text
+     * @param coloredText - Text to use secondary color on
+     * @param color2 - Secondary color
+     * @param wrap - Whether to wrap the text
+     * @param width - Width to wrap/shrink at
      */
     public static drawText(
         ctx: Canvas.CanvasRenderingContext2D,
@@ -112,6 +112,19 @@ export class CanvasUtils {
         }
     }
 
+    /**
+     * Draws the secondary colored text
+     *
+     * @param ctx - CanvasRenderingContext
+     * @param text - Text to draw
+     * @param align - Alignment of text
+     * @param pos - Position to place text
+     * @param replaceIndex - The index to start replacing with colored text
+     * @param coloredText - The actual text that's colored
+     * @param color - Base color of text
+     * @param color2 - Secondary color
+     * @private
+     */
     private static drawColoredText(
         ctx: Canvas.CanvasRenderingContext2D,
         text: string,
@@ -163,8 +176,10 @@ export class CanvasUtils {
         ctx.beginPath();
         ctx.arc(pos[0] + radius, pos[1] + radius, radius, 0, Math.PI * 2);
         ctx.closePath();
+        ctx.save();
         ctx.clip();
         ctx.drawImage(img, pos[0], pos[1], diameter, diameter);
+        ctx.restore();
     }
 
     /**

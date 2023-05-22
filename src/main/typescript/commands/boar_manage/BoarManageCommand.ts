@@ -28,7 +28,7 @@ export default class BoarManageCommand implements Command {
      *
      * @param interaction - An interaction that could've called a boar-manage subcommand
      */
-    public async execute(interaction: ChatInputCommandInteraction) {
+    public async execute(interaction: ChatInputCommandInteraction): Promise<void> {
         const subcommand = BoarBotApp.getBot().getSubcommands().get(interaction.options.getSubcommand());
 
         if (subcommand) {

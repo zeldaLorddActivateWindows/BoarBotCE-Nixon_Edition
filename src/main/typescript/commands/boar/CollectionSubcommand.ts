@@ -27,6 +27,7 @@ import {FormatStrings} from '../../util/discord/FormatStrings';
 import {RarityConfig} from '../../bot/config/items/RarityConfig';
 import createRBTree, {Node, Tree} from 'functional-red-black-tree';
 import {BoarGift} from '../../util/boar/BoarGift';
+import fs from 'fs';
 
 enum View {
     Normal,
@@ -78,10 +79,10 @@ export default class CollectionSubcommand implements Subcommand {
      *
      * @param interaction - The interaction that called the subcommand
      */
-    public async execute(interaction: ChatInputCommandInteraction) {
+    public async execute(interaction: ChatInputCommandInteraction): Promise<void> {
         const config = BoarBotApp.getBot().getConfig();
 
-        this.guildData = await InteractionUtils.handleStart(config, interaction);
+        this.guildData = await InteractionUtils.handleStart(interaction, config);
         if (!this.guildData) return;
 
         await interaction.deferReply();
@@ -121,14 +122,20 @@ export default class CollectionSubcommand implements Subcommand {
 
         this.collector = await CollectorUtils.createCollector(interaction);
 
-        this.collectionImage = new CollectionImageGenerator(this.boarUser, this.config, this.allBoars);
+        this.collectionImage = new CollectionImageGenerator(this.boarUser, this.allBoars, this.config);
         await this.showCollection();
 
         this.collector.on('collect', async (inter: ButtonInteraction) => await this.handleCollect(inter));
         this.collector.once('end', async (collected, reason) => await this.handleEndCollect(reason));
     }
 
-    private async handleCollect(inter: ButtonInteraction) {
+    /**
+     * Handles collecting button interactions
+     *
+     * @param inter - The button interaction
+     * @private
+     */
+    private async handleCollect(inter: ButtonInteraction): Promise<void> {
         try {
             const canInteract = await CollectorUtils.canInteract(this.timerVars, inter);
             if (!canInteract) return;
@@ -215,27 +222,27 @@ export default class CollectionSubcommand implements Subcommand {
                     break;
 
                 case collComponents.gift.customId:
-                    // if (this.giftStage === -1) {
-                    //     const confirmFile = this.config.pathConfig.collAssets + this.config.pathConfig.collGiftConfirm;
-                    //     await this.firstInter.followUp({
-                    //         files: [
-                    //             new AttachmentBuilder(
-                    //                 Buffer.from(fs.readFileSync(confirmFile)),
-                    //                 { name:`${this.config.stringConfig.imageName}.png` }
-                    //             )
-                    //         ],
-                    //         ephemeral: true
-                    //     });
-                    //     this.giftStage = 2;
-                    // } else {
+                    if (this.giftStage === -1) {
+                        const confirmFile = this.config.pathConfig.collAssets + this.config.pathConfig.collGiftConfirm;
+                        await this.firstInter.followUp({
+                            files: [
+                                new AttachmentBuilder(
+                                    Buffer.from(fs.readFileSync(confirmFile)),
+                                    { name:`${this.config.stringConfig.imageName}.png` }
+                                )
+                            ],
+                            ephemeral: true
+                        });
+                        this.giftStage = 2;
+                    } else {
                         await Queue.addQueue(() => {
                             this.boarUser.refreshUserData();
                             this.boarUser.powerups.numGifts--;
                             this.boarUser.powerups.giftsUsed++;
                             this.boarUser.updateUserData();
                         }, inter.id + this.boarUser.user.id);
-                        await new BoarGift(this.boarUser, this.config, this.collectionImage).sendMessage(inter);
-                    // }
+                        await new BoarGift(this.boarUser, this.collectionImage, this.config).sendMessage(inter);
+                    }
                     break;
             }
 
@@ -250,6 +257,11 @@ export default class CollectionSubcommand implements Subcommand {
         clearInterval(this.timerVars.updateTime);
     }
 
+    /**
+     * Gets the editions of the current boar and send them and their dates
+     *
+     * @private
+     */
     private async doEditions(): Promise<void> {
         const strConfig = this.config.stringConfig;
         let replyString = '';
@@ -275,9 +287,14 @@ export default class CollectionSubcommand implements Subcommand {
         });
     }
 
+    /**
+     * Enhances a boar by removing it, giving a random boar of the next rarity, and giving some boar bucks
+     *
+     * @private
+     */
     private async doEnhance(): Promise<void> {
         const enhancedBoar: string =
-            BoarUtils.findValid(this.allBoars[this.curPage].rarity[0], this.config, this.guildData);
+            BoarUtils.findValid(this.allBoars[this.curPage].rarity[0], this.guildData, this.config);
 
         if (enhancedBoar === '') {
             await LogDebug.handleError(this.config.stringConfig.dailyNoBoarFound, this.firstInter);
@@ -296,7 +313,7 @@ export default class CollectionSubcommand implements Subcommand {
             this.boarUser.updateUserData();
         }, this.compInter.id + this.compInter.user.id);
 
-        await this.boarUser.addBoars(this.config, [enhancedBoar], this.firstInter, false);
+        await this.boarUser.addBoars([enhancedBoar], this.firstInter, this.config);
 
         await Queue.addQueue(() => this.getUserInfo(this.boarUser.user), this.compInter.id + this.boarUser.user.id);
 
@@ -304,12 +321,12 @@ export default class CollectionSubcommand implements Subcommand {
             this.config.boarItemConfigs[enhancedBoar].name.toLowerCase().replace(/\s+/g, ''), this.allBoarsTree.root
         ) - 1;
 
-        this.collectionImage.updateInfo(this.boarUser, this.config, this.allBoars);
+        this.collectionImage.updateInfo(this.boarUser, this.allBoars, this.config);
         await this.collectionImage.createNormalBase();
     }
 
     /**
-     * Sends modals and receives information on modal submission
+     * Sends the modal that gets page input
      *
      * @param inter - Used to show the modal and create/remove listener
      * @private
@@ -332,12 +349,12 @@ export default class CollectionSubcommand implements Subcommand {
     }
 
     /**
-     * Handles when the user makes an interaction that could be a modal submission
+     * Handles page input that was input in modal
      *
      * @param submittedModal - The interaction to respond to
      * @private
      */
-    private modalListener = async (submittedModal: Interaction) => {
+    private modalListener = async (submittedModal: Interaction): Promise<void> => {
         try  {
             // If not a modal submission on current interaction, destroy the modal listener
             if (submittedModal.isMessageComponent() && submittedModal.customId.endsWith(this.firstInter.id + this.firstInter.user.id) ||
@@ -388,7 +405,13 @@ export default class CollectionSubcommand implements Subcommand {
         submittedModal.client.removeListener(Events.InteractionCreate, this.modalListener);
     };
 
-    private async handleEndCollect(reason: string) {
+    /**
+     * Handles when the collection for navigating through collection is finished
+     *
+     * @param reason - Why the collection ended
+     * @private
+     */
+    private async handleEndCollect(reason: string): Promise<void> {
         try {
             LogDebug.sendDebug('Ended collection with reason: ' + reason, this.config, this.firstInter);
 
@@ -425,7 +448,7 @@ export default class CollectionSubcommand implements Subcommand {
             const boarInfo = this.boarUser.boarCollection[boarID];
             if (boarInfo.num === 0) continue;
 
-            const rarity: [number, RarityConfig] = BoarUtils.findRarity(boarID);
+            const rarity: [number, RarityConfig] = BoarUtils.findRarity(boarID, this.config);
             if (rarity[0] === 0) continue;
 
             // Global boar information
@@ -453,7 +476,7 @@ export default class CollectionSubcommand implements Subcommand {
     }
 
     /**
-     * Displays the collection image
+     * Displays the collection image and modifies button states
      *
      * @private
      */
@@ -567,6 +590,11 @@ export default class CollectionSubcommand implements Subcommand {
         }
     }
 
+    /**
+     * Creates the buttons and rows used for collection by adding information to IDs
+     *
+     * @private
+     */
     private initButtons(): void {
         const collFieldConfigs = this.config.commandConfigs.boar.collection.componentFields;
 
@@ -587,6 +615,11 @@ export default class CollectionSubcommand implements Subcommand {
         }
     }
 
+    /**
+     * Disables all buttons
+     *
+     * @private
+     */
     private disableButtons(): void {
         for (const row of this.baseRows) {
             for (const component of row.components) {
@@ -599,6 +632,13 @@ export default class CollectionSubcommand implements Subcommand {
         }
     }
 
+    /**
+     * Uses a BST to get a page from boar name input (closest match)
+     *
+     * @param pageInput - The boar name input to look for
+     * @param root - The root of the tree
+     * @private
+     */
     private getPageFromName(pageInput: string, root: Node<string, number>): number {
         if (root.key.includes(pageInput))
             return root.value;
@@ -609,6 +649,12 @@ export default class CollectionSubcommand implements Subcommand {
         return root.value;
     }
 
+    /**
+     * Sets the page by min maxing the input value to be within bounds
+     *
+     * @param pageVal - The page integer to min max
+     * @private
+     */
     private setPage(pageVal: number): void {
         if (this.curView === View.Normal) {
             this.curPage = Math.max(Math.min(pageVal-1, this.maxPageNormal), 0);

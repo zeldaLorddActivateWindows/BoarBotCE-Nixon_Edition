@@ -58,11 +58,10 @@ export class StringConfig {
     public readonly giveBoar: string = ' ';
     public readonly giveBadID: string = '';
     public readonly giveTitle: string = ' ';
-    public readonly giveSpecialTitle: string = ' ';
     public readonly giveBadge: string = ' ';
     public readonly giveBadgeTitle: string = ' ';
     public readonly giveBadgeHas: string = ' ';
-    public readonly obtainedBadgeTitle: string = ' ';
+    public readonly giftOpenTitle: string = ' ';
 
     // Collection command strings
 

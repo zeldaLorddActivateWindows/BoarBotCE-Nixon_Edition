@@ -1,4 +1,4 @@
-import {AutocompleteInteraction, ChatInputCommandInteraction, User} from 'discord.js';
+import {AttachmentBuilder, AutocompleteInteraction, ChatInputCommandInteraction, User} from 'discord.js';
 import {BoarUser} from '../../util/boar/BoarUser';
 import {BoarBotApp} from '../../BoarBotApp';
 import {Subcommand} from '../../api/commands/Subcommand';
@@ -6,6 +6,8 @@ import {Queue} from '../../util/interactions/Queue';
 import {InteractionUtils} from '../../util/interactions/InteractionUtils';
 import {Replies} from '../../util/interactions/Replies';
 import {LogDebug} from '../../util/logging/LogDebug';
+import {ItemImageGenerator} from '../../util/generators/ItemImageGenerator';
+import {BoarUtils} from '../../util/boar/BoarUtils';
 
 /**
  * {@link GiveSubcommand GiveSubcommand.ts}
@@ -28,14 +30,14 @@ export default class GiveSubcommand implements Subcommand {
      *
      * @param interaction - The interaction that called the subcommand
      */
-    public async execute(interaction: ChatInputCommandInteraction) {
+    public async execute(interaction: ChatInputCommandInteraction): Promise<void> {
         this.config = BoarBotApp.getBot().getConfig();
 
-        const guildData = await InteractionUtils.handleStart(this.config, interaction);
+        const guildData = await InteractionUtils.handleStart(interaction, this.config);
         if (!guildData) return;
 
         if (!this.config.devs.includes(interaction.user.id)) {
-            await Replies.noPermsReply(this.config, interaction);
+            await Replies.noPermsReply(interaction, this.config);
             return;
         }
 
@@ -64,14 +66,14 @@ export default class GiveSubcommand implements Subcommand {
      *
      * @param interaction - Used to get the entered value to autocomplate
      */
-    public async autocomplete(interaction: AutocompleteInteraction) {
+    public async autocomplete(interaction: AutocompleteInteraction): Promise<void> {
         const strConfig = this.config.stringConfig;
 
         const focusedValue = interaction.options.getFocused().toLowerCase();
         const boarChoices = Object.keys(this.config.boarItemConfigs)
-            .map(val => (val + strConfig.giveBoarChoiceTag));
+            .map(val => (val + ' | ' + strConfig.giveBoarChoiceTag));
         const badgeChoices = Object.keys(this.config.badgeItemConfigs)
-            .map(val => (val + strConfig.giveBadgeChoiceTag));
+            .map(val => (val + ' | ' + strConfig.giveBadgeChoiceTag));
         const choices = boarChoices.concat(badgeChoices);
         const possibleChoices = choices.filter(choice => choice.toLowerCase().includes(focusedValue));
 
@@ -83,11 +85,11 @@ export default class GiveSubcommand implements Subcommand {
     }
 
     /**
-     * Gives the user the boar that was input
+     * Gives the user the item that was input and responds with an attachment of the item
      *
      * @private
      */
-    private async doGive() {
+    private async doGive(): Promise<void> {
         if (!this.interaction.guild || !this.interaction.channel) return;
 
         const strConfig = this.config.stringConfig;
@@ -100,12 +102,40 @@ export default class GiveSubcommand implements Subcommand {
 
         LogDebug.sendDebug('Gave \'' + this.idInput + '\' to ' + this.userInput.tag, this.config, this.interaction);
 
-        if (this.idInput.endsWith(strConfig.giveBoarChoiceTag)) {
-            await boarUser.addBoars(this.config, [this.idInput.split(' ')[0]], this.interaction, true);
-        } else if (this.idInput.endsWith(strConfig.giveBadgeChoiceTag)) {
-            await boarUser.addBadge(this.config, this.idInput.split(' ')[0], this.interaction);
-        } else {
+        const inputID = this.idInput.split(' ')[0];
+        const tag = this.idInput.split(' ')[2];
+        let attachment: AttachmentBuilder | undefined;
+        let replyString: string = strConfig.giveBoar;
+
+        if (
+            tag === strConfig.giveBoarChoiceTag && !BoarUtils.findRarity(inputID, this.config) ||
+            tag === strConfig.giveBadgeChoiceTag && !this.config.badgeItemConfigs[inputID]
+        ) {
             await Replies.handleReply(this.interaction, strConfig.giveBadID);
+            return;
+        }
+
+        if (tag === strConfig.giveBoarChoiceTag) {
+            await boarUser.addBoars([this.idInput.split(' ')[0]], this.interaction, this.config);
+
+            attachment = await new ItemImageGenerator(boarUser.user, inputID, strConfig.giveTitle, this.config)
+                .handleImageCreate(false, this.interaction.user);
+        } else if (tag === strConfig.giveBadgeChoiceTag) {
+            const hasBadge = await boarUser.addBadge(this.idInput.split(' ')[0], this.interaction);
+
+            if (!hasBadge) {
+                attachment = await new ItemImageGenerator(boarUser.user, inputID, strConfig.giveBadgeTitle, this.config)
+                    .handleImageCreate(true, this.interaction.user);
+                replyString = strConfig.giveBadge;
+            } else {
+                replyString = strConfig.giveBadgeHas;
+            }
+        }
+
+        await Replies.handleReply(this.interaction, replyString);
+
+        if (attachment) {
+            await this.interaction.followUp({ files: [attachment] });
         }
     }
 }

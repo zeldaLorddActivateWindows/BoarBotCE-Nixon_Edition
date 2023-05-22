@@ -44,21 +44,24 @@ export class NumberConfig {
     // Item image positions, sizes, and values
 
     public readonly itemImageSize: [number, number] = [0, 0];
-    public readonly itemBoarPos: [number, number] = [0, 0];
-    public readonly itemBoarSize: [number, number] = [0, 0];
-    public readonly itemBadgePos: [number, number] = [0, 0];
-    public readonly itemBadgeSize: [number, number] = [0, 0];
+    public readonly itemPos: [number, number] = [0, 0];
+    public readonly itemSize: [number, number] = [0, 0];
     public readonly itemTitlePos: [number, number] = [0, 0];
     public readonly itemNamePos: [number, number] = [0, 0];
-    public readonly itemUserTagPos: [number, number] = [0, 0];
-    public readonly itemUserAvatarPos: [number, number] = [0, 0];
+    public readonly itemUserTagX: number = 0;
+    public readonly itemUserAvatarX: number = 0;
+    public readonly itemUserAvatarYOffset: number = 0;
     public readonly itemUserAvatarWidth: number = 0;
-    public readonly itemUserBoxPos: [number, number] = [0, 0];
     public readonly itemUserBoxExtra: number = 0;
-    public readonly itemBucksBoxPos: [number, number] = [0, 0];
-    public readonly itemBucksBoxExtra: number = 0;
+    public readonly itemTextX: number = 0;
+    public readonly itemTextYOffset: number = 0;
+    public readonly itemTextBoxExtra: number = 0;
+    public readonly itemBoxX: number = 0;
+    public readonly itemBoxOneY: number = 0;
+    public readonly itemBoxTwoY: number = 0;
+    public readonly itemBoxThreeY: number = 0;
+    public readonly itemBoxFourY: number = 0;
     public readonly itemBoxHeight: number = 0;
-    public readonly itemBucksPos: [number, number] = [0, 0];
     public readonly itemBorderRadius: number = 0;
 
     // Collection image positions, sizes, and values

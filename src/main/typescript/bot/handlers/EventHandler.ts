@@ -32,8 +32,8 @@ export class EventHandler {
 
         for (const listenerFile of listenerFiles) {
             try {
-                const exports = require('../../listeners/' + listenerFile);
-                const listenClass = new exports.default();
+                const exports: any = require('../../listeners/' + listenerFile);
+                const listenClass: any = new exports.default();
 
                 client.on(listenClass.eventName, (...args: any[]) => listenClass.execute(...args));
 

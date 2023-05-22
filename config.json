@@ -38,6 +38,8 @@
         "mainFont": "MinecraftFont.ttf",
         "helpBackground": "Help.png",
         "circleMask": "CircleMask.png",
+        "bucks": "BoarBucksGift.png",
+        "powerup": "BoarPowerup.png",
         "dynamicImageScript": "src/main/python/make_animated_image.py",
         "userOverlayScript": "src/main/python/user_animated_overlay.py"
     },
@@ -74,16 +76,15 @@
         "dailyTitle": "Daily Boar!",
         "extraTitle": "Extra Boar!",
         "dailyNoBoarFound": "Failed to find one or more valid boars!",
-        "giveBoarChoiceTag": " | BOAR",
-        "giveBadgeChoiceTag": " | BADGE",
+        "giveBoarChoiceTag": "BOAR",
+        "giveBadgeChoiceTag": "BADGE",
         "giveBoar": "Successfully given boar (If it didn't show, make sure perms are correct!)",
         "giveBadID": "ID input is not valid. To see valid IDs, wait for choices to appear.",
         "giveTitle": "Boar Given!",
-        "giveSpecialTitle": "SPECIAL BOAR GIVEN!",
         "giveBadge": "Successfully given badge (If it didn't show, make sure perms are correct!)",
         "giveBadgeTitle": "Badge Given!",
         "giveBadgeHas": "This user already has this badge!",
-        "obtainedBadgeTitle": "Badge Obtained!",
+        "giftOpenTitle": "Gift Opened!",
         "collNoBadges": "No Badges!",
         "collDateLabel": "Started collecting on",
         "collScoreLabel": "Boar Bucks",
@@ -162,21 +163,24 @@
         "responseDetailsPos": [621, 1245],
         "responseDetailsWidth": 1160,
         "itemImageSize": [930, 1080],
-        "itemBoarPos": [27, 169],
-        "itemBoarSize": [886, 886],
-        "itemBadgePos": [120, 250],
-        "itemBadgeSize": [700, 700],
+        "itemPos": [27, 169],
+        "itemSize": [886, 886],
         "itemTitlePos": [465, 79],
         "itemNamePos": [465, 133],
-        "itemUserTagPos": [110, 248],
-        "itemUserAvatarPos": [43, 204],
+        "itemUserTagX": 110,
+        "itemUserAvatarX": 43,
+        "itemUserAvatarYOffset": 9,
         "itemUserAvatarWidth": 52,
-        "itemUserBoxPos": [8, 195],
         "itemUserBoxExtra": 127,
-        "itemBucksBoxPos": [8, 266],
-        "itemBucksBoxExtra": 65,
+        "itemTextX": 48,
+        "itemTextYOffset": 52,
+        "itemTextBoxExtra": 65,
+        "itemBoxX": 8,
+        "itemBoxOneY": 195,
+        "itemBoxTwoY": 266,
+        "itemBoxThreeY": 358,
+        "itemBoxFourY": 429,
         "itemBoxHeight": 71,
-        "itemBucksPos": [48, 320],
         "itemBorderRadius": 25,
         "collImageSize": [1920, 1388],
         "collUserAvatarPos": [24, 24],
@@ -187,10 +191,10 @@
         "collDateLabelPos": [994, 78],
         "collDatePos": [1005, 150],
         "collNoBadgePos": [240, 150],
-        "collBadgeStart": 240,
-        "collBadgeSpacing": 70,
-        "collBadgeY": 105,
-        "collBadgeSize": [55, 55],
+        "collBadgeStart": 235,
+        "collBadgeSpacing": 68,
+        "collBadgeY": 98,
+        "collBadgeSize": [65, 65],
         "collScoreLabelPos": [365, 289],
         "collScorePos": [365, 359],
         "collTotalLabelPos": [201, 472],
@@ -736,15 +740,15 @@
                     "suboutcomes": [
                         {
                             "weight": 90,
-                            "name": "$%@"
+                            "name": "+%@ Boar Bucks"
                         },
                         {
                             "weight": 9,
-                            "name": "$%@"
+                            "name": "+%@ Boar Bucks"
                         },
                         {
                             "weight": 1,
-                            "name": "$%@"
+                            "name": "+%@ Boar Bucks"
                         }
                     ]
                 },
@@ -1104,7 +1108,7 @@
         {
             "name": "Common",
             "pluralName": "Commons",
-            "weight": 1,
+            "weight": 7,
             "baseScore": 1,
             "fromDaily": true,
             "enhancersNeeded": 1,
@@ -1117,7 +1121,7 @@
         {
             "name": "Uncommon",
             "pluralName": "Uncommons",
-            "weight": 1,
+            "weight": 6,
             "baseScore": 10,
             "fromDaily": true,
             "enhancersNeeded": 2,
@@ -1133,7 +1137,7 @@
         {
             "name": "Rare",
             "pluralName": "Rares",
-            "weight": 1,
+            "weight": 5,
             "baseScore": 25,
             "fromDaily": true,
             "enhancersNeeded": 3,
@@ -1150,7 +1154,7 @@
         {
             "name": "Epic",
             "pluralName": "Epics",
-            "weight": 1,
+            "weight": 4,
             "baseScore": 50,
             "fromDaily": true,
             "enhancersNeeded": 5,
@@ -1167,7 +1171,7 @@
         {
             "name": "Legendary",
             "pluralName": "Legendaries",
-            "weight": 1,
+            "weight": 3,
             "baseScore": 100,
             "fromDaily": true,
             "enhancersNeeded": 7,
@@ -1180,7 +1184,7 @@
         {
             "name": "Mythic",
             "pluralName": "Mythics",
-            "weight": 1,
+            "weight": 2,
             "baseScore": 250,
             "fromDaily": true,
             "enhancersNeeded": 10,

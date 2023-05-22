@@ -54,7 +54,7 @@ export class CollectorUtils {
      * Creates and returns a message component collector
      *
      * @param interaction - The interaction to create the collector with
-     * @param excludeUser
+     * @param excludeUser - Whether to exclude the user instead of it only being them
      * @private
      */
     public static async createCollector(

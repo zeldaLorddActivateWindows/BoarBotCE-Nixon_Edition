@@ -22,7 +22,6 @@ back_color_key = sys.argv[4]
 main_image_path = sys.argv[5]
 title = sys.argv[6]
 name = sys.argv[7]
-is_badge = sys.argv[8]
 
 # Configured directory paths
 
@@ -51,13 +50,8 @@ text_medium = ImageFont.truetype(font_path, medium_font)
 # Setting image positioning and sizes from configurations
 
 image_size = tuple(num_config['itemImageSize'])
-
-if is_badge == 'true':
-    item_size = tuple(num_config['itemBadgeSize'])
-    item_pos = tuple(num_config['itemBadgePos'])
-else:
-    item_size = tuple(num_config['itemBoarSize'])
-    item_pos = tuple(num_config['itemBoarPos'])
+item_size = tuple(num_config['itemSize'])
+item_pos = tuple(num_config['itemPos'])
 
 title_pos = tuple(num_config['itemTitlePos'])
 name_pos = tuple(num_config['itemNamePos'])

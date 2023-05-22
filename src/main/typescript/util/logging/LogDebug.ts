@@ -65,7 +65,7 @@ export class LogDebug {
 
         const completeString = prefix + time + debugMessage;
 
-        this.sendLogMessage(config, completeString);
+        this.sendLogMessage(completeString, config);
     }
 
     /**
@@ -96,7 +96,7 @@ export class LogDebug {
                 completeString += errString;
             }
 
-            await this.sendLogMessage(config, completeString);
+            await this.sendLogMessage(completeString, config);
 
             if (!interaction || !interaction.isChatInputCommand()) return;
 
@@ -119,7 +119,7 @@ export class LogDebug {
         const time = LogDebug.getPrefixTime();
         const completeString = prefix + time + `${message.author.tag} sent: ` + message.content;
 
-        await this.sendLogMessage(config, completeString);
+        await this.sendLogMessage(completeString, config);
 
         await message.reply(config.stringConfig.dmReceived);
     }
@@ -142,11 +142,11 @@ export class LogDebug {
         return `[${Colors.Grey}${new Date().toLocaleString()}${Colors.White}]\n`;
     }
 
-    private static async sendLogMessage(config: BotConfig, message: string): Promise<void> {
+    private static async sendLogMessage(message: string, config: BotConfig): Promise<void> {
         console.log(message);
 
         if (BoarBotApp.getBot().getClient().isReady()) {
-            InteractionUtils.getTextChannel(config, config.logChannel).then(async (logChannel) => {
+            InteractionUtils.getTextChannel(config.logChannel).then(async (logChannel) => {
                 if (!logChannel) return;
                 await logChannel.send('```ansi\n' + message.substring(0, 1900) + '```');
             });

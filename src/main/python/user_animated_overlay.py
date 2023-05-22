@@ -7,7 +7,6 @@
 ################################################
 
 from PIL import Image, ImageSequence, ImageFont, ImageDraw, ImageChops
-import numpy as np
 import base64
 from io import BytesIO
 import requests  # used to get input from pyshell send in TS file
@@ -23,6 +22,8 @@ image_path = sys.argv[4]
 avatar_url = sys.argv[5]
 user_tag = sys.argv[6]
 score = sys.argv[7]
+gifter_avatar_url = sys.argv[8]
+gifter_user_tag = sys.argv[9]
 
 # Configured directory paths
 
@@ -48,21 +49,45 @@ text_small_medium = ImageFont.truetype(font_path, small_medium_font)
 # Setting image positioning and sizes from configurations
 
 avatar_size = (num_config['itemUserAvatarWidth'] // 3, num_config['itemUserAvatarWidth'] // 3)
+user_box_y = num_config['itemBoxOneY'] // 3
 
-user_avatar_pos = tuple(np.floor_divide(num_config['itemUserAvatarPos'], 3))
-user_tag_pos = tuple(np.floor_divide(num_config['itemUserTagPos'], 3))
-user_box_pos = tuple(np.floor_divide(num_config['itemUserBoxPos'], 3))
-user_box_extra = num_config['itemUserBoxExtra'] // 3
-bucks_pos = tuple(np.floor_divide(num_config['itemBucksPos'], 3))
-bucks_box_pos = tuple(np.floor_divide(num_config['itemBucksBoxPos'], 3))
-bucks_box_extra = num_config['itemBucksBoxExtra'] // 3
+if gifter_user_tag != '' and gifter_avatar_url != '':
+    user_box_y = num_config['itemBoxTwoY'] // 3
+
+text_box_extra = num_config['itemTextBoxExtra'] // 3
+box_x = num_config['itemBoxX'] // 3 + 1
 box_height = num_config['itemBoxHeight'] // 3
+user_box_extra = num_config['itemUserBoxExtra'] // 3
+
+to_pos = (num_config['itemTextX'] // 3, (num_config['itemBoxOneY'] + num_config['itemTextYOffset']) // 3)
+to_box_y = num_config['itemBoxOneY'] // 3
+
+from_pos = (num_config['itemTextX'] // 3, (num_config['itemBoxThreeY'] + num_config['itemTextYOffset']) // 3)
+from_box_y = num_config['itemBoxThreeY'] // 3
+
+user_avatar_pos = (num_config['itemUserAvatarX'] // 3, user_box_y + num_config['itemUserAvatarYOffset'] // 3)
+user_tag_pos = (num_config['itemUserTagX'] // 3, user_box_y + num_config['itemTextYOffset'] // 3)
+
+gifter_avatar_pos = (
+    num_config['itemUserAvatarX'] // 3,
+    (num_config['itemBoxFourY'] + num_config['itemUserAvatarYOffset']) // 3
+)
+gifter_tag_pos = (num_config['itemUserTagX'] // 3, (num_config['itemBoxFourY'] + num_config['itemTextYOffset']) // 3)
+gifter_box_y = num_config['itemBoxFourY'] // 3
+
+bucks_pos = (num_config['itemTextX'] // 3, (num_config['itemBoxTwoY'] + num_config['itemTextYOffset']) // 3)
+bucks_box_y = num_config['itemBoxTwoY'] // 3
 
 # Opening, converting, and resizing asset files
 
-image = Image.open(image_path)
+item_image = Image.open(image_path)
 
 circle_mask = Image.open(circle_mask_path).convert('RGBA').resize(avatar_size)
+
+if gifter_user_tag != '' and gifter_avatar_url != '':
+    gifter_avatar = Image.open(BytesIO(requests.get(gifter_avatar_url).content)).convert('RGBA').resize(avatar_size)
+    gifter_avatar.putalpha(ImageChops.multiply(gifter_avatar.getchannel('A'), circle_mask.getchannel('A')).convert('L'))
+
 user_avatar = Image.open(BytesIO(requests.get(avatar_url).content)).convert('RGBA').resize(avatar_size)
 user_avatar.putalpha(ImageChops.multiply(user_avatar.getchannel('A'), circle_mask.getchannel('A')).convert('L'))
 
@@ -70,28 +95,66 @@ user_avatar.putalpha(ImageChops.multiply(user_avatar.getchannel('A'), circle_mas
 frames = []
 
 # Loops through each animation frame, applying overlays, underlays, and text
-for frame in ImageSequence.Iterator(image):
+for frame in ImageSequence.Iterator(item_image):
     # Places the nameplate image
 
     new_frame = frame.copy().convert('RGBA')
     new_frame_draw = ImageDraw.Draw(new_frame)
+
+    if gifter_user_tag != '' and gifter_avatar_url != '':
+        new_frame_draw.rounded_rectangle(
+            xy=(
+                box_x, to_box_y,
+                box_x+text_small_medium.getlength('To')+text_box_extra,
+                to_box_y+box_height
+            ), radius=25/3, fill='#151518'
+        )
+        new_frame_draw.text(
+            to_pos, 'To', font_color, font=text_small_medium, anchor='ls'
+        )
+
+        new_frame_draw.rounded_rectangle(
+            xy=(
+                box_x, from_box_y,
+                box_x+text_small_medium.getlength('From')+text_box_extra,
+                from_box_y+box_height
+            ), radius=25/3, fill='#151518'
+        )
+        new_frame_draw.text(
+            from_pos, 'From', font_color, font=text_small_medium, anchor='ls'
+        )
+
+        new_frame_draw.rounded_rectangle(
+            xy=(
+                box_x, gifter_box_y,
+                box_x+text_small_medium.getlength(gifter_user_tag)+user_box_extra,
+                gifter_box_y+box_height
+            ), radius=25/3, fill='#151518'
+        )
+        new_frame_draw.text(
+            gifter_tag_pos, gifter_user_tag.encode('utf-16').decode('utf-16'),
+            font_color, font=text_small_medium, anchor='ls'
+        )
+
+        new_frame.paste(gifter_avatar, gifter_avatar_pos, mask=gifter_avatar)
+
     new_frame_draw.rounded_rectangle(
         xy=(
-            user_box_pos[0]+1, user_box_pos[1],
-            user_box_pos[0]+text_small_medium.getlength(user_tag)+user_box_extra,
-            user_box_pos[1]+box_height
+            box_x, user_box_y,
+            box_x+text_small_medium.getlength(user_tag)+user_box_extra,
+            user_box_y+box_height
         ), radius=25/3, fill='#151518'
     )
     new_frame_draw.text(
         user_tag_pos, user_tag.encode('utf-16').decode('utf-16'), font_color, font=text_small_medium, anchor='ls'
     )
 
-    if score != '':
+    if score != '' and gifter_user_tag == '':
         new_frame_draw.rounded_rectangle(
             xy=(
-                bucks_box_pos[0]+1, bucks_box_pos[1],
-                bucks_box_pos[0]+text_small_medium.getlength('+$' + score)+bucks_box_extra,
-                bucks_box_pos[1]+box_height
+                box_x, bucks_box_y,
+                box_x+text_small_medium.getlength('+$' + score)+text_box_extra,
+                bucks_box_y+box_height
             ), radius=25/3, fill='#151518'
         )
         new_frame_draw.text(
@@ -108,7 +171,6 @@ for frame in ImageSequence.Iterator(image):
 
     # Places the user avatar image
 
-    new_frame = new_frame.copy().convert('RGBA')
     new_frame.paste(user_avatar, user_avatar_pos, mask=user_avatar)
 
     frames.append(new_frame)

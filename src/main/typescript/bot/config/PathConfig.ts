@@ -57,6 +57,8 @@ export class PathConfig {
     public readonly mainFont: string = '';
     public readonly helpBackground: string = '';
     public readonly circleMask: string = '';
+    public readonly bucks: string = '';
+    public readonly powerup: string = '';
 
     // Python scripts
 

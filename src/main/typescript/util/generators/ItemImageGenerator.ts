@@ -4,8 +4,7 @@ import {BoarUtils} from '../boar/BoarUtils';
 import {Options, PythonShell} from 'python-shell';
 import {LogDebug} from '../logging/LogDebug';
 import {CanvasUtils} from './CanvasUtils';
-import {AttachmentBuilder} from 'discord.js';
-import {BoarUser} from '../boar/BoarUser';
+import {AttachmentBuilder, User} from 'discord.js';
 import fs from 'fs';
 
 /**
@@ -17,7 +16,7 @@ import fs from 'fs';
  * @copyright WeslayCodes 2023
  */
 export class ItemImageGenerator {
-    private readonly boarUser: BoarUser = {} as BoarUser;
+    private readonly user: User = {} as User;
     private readonly config: BotConfig = {} as BotConfig;
     private readonly id: string = '';
     private readonly title: string = '';
@@ -27,12 +26,22 @@ export class ItemImageGenerator {
     private imageFilePath: string = '';
     private userAvatar: string = '';
     private userTag: string = '';
+    private giftingUserAvatar: string | undefined;
+    private giftingUserTag: string | undefined;
     private itemName: string = '';
+    private itemNameColored: string = '';
     private itemFile: string = '';
-    private isBadge: boolean = false;
 
-    constructor(boarUser: BoarUser, config: BotConfig, id: string, title: string) {
-        this.boarUser = boarUser;
+    /**
+     * Creates a new item image generator
+     *
+     * @param user - The user that got the item
+     * @param id - The ID of the item
+     * @param title - The title to put on the item attachment
+     * @param config - Used to get path, string, and other information
+     */
+    constructor(user: User, id: string, title: string, config: BotConfig) {
+        this.user = user;
         this.config = config;
         this.id = id;
         this.title = title;
@@ -40,12 +49,19 @@ export class ItemImageGenerator {
 
     /**
      * Creates the image to be sent on boar/badge add
-
+     *
+     * @param isBadge - Whether the item is a badge
+     * @param giftingUser - The user that's gifting the item (if there is one)
+     * @param coloredText - The portion of text that's colored (if there is one)
+     * @param manualInput - A way to input name, file, and color information outside of ID
+     * @param score - Score gained from the item
      * @return attachment - AttachmentBuilder object containing image
      * @private
      */
     public async handleImageCreate(
-        isBadge: boolean,
+        isBadge: boolean = false,
+        giftingUser?: User,
+        coloredText?: string,
         manualInput?: {name: string, file: string, colorKey: string},
         score?: number
     ): Promise<AttachmentBuilder> {
@@ -54,9 +70,7 @@ export class ItemImageGenerator {
 
         let folderPath: string;
 
-        this.isBadge = isBadge;
-
-        if (this.isBadge && manualInput === undefined) {
+        if (isBadge && manualInput === undefined) {
             const badgeInfo = this.config.badgeItemConfigs[this.id];
             this.itemName = badgeInfo.name;
             this.itemFile = badgeInfo.file;
@@ -67,13 +81,16 @@ export class ItemImageGenerator {
             this.itemName = boarInfo.name;
             this.itemFile = boarInfo.file;
             folderPath = pathConfig.boarImages;
-            this.colorKey = 'rarity' + BoarUtils.findRarity(this.id)[0];
+            this.colorKey = 'rarity' + BoarUtils.findRarity(this.id, this.config)[0];
         } else {
             this.itemName = manualInput.name;
             this.itemFile = manualInput.file;
             folderPath = pathConfig.otherAssets;
             this.colorKey = manualInput.colorKey;
         }
+
+        this.itemNameColored = coloredText ? coloredText : this.itemName;
+        this.itemName = this.itemName.replace(this.itemNameColored, '%@');
 
         this.imageFilePath = folderPath + this.itemFile;
         const imageExtension = this.imageFilePath.split('.')[1];
@@ -84,8 +101,11 @@ export class ItemImageGenerator {
         this.tempPath = pathConfig.tempItemAssets + this.id + this.colorKey +
             this.title.toLowerCase().substring(0, 4) + '.' + imageExtension;
 
-        this.userAvatar = this.boarUser.user.displayAvatarURL({ extension: 'png' });
-        this.userTag = this.boarUser.user.username.substring(0, usernameLength);
+        this.userAvatar = this.user.displayAvatarURL({ extension: 'png' });
+        this.userTag = this.user.username.substring(0, usernameLength);
+
+        this.giftingUserTag = giftingUser?.username.substring(0, usernameLength);
+        this.giftingUserAvatar = giftingUser?.displayAvatarURL({ extension: 'png' });
 
         // Creates base response attachment depending on the boar's image type
         if (!fs.existsSync(this.tempPath)) {
@@ -108,7 +128,12 @@ export class ItemImageGenerator {
         return new AttachmentBuilder(this.buffer, { name:`${strConfig.imageName}.${imageExtension}` });
     }
 
-    private async makeAnimated() {
+    /**
+     * Creates the base of an item image if it's animated
+     *
+     * @private
+     */
+    private async makeAnimated(): Promise<void> {
         const script = this.config.pathConfig.dynamicImageScript;
 
         // Waits for python code to execute before continuing
@@ -121,8 +146,7 @@ export class ItemImageGenerator {
                     this.colorKey,
                     this.imageFilePath,
                     this.title,
-                    this.itemName,
-                    this.isBadge.toString()
+                    this.itemName.replace('%@', this.itemNameColored)
                 ]
             };
 
@@ -139,7 +163,12 @@ export class ItemImageGenerator {
         });
     }
 
-    private async makeStatic() {
+    /**
+     * Creates the base of an item image if it's static
+     *
+     * @private
+     */
+    private async makeStatic(): Promise<void> {
         const strConfig = this.config.stringConfig;
         const nums = this.config.numberConfig;
         const pathConfig = this.config.pathConfig;
@@ -158,13 +187,8 @@ export class ItemImageGenerator {
         let mainPos: [number, number];
         let mainSize: [number, number];
 
-        if (this.isBadge) {
-            mainPos = nums.itemBadgePos;
-            mainSize = nums.itemBadgeSize;
-        } else {
-            mainPos = nums.itemBoarPos;
-            mainSize = nums.itemBoarSize;
-        }
+        mainPos = nums.itemPos;
+        mainSize = nums.itemSize;
 
         // Font info
 
@@ -191,13 +215,20 @@ export class ItemImageGenerator {
 
         CanvasUtils.drawText(ctx, this.title, nums.itemTitlePos, mediumFont, 'center', colorConfig.font);
         CanvasUtils.drawText(
-            ctx, this.itemName, nums.itemNamePos, mediumFont, 'center', colorConfig[this.colorKey]
+            ctx, this.itemName, nums.itemNamePos, mediumFont, 'center', colorConfig.font,
+            undefined, false, this.itemNameColored, colorConfig[this.colorKey]
         );
 
         this.buffer = canvas.toBuffer();
     }
 
-    private async addAnimatedProfile(score?: number) {
+    /**
+     * Adds user and other information on top of animated image
+     *
+     * @param score - The score that was gained
+     * @private
+     */
+    private async addAnimatedProfile(score?: number): Promise<void> {
         const script = this.config.pathConfig.userOverlayScript;
 
         // Waits for python code to execute before continuing
@@ -210,26 +241,32 @@ export class ItemImageGenerator {
                     this.tempPath,
                     this.userAvatar,
                     this.userTag,
-                    score === undefined ? '' : score.toLocaleString()
+                    score === undefined ? '' : score.toLocaleString(),
+                    this.giftingUserAvatar === undefined ? '' : this.giftingUserAvatar,
+                    this.giftingUserTag === undefined ? '' : this.giftingUserTag
                 ]
             };
 
             // Sends python all dynamic image data and receives final animated image
             PythonShell.run(script, scriptOptions, (err, data) => {
                 if (!data) {
-                    LogDebug.handleError(err);
-
-                    reject('Python Error!');
+                    reject(err);
                     return;
                 }
 
                 this.buffer = Buffer.from(data[0], 'base64');
                 resolve('Script ran successfully!');
             });
-        });
+        }).catch((err) => { LogDebug.handleError(err); });
     }
 
-    private async addStaticProfile(score?: number) {
+    /**
+     * Adds user and other information on top of static image
+     *
+     * @param score - The score that was gained
+     * @private
+     */
+    private async addStaticProfile(score?: number): Promise<void> {
         const nums = this.config.numberConfig;
         const colorConfig = this.config.colorConfig;
 
@@ -238,6 +275,8 @@ export class ItemImageGenerator {
         const origin = nums.originPos;
         const imageSize = nums.itemImageSize;
 
+        let userBoxY = nums.itemBoxOneY;
+
         const canvas = Canvas.createCanvas(imageSize[0], imageSize[1]);
         const ctx = canvas.getContext('2d');
 
@@ -245,34 +284,87 @@ export class ItemImageGenerator {
 
         ctx.font = smallMediumFont;
 
-        ctx.beginPath();
-        ctx.roundRect(
-            nums.itemUserBoxPos[0], nums.itemUserBoxPos[1],
-            ctx.measureText(this.userTag).width + nums.itemUserBoxExtra, nums.itemBoxHeight, nums.itemBorderRadius
-        );
-        ctx.fillStyle = this.config.colorConfig.foregroundGray;
-        ctx.fill();
+        if (this.giftingUserTag !== undefined && this.giftingUserAvatar !== undefined) {
+            userBoxY = nums.itemBoxTwoY;
 
-        CanvasUtils.drawText(ctx, this.userTag, nums.itemUserTagPos, smallMediumFont, 'left', colorConfig.font);
-
-        if (score) {
             ctx.beginPath();
             ctx.roundRect(
-                nums.itemBucksBoxPos[0], nums.itemBucksBoxPos[1],
-                ctx.measureText('+$' + score).width + nums.itemBucksBoxExtra, nums.itemBoxHeight, nums.itemBorderRadius
+                nums.itemBoxX, nums.itemBoxOneY,
+                ctx.measureText('To').width + nums.itemTextBoxExtra, nums.itemBoxHeight, nums.itemBorderRadius
             );
             ctx.fillStyle = this.config.colorConfig.foregroundGray;
             ctx.fill();
 
             CanvasUtils.drawText(
-                ctx, '+%@' + score.toLocaleString(), nums.itemBucksPos, smallMediumFont, 'left',
-                colorConfig.font, undefined, false, '$', colorConfig.bucks
+                ctx, 'To', [nums.itemTextX, nums.itemBoxOneY + nums.itemTextYOffset],
+                smallMediumFont, 'left', colorConfig.font
+            );
+
+            ctx.beginPath();
+            ctx.roundRect(
+                nums.itemBoxX, nums.itemBoxThreeY,
+                ctx.measureText('From').width + nums.itemTextBoxExtra, nums.itemBoxHeight, nums.itemBorderRadius
+            );
+            ctx.fillStyle = this.config.colorConfig.foregroundGray;
+            ctx.fill();
+
+            CanvasUtils.drawText(
+                ctx, 'From', [nums.itemTextX, nums.itemBoxThreeY + nums.itemTextYOffset],
+                smallMediumFont, 'left', colorConfig.font
+            );
+
+            ctx.beginPath();
+            ctx.roundRect(
+                nums.itemBoxX, nums.itemBoxFourY,
+                ctx.measureText(this.giftingUserTag).width + nums.itemUserBoxExtra,
+                nums.itemBoxHeight, nums.itemBorderRadius
+            );
+            ctx.fillStyle = this.config.colorConfig.foregroundGray;
+            ctx.fill();
+
+            CanvasUtils.drawText(
+                ctx, this.giftingUserTag, [nums.itemUserTagX, nums.itemBoxFourY + nums.itemTextYOffset],
+                smallMediumFont, 'left', colorConfig.font
+            );
+
+            CanvasUtils.drawCircleImage(
+                ctx, await Canvas.loadImage(this.giftingUserAvatar),
+                [nums.itemUserAvatarX, nums.itemBoxFourY + nums.itemUserAvatarYOffset], nums.itemUserAvatarWidth
             );
         }
 
-        CanvasUtils.drawCircleImage(
-            ctx, await Canvas.loadImage(this.userAvatar), nums.itemUserAvatarPos, nums.itemUserAvatarWidth
+        ctx.beginPath();
+        ctx.roundRect(
+            nums.itemBoxX, userBoxY,
+            ctx.measureText(this.userTag).width + nums.itemUserBoxExtra, nums.itemBoxHeight, nums.itemBorderRadius
         );
+        ctx.fillStyle = this.config.colorConfig.foregroundGray;
+        ctx.fill();
+
+        CanvasUtils.drawText(
+            ctx, this.userTag, [nums.itemUserTagX, userBoxY + nums.itemTextYOffset],
+            smallMediumFont, 'left', colorConfig.font
+        );
+
+        CanvasUtils.drawCircleImage(
+            ctx, await Canvas.loadImage(this.userAvatar),
+            [nums.itemUserAvatarX, userBoxY + nums.itemUserAvatarYOffset], nums.itemUserAvatarWidth
+        );
+
+        if (score && this.giftingUserTag === undefined) {
+            ctx.beginPath();
+            ctx.roundRect(
+                nums.itemBoxX, nums.itemBoxTwoY, ctx.measureText('+$' + score).width + nums.itemTextBoxExtra,
+                nums.itemBoxHeight, nums.itemBorderRadius
+            );
+            ctx.fillStyle = this.config.colorConfig.foregroundGray;
+            ctx.fill();
+
+            CanvasUtils.drawText(
+                ctx, '+%@' + score.toLocaleString(), [nums.itemTextX, nums.itemBoxTwoY + nums.itemTextYOffset],
+                smallMediumFont, 'left', colorConfig.font, undefined, false, '$', colorConfig.bucks
+            );
+        }
 
         this.buffer = canvas.toBuffer();
     }

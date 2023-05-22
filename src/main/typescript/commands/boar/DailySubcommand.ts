@@ -1,4 +1,4 @@
-import {ChatInputCommandInteraction} from 'discord.js';
+import {AttachmentBuilder, ChatInputCommandInteraction} from 'discord.js';
 import {BoarUser} from '../../util/boar/BoarUser';
 import {BoarBotApp} from '../../BoarBotApp';
 import {FormatStrings} from '../../util/discord/FormatStrings';
@@ -10,6 +10,7 @@ import {BotConfig} from '../../bot/config/BotConfig';
 import {SubcommandConfig} from '../../bot/config/commands/SubcommandConfig';
 import {Replies} from '../../util/interactions/Replies';
 import {BoarUtils} from '../../util/boar/BoarUtils';
+import {ItemImageGenerator} from '../../util/generators/ItemImageGenerator';
 
 /**
  * {@link DailySubcommand DailySubcommand.ts}
@@ -34,7 +35,7 @@ export default class DailySubcommand implements Subcommand {
     public async execute(interaction: ChatInputCommandInteraction): Promise<void> {
         this.config = BoarBotApp.getBot().getConfig();
 
-        this.guildData = await InteractionUtils.handleStart(this.config, interaction);
+        this.guildData = await InteractionUtils.handleStart(interaction, this.config);
         if(!this.guildData) return;
 
         await interaction.deferReply();
@@ -52,6 +53,8 @@ export default class DailySubcommand implements Subcommand {
     private async doDaily(): Promise<void> {
         if (!this.interaction.guild || !this.interaction.channel) return;
 
+        const strConfig = this.config.stringConfig;
+
         let boarUser: BoarUser = {} as BoarUser;
         let boarIDs: string[] = [''];
 
@@ -63,8 +66,12 @@ export default class DailySubcommand implements Subcommand {
             if (!canUseDaily) return;
 
             // Gets whether to use boost
-            const boostInput: boolean | null = this.interaction.options.getBoolean(this.subcommandInfo.args[0].name);
-            const extraInput: boolean | null = this.interaction.options.getBoolean(this.subcommandInfo.args[1].name);
+            const boostInput: boolean = this.interaction.options.getBoolean(this.subcommandInfo.args[0].name)
+                ? this.interaction.options.getBoolean(this.subcommandInfo.args[0].name) as boolean
+                : false;
+            const extraInput: boolean = this.interaction.options.getBoolean(this.subcommandInfo.args[1].name)
+                ? this.interaction.options.getBoolean(this.subcommandInfo.args[1].name) as boolean
+                : false;
 
             // Map of rarity index keys and weight values
             let rarityWeights = BoarUtils.getBaseRarityWeights(this.config);
@@ -77,8 +84,8 @@ export default class DailySubcommand implements Subcommand {
             rarityWeights = this.applyMultiplier(userMultiplier, rarityWeights);
 
             boarIDs = BoarUtils.getRandBoars(
-                this.config, this.guildData, this.interaction, rarityWeights,
-                extraInput, boarUser.powerups.extraChanceTotal
+                this.guildData, this.interaction, rarityWeights,
+                extraInput, boarUser.powerups.extraChanceTotal, this.config
             );
 
             if (boarIDs.includes('')) {
@@ -113,7 +120,37 @@ export default class DailySubcommand implements Subcommand {
 
         if (boarIDs.includes('')) return;
 
-        await boarUser.addBoars(this.config, boarIDs, this.interaction, true);
+        const randScores: number[] = [];
+        const attachments: AttachmentBuilder[] = [];
+
+        for (let i=0; i<boarIDs.length; i++) {
+            randScores.push(
+                Math.round(
+                    this.config.rarityConfigs[BoarUtils.findRarity(boarIDs[i], this.config)[0]-1].baseScore *
+                    (Math.random() * (1.1 - .9) + .9)
+                )
+            );
+        }
+
+        await boarUser.addBoars(boarIDs, this.interaction, this.config, randScores);
+
+        for (let i=0; i<boarIDs.length; i++) {
+            attachments.push(
+                await new ItemImageGenerator(
+                    boarUser.user, boarIDs[i], i === 0 ? strConfig.dailyTitle : strConfig.extraTitle, this.config
+                ).handleImageCreate(
+                    false, undefined, undefined, undefined, randScores[i]
+                )
+            );
+        }
+
+        for (let i=0; i<attachments.length; i++) {
+            if (i === 0) {
+                await this.interaction.editReply({ files: [attachments[i]] })
+            } else {
+                await this.interaction.followUp({ files: [attachments[i]] })
+            }
+        }
     }
 
     /**

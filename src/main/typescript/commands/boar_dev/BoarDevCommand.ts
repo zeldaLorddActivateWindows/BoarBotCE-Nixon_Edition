@@ -40,7 +40,7 @@ export default class BoarDevCommand implements Command {
      *
      * @param interaction - An interaction that could've called a boar-dev subcommand
      */
-    public async execute(interaction: AutocompleteInteraction | ChatInputCommandInteraction) {
+    public async execute(interaction: AutocompleteInteraction | ChatInputCommandInteraction): Promise<void> {
         const subcommand = BoarBotApp.getBot().getSubcommands().get(interaction.options.getSubcommand());
 
         if (!subcommand) return;

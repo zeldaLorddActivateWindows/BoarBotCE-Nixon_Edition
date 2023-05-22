@@ -36,8 +36,8 @@ export class CommandHandler {
             process.exit(-1);
         }
 
-        const allFiles: string[][] = this.findCommandFiles(config, commandFolders);
-        this.registerCommandFiles(config, allFiles);
+        const allFiles: string[][] = this.findCommandFiles(commandFolders, config);
+        this.registerCommandFiles(allFiles, config);
     }
 
     /**
@@ -45,10 +45,10 @@ export class CommandHandler {
      *
      * @param config - The config file to use. Parameterized to prevent bugs when updating config
      * @param commandFolders - All folders that store commands
-     * @return allFiles - All command ans subcommand files
+     * @return allFiles - All command and subcommand files
      * @private
      */
-    private findCommandFiles(config: BotConfig, commandFolders: string[]): string[][] {
+    private findCommandFiles(commandFolders: string[], config: BotConfig): string[][] {
         let allCommandFiles: string[] = [];
         let allSubcommandFiles: string[] = [];
 
@@ -91,7 +91,7 @@ export class CommandHandler {
      * @param allFiles - All command and subcommand files
      * @private
      */
-    private registerCommandFiles(config: BotConfig, allFiles: string[][]): void {
+    private registerCommandFiles(allFiles: string[][], config: BotConfig): void {
         const commandFiles: string[] = allFiles[0];
         const subcommandFiles: string[] = allFiles[1];
 
@@ -119,10 +119,13 @@ export class CommandHandler {
      */
     public getCommands(): Map<string, Command> { return this.commands; }
 
+    /**
+     * Grabs the {@link Map} storing {@link Subcommand} data
+     */
     public getSubcommands(): Map<string, Subcommand> { return this.subcommands; }
 
     /**
-     * Deploys application commands to Discord API
+     * Deploys application commands to Discord's API
      */
     public async deployCommands(): Promise<void> {
         const config = BoarBotApp.getBot().getConfig();
@@ -160,7 +163,7 @@ export class CommandHandler {
             await rest.put(Routes.applicationCommands(process.env.CLIENT_ID as string), { body: commandData });
             LogDebug.sendDebug('Application commands have successfully been registered!', config);
         } catch (err: unknown) {
-            LogDebug.handleError(err);
+            await LogDebug.handleError(err);
         }
     }
 
@@ -184,7 +187,7 @@ export class CommandHandler {
             );
             LogDebug.sendDebug('Guild commands have successfully been registered!', config);
         } catch (err: unknown) {
-            LogDebug.handleError(err);
+            await LogDebug.handleError(err);
         }
     }
 }

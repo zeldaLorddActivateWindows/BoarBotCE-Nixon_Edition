@@ -468,7 +468,7 @@ export default class SetupSubcommand implements Subcommand {
     private modalListener = async (submittedModal: Interaction) => {
         try  {
             // If not a modal submission on current interaction, destroy the modal listener
-            if (submittedModal.isMessageComponent() && submittedModal.customId.endsWith(this.firstInter.id) ||
+            if (submittedModal.isMessageComponent() && submittedModal.customId.endsWith(this.firstInter.id as string) ||
                 BoarBotApp.getBot().getConfig().maintenanceMode && !this.config.devs.includes(this.compInter.user.id)
             ) {
                 clearInterval(this.timerVars.updateTime);

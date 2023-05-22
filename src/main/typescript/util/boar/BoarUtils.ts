@@ -1,4 +1,3 @@
-import {BoarBotApp} from '../../BoarBotApp';
 import {RarityConfig} from '../../bot/config/items/RarityConfig';
 import {BoarItemConfigs} from '../../bot/config/items/BoarItemConfigs';
 import {BotConfig} from '../../bot/config/BotConfig';
@@ -18,11 +17,10 @@ export class BoarUtils {
      * Finds the rarity index from a given boar ID
      *
      * @param boarID - Boar ID to get rarity for
-     * @return rarity - Rarity of the boar in index form
+     * @param config - Used to get rarity weights
+     * @return rarity - Rarity index (0) and rarity config (1) tuple
      */
-    public static findRarity(boarID: string): [number, RarityConfig] {
-        const config = BoarBotApp.getBot().getConfig();
-
+    public static findRarity(boarID: string, config: BotConfig): [number, RarityConfig] {
         const orderedRarities: RarityConfig[] = [...config.rarityConfigs]
             .sort((rarity1, rarity2) => { return rarity2.weight - rarity1.weight; });
 
@@ -42,11 +40,11 @@ export class BoarUtils {
      * guild and isn't blacklisted
      *
      * @param rarityIndex - The rarity index that's being checked
-     * @param config
-     * @param guildData
+     * @param config - Used to get boar and rarity information
+     * @param guildData - Used to see if a boar should be ignored
      * @private
      */
-    public static findValid(rarityIndex: number, config: BotConfig, guildData: any): string {
+    public static findValid(rarityIndex: number, guildData: any, config: BotConfig): string {
         const rarities: RarityConfig[] = config.rarityConfigs;
         const boarIDs: BoarItemConfigs = config.boarItemConfigs;
         let randomBoar = Math.random();
@@ -72,21 +70,21 @@ export class BoarUtils {
     /**
      * Gets the boar to give to the user
      *
-     * @param config
-     * @param guildData
-     * @param inter
+     * @param config - Used to get valid boars and debug
+     * @param guildData - Used to see if a boar should be ignored
+     * @param inter - Used for debugging
      * @param rarityWeights - Map of weights and their indexes
      * @param extra - Whether to apply extra boar chance
      * @param extraVal - User's chance of extra boar
      * @private
      */
     public static getRandBoars(
-        config: BotConfig,
         guildData: any,
         inter: ChatInputCommandInteraction | MessageComponentInteraction,
         rarityWeights: Map<number, number>,
-        extra: boolean | null,
-        extraVal: number
+        extra: boolean,
+        extraVal: number,
+        config: BotConfig
     ): string[] {
         const boarIDs: string[] = [];
         let numBoars: number = 1;
@@ -126,7 +124,7 @@ export class BoarUtils {
                 if (randomRarity > probability && Math.max(...probabilities.values()) !== probability)
                     continue;
 
-                const boarGotten: string = BoarUtils.findValid(rarityIndex, config, guildData);
+                const boarGotten: string = BoarUtils.findValid(rarityIndex, guildData, config);
 
                 LogDebug.sendDebug(`Rolled boar with ID '${boarGotten}'`, config, inter);
 
@@ -141,6 +139,7 @@ export class BoarUtils {
     /**
      * Returns a map storing rarity weights and their indexes
      *
+     * @param config - Used to get rarity information
      * @private
      */
     public static getBaseRarityWeights(config: BotConfig): Map<number, number> {

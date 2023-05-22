@@ -2,9 +2,10 @@ import {Events, Message} from 'discord.js';
 import {Listener} from '../api/listeners/Listener';
 import {BoarBotApp} from '../BoarBotApp';
 import {LogDebug} from '../util/logging/LogDebug';
+import {BotConfig} from '../bot/config/BotConfig';
 
 /**
- * {@link GuildAddListener GuildAddListener.ts}
+ * {@link MessageListener MessageListener.ts}
  *
  * An event that runs when someone sends a
  * message that the bot can read.
@@ -17,10 +18,11 @@ export default class MessageListener implements Listener {
 
 	/**
 	 * Handles message send to the bot (Only DM Reports)
+	 *
 	 * @param message - The message to reply to and log
 	 */
 	public async execute(message: Message): Promise<void> {
-		const config = BoarBotApp.getBot().getConfig();
+		const config: BotConfig = BoarBotApp.getBot().getConfig();
 		if (!message.channel.isDMBased() || message.author.id === message.client.user.id) return;
 		await LogDebug.sendReport(message, config);
 	}

@@ -20,8 +20,8 @@ export class ComponentUtils {
      *
      * @param rowConfig - The configuration of the row
      * @param row - The actual row
-     * @param interaction
-     * @param includeUser
+     * @param interaction - Used to get ID information
+     * @param includeUser - Whether to include user ID in custom ID
      * @return row - Updated row with addition to ids
      */
     public static addToIDs(

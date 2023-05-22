@@ -27,7 +27,7 @@ export class ConfigHandler {
         try {
             parsedConfig = JSON.parse(fs.readFileSync('config.json', 'utf-8'));
         } catch {
-            LogDebug.handleError('Unable to parse config file. Is \'config.json\' in the project root?');
+            await LogDebug.handleError('Unable to parse config file. Is \'config.json\' in the project root?');
             process.exit(-1);
         }
 
@@ -44,9 +44,11 @@ export class ConfigHandler {
         this.loadFonts();
     }
 
+
     /**
      * Validates the contents of the data in the configuration file
      *
+     * @param parsedConfig - The newly parsed config file to validate
      * @return passed - Whether the config file passed validation
      * @private
      */

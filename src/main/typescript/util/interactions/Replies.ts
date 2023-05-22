@@ -27,8 +27,8 @@ export class Replies {
      * @param interaction - Interaction to reply to
      */
     public static async currentConfigReply(
-        config: BotConfig,
-        interaction: ChatInputCommandInteraction
+        interaction: ChatInputCommandInteraction,
+        config: BotConfig
     ): Promise<void> {
         LogDebug.sendDebug('Tried to run command while setup being configured', config, interaction);
         await Replies.handleReply(interaction, config.stringConfig.doingSetup);
@@ -43,9 +43,9 @@ export class Replies {
      * @param includeTrade - Whether to include trade channel in usable channels
      */
     public static async wrongChannelReply(
-        config: BotConfig,
         interaction: ChatInputCommandInteraction,
         guildData: any,
+        config: BotConfig,
         includeTrade: boolean = false
     ): Promise<void> {
         LogDebug.sendDebug('Used in the wrong channel', config, interaction);
@@ -70,8 +70,8 @@ export class Replies {
      * @param interaction - Interaction to reply to
      */
     public static async noPermsReply(
-        config: BotConfig,
-        interaction: ChatInputCommandInteraction
+        interaction: ChatInputCommandInteraction,
+        config: BotConfig
     ): Promise<void> {
         LogDebug.sendDebug('Not a developer', config, interaction);
         await Replies.handleReply(interaction, config.stringConfig.noPermission);
@@ -84,8 +84,8 @@ export class Replies {
      * @param interaction - Interaction to reply to
      */
     public static async onCooldownReply(
-        config: BotConfig,
-        interaction: ChatInputCommandInteraction
+        interaction: ChatInputCommandInteraction,
+        config: BotConfig
     ): Promise<void> {
         LogDebug.sendDebug('Currently on cooldown', config, interaction);
         await Replies.handleReply(interaction, config.stringConfig.onCooldown);
