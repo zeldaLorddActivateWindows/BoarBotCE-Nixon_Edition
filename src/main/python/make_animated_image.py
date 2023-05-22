@@ -41,7 +41,7 @@ main_image_name = main_image_path.split('/').pop().split('.')[0]
 # Configured colors
 
 font_color = color_config['font']
-back_color = color_config[back_color_key]
+rarity_color = color_config[back_color_key]
 
 # Setting font size from configurations
 
@@ -68,7 +68,7 @@ underlay_mask = Image.open(underlay_path).convert('RGBA').resize(image_size)
 main_image = Image.open(main_image_path)
 overlay_image = Image.open(overlay_path).convert('RGBA').resize(image_size)
 
-underlay_color = Image.new('RGBA', image_size, color=back_color)
+underlay_color = Image.new('RGBA', image_size, color=rarity_color)
 underlay_color.putalpha(underlay_mask.getchannel('A').convert('L'))
 
 backplate = Image.open(backplate_path).convert('RGBA').resize(image_size)
@@ -98,7 +98,7 @@ for frame in ImageSequence.Iterator(main_image):
 
     new_frame_draw = ImageDraw.Draw(new_frame)
     new_frame_draw.text(title_pos, title, font_color, font=text_medium, anchor='ms')
-    new_frame_draw.text(name_pos, name, font_color, font=text_medium, anchor='ms')
+    new_frame_draw.text(name_pos, name, rarity_color, font=text_medium, anchor='ms')
 
     frames.append(new_frame.resize((int(image_size[0] / 3), int(image_size[1] / 3))))
 

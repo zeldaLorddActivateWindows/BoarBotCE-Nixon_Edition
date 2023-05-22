@@ -1,7 +1,5 @@
 import Canvas from 'canvas';
 import {BotConfig} from '../../bot/config/BotConfig';
-import {BoarItemConfig} from '../../bot/config/items/BoarItemConfig';
-import {BadgeItemConfig} from '../../bot/config/items/BadgeItemConfig';
 import {BoarUtils} from '../boar/BoarUtils';
 import {Options, PythonShell} from 'python-shell';
 import {LogDebug} from '../logging/LogDebug';
@@ -25,11 +23,12 @@ export class ItemImageGenerator {
     private readonly title: string = '';
     private buffer: Buffer = {} as Buffer;
     private tempPath: string = '';
-    private rarityColorKey: string = '';
+    private colorKey: string = '';
     private imageFilePath: string = '';
     private userAvatar: string = '';
     private userTag: string = '';
-    private itemInfo: BoarItemConfig | BadgeItemConfig = {} as BoarItemConfig;
+    private itemName: string = '';
+    private itemFile: string = '';
     private isBadge: boolean = false;
 
     constructor(boarUser: BoarUser, config: BotConfig, id: string, title: string) {
@@ -45,7 +44,11 @@ export class ItemImageGenerator {
      * @return attachment - AttachmentBuilder object containing image
      * @private
      */
-    public async handleImageCreate(isBadge: boolean, score?: number): Promise<AttachmentBuilder> {
+    public async handleImageCreate(
+        isBadge: boolean,
+        manualInput?: {name: string, file: string, colorKey: string},
+        score?: number
+    ): Promise<AttachmentBuilder> {
         const strConfig = this.config.stringConfig;
         const pathConfig = this.config.pathConfig;
 
@@ -53,23 +56,32 @@ export class ItemImageGenerator {
 
         this.isBadge = isBadge;
 
-        if (this.isBadge) {
-            this.itemInfo = this.config.badgeItemConfigs[this.id];
+        if (this.isBadge && manualInput === undefined) {
+            const badgeInfo = this.config.badgeItemConfigs[this.id];
+            this.itemName = badgeInfo.name;
+            this.itemFile = badgeInfo.file;
             folderPath = pathConfig.badgeImages;
-            this.rarityColorKey = 'badge';
-        } else {
-            this.itemInfo = this.config.boarItemConfigs[this.id];
+            this.colorKey = 'badge';
+        } else if (manualInput === undefined) {
+            const boarInfo = this.config.boarItemConfigs[this.id];
+            this.itemName = boarInfo.name;
+            this.itemFile = boarInfo.file;
             folderPath = pathConfig.boarImages;
-            this.rarityColorKey = 'rarity' + BoarUtils.findRarity(this.id)[0];
+            this.colorKey = 'rarity' + BoarUtils.findRarity(this.id)[0];
+        } else {
+            this.itemName = manualInput.name;
+            this.itemFile = manualInput.file;
+            folderPath = pathConfig.otherAssets;
+            this.colorKey = manualInput.colorKey;
         }
 
-        this.imageFilePath = folderPath + this.itemInfo.file;
+        this.imageFilePath = folderPath + this.itemFile;
         const imageExtension = this.imageFilePath.split('.')[1];
         const isAnimated = imageExtension === 'gif';
 
         const usernameLength = this.config.numberConfig.maxUsernameLength;
 
-        this.tempPath = pathConfig.tempItemAssets + this.id + this.rarityColorKey +
+        this.tempPath = pathConfig.tempItemAssets + this.id + this.colorKey +
             this.title.toLowerCase().substring(0, 4) + '.' + imageExtension;
 
         this.userAvatar = this.boarUser.user.displayAvatarURL({ extension: 'png' });
@@ -100,16 +112,16 @@ export class ItemImageGenerator {
         const script = this.config.pathConfig.dynamicImageScript;
 
         // Waits for python code to execute before continuing
-        await new Promise((resolve, reject) => {
+        await new Promise((resolve) => {
             const scriptOptions: Options = {
                 args: [
                     JSON.stringify(this.config.pathConfig),
                     JSON.stringify(this.config.colorConfig),
                     JSON.stringify(this.config.numberConfig),
-                    this.rarityColorKey,
+                    this.colorKey,
                     this.imageFilePath,
                     this.title,
-                    this.itemInfo.name,
+                    this.itemName,
                     this.isBadge.toString()
                 ]
             };
@@ -118,13 +130,11 @@ export class ItemImageGenerator {
             PythonShell.run(script, scriptOptions, (err, data) => {
                 if (!data) {
                     LogDebug.handleError(err);
-
-                    reject('Python Error!');
                     return;
                 }
 
                 this.buffer = Buffer.from(data[0], 'base64');
-                resolve('Script ran successfully!');
+                resolve('Success');
             });
         });
     }
@@ -166,7 +176,7 @@ export class ItemImageGenerator {
 
         // Draws edge/background rarity color
 
-        CanvasUtils.drawRect(ctx, origin, imageSize, colorConfig[this.rarityColorKey]);
+        CanvasUtils.drawRect(ctx, origin, imageSize, colorConfig[this.colorKey]);
         ctx.globalCompositeOperation = 'destination-in';
         ctx.drawImage(await Canvas.loadImage(underlayPath), ...origin, ...imageSize);
         ctx.globalCompositeOperation = 'normal';
@@ -181,7 +191,7 @@ export class ItemImageGenerator {
 
         CanvasUtils.drawText(ctx, this.title, nums.itemTitlePos, mediumFont, 'center', colorConfig.font);
         CanvasUtils.drawText(
-            ctx, this.itemInfo.name, nums.itemNamePos, mediumFont, 'center', colorConfig[this.rarityColorKey]
+            ctx, this.itemName, nums.itemNamePos, mediumFont, 'center', colorConfig[this.colorKey]
         );
 
         this.buffer = canvas.toBuffer();

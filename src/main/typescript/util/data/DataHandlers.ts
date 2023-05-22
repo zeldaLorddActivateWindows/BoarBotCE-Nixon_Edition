@@ -1,5 +1,5 @@
 import fs from 'fs';
-import {ChatInputCommandInteraction} from 'discord.js';
+import {ChatInputCommandInteraction, MessageComponentInteraction} from 'discord.js';
 import {BoarBotApp} from '../../BoarBotApp';
 import {LogDebug} from '../logging/LogDebug';
 import {Replies} from '../interactions/Replies';
@@ -36,7 +36,7 @@ export class DataHandlers {
      * @return guildData - Guild data parsed from JSON (or undefined if it doesn't exist)
      */
     public static async getGuildData(
-        interaction: ChatInputCommandInteraction,
+        interaction: ChatInputCommandInteraction | MessageComponentInteraction,
         create: boolean = false
     ): Promise<any> {
         const config = BoarBotApp.getBot().getConfig();

@@ -726,17 +726,12 @@
             "tiers": [0, 1, 3],
             "outcomes": [
                 {
-                    "weight": 10000000000000,
+                    "weight": 1,
                     "category": "Special Boar",
-                    "suboutcomes": [
-                        {
-                            "weight": 1,
-                            "name": "Gift Boar"
-                        }
-                    ]
+                    "suboutcomes": []
                 },
                 {
-                    "weight": 10000000000000,
+                    "weight": 1,
                     "category": "Boar Bucks",
                     "suboutcomes": [
                         {
@@ -754,7 +749,7 @@
                     ]
                 },
                 {
-                    "weight": 199,
+                    "weight": 1,
                     "category": "Powerups",
                     "suboutcomes": [
                         {
@@ -763,17 +758,17 @@
                         },
                         {
                             "weight": 45,
-                            "name": "+1 Enhancer"
+                            "name": "+3% Extra Boar Chance"
                         },
                         {
                             "weight": 10,
-                            "name": "+3% Extra Boar Chance"
+                            "name": "+1 Enhancer"
                         }
                     ]
                 },
                 {
-                    "weight": 400,
-                    "category": "Boar",
+                    "weight": 1,
+                    "category": "Random Boar",
                     "suboutcomes": []
                 }
             ]

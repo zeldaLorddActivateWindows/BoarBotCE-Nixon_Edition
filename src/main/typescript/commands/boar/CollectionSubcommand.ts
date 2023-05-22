@@ -488,7 +488,9 @@ export default class CollectionSubcommand implements Subcommand {
             finalImage = await this.collectionImage.finalizeNormalImage(this.curPage);
         } else if (this.curView == View.Detailed) {
             finalImage = await this.collectionImage.finalizeDetailedImage(this.curPage);
-            optionalRow.addComponents(this.optionalButtons.components[0].setDisabled(false)); // Favorite button
+            optionalRow.addComponents(this.optionalButtons.components[0].setDisabled(
+                this.firstInter.user.id !== this.boarUser.user.id
+            )); // Favorite button
         } else {
             finalImage = await this.collectionImage.finalizePowerupsImage();
         }
@@ -543,7 +545,8 @@ export default class CollectionSubcommand implements Subcommand {
         ) {
             optionalRow.addComponents(this.optionalButtons.components[3]
                 .setDisabled(
-                    this.boarUser.powerups.numEnhancers < this.allBoars[this.curPage].rarity[1].enhancersNeeded
+                    this.boarUser.powerups.numEnhancers < this.allBoars[this.curPage].rarity[1].enhancersNeeded ||
+                    this.firstInter.user.id !== this.boarUser.user.id
                 )
             );
         }
@@ -551,7 +554,9 @@ export default class CollectionSubcommand implements Subcommand {
         // Gift button enabling
         if (this.curView === View.Powerups) {
             optionalRow.addComponents(
-                this.optionalButtons.components[1].setDisabled(this.boarUser.powerups.numGifts === 0)
+                this.optionalButtons.components[1].setDisabled(
+                    this.boarUser.powerups.numGifts === 0 || this.firstInter.user.id !== this.boarUser.user.id
+                )
             );
         }
 

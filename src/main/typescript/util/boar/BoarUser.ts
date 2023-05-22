@@ -349,7 +349,7 @@ export class BoarUser {
             for (let i=0; i<boarIDs.length; i++) {
                 attachments.push(
                     await new ItemImageGenerator(this, config, boarIDs[i], attachmentTitles[i])
-                        .handleImageCreate(false, randScores[i])
+                        .handleImageCreate(false, undefined, randScores[i])
                 );
             }
 
