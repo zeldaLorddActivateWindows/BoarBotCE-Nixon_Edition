@@ -757,8 +757,7 @@ export class CollectionImageGenerator {
 
         // Non-trivial user information
 
-        const userTag = this.boarUser.user.username.substring(0, nums.maxUsernameLength) + '#' +
-            this.boarUser.user.discriminator;
+        const userTag = this.boarUser.user.username.substring(0, nums.maxUsernameLength);
         const userAvatar = this.boarUser.user.displayAvatarURL({ extension: 'png' });
 
         // Fixes stats through flooring/alternate values
@@ -866,8 +865,7 @@ export class CollectionImageGenerator {
         const mediumFont = `${nums.fontMedium}px ${strConfig.fontName}`;
 
         const confirmUnderlay = pathConfig.collAssets + pathConfig.collGiftUnderlay;
-        const userTag = this.boarUser.user.username.substring(0, nums.maxUsernameLength) + '#' +
-            this.boarUser.user.discriminator;
+        const userTag = this.boarUser.user.username.substring(0, nums.maxUsernameLength);
 
         const canvas = Canvas.createCanvas(...nums.responseImageSize);
         const ctx = canvas.getContext('2d');

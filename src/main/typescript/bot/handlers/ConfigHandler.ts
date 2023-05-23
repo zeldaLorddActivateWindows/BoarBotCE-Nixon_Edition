@@ -3,6 +3,10 @@ import fs from 'fs';
 import {registerFont} from 'canvas';
 import moment from 'moment/moment';
 import {LogDebug} from '../../util/logging/LogDebug';
+import {RarityConfig} from '../config/items/RarityConfig';
+import {BoarItemConfigs} from '../config/items/BoarItemConfigs';
+import {BadgeItemConfigs} from '../config/items/BadgeItemConfigs';
+import {PathConfig} from '../config/PathConfig';
 
 /**
  * {@link ConfigHandler ConfigHandler.ts}
@@ -53,21 +57,21 @@ export class ConfigHandler {
      * @private
      */
     private async validateConfig(parsedConfig: BotConfig): Promise<boolean> {
-        const rarities = parsedConfig.rarityConfigs;
-        const boars = parsedConfig.boarItemConfigs;
-        const boarIDs = Object.keys(boars);
-        const badges = parsedConfig.badgeItemConfigs;
-        const badgeIDs = Object.keys(badges);
+        const rarities: RarityConfig[] = parsedConfig.rarityConfigs;
+        const boars: BoarItemConfigs = parsedConfig.boarItemConfigs;
+        const boarIDs: string[] = Object.keys(boars);
+        const badges: BadgeItemConfigs = parsedConfig.badgeItemConfigs;
+        const badgeIDs: string[] = Object.keys(badges);
         const foundBoars: string[] = [];
 
-        const pathConfig = parsedConfig.pathConfig;
-        const boarImages = pathConfig.boarImages;
-        const badgeImages = pathConfig.badgeImages;
-        const itemAssets = pathConfig.itemAssets;
-        const collAssets = pathConfig.collAssets;
-        const otherAssets = pathConfig.otherAssets;
+        const pathConfig: PathConfig = parsedConfig.pathConfig;
+        const boarImages: string = pathConfig.boarImages;
+        const badgeImages: string = pathConfig.badgeImages;
+        const itemAssets: string = pathConfig.itemAssets;
+        const collAssets: string = pathConfig.collAssets;
+        const otherAssets: string = pathConfig.otherAssets;
 
-        const allPaths = [
+        const allPaths: string[] = [
             pathConfig.listeners,
             pathConfig.commands,
             pathConfig.guildDataFolder,
@@ -89,10 +93,10 @@ export class ConfigHandler {
             pathConfig.userOverlayScript
         ];
 
-        let passed = true;
+        let passed: boolean = true;
 
         for (const rarity in rarities) {
-            const rarityInfo = rarities[rarity];
+            const rarityInfo: RarityConfig = rarities[rarity];
             for (const boar of rarityInfo.boars) {
                 if (boarIDs.includes(boar) && !foundBoars.includes(boar)) {
                     foundBoars.push(boar);
@@ -141,8 +145,8 @@ export class ConfigHandler {
      * @private
      */
     private removeTempFiles(): void {
-        const tempItemFolder = this.config.pathConfig.tempItemAssets;
-        const tempItemFiles = fs.readdirSync(tempItemFolder);
+        const tempItemFolder: string = this.config.pathConfig.tempItemAssets;
+        const tempItemFiles: string[] = fs.readdirSync(tempItemFolder);
 
         for (const file of tempItemFiles) {
             fs.rmSync(tempItemFolder + file);
@@ -161,7 +165,7 @@ export class ConfigHandler {
      */
     public loadFonts(): void {
         try {
-            const mcFont = this.config.pathConfig.otherAssets + this.config.pathConfig.mainFont;
+            const mcFont: string = this.config.pathConfig.otherAssets + this.config.pathConfig.mainFont;
 
             registerFont(mcFont, { family: this.config.stringConfig.fontName });
         } catch {

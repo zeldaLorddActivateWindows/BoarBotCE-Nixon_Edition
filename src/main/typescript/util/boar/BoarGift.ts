@@ -58,7 +58,7 @@ export class BoarGift {
      * @param interaction - The interaction to follow up
      */
     public async sendMessage(interaction: MessageComponentInteraction): Promise<void> {
-        this.collector = await CollectorUtils.createCollector(interaction, true);
+        this.collector = await CollectorUtils.createCollector(interaction, undefined, true);
 
         this.firstInter = interaction;
 
@@ -67,7 +67,7 @@ export class BoarGift {
         const claimRow: ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder> = ComponentUtils.addToIDs(
             giftFieldConfig[2][0],
             new ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>(giftFieldConfig[2][0]),
-            interaction, true
+            interaction, undefined, true
         );
 
         claimRow.components[0].setDisabled(false);
@@ -352,7 +352,7 @@ export class BoarGift {
         const rarityWeights = BoarUtils.getBaseRarityWeights(this.config);
 
         const boarIDs = BoarUtils.getRandBoars(
-            DataHandlers.getGuildData(inter), inter, rarityWeights, false, 0, this.config
+            await DataHandlers.getGuildData(inter.guild?.id, inter), inter, rarityWeights, false, 0, this.config
         );
 
         await this.giftedUser.addBoars(boarIDs, inter, this.config);

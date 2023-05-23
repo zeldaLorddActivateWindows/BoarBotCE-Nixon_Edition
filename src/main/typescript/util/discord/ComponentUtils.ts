@@ -21,6 +21,7 @@ export class ComponentUtils {
      * @param rowConfig - The configuration of the row
      * @param row - The actual row
      * @param interaction - Used to get ID information
+     * @param id
      * @param includeUser - Whether to include user ID in custom ID
      * @return row - Updated row with addition to ids
      */
@@ -28,11 +29,12 @@ export class ComponentUtils {
         rowConfig: RowConfig,
         row: ActionRowBuilder<StringSelectMenuBuilder | ButtonBuilder>,
         interaction: ChatInputCommandInteraction | MessageComponentInteraction,
+        id?: string,
         includeUser: boolean = false
     ): ActionRowBuilder<StringSelectMenuBuilder | ButtonBuilder> {
         for (const component in row.components) {
             const componentConfig = rowConfig.components[component];
-            let curID = componentConfig.customId + '|' + interaction.id;
+            let curID = componentConfig.customId + '|' + (id ? id : interaction.id);
 
             if (includeUser) {
                 curID += '|' + interaction.user.id;

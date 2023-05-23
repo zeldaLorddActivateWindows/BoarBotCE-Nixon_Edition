@@ -3,6 +3,7 @@ import {BoarItemConfigs} from '../../bot/config/items/BoarItemConfigs';
 import {BotConfig} from '../../bot/config/BotConfig';
 import {ChatInputCommandInteraction, MessageComponentInteraction} from 'discord.js';
 import {LogDebug} from '../logging/LogDebug';
+import {GuildData} from '../data/GuildData';
 
 /**
  * {@link BoarUtils BoarUtils.ts}
@@ -44,7 +45,7 @@ export class BoarUtils {
      * @param guildData - Used to see if a boar should be ignored
      * @private
      */
-    public static findValid(rarityIndex: number, guildData: any, config: BotConfig): string {
+    public static findValid(rarityIndex: number, guildData: GuildData | undefined, config: BotConfig): string {
         const rarities: RarityConfig[] = config.rarityConfigs;
         const boarIDs: BoarItemConfigs = config.boarItemConfigs;
         let randomBoar = Math.random();
@@ -57,7 +58,7 @@ export class BoarUtils {
             const isBlacklisted = boarIDs[boarID].blacklisted;
             const isSB = boarIDs[boarID].isSB;
 
-            if (isBlacklisted || (!guildData.isSBServer && isSB))
+            if (isBlacklisted || (!guildData?.isSBServer && isSB))
                 continue;
             validRarityBoars.push(boarID);
         }
@@ -79,7 +80,7 @@ export class BoarUtils {
      * @private
      */
     public static getRandBoars(
-        guildData: any,
+        guildData: GuildData | undefined,
         inter: ChatInputCommandInteraction | MessageComponentInteraction,
         rarityWeights: Map<number, number>,
         extra: boolean,

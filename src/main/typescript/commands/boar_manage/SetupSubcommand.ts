@@ -21,6 +21,7 @@ import {CollectorUtils} from '../../util/discord/CollectorUtils';
 import {SubcommandConfig} from '../../bot/config/commands/SubcommandConfig';
 import {ComponentUtils} from '../../util/discord/ComponentUtils';
 import {Replies} from '../../util/interactions/Replies';
+import {GuildData} from '../../util/data/GuildData';
 
 /**
  * {@link SetupSubcommand SetupSubcommand.ts}
@@ -43,7 +44,7 @@ export default class SetupSubcommand implements Subcommand {
     private staticRow = new ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>();
     private setupFields: FormField[] = [];
     private guildDataPath: string = '';
-    private guildData: any = {};
+    private guildData: GuildData = {} as GuildData;
     private userResponses = {
         isSBServer: false,
         tradeChannelId: '',
@@ -79,7 +80,7 @@ export default class SetupSubcommand implements Subcommand {
         this.setupFields = this.getSetupFields(this.staticRow);
 
         this.guildDataPath = this.config.pathConfig.guildDataFolder + interaction.guild.id + '.json';
-        this.guildData = await DataHandlers.getGuildData(interaction, true);
+        this.guildData = await DataHandlers.getGuildData(interaction.guild.id, interaction, true) as GuildData;
         
         this.collector = await CollectorUtils.createCollector(interaction)
             .catch(async (err: unknown) => {
@@ -346,7 +347,7 @@ export default class SetupSubcommand implements Subcommand {
             let replyContent: string;
             let color: ColorResolvable | undefined;
 
-            if (reason && reason !== CollectorUtils.Reasons.Finished) {
+            if (reason && reason !== CollectorUtils.Reasons.Finished || !this.compInter.guild) {
                 await DataHandlers.removeGuildFile(this.guildDataPath, this.guildData);
             }
 
@@ -363,12 +364,17 @@ export default class SetupSubcommand implements Subcommand {
                     break;
                 case CollectorUtils.Reasons.Finished:
                     this.guildData = {
+                        fullySetup: true,
                         isSBServer: this.userResponses.isSBServer,
                         tradeChannel: this.userResponses.tradeChannelId,
-                        channels: this.userResponses.boarChannels.filter((ch) => ch !== '')
+                        channels: this.userResponses.boarChannels.filter((ch) => ch !== ''),
+                        latestInters: [undefined, undefined, undefined]
                     };
 
-                    fs.writeFileSync(this.guildDataPath, JSON.stringify(this.guildData));
+                    if (this.compInter.guild) {
+                        fs.writeFileSync(this.guildDataPath, JSON.stringify(this.guildData));
+                        BoarBotApp.getBot().getGuildData()[this.compInter.guild.id] = this.guildData;
+                    }
 
                     replyContent = strConfig.setupFinishedAll;
                     color = 0x3BA55C;

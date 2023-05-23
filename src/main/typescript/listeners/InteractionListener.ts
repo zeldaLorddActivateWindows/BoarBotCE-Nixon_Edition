@@ -50,7 +50,7 @@ export default class InteractionListener implements Listener {
         if (command) {
             LogDebug.sendDebug('Started interaction', this.config, interaction);
 
-            const onCooldown = await Cooldown.handleCooldown(interaction as ChatInputCommandInteraction, this.config);
+            const onCooldown: boolean = await Cooldown.handleCooldown(interaction as ChatInputCommandInteraction, this.config);
             if (onCooldown) return;
 
             try {
@@ -58,6 +58,25 @@ export default class InteractionListener implements Listener {
             } catch (err: unknown) {
                 await LogDebug.handleError(err, interaction);
                 return;
+            }
+
+            const guildData = BoarBotApp.getBot().getGuildData()[interaction.guild ? interaction.guild.id : ''];
+            if (
+                guildData && guildData.fullySetup && interaction.guild &&
+                interaction.channel && interaction.isChatInputCommand()
+            ) {
+                let channelIndex = -1;
+
+                for (let i=0; i<guildData.channels.length; i++) {
+                    if (interaction.channel.id !== guildData.channels[i]) continue;
+
+                    channelIndex = i;
+                    break;
+                }
+
+                if (channelIndex !== -1) {
+                    guildData.latestInters[channelIndex] = interaction;
+                }
             }
 
             LogDebug.sendDebug('End of interaction', this.config, interaction);

@@ -9,6 +9,7 @@ import {BotConfig} from '../../bot/config/BotConfig';
 import {FormatStrings} from '../discord/FormatStrings';
 import {LogDebug} from '../logging/LogDebug';
 import {BoarBotApp} from '../../BoarBotApp';
+import {GuildData} from '../data/GuildData';
 
 /**
  * {@link Replies Replies.ts}
@@ -44,7 +45,7 @@ export class Replies {
      */
     public static async wrongChannelReply(
         interaction: ChatInputCommandInteraction,
-        guildData: any,
+        guildData: GuildData | undefined,
         config: BotConfig,
         includeTrade: boolean = false
     ): Promise<void> {
@@ -52,12 +53,14 @@ export class Replies {
 
         let strChannels = '';
 
-        for (const ch of guildData.channels) {
-            strChannels += '\n> ' + FormatStrings.toBasicChannel(ch);
-        }
+        if (guildData) {
+            for (const ch of guildData.channels) {
+                strChannels += '\n> ' + FormatStrings.toBasicChannel(ch);
+            }
 
-        if (includeTrade) {
-            strChannels += '\n> ' + FormatStrings.toBasicChannel(guildData.tradeChannel);
+            if (includeTrade) {
+                strChannels += '\n> ' + FormatStrings.toBasicChannel(guildData.tradeChannel);
+            }
         }
 
         await Replies.handleReply(interaction, config.stringConfig.wrongChannel + strChannels);

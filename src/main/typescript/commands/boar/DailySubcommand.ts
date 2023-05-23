@@ -11,6 +11,7 @@ import {SubcommandConfig} from '../../bot/config/commands/SubcommandConfig';
 import {Replies} from '../../util/interactions/Replies';
 import {BoarUtils} from '../../util/boar/BoarUtils';
 import {ItemImageGenerator} from '../../util/generators/ItemImageGenerator';
+import {GuildData} from '../../util/data/GuildData';
 
 /**
  * {@link DailySubcommand DailySubcommand.ts}
@@ -23,7 +24,7 @@ import {ItemImageGenerator} from '../../util/generators/ItemImageGenerator';
 export default class DailySubcommand implements Subcommand {
     private config: BotConfig = BoarBotApp.getBot().getConfig();
     private subcommandInfo: SubcommandConfig = this.config.commandConfigs.boar.daily;
-    private guildData: any = {};
+    private guildData: GuildData | undefined;
     private interaction: ChatInputCommandInteraction = {} as ChatInputCommandInteraction;
     public readonly data = { name: this.subcommandInfo.name, path: __filename, cooldown: this.subcommandInfo.cooldown };
 

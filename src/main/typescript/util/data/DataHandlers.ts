@@ -3,6 +3,7 @@ import {ChatInputCommandInteraction, MessageComponentInteraction} from 'discord.
 import {BoarBotApp} from '../../BoarBotApp';
 import {LogDebug} from '../logging/LogDebug';
 import {Replies} from '../interactions/Replies';
+import {GuildData} from './GuildData';
 
 /**
  * {@link DataHandlers DataHandlers.ts}
@@ -33,34 +34,35 @@ export class DataHandlers {
      *
      * @param interaction - Interaction to reply to
      * @param create - Whether to create the guildData file if it doesn't exist
+     * @param guildID - Used as replacement for interaction
      * @return guildData - Guild data parsed from JSON (or undefined if it doesn't exist)
      */
     public static async getGuildData(
-        interaction: ChatInputCommandInteraction | MessageComponentInteraction,
-        create: boolean = false
-    ): Promise<any> {
-        const config = BoarBotApp.getBot().getConfig();
+        guildID: string | undefined,
+        interaction?: ChatInputCommandInteraction | MessageComponentInteraction,
+        create: boolean = false,
+    ): Promise<GuildData | undefined> {
+        if (!guildID) return;
 
+        const config = BoarBotApp.getBot().getConfig();
         const strConfig = config.stringConfig;
 
-        const guildDataPath = config.pathConfig.guildDataFolder + interaction.guild?.id + '.json';
-        let guildData: any;
+        const guildDataPath = config.pathConfig.guildDataFolder + guildID + '.json';
 
         try {
-            guildData = JSON.parse(fs.readFileSync(guildDataPath, 'utf-8'));
-            return guildData;
+            JSON.parse(fs.readFileSync(guildDataPath, 'utf-8'));
+            return BoarBotApp.getBot().getGuildData()[guildID];
         } catch {
             if (create) {
-                fs.writeFileSync(guildDataPath, '{}');
-                guildData = JSON.parse(fs.readFileSync(guildDataPath, 'utf-8'));
-                return guildData;
+                fs.writeFileSync(guildDataPath, JSON.stringify(new GuildData));
+                return BoarBotApp.getBot().getGuildData()[guildID] =
+                    JSON.parse(fs.readFileSync(guildDataPath, 'utf-8')) as GuildData;
             }
 
-            LogDebug.sendDebug('Setup not configured', config, interaction);
-
-            await Replies.handleReply(interaction, strConfig.noSetup);
-
-            return;
+            if (interaction) {
+                LogDebug.sendDebug('Setup not configured', config, interaction);
+                await Replies.handleReply(interaction, strConfig.noSetup);
+            }
         }
     }
 
@@ -70,8 +72,8 @@ export class DataHandlers {
      * @param guildDataPath - Path of guild data file
      * @param guildData - Guild data parsed from JSON (or undefined if it doesn't exist)
      */
-    public static async removeGuildFile(guildDataPath: string, guildData: any): Promise<void> {
-        if (Object.keys(guildData).length !== 0) return;
+    public static async removeGuildFile(guildDataPath: string, guildData: GuildData | undefined): Promise<void> {
+        if (!guildData || guildData.fullySetup) return;
 
         try {
             fs.rmSync(guildDataPath);

@@ -28,6 +28,7 @@ import {RarityConfig} from '../../bot/config/items/RarityConfig';
 import createRBTree, {Node, Tree} from 'functional-red-black-tree';
 import {BoarGift} from '../../util/boar/BoarGift';
 import fs from 'fs';
+import {GuildData} from '../../util/data/GuildData';
 
 enum View {
     Normal,
@@ -47,7 +48,7 @@ enum View {
 export default class CollectionSubcommand implements Subcommand {
     private config = BoarBotApp.getBot().getConfig();
     private subcommandInfo = this.config.commandConfigs.boar.collection;
-    private guildData: any = {};
+    private guildData: GuildData | undefined;
     private firstInter: ChatInputCommandInteraction = {} as ChatInputCommandInteraction;
     private compInter: ButtonInteraction = {} as ButtonInteraction;
     private collectionImage = {} as CollectionImageGenerator;
@@ -165,6 +166,10 @@ export default class CollectionSubcommand implements Subcommand {
             // User wants to input a page manually
             if (inter.customId.startsWith(collComponents.inputPage.customId)) {
                 await this.modalHandle(inter);
+
+                this.enhanceStage--;
+                this.giftStage--;
+
                 clearInterval(this.timerVars.updateTime);
                 return;
             }
@@ -222,7 +227,7 @@ export default class CollectionSubcommand implements Subcommand {
                     break;
 
                 case collComponents.gift.customId:
-                    if (this.giftStage === -1) {
+                    if (this.giftStage !== 1) {
                         const confirmFile = this.config.pathConfig.collAssets + this.config.pathConfig.collGiftConfirm;
                         await this.firstInter.followUp({
                             files: [
@@ -602,7 +607,7 @@ export default class CollectionSubcommand implements Subcommand {
             for (const rowConfig of collFieldConfigs[i]) {
                 let newRow = new ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>(rowConfig);
 
-                newRow = ComponentUtils.addToIDs(rowConfig, newRow, this.firstInter, true);
+                newRow = ComponentUtils.addToIDs(rowConfig, newRow, this.firstInter, undefined, true);
 
                 if (i === 0) {
                     this.baseRows.push(newRow);

@@ -2,7 +2,7 @@ import {
     AutocompleteInteraction,
     ChatInputCommandInteraction, ColorResolvable,
     Message, MessageComponentInteraction,
-    ModalSubmitInteraction
+    ModalSubmitInteraction, TextChannel
 } from 'discord.js';
 import {BotConfig} from '../../bot/config/BotConfig';
 import {BoarBotApp} from '../../BoarBotApp';
@@ -46,18 +46,18 @@ export class LogDebug {
         const time = LogDebug.getPrefixTime();
 
         if (typeof debugMessage !== 'string') {
-            debugMessage = JSON.stringify(debugMessage);
+            debugMessage = JSON.stringify(debugMessage, (_, v) => typeof v === 'bigint' ? v.toString() : v);
         }
 
         if (interaction && !interaction.isMessageComponent()) {
             debugMessage = config.stringConfig.commandDebugPrefix
-                .replace('%@', interaction.user.tag)
+                .replace('%@', interaction.user.username + ' (' + interaction.user.id + ')')
                 .replace('%@', interaction.commandName)
                 .replace('%@', interaction.options.getSubcommand()) +
                 debugMessage
         } else if (interaction) {
             debugMessage = config.stringConfig.commandDebugPrefix
-                .replace('%@', interaction.user.tag)
+                .replace('%@', interaction.user.username + ' (' + interaction.user.id + ')')
                 .replace('%@', interaction.customId.split('|')[0])
                 .replace('%@', '') +
                 debugMessage
@@ -73,11 +73,13 @@ export class LogDebug {
      *
      * @param err - Error message
      * @param interaction - Interaction to reply to
+     * @param logToChannel - Whether to log the message to log channel
      */
     public static async handleError(
         err: unknown | string,
         interaction?: ChatInputCommandInteraction | ModalSubmitInteraction |
-            AutocompleteInteraction | MessageComponentInteraction
+            AutocompleteInteraction | MessageComponentInteraction,
+        logToChannel: boolean = true
     ): Promise<void> {
         try {
             let errString = typeof err === 'string' ? err : (err as Error).stack;
@@ -88,7 +90,7 @@ export class LogDebug {
             let completeString = prefix + time;
             if (interaction && interaction.isChatInputCommand()) {
                 completeString += config.stringConfig.commandDebugPrefix
-                    .replace('%@', interaction.user.tag)
+                    .replace('%@', interaction.user.username + ' (' + interaction.user.id + ')')
                     .replace('%@', interaction.commandName)
                     .replace('%@', interaction.options.getSubcommand()) +
                     errString;
@@ -96,7 +98,9 @@ export class LogDebug {
                 completeString += errString;
             }
 
-            await this.sendLogMessage(completeString, config);
+            if (logToChannel) {
+                await this.sendLogMessage(completeString, config);
+            }
 
             if (!interaction || !interaction.isChatInputCommand()) return;
 
@@ -117,7 +121,8 @@ export class LogDebug {
     public static async sendReport(message: Message, config: BotConfig): Promise<void> {
         const prefix = `[${Colors.Blue}DM REPORT${Colors.White}] `;
         const time = LogDebug.getPrefixTime();
-        const completeString = prefix + time + `${message.author.tag} sent: ` + message.content;
+        const completeString = prefix + time + `${message.author.username + '(' + message.author.id + ')'} sent: ` +
+            message.content;
 
         await this.sendLogMessage(completeString, config);
 
@@ -146,10 +151,10 @@ export class LogDebug {
         console.log(message);
 
         if (BoarBotApp.getBot().getClient().isReady()) {
-            InteractionUtils.getTextChannel(config.logChannel).then(async (logChannel) => {
-                if (!logChannel) return;
-                await logChannel.send('```ansi\n' + message.substring(0, 1900) + '```');
-            });
+            const logChannel: TextChannel | undefined = await InteractionUtils.getTextChannel(config.logChannel);
+
+            if (!logChannel) return;
+            await logChannel.send('```ansi\n' + message.substring(0, 1900) + '```').catch(() => {});
         }
     }
 }

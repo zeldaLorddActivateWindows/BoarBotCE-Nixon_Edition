@@ -185,7 +185,7 @@
         "collImageSize": [1920, 1388],
         "collUserAvatarPos": [24, 24],
         "collUserAvatarSize": [156, 156],
-        "collUserTagPos": [225, 80],
+        "collUserTagPos": [229, 80],
         "collClanPos": [1740, 24],
         "collClanSize": [156,156],
         "collDateLabelPos": [994, 78],
@@ -312,7 +312,8 @@
         "collEnhancerSpacingX": 70,
         "collEnhancerSpacingY": 80,
         "collEnhancerCols": 8,
-        "collEnhancerSize": [55, 64]
+        "collEnhancerSize": [55, 64],
+        "powInterval": 10000
     },
     "commandConfigs": {
         "boar": {
@@ -793,6 +794,7 @@
             "emojiFind": {
                 "name": "Emoji Find",
                 "description": "Click the emoji that's different from the others!",
+                "rows": [],
                 "frown1": {
                     "name": "Frown Face",
                     "emoji1": "\uD83D\uDE41",
@@ -802,6 +804,7 @@
             "trivia": {
                 "name": "Boar Trivia",
                 "description": "Answer the trivia question about boars correctly!",
+                "rows": [],
                 "normal1": {
                     "name": "Normal Boar",
                     "question": "What is normal boar?",
@@ -813,17 +816,30 @@
                     ]
                 }
             },
-            "jitter": {
-                "name": "Spam Click",
-                "description": "Click the green button as many times as you can!",
-                "one": {
-                    "name": "One button",
-                    "numButtons": 1
-                }
-            },
             "fast": {
                 "name": "Quick Click",
                 "description": "Click the green button as fast as you can!",
+                "rows": [
+                    {
+                        "type": 1,
+                        "components": [
+                            {
+                                "type": 2,
+                                "customId": "POW_GREEN",
+                                "label": "Click!",
+                                "style": 3,
+                                "disabled": false
+                            },
+                            {
+                                "type": 2,
+                                "customId": "POW_RED",
+                                "emoji": "Click!",
+                                "style": 4,
+                                "disabled": false
+                            }
+                        ]
+                    }
+                ],
                 "one": {
                     "name": "One button",
                     "numButtons": 1

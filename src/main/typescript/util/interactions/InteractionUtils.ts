@@ -4,6 +4,7 @@ import {BotConfig} from '../../bot/config/BotConfig';
 import {DataHandlers} from '../data/DataHandlers';
 import {Replies} from './Replies';
 import {LogDebug} from '../logging/LogDebug';
+import {GuildData} from '../data/GuildData';
 
 /**
  * {@link InteractionUtils InteractionUtils.ts}
@@ -29,15 +30,15 @@ export class InteractionUtils {
     ): Promise<any> {
         if (!interaction.guild || !interaction.channel) return;
 
-        const guildData = await DataHandlers.getGuildData(interaction);
+        const guildData: GuildData | undefined = await DataHandlers.getGuildData(interaction.guild.id, interaction);
         if (!guildData) return;
 
-        if (!guildData.channels) {
+        if (!guildData.fullySetup) {
             await Replies.currentConfigReply(interaction, config);
             return;
         }
 
-        const acceptableChannels: string[] = [].concat(guildData.channels);
+        const acceptableChannels: string[] = [...guildData.channels];
 
         if (includeTrade) {
             acceptableChannels.push(guildData.tradeChannel);
@@ -77,7 +78,7 @@ export class InteractionUtils {
 
         const memberMePerms = memberMe.permissions.toArray();
         if (!memberMePerms.includes('SendMessages')) {
-            LogDebug.handleError('Bot doesn\'t have permission to send messages to channel.');
+            LogDebug.handleError('Bot doesn\'t have permission to send messages to channel.', undefined, false);
             return;
         }
 

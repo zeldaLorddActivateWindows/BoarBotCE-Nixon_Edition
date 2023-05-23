@@ -1,6 +1,13 @@
 import dotenv from 'dotenv';
 import fs from 'fs';
-import {ActivityType, Client, Events, GatewayIntentBits, Partials, TextChannel} from 'discord.js';
+import {
+	ActivityType,
+	Client,
+	Events,
+	GatewayIntentBits,
+	Partials,
+	TextChannel
+} from 'discord.js';
 import {Bot} from '../api/bot/Bot';
 import {FormatStrings} from '../util/discord/FormatStrings';
 import {ConfigHandler} from './handlers/ConfigHandler';
@@ -11,6 +18,12 @@ import {Command} from '../api/commands/Command';
 import {Subcommand} from '../api/commands/Subcommand';
 import {LogDebug} from '../util/logging/LogDebug';
 import {InteractionUtils} from '../util/interactions/InteractionUtils';
+import {PowerupSpawner} from '../util/boar/PowerupSpawner';
+import {Queue} from '../util/interactions/Queue';
+import {DataHandlers} from '../util/data/DataHandlers';
+import {BoarBotApp} from '../BoarBotApp';
+import {GuildData} from '../util/data/GuildData';
+import {GuildDatas} from '../util/data/GuildDatas';
 
 dotenv.config();
 
@@ -29,6 +42,7 @@ export class BoarBot implements Bot {
 	private configHandler: ConfigHandler = new ConfigHandler;
 	private commandHandler: CommandHandler = new CommandHandler();
 	private eventHandler: EventHandler = new EventHandler();
+	private guildDatas: GuildDatas = new GuildDatas();
 
 	/**
 	 * Creates the bot by loading and registering global information
@@ -128,6 +142,15 @@ export class BoarBot implements Bot {
 			LogDebug.sendDebug('Interaction Listeners: ' + this.client.listenerCount(Events.InteractionCreate), this.getConfig())
 		}, 600000);
 
+		let timeUntilPow: number = 0;
+
+		await Queue.addQueue(() => {
+			const globalData = DataHandlers.getGlobalData();
+			timeUntilPow = globalData.nextPowerup;
+		}, 'start' + 'global');
+
+		new PowerupSpawner(BoarBotApp.getBot().getConfig().numberConfig.powInterval, timeUntilPow).startSpawning();
+
 		const botStatusChannel: TextChannel | undefined =
 			await InteractionUtils.getTextChannel(this.getConfig().botStatusChannel);
 
@@ -140,6 +163,7 @@ export class BoarBot implements Bot {
 			);
 		} catch (err: unknown) {
 			await LogDebug.handleError(err);
+			return;
 		}
 
 		LogDebug.sendDebug('Successfully sent status message!', this.getConfig());
@@ -162,16 +186,23 @@ export class BoarBot implements Bot {
 			process.exit(-1);
 		}
 
-		for (const guildData of guildDataFiles) {
-			const data: any = JSON.parse(fs.readFileSync(guildDataFolder + guildData, 'utf-8'));
+		for (const guildFile of guildDataFiles) {
+			const guildData: GuildData = JSON.parse(fs.readFileSync(guildDataFolder + guildFile, 'utf-8')) as GuildData;
+			if (guildData.fullySetup) {
+				this.guildDatas[guildFile.split('.')[0]] = guildData;
+				this.guildDatas[guildFile.split('.')[0]].latestInters = [undefined, undefined, undefined];
+				continue;
+			}
 
-			if (Object.keys(data).length !== 0) continue;
+			fs.rmSync(guildDataFolder + guildFile);
 
-			fs.rmSync(guildDataFolder + guildData);
-
-			LogDebug.sendDebug('Deleted empty guild file: ' + guildData, this.getConfig());
+			LogDebug.sendDebug('Deleted unfinished guild file: ' + guildFile, this.getConfig());
 		}
 
 		LogDebug.sendDebug('Guild data fixed!', this.getConfig())
+	}
+
+	public getGuildData(): GuildDatas {
+		return this.guildDatas;
 	}
 }

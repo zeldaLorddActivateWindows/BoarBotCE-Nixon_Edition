@@ -14,6 +14,9 @@ import {CollectedBoar} from './CollectedBoar';
 import {PowerupData} from './PowerupData';
 import {PromptTypeData} from './PromptTypeData';
 import {BoarUtils} from './BoarUtils';
+import {NumberConfig} from '../../bot/config/NumberConfig';
+import {PathConfig} from '../../bot/config/PathConfig';
+import {StringConfig} from '../../bot/config/StringConfig';
 
 /**
  * {@link BoarUser BoarUser.ts}
@@ -50,7 +53,7 @@ export class BoarUser {
     constructor(user: User, createFile?: boolean) {
         this.user = user;
 
-        const userData = this.refreshUserData(createFile);
+        const userData: any = this.refreshUserData(createFile);
 
         if (createFile || this.boarStreak > 0) {
             this.fixUserData(userData);
@@ -67,8 +70,8 @@ export class BoarUser {
      */
     private getUserData(createFile?: boolean): any {
         let userDataJSON: string;
-        const config = BoarBotApp.getBot().getConfig();
-        const userFile = config.pathConfig.userDataFolder + this.user.id + '.json';
+        const config: BotConfig = BoarBotApp.getBot().getConfig();
+        const userFile: string = config.pathConfig.userDataFolder + this.user.id + '.json';
 
         try {
             userDataJSON = fs.readFileSync(userFile, 'utf-8');
@@ -90,7 +93,7 @@ export class BoarUser {
      * Updates user data in JSON file and in this instance
      */
     public updateUserData(): void {
-        const userData = this.getUserData();
+        const userData: any = this.getUserData();
 
         userData.lastDaily = this.lastDaily;
         userData.numDailies = this.numDailies;
@@ -115,7 +118,7 @@ export class BoarUser {
      * @param createFile - Whether to create a file if it doesn't exist
      */
     public refreshUserData(createFile: boolean = false): any {
-        const userData = this.getUserData(createFile);
+        const userData: any = this.getUserData(createFile);
 
         this.lastDaily = userData.lastDaily;
         this.numDailies = userData.numDailies;
@@ -142,13 +145,13 @@ export class BoarUser {
      * @private
      */
     private fixUserData(userData: any): void {
-        const config = BoarBotApp.getBot().getConfig();
-        const userFile = config.pathConfig.userDataFolder + this.user.id + '.json';
+        const config: BotConfig = BoarBotApp.getBot().getConfig();
+        const userFile: string = config.pathConfig.userDataFolder + this.user.id + '.json';
 
-        const boarsGottenIDs = Object.keys(this.boarCollection);
-        const twoDailiesAgo = Math.floor(new Date().setUTCHours(24,0,0,0)) - (1000 * 60 * 60 * 24 * 2);
+        const boarsGottenIDs: string[] = Object.keys(this.boarCollection);
+        const twoDailiesAgo: number = Math.floor(new Date().setUTCHours(24,0,0,0)) - (1000 * 60 * 60 * 24 * 2);
 
-        const nums = BoarBotApp.getBot().getConfig().numberConfig;
+        const nums: NumberConfig = BoarBotApp.getBot().getConfig().numberConfig;
 
         for (const boarID of boarsGottenIDs) {
             if (boarID !in config.boarItemConfigs) continue;
@@ -163,21 +166,22 @@ export class BoarUser {
                 this.favoriteBoar = '';
         }
 
+        for (const promptType of Object.keys(config.powerupConfig.promptTypes)) {
+            if (!this.powerups.promptData[promptType]) {
+                this.powerups.promptData[promptType] = new PromptTypeData;
+            }
+        }
+
         for (const promptType of Object.keys(this.powerups.promptData)) {
             if (!config.powerupConfig.promptTypes[promptType]) {
                 delete this.powerups.promptData[promptType];
+                continue;
             }
 
             for (const promptID of Object.keys(this.powerups.promptData[promptType])) {
                 if (!this.promptExists(promptType, promptID, config)) {
                     delete this.powerups.promptData[promptType][promptID];
                 }
-            }
-        }
-
-        for (const promptType of Object.keys(config.powerupConfig.promptTypes)) {
-            if (!this.powerups.promptData[promptType]) {
-                this.powerups.promptData[promptType] = new PromptTypeData;
             }
         }
 
@@ -234,12 +238,12 @@ export class BoarUser {
         scores: number[] = []
     ): Promise<void> {
         // Config aliases
-        const pathConfig = config.pathConfig;
-        const strConfig = config.stringConfig;
-        const numConfig = config.numberConfig;
+        const pathConfig: PathConfig = config.pathConfig;
+        const strConfig: StringConfig = config.stringConfig;
+        const numConfig: NumberConfig = config.numberConfig;
 
         // Rarity information
-        const rarities = config.rarityConfigs;
+        const rarities: RarityConfig[] = config.rarityConfigs;
         const rarityInfos: RarityConfig[] = [];
 
         for (let i=0; i<boarIDs.length; i++) {
@@ -265,7 +269,7 @@ export class BoarUser {
         await Queue.addQueue(() => {
             LogDebug.sendDebug('Updating global edition info...', config, interaction);
 
-            const globalData = DataHandlers.getGlobalData();
+            const globalData: any = DataHandlers.getGlobalData();
 
             // Sets edition numbers
             for (const boarID of boarIDs) {
@@ -284,7 +288,7 @@ export class BoarUser {
             this.refreshUserData();
 
             for (let i=0; i<boarIDs.length; i++) {
-                const boarID = boarIDs[i];
+                const boarID: string = boarIDs[i];
 
                 if (!this.boarCollection[boarID]) {
                     this.boarCollection[boarID] = new CollectedBoar;
@@ -374,11 +378,11 @@ export class BoarUser {
     ): Promise<void> {
         const orderedRarities: RarityConfig[] = [...config.rarityConfigs]
             .sort((rarity1, rarity2) => { return rarity1.weight - rarity2.weight; });
-        const obtainedBoars = Object.keys(this.boarCollection);
-        let numSpecial = 0;
-        let numZeroBoars = 0;
+        const obtainedBoars: string[] = Object.keys(this.boarCollection);
+        let numSpecial: number = 0;
+        let numZeroBoars: number = 0;
 
-        let maxUniques = 0;
+        let maxUniques: number = 0;
 
         for (const rarity of orderedRarities) {
             if (rarity.name !== 'Special') {

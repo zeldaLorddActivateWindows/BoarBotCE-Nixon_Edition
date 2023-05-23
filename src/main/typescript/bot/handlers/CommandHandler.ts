@@ -53,9 +53,9 @@ export class CommandHandler {
         let allSubcommandFiles: string[] = [];
 
         for (const commandFolder of commandFolders) {
-            const folderFiles = fs.readdirSync(config.pathConfig.commands + commandFolder);
+            const folderFiles: string[] = fs.readdirSync(config.pathConfig.commands + commandFolder);
 
-            const subcommandFiles = folderFiles.filter(fileName => {
+            const subcommandFiles: string[] = folderFiles.filter(fileName => {
                 return fileName.toLowerCase().includes('subcommand');
             });
 
@@ -65,7 +65,7 @@ export class CommandHandler {
 
             allSubcommandFiles = allSubcommandFiles.concat(subcommandFiles);
 
-            const commandFile = folderFiles.find(fileName => {
+            const commandFile: string | undefined = folderFiles.find(fileName => {
                 return !subcommandFiles.includes(fileName);
             });
 
@@ -97,8 +97,8 @@ export class CommandHandler {
 
         for (const commandFile of commandFiles) {
             try {
-                const exports = require('../../commands/' + commandFile);
-                const commandClass = new exports.default();
+                const exports: any = require('../../commands/' + commandFile);
+                const commandClass: any = new exports.default();
 
                 if (!subcommandFiles.includes(commandFile)) {
                     this.commands.set(commandClass.data.name, commandClass);
@@ -128,7 +128,7 @@ export class CommandHandler {
      * Deploys application commands to Discord's API
      */
     public async deployCommands(): Promise<void> {
-        const config = BoarBotApp.getBot().getConfig();
+        const config: BotConfig = BoarBotApp.getBot().getConfig();
         const applicationCommandData: (SlashCommandBuilder | SlashCommandSubcommandsOnlyBuilder)[] = [];
         const guildCommandData: (SlashCommandBuilder | SlashCommandSubcommandsOnlyBuilder)[]  = [];
 
@@ -141,7 +141,7 @@ export class CommandHandler {
             applicationCommandData.push(command.data);
         }
 
-        const rest = new REST({ version: '10' }).setToken(process.env.TOKEN as string);
+        const rest: REST = new REST({ version: '10' }).setToken(process.env.TOKEN as string);
         await this.deployApplicationCommands(rest, applicationCommandData, config);
         await this.deployGuildCommands(rest, guildCommandData, config);
     }

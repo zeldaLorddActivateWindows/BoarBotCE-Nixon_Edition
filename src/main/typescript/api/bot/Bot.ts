@@ -2,6 +2,7 @@ import {BotConfig} from '../../bot/config/BotConfig';
 import {Command} from '../commands/Command';
 import {Client} from 'discord.js';
 import {Subcommand} from '../commands/Subcommand';
+import {GuildDatas} from '../../util/data/GuildDatas';
 
 /**
  * {@link Bot Bot.ts}
@@ -19,6 +20,7 @@ export interface Bot {
     registerCommands(): void;
     getCommands(): Map<string, Command>;
     getSubcommands(): Map<string, Subcommand>;
+    getGuildData(): GuildDatas;
     deployCommands(): void;
     registerListeners(): void;
     onStart(): void;

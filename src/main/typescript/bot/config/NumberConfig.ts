@@ -181,4 +181,6 @@ export class NumberConfig {
     public readonly collEnhancerSpacingY: number = 0;
     public readonly collEnhancerCols: number = 0;
     public readonly collEnhancerSize: [number, number] = [0, 0];
+
+    public readonly powInterval: number = 0;
 }
