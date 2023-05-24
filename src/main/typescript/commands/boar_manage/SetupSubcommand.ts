@@ -5,8 +5,8 @@ import {
     ButtonStyle,
     ChannelType, ChatInputCommandInteraction, ColorResolvable,
     ComponentType, Events, Interaction,
-    InteractionCollector, ModalBuilder, SelectMenuComponentOptionData,
-    StringSelectMenuBuilder, StringSelectMenuInteraction,
+    InteractionCollector, ModalBuilder, PermissionsBitField, SelectMenuComponentOptionData,
+    StringSelectMenuBuilder, StringSelectMenuInteraction, TextChannel,
     TextInputStyle,
 } from 'discord.js';
 import fs from 'fs';
@@ -41,7 +41,7 @@ export default class SetupSubcommand implements Subcommand {
     private compInter: StringSelectMenuInteraction | ButtonInteraction =
         {} as StringSelectMenuInteraction | ButtonInteraction;
 
-    private staticRow = new ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>();
+    private staticRows: ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>[] = [];
     private setupFields: FormField[] = [];
     private guildDataPath: string = '';
     private guildData: GuildData = {} as GuildData;
@@ -76,13 +76,13 @@ export default class SetupSubcommand implements Subcommand {
 
         this.config = BoarBotApp.getBot().getConfig();
         
-        this.staticRow = this.getStaticRow();
-        this.setupFields = this.getSetupFields(this.staticRow);
+        this.staticRows = this.getStaticRows();
+        this.setupFields = this.getSetupFields(this.staticRows);
 
         this.guildDataPath = this.config.pathConfig.guildDataFolder + interaction.guild.id + '.json';
         this.guildData = await DataHandlers.getGuildData(interaction.guild.id, interaction, true) as GuildData;
         
-        this.collector = await CollectorUtils.createCollector(interaction)
+        this.collector = await CollectorUtils.createCollector(interaction.channel as TextChannel, interaction.id)
             .catch(async (err: unknown) => {
                 await DataHandlers.removeGuildFile(this.guildDataPath, this.guildData);
                 throw err;
@@ -219,7 +219,7 @@ export default class SetupSubcommand implements Subcommand {
      * @private
      */
     private async doNext(): Promise<void> {
-        const nextButton: ButtonBuilder = this.staticRow.components[2] as ButtonBuilder;
+        const nextButton: ButtonBuilder = this.staticRows[0].components[2] as ButtonBuilder;
         nextButton.setDisabled(true);
 
         if (this.curField === 1) {
@@ -282,7 +282,7 @@ export default class SetupSubcommand implements Subcommand {
     private async doRefreshRestart(setupComponents: any): Promise<void> {
         const strConfig = this.config.stringConfig;
         const isRestart = this.compInter.customId.startsWith(setupComponents.restart.customId);
-        const nextButton: ButtonBuilder = this.staticRow.components[2] as ButtonBuilder;
+        const nextButton: ButtonBuilder = this.staticRows[0].components[2] as ButtonBuilder;
 
         if (isRestart || this.curField === 1) {
             this.userResponses.tradeChannelId = '';
@@ -327,7 +327,7 @@ export default class SetupSubcommand implements Subcommand {
             ? setupComponents.sbYes.label
             : setupComponents.sbNo.label);
 
-        this.staticRow.components[2].setDisabled(false);
+        this.staticRows[0].components[2].setDisabled(false);
 
         await this.setupFields[2].editReply(this.compInter);
     }
@@ -367,14 +367,10 @@ export default class SetupSubcommand implements Subcommand {
                         fullySetup: true,
                         isSBServer: this.userResponses.isSBServer,
                         tradeChannel: this.userResponses.tradeChannelId,
-                        channels: this.userResponses.boarChannels.filter((ch) => ch !== ''),
-                        latestInters: [undefined, undefined, undefined]
+                        channels: this.userResponses.boarChannels.filter((ch) => ch !== '')
                     };
 
-                    if (this.compInter.guild) {
-                        fs.writeFileSync(this.guildDataPath, JSON.stringify(this.guildData));
-                        BoarBotApp.getBot().getGuildData()[this.compInter.guild.id] = this.guildData;
-                    }
+                    fs.writeFileSync(this.guildDataPath, JSON.stringify(this.guildData));
 
                     replyContent = strConfig.setupFinishedAll;
                     color = 0x3BA55C;
@@ -410,8 +406,16 @@ export default class SetupSubcommand implements Subcommand {
             label: strConfig.emptySelect,
             value: strConfig.emptySelect
         }];
-        
-        const textChannels = interaction.guild?.channels.cache.filter(ch => ch.type === ChannelType.GuildText);
+
+        const textChannels = interaction.guild?.channels.cache.filter(ch => {
+                return ch.type === ChannelType.GuildText && ch.guild && ch.guild.members.me &&
+                    ch.permissionsFor(ch.guild.members.me).has([
+                        PermissionsBitField.Flags.ViewChannel,
+                        PermissionsBitField.Flags.SendMessages,
+                        PermissionsBitField.Flags.AttachFiles
+                    ]);
+            }
+        );
 
         if (!textChannels) {
             return noChannelOptions;
@@ -594,7 +598,7 @@ export default class SetupSubcommand implements Subcommand {
         const fieldTwoSelectMenus: ActionRowBuilder<StringSelectMenuBuilder>[] =
             this.setupFields[1].components.slice(0,3) as ActionRowBuilder<StringSelectMenuBuilder>[];
         const nextButton: ButtonBuilder =
-            this.staticRow.components[2] as ButtonBuilder;
+            this.staticRows[0].components[2] as ButtonBuilder;
 
         // Information about the state of the interaction
         const chosenChannels: string[] =
@@ -663,23 +667,24 @@ export default class SetupSubcommand implements Subcommand {
      *
      * @private
      */
-    private getStaticRow(): ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder> {
-        const setupRowConfigs = this.config.commandConfigs.boarManage.setup.componentFields;
-        let staticRow = new ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>(setupRowConfigs[3][0]);
+    private getStaticRows(): ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>[] {
+        const staticRowsConfig = this.config.commandConfigs.boarManage.setup.componentFields[3];
+        let staticRows: ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>[] =
+            ComponentUtils.makeRows(staticRowsConfig);
 
-        staticRow = ComponentUtils.addToIDs(setupRowConfigs[3][0], staticRow, this.firstInter);
+        ComponentUtils.addToIDs(staticRowsConfig, staticRows, this.firstInter.id);
 
-        return staticRow;
+        return staticRows;
     }
 
     /**
      * Creates {@link FormField form fields} from configurations and returns them
      *
-     * @param staticRow - The row that all setup fields have
      * @private
+     * @param staticRows
      */
     private getSetupFields(
-        staticRow: ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>,
+        staticRows: ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>[],
     ): FormField[] {
         const strConfig = this.config.stringConfig;
         const setupFieldConfigs = this.config.commandConfigs.boarManage.setup.componentFields;
@@ -687,18 +692,16 @@ export default class SetupSubcommand implements Subcommand {
         const allFields: ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>[][] = [];
 
         for (const field in setupFieldConfigs) {
-            allFields.push([]);
+            const rowsConfig = setupFieldConfigs[field];
+            const newRows: ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>[] =
+                ComponentUtils.makeRows(rowsConfig);
 
-            for (const rowConfig of setupFieldConfigs[field]) {
-                let newRow = new ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>(rowConfig);
+            ComponentUtils.addToIDs(
+                rowsConfig, newRows, this.firstInter.id, undefined, this.getTextChannels()
+            );
 
-                newRow = ComponentUtils.addToIDs(rowConfig, newRow, this.firstInter);
-                newRow = ComponentUtils.addOptionsToSelectRow(newRow, this.getTextChannels());
-
-                allFields[field].push(newRow);
-            }
-
-            allFields[field].push(staticRow);
+            allFields[field] = newRows;
+            allFields[field].push(staticRows[0]);
         }
 
         return [

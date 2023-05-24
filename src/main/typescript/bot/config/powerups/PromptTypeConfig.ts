@@ -1,5 +1,4 @@
 import {PromptConfig} from './PromptConfig';
-import {RowConfig} from '../components/RowConfig';
 
 /**
  * {@link PromptTypeConfig PromptTypeConfig.ts}
@@ -11,9 +10,10 @@ import {RowConfig} from '../components/RowConfig';
  */
 
 export class PromptTypeConfig {
-    [promptKey: string]: PromptConfig | string | RowConfig[];
+    [promptKey: string]: PromptConfig | string | number;
 
     public readonly name: string = ' ';
     public readonly description: string = ' ';
-    public readonly rows: RowConfig[] = [];
+    public readonly rightStyle: number = 0;
+    public readonly wrongStyle: number = 0;
 }

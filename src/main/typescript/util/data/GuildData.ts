@@ -1,5 +1,3 @@
-import {ChatInputCommandInteraction} from 'discord.js';
-
 /**
  * {@link GuildData GuildData.ts}
  *
@@ -14,5 +12,4 @@ export class GuildData {
     public isSBServer: boolean = false;
     public tradeChannel: string = '';
     public channels: string[] = [];
-    public latestInters: (ChatInputCommandInteraction | undefined)[] = [undefined, undefined, undefined];
 }

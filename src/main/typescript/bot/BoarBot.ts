@@ -21,9 +21,7 @@ import {InteractionUtils} from '../util/interactions/InteractionUtils';
 import {PowerupSpawner} from '../util/boar/PowerupSpawner';
 import {Queue} from '../util/interactions/Queue';
 import {DataHandlers} from '../util/data/DataHandlers';
-import {BoarBotApp} from '../BoarBotApp';
 import {GuildData} from '../util/data/GuildData';
-import {GuildDatas} from '../util/data/GuildDatas';
 
 dotenv.config();
 
@@ -42,7 +40,6 @@ export class BoarBot implements Bot {
 	private configHandler: ConfigHandler = new ConfigHandler;
 	private commandHandler: CommandHandler = new CommandHandler();
 	private eventHandler: EventHandler = new EventHandler();
-	private guildDatas: GuildDatas = new GuildDatas();
 
 	/**
 	 * Creates the bot by loading and registering global information
@@ -149,7 +146,7 @@ export class BoarBot implements Bot {
 			timeUntilPow = globalData.nextPowerup;
 		}, 'start' + 'global');
 
-		new PowerupSpawner(BoarBotApp.getBot().getConfig().numberConfig.powInterval, timeUntilPow).startSpawning();
+		new PowerupSpawner(timeUntilPow).startSpawning();
 
 		const botStatusChannel: TextChannel | undefined =
 			await InteractionUtils.getTextChannel(this.getConfig().botStatusChannel);
@@ -188,11 +185,7 @@ export class BoarBot implements Bot {
 
 		for (const guildFile of guildDataFiles) {
 			const guildData: GuildData = JSON.parse(fs.readFileSync(guildDataFolder + guildFile, 'utf-8')) as GuildData;
-			if (guildData.fullySetup) {
-				this.guildDatas[guildFile.split('.')[0]] = guildData;
-				this.guildDatas[guildFile.split('.')[0]].latestInters = [undefined, undefined, undefined];
-				continue;
-			}
+			if (guildData.fullySetup) continue;
 
 			fs.rmSync(guildDataFolder + guildFile);
 
@@ -200,9 +193,5 @@ export class BoarBot implements Bot {
 		}
 
 		LogDebug.sendDebug('Guild data fixed!', this.getConfig())
-	}
-
-	public getGuildData(): GuildDatas {
-		return this.guildDatas;
 	}
 }

@@ -433,7 +433,12 @@ export class CollectionImageGenerator {
         for (const promptType of Object.keys(powerupData.promptData)) {
             const typeName = powConfig.promptTypes[promptType].name;
             for (const prompt of Object.keys(powerupData.promptData[promptType])) {
-                if (typeof powConfig.promptTypes[promptType][prompt] === 'string') continue;
+                if (
+                    typeof powConfig.promptTypes[promptType][prompt] === 'string' ||
+                    typeof powConfig.promptTypes[promptType][prompt] === 'number'
+                ) {
+                    continue;
+                }
 
                 const promptName = (powConfig.promptTypes[promptType][prompt] as PromptConfig).name;
 

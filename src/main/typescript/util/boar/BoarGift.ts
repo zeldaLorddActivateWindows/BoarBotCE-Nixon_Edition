@@ -4,7 +4,7 @@ import {
     ButtonInteraction,
     Collection,
     InteractionCollector, Message, MessageComponentInteraction, StringSelectMenuBuilder,
-    StringSelectMenuInteraction
+    StringSelectMenuInteraction, TextChannel
 } from 'discord.js';
 import {CollectorUtils} from '../discord/CollectorUtils';
 import {ComponentUtils} from '../discord/ComponentUtils';
@@ -17,6 +17,7 @@ import {BoarUtils} from './BoarUtils';
 import {DataHandlers} from '../data/DataHandlers';
 import {ItemImageGenerator} from '../generators/ItemImageGenerator';
 import {LogDebug} from '../logging/LogDebug';
+import {Replies} from '../interactions/Replies';
 
 /**
  * {@link BoarGift BoarGift.ts}
@@ -58,24 +59,32 @@ export class BoarGift {
      * @param interaction - The interaction to follow up
      */
     public async sendMessage(interaction: MessageComponentInteraction): Promise<void> {
-        this.collector = await CollectorUtils.createCollector(interaction, undefined, true);
+        if (!interaction.channel) return;
+
+        this.collector = await CollectorUtils.createCollector(
+            interaction.channel as TextChannel, interaction.id, true, 10000
+        );
 
         this.firstInter = interaction;
 
-        const giftFieldConfig = this.config.commandConfigs.boar.collection.componentFields;
+        const giftFieldConfig = this.config.commandConfigs.boar.collection.componentFields[2];
 
-        const claimRow: ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder> = ComponentUtils.addToIDs(
-            giftFieldConfig[2][0],
-            new ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>(giftFieldConfig[2][0]),
-            interaction, undefined, true
-        );
+        const claimRows: ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>[] =
+            ComponentUtils.makeRows(giftFieldConfig);
 
-        claimRow.components[0].setDisabled(false);
+        ComponentUtils.addToIDs(giftFieldConfig, claimRows, interaction.id, interaction.user.id);
 
-        this.giftMessage = await interaction.followUp({
-            files: [await this.imageGen.finalizeGift()],
-            components: [claimRow]
-        });
+        claimRows[0].components[0].setDisabled(false);
+
+        try {
+            this.giftMessage = await interaction.channel.send({
+                files: [await this.imageGen.finalizeGift()],
+                components: [claimRows[0]]
+            });
+        } catch {
+            await Replies.handleReply(interaction, this.config.stringConfig.giftFail);
+            return;
+        }
 
         this.collector.on('collect', async (inter: ButtonInteraction) => await this.handleCollect(inter));
         this.collector.once('end', async (collected) => await this.handleEndCollect(collected));
@@ -109,16 +118,9 @@ export class BoarGift {
     ): Promise<void> {
         try {
             if (collected.size === 0) {
-                const expiredButton = new ButtonBuilder()
-                    .setDisabled(true)
-                    .setCustomId('GIFT_CLAIMED')
-                    .setLabel('EXPIRED')
-                    .setStyle(2);
-
                 await this.giftMessage.edit({
-                    components: [new ActionRowBuilder<ButtonBuilder>().addComponents(expiredButton)]
+                    components: []
                 });
-
                 return;
             }
 

@@ -9,7 +9,7 @@ import {
     MessageComponentInteraction,
     ModalBuilder,
     StringSelectMenuBuilder,
-    StringSelectMenuInteraction,
+    StringSelectMenuInteraction, TextChannel,
     User
 } from 'discord.js';
 import {BoarUser} from '../../util/boar/BoarUser';
@@ -121,7 +121,7 @@ export default class CollectionSubcommand implements Subcommand {
 
         this.setPage(pageVal);
 
-        this.collector = await CollectorUtils.createCollector(interaction);
+        this.collector = await CollectorUtils.createCollector(interaction.channel as TextChannel, interaction.id);
 
         this.collectionImage = new CollectionImageGenerator(this.boarUser, this.allBoars, this.config);
         await this.showCollection();
@@ -604,18 +604,17 @@ export default class CollectionSubcommand implements Subcommand {
         const collFieldConfigs = this.config.commandConfigs.boar.collection.componentFields;
 
         for (let i=0; i<collFieldConfigs.length; i++) {
-            for (const rowConfig of collFieldConfigs[i]) {
-                let newRow = new ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>(rowConfig);
+            const newRows: ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>[] =
+                ComponentUtils.makeRows(collFieldConfigs[i]);
 
-                newRow = ComponentUtils.addToIDs(rowConfig, newRow, this.firstInter, undefined, true);
+            ComponentUtils.addToIDs(collFieldConfigs[i], newRows, this.firstInter.id, this.firstInter.user.id);
 
-                if (i === 0) {
-                    this.baseRows.push(newRow);
-                }
+            if (i === 0) {
+                this.baseRows = newRows
+            }
 
-                if (i === 1) {
-                    this.optionalButtons = newRow;
-                }
+            if (i === 1) {
+                this.optionalButtons = newRows[0];
             }
         }
     }

@@ -1,7 +1,6 @@
 import {
     ButtonInteraction,
-    ChatInputCommandInteraction,
-    InteractionCollector, MessageComponentInteraction, StringSelectMenuInteraction,
+    InteractionCollector, MessageComponentInteraction, StringSelectMenuInteraction, TextChannel,
 } from 'discord.js';
 
 // Reasons for ending collection
@@ -53,20 +52,22 @@ export class CollectorUtils {
     /**
      * Creates and returns a message component collector
      *
-     * @param interaction - The interaction to create the collector with
+     * @param channel
      * @param id
      * @param excludeUser - Whether to exclude the user instead of it only being them
+     * @param time
      * @private
      */
     public static async createCollector(
-        interaction: ChatInputCommandInteraction | MessageComponentInteraction,
-        id?: string,
-        excludeUser: boolean = false
+        channel: TextChannel,
+        id: string,
+        excludeUser: boolean = false,
+        time?: number
     ): Promise<InteractionCollector<ButtonInteraction | StringSelectMenuInteraction>> {
         // Only allows button presses from current interaction
         const filter = async (compInter: MessageComponentInteraction) => {
             const modifiers = compInter.customId.split('|').slice(1);
-            let returnVal = modifiers[0] === (id ? id : interaction.id);
+            let returnVal = modifiers[0] === id;
 
             if (modifiers.length > 1 && excludeUser) {
                 return returnVal && modifiers[1] !== compInter.user.id;
@@ -77,9 +78,16 @@ export class CollectorUtils {
             return returnVal;
         };
 
-        return interaction.channel?.createMessageComponentCollector({
-            filter,
-            idle: 1000 * 60 * 2
-        }) as InteractionCollector<ButtonInteraction | StringSelectMenuInteraction>;
+        if (!time) {
+            return channel.createMessageComponentCollector({
+                filter,
+                idle: 1000 * 60 * 2
+            }) as InteractionCollector<ButtonInteraction | StringSelectMenuInteraction>;
+        } else {
+            return channel.createMessageComponentCollector({
+                filter,
+                time: time
+            }) as InteractionCollector<ButtonInteraction | StringSelectMenuInteraction>;
+        }
     }
 }

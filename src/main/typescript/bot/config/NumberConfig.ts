@@ -183,4 +183,6 @@ export class NumberConfig {
     public readonly collEnhancerSize: [number, number] = [0, 0];
 
     public readonly powInterval: number = 0;
+    public readonly emojiRows: number = 0;
+    public readonly emojiCols: number = 0;
 }

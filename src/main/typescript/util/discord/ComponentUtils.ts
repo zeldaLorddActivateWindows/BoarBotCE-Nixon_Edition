@@ -1,7 +1,7 @@
 import {
     ActionRowBuilder,
-    ButtonBuilder, ChatInputCommandInteraction,
-    ComponentType, MessageComponentInteraction, SelectMenuComponentOptionData, StringSelectMenuBuilder
+    ButtonBuilder,
+    ComponentType, SelectMenuComponentOptionData, StringSelectMenuBuilder
 } from 'discord.js';
 import {RowConfig} from '../../bot/config/components/RowConfig';
 
@@ -18,32 +18,40 @@ export class ComponentUtils {
     /**
      * Adds an addition to all custom ids in an action row
      *
-     * @param rowConfig - The configuration of the row
-     * @param row - The actual row
-     * @param interaction - Used to get ID information
+     * @param rowsConfig - The configuration of the row
+     * @param rows
      * @param id
-     * @param includeUser - Whether to include user ID in custom ID
+     * @param userID
+     * @param options
      * @return row - Updated row with addition to ids
      */
     public static addToIDs(
-        rowConfig: RowConfig,
-        row: ActionRowBuilder<StringSelectMenuBuilder | ButtonBuilder>,
-        interaction: ChatInputCommandInteraction | MessageComponentInteraction,
-        id?: string,
-        includeUser: boolean = false
-    ): ActionRowBuilder<StringSelectMenuBuilder | ButtonBuilder> {
-        for (const component in row.components) {
-            const componentConfig = rowConfig.components[component];
-            let curID = componentConfig.customId + '|' + (id ? id : interaction.id);
+        rowsConfig: RowConfig[],
+        rows: ActionRowBuilder<StringSelectMenuBuilder | ButtonBuilder>[],
+        id: string,
+        userID?: string,
+        options?: SelectMenuComponentOptionData[]
+    ): void {
+        let rowIndex = 0;
 
-            if (includeUser) {
-                curID += '|' + interaction.user.id;
+        for (const row of rows) {
+            for (const component in row.components) {
+                const componentConfig = rowsConfig[rowIndex].components[component];
+                let curID = componentConfig.customId + '|' + id;
+
+                if (userID) {
+                    curID += '|' + userID;
+                }
+
+                row.components[component].setCustomId(curID);
             }
 
-            row.components[component].setCustomId(curID);
-        }
+            if (options) {
+                ComponentUtils.addOptionsToSelectRow(row, options);
+            }
 
-        return row;
+            rowIndex++;
+        }
     }
 
     /**
@@ -61,5 +69,15 @@ export class ComponentUtils {
         }
 
         return row;
+    }
+
+    public static makeRows(rowsConfig: RowConfig[]): ActionRowBuilder<StringSelectMenuBuilder | ButtonBuilder>[] {
+        const newRows: ActionRowBuilder<StringSelectMenuBuilder | ButtonBuilder>[] = [];
+
+        for (const rowConfig of rowsConfig) {
+            newRows.push(new ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>(rowConfig));
+        }
+
+        return newRows;
     }
 }

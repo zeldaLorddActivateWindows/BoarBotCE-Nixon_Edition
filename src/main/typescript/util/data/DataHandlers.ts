@@ -50,13 +50,11 @@ export class DataHandlers {
         const guildDataPath = config.pathConfig.guildDataFolder + guildID + '.json';
 
         try {
-            JSON.parse(fs.readFileSync(guildDataPath, 'utf-8'));
-            return BoarBotApp.getBot().getGuildData()[guildID];
+            return JSON.parse(fs.readFileSync(guildDataPath, 'utf-8'));
         } catch {
             if (create) {
                 fs.writeFileSync(guildDataPath, JSON.stringify(new GuildData));
-                return BoarBotApp.getBot().getGuildData()[guildID] =
-                    JSON.parse(fs.readFileSync(guildDataPath, 'utf-8')) as GuildData;
+                return JSON.parse(fs.readFileSync(guildDataPath, 'utf-8'));
             }
 
             if (interaction) {

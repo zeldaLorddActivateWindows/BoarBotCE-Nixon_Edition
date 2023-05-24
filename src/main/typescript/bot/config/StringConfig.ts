@@ -111,6 +111,7 @@ export class StringConfig {
 
     // Miscellaneous strings
 
+    public readonly giftFail: string = ' ';
     public readonly noParentChannel: string = ' ';
     public readonly notValidChannel: string = ' ';
     public readonly defaultSelectPlaceholder: string = ' ';
