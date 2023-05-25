@@ -2,6 +2,7 @@ import {
     ButtonInteraction,
     InteractionCollector, MessageComponentInteraction, StringSelectMenuInteraction, TextChannel,
 } from 'discord.js';
+import {NumberConfig} from '../../bot/config/NumberConfig';
 
 // Reasons for ending collection
 enum Reasons {
@@ -54,6 +55,7 @@ export class CollectorUtils {
      *
      * @param channel
      * @param id
+     * @param nums
      * @param excludeUser - Whether to exclude the user instead of it only being them
      * @param time
      * @private
@@ -61,6 +63,7 @@ export class CollectorUtils {
     public static async createCollector(
         channel: TextChannel,
         id: string,
+        nums: NumberConfig,
         excludeUser: boolean = false,
         time?: number
     ): Promise<InteractionCollector<ButtonInteraction | StringSelectMenuInteraction>> {

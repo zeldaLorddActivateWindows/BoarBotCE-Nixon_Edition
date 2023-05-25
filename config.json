@@ -182,7 +182,6 @@
         "itemBoxThreeY": 358,
         "itemBoxFourY": 429,
         "itemBoxHeight": 71,
-        "itemBorderRadius": 25,
         "collImageSize": [1920, 1388],
         "collUserAvatarPos": [24, 24],
         "collUserAvatarSize": [156, 156],
@@ -314,9 +313,18 @@
         "collEnhancerSpacingY": 80,
         "collEnhancerCols": 8,
         "collEnhancerSize": [55, 64],
-        "powInterval": 15000,
+        "border": 25,
+        "embedMaxWidth": 1500,
+        "embedMinHeight": 204,
+        "embedTextPadding": 50,
+        "powInterval": 30000,
+        "powDuration": 20000,
+        "collectorIdle": 120000,
         "emojiRows": 4,
-        "emojiCols": 4
+        "emojiCols": 4,
+        "triviaRows": 2,
+        "triviaCols": 2,
+        "fastCols": 3
     },
     "commandConfigs": {
         "boar": {
@@ -800,9 +808,29 @@
                 "rightStyle": 1,
                 "wrongStyle": 1,
                 "frown1": {
-                    "name": "Frown Face",
+                    "name": "Frowns",
                     "emoji1": "\uD83D\uDE41",
                     "emoji2": "\u2639"
+                },
+                "detective1": {
+                    "name": "Detectives",
+                    "emoji1": "\uD83D\uDD75",
+                    "emoji2": "\uD83D\uDD75\uFE0F\u200D\u2640\uFE0F"
+                },
+                "cloud1": {
+                    "name": "Clouds",
+                    "emoji1": "\uD83C\uDF28",
+                    "emoji2": "\uD83C\uDF27"
+                },
+                "earth1": {
+                    "name": "Earth",
+                    "emoji1": "\uD83C\uDF0F",
+                    "emoji2": "\uD83C\uDF0E"
+                },
+                "folder1": {
+                    "name": "Folders",
+                    "emoji1": "\uD83D\uDCC2",
+                    "emoji2": "\uD83D\uDCC1"
                 }
             },
             "trivia": {
@@ -819,6 +847,46 @@
                         "Average",
                         "Common"
                     ]
+                },
+                "tiny1": {
+                    "name": "Tiny Boar",
+                    "question": "What boar is mentioned in Tiny Boar's description?",
+                    "choices": [
+                        "Wizard Boar",
+                        "Boarfish",
+                        "Soda Boar",
+                        "Matrix Boar"
+                    ]
+                },
+                "explosionless1": {
+                    "name": "Explosionless Boar",
+                    "question": "What adjective describes Explosionless Boar's potential explosivity?",
+                    "choices": [
+                        "Cataclysmic",
+                        "Explosive",
+                        "Catastrophic",
+                        "Disastrous"
+                    ]
+                },
+                "chocolate1": {
+                    "name": "Chocolate Boar",
+                    "question": "What year was Chocolate Boar pulled off shelves?",
+                    "choices": [
+                        "1999",
+                        "1995",
+                        "1996",
+                        "1989"
+                    ]
+                },
+                "matrix1": {
+                    "name": "Matrix Boar",
+                    "question": "What color pill does Matrix Boar keep taking?",
+                    "choices": [
+                        "Red",
+                        "Blue",
+                        "Green",
+                        "White"
+                    ]
                 }
             },
             "fast": {
@@ -828,7 +896,33 @@
                 "wrongStyle": 4,
                 "one": {
                     "name": "One button",
-                    "numButtons": 1
+                    "numButtons": 1,
+                    "emoji1": "\uD83D\uDFE2",
+                    "emoji2": "\uD83D\uDD34"
+                },
+                "two": {
+                    "name": "Two buttons",
+                    "numButtons": 2,
+                    "emoji1": "\uD83D\uDFE2",
+                    "emoji2": "\uD83D\uDD34"
+                },
+                "three": {
+                    "name": "Three buttons",
+                    "numButtons": 3,
+                    "emoji1": "\uD83D\uDFE2",
+                    "emoji2": "\uD83D\uDD34"
+                },
+                "six": {
+                    "name": "Six buttons",
+                    "numButtons": 6,
+                    "emoji1": "\uD83D\uDFE2",
+                    "emoji2": "\uD83D\uDD34"
+                },
+                "nine": {
+                    "name": "Nine buttons",
+                    "numButtons": 9,
+                    "emoji1": "\uD83D\uDFE2",
+                    "emoji2": "\uD83D\uDD34"
                 }
             }
         },
@@ -896,14 +990,14 @@
         "buff": {
             "name": "Buff Boar",
             "file": "BuffBoar.png",
-            "description": "It's said this boar can crush rocks with its bare hands. Had high-school relationship with Coffee Girl Boar that quickly ended when she spent $100 on coffee in one week.",
+            "description": "It's said this boar can crush rocks with its bare hands. Stuck in a toxic relationship with Coffee Girl Boar simply for appearances.",
             "isSB": false,
             "blacklisted": false
         },
         "chocolate": {
             "name": "Chocolate Boar",
             "file": "ChocolateBoar.png",
-            "description": "A discontinued chocolate bar from 1999. It was pulled off shelves after a stampede of boars burst through a grocery store's doors to taste it.",
+            "description": "A discontinued chocolate bar from 1999. It was pulled off shelves after traces of boar meat were discovered inside it.",
             "isSB": false,
             "blacklisted": false
         },
@@ -1263,7 +1357,9 @@
         }
     ],
     "colorConfig": {
-        "foregroundGray": "#151518",
+        "dark": "#151518",
+        "mid": "#212224",
+        "light": "#2D2F31",
         "font": "#FFFFFF",
         "badge": "#4D4278",
         "powerup": "#40DEA9",

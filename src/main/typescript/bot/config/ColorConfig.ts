@@ -9,7 +9,9 @@
 export class ColorConfig {
     [colorKey: string]: string;
 
-    public readonly foregroundGray: string = '#000000';
+    public readonly dark: string = '#000000';
+    public readonly mid: string = '#000000';
+    public readonly light: string = '#000000';
     public readonly font: string = '#000000';
 
     public readonly badge: string = '#000000';

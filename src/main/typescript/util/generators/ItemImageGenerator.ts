@@ -290,9 +290,9 @@ export class ItemImageGenerator {
             ctx.beginPath();
             ctx.roundRect(
                 nums.itemBoxX, nums.itemBoxOneY,
-                ctx.measureText('To').width + nums.itemTextBoxExtra, nums.itemBoxHeight, nums.itemBorderRadius
+                ctx.measureText('To').width + nums.itemTextBoxExtra, nums.itemBoxHeight, nums.border
             );
-            ctx.fillStyle = this.config.colorConfig.foregroundGray;
+            ctx.fillStyle = this.config.colorConfig.dark;
             ctx.fill();
 
             CanvasUtils.drawText(
@@ -303,9 +303,9 @@ export class ItemImageGenerator {
             ctx.beginPath();
             ctx.roundRect(
                 nums.itemBoxX, nums.itemBoxThreeY,
-                ctx.measureText('From').width + nums.itemTextBoxExtra, nums.itemBoxHeight, nums.itemBorderRadius
+                ctx.measureText('From').width + nums.itemTextBoxExtra, nums.itemBoxHeight, nums.border
             );
-            ctx.fillStyle = this.config.colorConfig.foregroundGray;
+            ctx.fillStyle = this.config.colorConfig.dark;
             ctx.fill();
 
             CanvasUtils.drawText(
@@ -317,9 +317,9 @@ export class ItemImageGenerator {
             ctx.roundRect(
                 nums.itemBoxX, nums.itemBoxFourY,
                 ctx.measureText(this.giftingUserTag).width + nums.itemUserBoxExtra,
-                nums.itemBoxHeight, nums.itemBorderRadius
+                nums.itemBoxHeight, nums.border
             );
-            ctx.fillStyle = this.config.colorConfig.foregroundGray;
+            ctx.fillStyle = this.config.colorConfig.dark;
             ctx.fill();
 
             CanvasUtils.drawText(
@@ -336,9 +336,9 @@ export class ItemImageGenerator {
         ctx.beginPath();
         ctx.roundRect(
             nums.itemBoxX, userBoxY,
-            ctx.measureText(this.userTag).width + nums.itemUserBoxExtra, nums.itemBoxHeight, nums.itemBorderRadius
+            ctx.measureText(this.userTag).width + nums.itemUserBoxExtra, nums.itemBoxHeight, nums.border
         );
-        ctx.fillStyle = this.config.colorConfig.foregroundGray;
+        ctx.fillStyle = this.config.colorConfig.dark;
         ctx.fill();
 
         CanvasUtils.drawText(
@@ -355,9 +355,9 @@ export class ItemImageGenerator {
             ctx.beginPath();
             ctx.roundRect(
                 nums.itemBoxX, nums.itemBoxTwoY, ctx.measureText('+$' + score).width + nums.itemTextBoxExtra,
-                nums.itemBoxHeight, nums.itemBorderRadius
+                nums.itemBoxHeight, nums.border
             );
-            ctx.fillStyle = this.config.colorConfig.foregroundGray;
+            ctx.fillStyle = this.config.colorConfig.dark;
             ctx.fill();
 
             CanvasUtils.drawText(

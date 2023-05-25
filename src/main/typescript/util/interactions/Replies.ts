@@ -1,15 +1,14 @@
 import {
     ChatInputCommandInteraction,
     ColorResolvable,
-    EmbedBuilder,
     MessageComponentInteraction,
-    ModalSubmitInteraction
+    ModalSubmitInteraction, TextChannel
 } from 'discord.js';
 import {BotConfig} from '../../bot/config/BotConfig';
-import {FormatStrings} from '../discord/FormatStrings';
 import {LogDebug} from '../logging/LogDebug';
 import {BoarBotApp} from '../../BoarBotApp';
 import {GuildData} from '../data/GuildData';
+import {CustomEmbedGenerator} from '../generators/CustomEmbedGenerator';
 
 /**
  * {@link Replies Replies.ts}
@@ -51,16 +50,32 @@ export class Replies {
     ): Promise<void> {
         LogDebug.sendDebug('Used in the wrong channel', config, interaction);
 
-        let strChannels = '';
+        let strChannels = ' ';
 
         if (guildData) {
             for (const ch of guildData.channels) {
-                strChannels += '\n> ' + FormatStrings.toBasicChannel(ch);
+                try {
+                    strChannels += '#' + (
+                        await BoarBotApp.getBot().getClient().channels.fetch(ch) as TextChannel
+                    ).name + ', ';
+                } catch {}
             }
 
             if (includeTrade) {
-                strChannels += '\n> ' + FormatStrings.toBasicChannel(guildData.tradeChannel);
+                try {
+                    strChannels += '#' + (
+                        await BoarBotApp.getBot().getClient().channels.fetch(guildData.tradeChannel) as TextChannel
+                    ).name;
+                } catch {}
             }
+        }
+
+        if (strChannels === ' ') {
+            strChannels += 'No channels found';
+        }
+
+        if (strChannels.endsWith(', ')) {
+            strChannels = strChannels.substring(0, strChannels.length-2);
         }
 
         await Replies.handleReply(interaction, config.stringConfig.wrongChannel + strChannels);
@@ -108,36 +123,20 @@ export class Replies {
         color: ColorResolvable = BoarBotApp.getBot().getConfig().colorConfig.baseEmbed as ColorResolvable,
         forceFollowup: boolean = false
     ): Promise<void> {
-        const responseEmbed: EmbedBuilder = new EmbedBuilder()
-            .setColor(color);
-
-        if (content.length > 256) {
-            responseEmbed.setDescription(content);
-        } else {
-            responseEmbed.setTitle(content);
-        }
+        const embedImage = CustomEmbedGenerator.makeEmbed(content, BoarBotApp.getBot().getConfig());
 
         if (!forceFollowup && interaction.deferred && interaction.isChatInputCommand()) {
             await interaction.editReply({
-                content: '',
-                files: [],
-                components: [],
-                embeds: [responseEmbed]
+                files: [embedImage]
             });
         } else if (forceFollowup || interaction.replied || !interaction.isChatInputCommand()) {
             await interaction.followUp({
-                content: '',
-                files: [],
-                components: [],
-                embeds: [responseEmbed],
+                files: [embedImage],
                 ephemeral: true
             });
         } else {
             await interaction.reply({
-                content: '',
-                files: [],
-                components: [],
-                embeds: [responseEmbed],
+                files: [embedImage],
                 ephemeral: true
             });
         }

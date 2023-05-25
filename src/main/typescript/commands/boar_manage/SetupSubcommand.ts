@@ -82,11 +82,12 @@ export default class SetupSubcommand implements Subcommand {
         this.guildDataPath = this.config.pathConfig.guildDataFolder + interaction.guild.id + '.json';
         this.guildData = await DataHandlers.getGuildData(interaction.guild.id, interaction, true) as GuildData;
         
-        this.collector = await CollectorUtils.createCollector(interaction.channel as TextChannel, interaction.id)
-            .catch(async (err: unknown) => {
-                await DataHandlers.removeGuildFile(this.guildDataPath, this.guildData);
-                throw err;
-            });
+        this.collector = await CollectorUtils.createCollector(
+            interaction.channel as TextChannel, interaction.id, this.config.numberConfig
+        ).catch(async (err: unknown) => {
+            await DataHandlers.removeGuildFile(this.guildDataPath, this.guildData);
+            throw err;
+        });
 
         await this.setupFields[0].editReply(interaction).catch(async (err: unknown) => {
             await DataHandlers.removeGuildFile(this.guildDataPath, this.guildData);

@@ -62,7 +62,7 @@ export class BoarGift {
         if (!interaction.channel) return;
 
         this.collector = await CollectorUtils.createCollector(
-            interaction.channel as TextChannel, interaction.id, true, 10000
+            interaction.channel as TextChannel, interaction.id, this.config.numberConfig, true, 10000
         );
 
         this.firstInter = interaction;

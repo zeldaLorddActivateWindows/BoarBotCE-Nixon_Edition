@@ -121,7 +121,9 @@ export default class CollectionSubcommand implements Subcommand {
 
         this.setPage(pageVal);
 
-        this.collector = await CollectorUtils.createCollector(interaction.channel as TextChannel, interaction.id);
+        this.collector = await CollectorUtils.createCollector(
+            interaction.channel as TextChannel, interaction.id, this.config.numberConfig
+        );
 
         this.collectionImage = new CollectionImageGenerator(this.boarUser, this.allBoars, this.config);
         await this.showCollection();

@@ -35,7 +35,7 @@ export class CanvasUtils {
         wrap: boolean = false,
         coloredText: string = '',
         color2: string = color
-    ): void {
+    ): number {
         ctx.font = font;
         ctx.textAlign = align;
         ctx.textBaseline = 'alphabetic';
@@ -43,6 +43,8 @@ export class CanvasUtils {
 
         let replaceIndex = text.indexOf('%@');
         text = text.replace('%@', coloredText);
+
+        let heightDiff = 0;
 
         if (width != undefined && wrap) {
             const words: string[] = text.split(' ');
@@ -65,7 +67,7 @@ export class CanvasUtils {
 
             lines.push(curLine);
 
-            newHeight -= lineHeight * lines.length / 2;
+            newHeight -= lineHeight * (lines.length-1) / 2;
 
             let charIndex = 0;
             const originalColorLength = coloredText.length;
@@ -98,18 +100,21 @@ export class CanvasUtils {
                     ctx.fillText(line, pos[0], newHeight);
                 }
 
+                heightDiff += lineHeight;
                 newHeight += lineHeight;
             }
         } else if (width != undefined) {
+            ctx.textBaseline = 'middle';
             while (ctx.measureText(text).width > width) {
                 font = (parseInt(font)-1) + font.substring(font.indexOf('px'));
                 ctx.font = font;
             }
-            ctx.textBaseline = 'middle';
             this.drawColoredText(ctx, text, align, pos, replaceIndex, coloredText, color, color2);
         } else {
             this.drawColoredText(ctx, text, align, pos, replaceIndex, coloredText, color, color2);
         }
+
+        return heightDiff;
     }
 
     /**

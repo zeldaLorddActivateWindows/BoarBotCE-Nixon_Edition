@@ -22,6 +22,8 @@ import {CollectorUtils} from '../discord/CollectorUtils';
 import {BotConfig} from '../../bot/config/BotConfig';
 import {Replies} from '../interactions/Replies';
 import {PromptConfig} from '../../bot/config/powerups/PromptConfig';
+import {NumberConfig} from '../../bot/config/NumberConfig';
+import {RowConfig} from '../../bot/config/components/RowConfig';
 
 export class PowerupSpawner {
     private readonly intervalVal: number =
@@ -83,69 +85,37 @@ export class PowerupSpawner {
 
             const powConfig = config.powerupConfig;
             const promptTypes = powConfig.promptTypes;
-            const randPromptType = 'emojiFind';
+            const randPromptType = Object.keys(promptTypes)[Math.floor(
+                Math.random() * Object.keys(promptTypes).length
+            )];
+            const prompts = this.getPrompts(randPromptType, config);
+            const chosenPrompt = prompts[Math.floor(Math.random() * prompts.length)] as PromptConfig;
 
             const rightStyle = promptTypes[randPromptType].rightStyle;
             const wrongStyle = promptTypes[randPromptType].wrongStyle;
 
-            const rowsConfig = powConfig.rows;
-            const rows: ActionRowBuilder<ButtonBuilder>[] = [];
+            const rowsConfig = config.powerupConfig.rows;
+            let rows: ActionRowBuilder<ButtonBuilder>[] = [];
 
-            LogDebug.sendDebug('Was ' + randPromptType, config);
-
-            if (randPromptType === 'emojiFind') {
-                const randEmojiIndex = Math.floor(Math.random() * nums.emojiRows * nums.emojiCols);
-                const prompts: PromptConfig[] = [];
-
-                for (const promptTypeProp of Object.keys(promptTypes[randPromptType])) {
-                    if (
-                        typeof promptTypes[randPromptType][promptTypeProp] === 'string' ||
-                        typeof promptTypes[randPromptType][promptTypeProp] === 'number'
-                    ) {
-                        continue;
-                    }
-
-                    prompts.push(promptTypes[randPromptType][promptTypeProp] as PromptConfig);
-                }
-
-                LogDebug.sendDebug('Got prompt', config);
-
-                const randPromptIndex = Math.floor(Math.random() * prompts.length);
-                const emoji1 = (prompts[randPromptIndex] as PromptConfig).emoji1;
-                const emoji2 = (prompts[randPromptIndex] as PromptConfig).emoji2;
-                let curIndex = 0;
-
-                for (let i=0; i<nums.emojiRows; i++) {
-                    const row: ActionRowBuilder<ButtonBuilder> = new ActionRowBuilder<ButtonBuilder>();
-                    for (let j=0; j<nums.emojiCols; j++) {
-                        let button: ButtonBuilder;
-
-                        if (curIndex === randEmojiIndex) {
-                            button = new ButtonBuilder(rowsConfig[0].components[0]);
-                            button.setEmoji(emoji1).setStyle(rightStyle).setCustomId(
-                                rowsConfig[0].components[1].customId + '|' + curTime
-                            );
-                        } else {
-                            button = new ButtonBuilder(rowsConfig[0].components[1]);
-                            button.setEmoji(emoji2).setStyle(wrongStyle).setCustomId(
-                                rowsConfig[0].components[1].customId + curIndex + '|' + curTime
-                            );
-                        }
-
-                        row.addComponents(button);
-                        curIndex++;
-                    }
-                    rows.push(row);
-                }
-            } else {
-                return;
+            switch (randPromptType) {
+                case 'emojiFind':
+                    rows = this.makeEmojiRows(chosenPrompt, rightStyle, wrongStyle, rowsConfig, curTime, nums);
+                    break;
+                case 'trivia':
+                    rows = this.makeTriviaRows(chosenPrompt, rightStyle, wrongStyle, rowsConfig, curTime, nums);
+                    break;
+                case 'fast':
+                    rows = this.makeFastRows(chosenPrompt, rightStyle, wrongStyle, rowsConfig, curTime, nums);
+                    break;
             }
 
             for (const channel of allBoarChannels) {
-                const collector = await CollectorUtils.createCollector(channel, curTime.toString(), false, 5000);
+                const collector = await CollectorUtils.createCollector(
+                    channel, curTime.toString(), nums, false, nums.powDuration
+                );
 
                 const powMsg = await channel.send({
-                    content: "Powerup!",
+                    content: '**Powerup Prompt: **' + promptTypes[randPromptType].name + ' - ' + chosenPrompt.name,
                     components: rows
                 });
 
@@ -163,13 +133,19 @@ export class PowerupSpawner {
         try {
             await inter.deferUpdate();
 
-            if (!this.claimers.has(inter.user.id)) {
-                this.claimers.set(inter.user.id, inter.createdTimestamp - powMsg.createdTimestamp);
-                await Replies.handleReply(inter, "Successfully registered your attempt");
+            LogDebug.sendDebug(inter.customId, config);
+
+            if (!this.claimers.has(inter.user.id) && inter.customId.toLowerCase().includes('correct')) {
+                const timeToClaim = inter.createdTimestamp - powMsg.createdTimestamp;
+                this.claimers.set(inter.user.id, timeToClaim);
+                await Replies.handleReply(inter, "Correct! It took you " + timeToClaim + "ms to guess correctly! Wait for the powerup to end to see your placement.");
                 LogDebug.sendDebug("Collected " + inter.user.username, config);
+            } else if (!this.claimers.has(inter.user.id)) {
+                await Replies.handleReply(inter, "Incorrect! Try again!");
+                LogDebug.sendDebug("Failed attempt " + inter.user.username, config);
             } else {
                 await Replies.handleReply(inter, "You've already attempted this powerup!");
-                LogDebug.sendDebug("Failed attempt " + inter.user.username, config);
+                LogDebug.sendDebug("Already collected " + inter.user.username, config);
             }
         } catch (err: unknown) {
             await LogDebug.handleError(err);
@@ -244,5 +220,153 @@ export class PowerupSpawner {
         } catch (err: unknown) {
             await LogDebug.handleError(err);
         }
+    }
+
+    private getPrompts(promptType: string, config: BotConfig) {
+        const promptTypes = config.powerupConfig.promptTypes;
+        const prompts: PromptConfig[] = [];
+
+        for (const promptTypeProperty of Object.keys(promptTypes[promptType])) {
+            if (
+                typeof promptTypes[promptType][promptTypeProperty] === 'string' ||
+                typeof promptTypes[promptType][promptTypeProperty] === 'number'
+            ) {
+                continue;
+            }
+
+            prompts.push(promptTypes[promptType][promptTypeProperty] as PromptConfig);
+        }
+
+        return prompts;
+    }
+
+    private makeEmojiRows(
+        prompt: PromptConfig,
+        rightStyle: number,
+        wrongStyle: number,
+        rowsConfig: RowConfig[],
+        id: number,
+        nums: NumberConfig
+    ): ActionRowBuilder<ButtonBuilder>[] {
+        const rows: ActionRowBuilder<ButtonBuilder>[] = [];
+
+        const randEmojiIndex = Math.floor(Math.random() * nums.emojiRows * nums.emojiCols);
+
+        const emoji1 = prompt.emoji1;
+        const emoji2 = prompt.emoji2;
+
+        let curIndex = 0;
+
+        for (let i=0; i<nums.emojiRows; i++) {
+            const row: ActionRowBuilder<ButtonBuilder> = new ActionRowBuilder<ButtonBuilder>();
+            for (let j=0; j<nums.emojiCols; j++) {
+                let button: ButtonBuilder;
+
+                if (curIndex === randEmojiIndex) {
+                    button = new ButtonBuilder(rowsConfig[0].components[0]);
+                    button.setEmoji(emoji1).setStyle(rightStyle).setCustomId(
+                        rowsConfig[0].components[0].customId + '|' + id
+                    );
+                } else {
+                    button = new ButtonBuilder(rowsConfig[0].components[1]);
+                    button.setEmoji(emoji2).setStyle(wrongStyle).setCustomId(
+                        rowsConfig[0].components[1].customId + curIndex + '|' + id
+                    );
+                }
+
+                row.addComponents(button);
+                curIndex++;
+            }
+            rows.push(row);
+        }
+
+        return rows;
+    }
+
+    private makeTriviaRows(
+        prompt: PromptConfig,
+        rightStyle: number,
+        wrongStyle: number,
+        rowsConfig: RowConfig[],
+        id: number,
+        nums: NumberConfig
+    ) {
+        const rows: ActionRowBuilder<ButtonBuilder>[] = [];
+
+        const choices = [...prompt.choices];
+        const answer = choices[0];
+
+        let curIndex = 0;
+
+        for (let i=0; i<nums.triviaRows; i++) {
+            const row: ActionRowBuilder<ButtonBuilder> = new ActionRowBuilder<ButtonBuilder>();
+            for (let j=0; j<nums.triviaCols; j++) {
+                const randChoice = choices[Math.floor(Math.random() * choices.length)];
+                let button: ButtonBuilder;
+
+                if (randChoice === answer) {
+                    button = new ButtonBuilder(rowsConfig[0].components[0]);
+                    button.setLabel(randChoice).setStyle(rightStyle).setCustomId(
+                        rowsConfig[0].components[0].customId + '|' + id
+                    );
+                } else {
+                    button = new ButtonBuilder(rowsConfig[0].components[1]);
+                    button.setLabel(randChoice).setStyle(wrongStyle).setCustomId(
+                        rowsConfig[0].components[1].customId + curIndex + '|' + id
+                    );
+                }
+
+                choices.splice(choices.indexOf(randChoice), 1);
+                row.addComponents(button);
+                curIndex++;
+            }
+            rows.push(row);
+        }
+
+        return rows;
+    }
+
+    private makeFastRows(
+        prompt: PromptConfig,
+        rightStyle: number,
+        wrongStyle: number,
+        rowsConfig: RowConfig[],
+        id: number,
+        nums: NumberConfig
+    ) {
+        const rows: ActionRowBuilder<ButtonBuilder>[] = [];
+
+        const numButtons = prompt.numButtons;
+        const numRows = Math.ceil(numButtons / nums.fastCols);
+        const emoji1 = prompt.emoji1;
+        const emoji2 = prompt.emoji2;
+        const randCorrectIndex = Math.floor(Math.random() * numButtons);
+
+        let curIndex = 0;
+
+        for (let i=0; i<numRows; i++) {
+            const row: ActionRowBuilder<ButtonBuilder> = new ActionRowBuilder<ButtonBuilder>();
+            for (let j=0; j<Math.min(numButtons, nums.fastCols); j++) {
+                let button: ButtonBuilder;
+
+                if (curIndex === randCorrectIndex) {
+                    button = new ButtonBuilder(rowsConfig[0].components[0]);
+                    button.setEmoji(emoji1).setStyle(rightStyle).setCustomId(
+                        rowsConfig[0].components[0].customId + '|' + id
+                    );
+                } else {
+                    button = new ButtonBuilder(rowsConfig[0].components[1]);
+                    button.setEmoji(emoji2).setStyle(wrongStyle).setCustomId(
+                        rowsConfig[0].components[1].customId + curIndex + '|' + id
+                    );
+                }
+
+                row.addComponents(button);
+                curIndex++;
+            }
+            rows.push(row);
+        }
+
+        return rows;
     }
 }

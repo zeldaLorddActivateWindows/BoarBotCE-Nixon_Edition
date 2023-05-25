@@ -62,7 +62,6 @@ export class NumberConfig {
     public readonly itemBoxThreeY: number = 0;
     public readonly itemBoxFourY: number = 0;
     public readonly itemBoxHeight: number = 0;
-    public readonly itemBorderRadius: number = 0;
 
     // Collection image positions, sizes, and values
 
@@ -182,7 +181,15 @@ export class NumberConfig {
     public readonly collEnhancerCols: number = 0;
     public readonly collEnhancerSize: [number, number] = [0, 0];
 
+    public readonly border: number = 0;
+    public readonly embedMaxWidth: number = 0;
+    public readonly embedMinHeight: number = 0;
     public readonly powInterval: number = 0;
+    public readonly powDuration: number = 0;
+    public readonly collectorIdle: number = 0;
     public readonly emojiRows: number = 0;
     public readonly emojiCols: number = 0;
+    public readonly triviaRows: number = 0;
+    public readonly triviaCols: number = 0;
+    public readonly fastCols: number = 0;
 }
