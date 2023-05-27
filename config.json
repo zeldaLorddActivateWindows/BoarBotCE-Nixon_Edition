@@ -33,6 +33,8 @@
         "clanNone": "BoarClanNone.png",
         "enhancerOn": "EnhancerActive.png",
         "enhancerOff": "EnhancerInactive.png",
+        "powerupSpawn": "BoarPowerupSpawn.png",
+        "powerupEnd": "BoarPowerupEnd.png",
         "favorite": "favorite.png",
         "thankYouImage": "BoarBotThanks.png",
         "mainFont": "MinecraftFont.ttf",
@@ -48,9 +50,9 @@
         "guildAdd": "Hey, %@! Thanks for adding me to your server **%@**!\n> To get started, run the command `/%@` in your server!",
         "dmReceived": "Thanks for the DM! Your complaint/issue/feedback has been logged!\n\n*Note: If you're sending an image, make sure you include the link!*",
         "noPermission": "You don't have permission to use this command.",
-        "noSetup": "To use this command, an admin must first do </boar-manage setup:1080193988046364734>!",
+        "noSetup": "To use this command, an admin must first do /boar-manage setup!",
         "doingSetup": "BoarBot is currently being set up! Please wait!",
-        "wrongChannel": "Cannot use that command here! Please use it in the following channel(s):",
+        "wrongChannel": "Cannot use that command here!",
         "noGuild": "This can only be used in a server!",
         "nullFound": "One or more inputs are `null`!",
         "invalidID": "Invalid ID input!",
@@ -59,19 +61,19 @@
         "noAttachmentPerms": "BoarBot doesn't have attachment permissions, so some interactive images may not appear.",
         "error": "Something went wrong! Please try again in a few minutes. If the issue persists, DM BoarBot with the issue!",
         "maintenance": "BoarBot is currently in maintenance mode!",
-        "setupCancelled": "**Setup was cancelled!**",
-        "setupError": "**An error occurred while getting information! Try again later.**",
-        "setupFinishedAll": "**BoarBot has successfully been set up! Do </boar daily:1080193988046364733> in one of the boar channels you chose to get started.**",
-        "setupExpired": "**You haven't interacted with the form for 2 minutes! Automatically terminating setup.**",
+        "setupCancelled": "Setup was cancelled!",
+        "setupError": "An error occurred while getting information! Try again later.",
+        "setupFinishedAll": "BoarBot has successfully been set up! Do /boar daily in one of the boar channels you chose to get started.",
+        "setupExpired": "You haven't interacted with the form for 2 minutes! Automatically terminating setup.",
         "setupUnfinished1": "**What channel can be used for trading?** \n*(Note: Threads will dynamically be created in this channel.)*",
         "setupUnfinished2": "**What channels can BoarBot commands be used in? [Max 3]** \n*(Note: If you have a lot of server members, these channels may get flooded.)*",
         "setupUnfinished3": "**Is this server a Hypixel Skyblock community?**",
         "setupFinished1": "**The channel you're using for trading is: **",
         "setupFinished2": "**These are the channels you've selected for BoarBot to work in: **",
         "setupFinished3": "**Hypixel Skyblock community: **",
-        "setupInfoResponse1": "**__TRADE CHANNEL__**\n\nThis bot has a trading system! In order for the trading system to work properly, it needs its own channel. Threads will dynamically be created and deleted in this channel unless the bot doesn't have permission to do so. If this is the case, trading will unfortunately be automatically disabled.\n\n*This channel can be changed at any time using </boar-manage setup:1080193988046364734>.*\n*Use :pencil: to enter a channel ID (right-click channel name, Copy ID) that isn't shown in the select box.*",
-        "setupInfoResponse2": "**__BOAR CHANNELS__**\n\nObviously, this bot has slash commands. Slash commands can produce spammy content depending on how large your server is, so you'll need to decide which channels the bot is enabled in.\n\n*These channels can be changed at any time using </boar-manage setup:1080193988046364734>.*\n*Use :pencil: to enter a channel ID (right-click channel name, Copy ID) that isn't shown in the select box.*",
-        "setupInfoResponse3": "**__SKYBLOCK COMMUNITY__**\n\nThis bot originated on a Discord server dedicated to Hypixel Skyblock. If you don't know what that is, no sweat! Just click \"No\". If you do and you're part of the community, it's highly recommended that you click \"Yes\".\n\n*This can be changed at any time using </boar-manage setup:1080193988046364734>.*",
+        "setupInfoResponse1": "This bot has a trading system! In order for the trading system to work properly, it needs its own channel. Threads will dynamically be created and deleted in this channel unless the bot doesn't have permission to do so. If this is the case, trading will unfortunately be automatically disabled. This channel can be changed at any time using /boar-manage setup. Use the pencil button to enter a channel ID (right-click channel name, Copy ID) that isn't shown in the select box.",
+        "setupInfoResponse2": "This bot has slash commands, which can produce spammy content depending on how large your server is, so you'll need to decide which channel(s) the bot is enabled in. These channels can be changed at any time using /boar-manage setup. Use the pencil button to enter a channel ID (right-click channel name, Copy ID) that isn't shown in the select box.",
+        "setupInfoResponse3": "This bot originated on a Discord server dedicated to Hypixel Skyblock. If you don't know what that is, no sweat! Just click \"No\". If you do and you're part of the community, it's highly recommended that you click \"Yes\". This can be changed at any time using /boar-manage setup.",
         "dailyUsed": "You've already used your daily boar! The next time you can use the command is ",
         "dailyTitle": "Daily Boar!",
         "extraTitle": "Extra Boar!",
@@ -128,7 +130,13 @@
         "collGiftDetails": " has sent out a %@! These gifts include boars, boar bucks, other powerups, and exclusive items. Be the first to click \"Claim\" to claim it!",
         "collEditionTitle": "__Your editions for %@__",
         "collEditionLine": "**Edition #%@:** %@\n",
-        "giftFail": "BoarBot is missing permissions needed to send gifts!\n\n__Permissions needed__\n- View Channels\n- Send Messages and Create Posts\n- Attach Files",
+        "giftFail": "BoarBot is missing permissions needed to send gifts!",
+        "enhanceGotten": "You received %@ from your enhancement!",
+        "powRightFull": "%@ It took you %@ms to guess correctly! Wait for the powerup to end to see your placement.",
+        "powRight": "Correct!",
+        "powWrongFull": "%@ Try again!",
+        "powWrong": "Incorrect!",
+        "powAttempted": "You've already attempted this powerup!",
         "noParentChannel": "NO CATEGORY",
         "notValidChannel": "This channel isn't valid! Try a different one! The channel should be:\n- A text channel\n- Not already chosen\n- Exists in this server",
         "defaultSelectPlaceholder": "UNSELECTED",
@@ -161,7 +169,7 @@
         "maxPowPages": 3,
         "rarityIncreaseConst": 25000,
         "responseImageSize": [1242, 1388],
-        "responseDetailsPos": [621, 1245],
+        "responseDetailsPos": [621, 1221],
         "responseDetailsWidth": 1160,
         "itemImageSize": [930, 1080],
         "itemPos": [27, 169],
@@ -219,7 +227,7 @@
         "collLastObtainedLabelPos": [370, 818],
         "collLastObtainedPos": [370, 889],
         "collDescriptionLabelPos": [370, 1003],
-        "collDescriptionPos": [370, 1230],
+        "collDescriptionPos": [370, 1216],
         "collDescriptionWidth": 630,
         "collAttemptsLabelPos": [486, 313],
         "collAttemptsPos": [486, 384],
@@ -313,6 +321,10 @@
         "collEnhancerSpacingY": 80,
         "collEnhancerCols": 8,
         "collEnhancerSize": [55, 64],
+        "powSpawnSize": [1491, 1069],
+        "powSpawnDescriptionPos": [745, 623],
+        "powSpawnDescriptionWidth": 1100,
+        "powSpawnRewardPos": [745, 999],
         "border": 25,
         "embedMaxWidth": 1500,
         "embedMinHeight": 204,
@@ -733,13 +745,13 @@
             "name": "Multiplier Boost",
             "pluralName": "Multiplier Boosts",
             "description": "Boosts your multiplier by adding to its current value, making it more likely to get rarer boars when you do /boar daily.",
-            "tiers": [10, 25, 100]
+            "tiers": [50, 25, 10]
         },
         "gift": {
             "name": "Boar Gift",
             "pluralName": "Boar Gifts",
             "description": "A gift that you can be sent to and opened by other people. Contains boar bucks, boars, rare surprises, and more.",
-            "tiers": [0, 1, 3],
+            "tiers": [3, 1, 0],
             "outcomes": [
                 {
                     "weight": 1,
@@ -793,13 +805,13 @@
             "name": "Extra Boar Chance",
             "pluralName": "Extra Boar Chances",
             "description": "Increases your chance of getting an extra boar when you do /boar daily. Capped at 300%. Multiplier boosts apply to all extra boars.",
-            "tiers": [1, 5, 10]
+            "tiers": [10, 5, 1]
         },
         "enhancer": {
             "name": "Boar Enhancer",
             "pluralName": "Boar Enhancers",
             "description": "Can be used to enhance a boar to a random boar of the next rarity. Capped at 16. Divine is the maximum rarity that can be enhanced.",
-            "tiers": [0, 1, 1]
+            "tiers": [1, 1, 0]
         },
         "promptTypes": {
             "emojiFind": {
@@ -810,7 +822,7 @@
                 "frown1": {
                     "name": "Frowns",
                     "emoji1": "\uD83D\uDE41",
-                    "emoji2": "\u2639"
+                    "emoji2": "\u2639\uFE0F"
                 },
                 "detective1": {
                     "name": "Detectives",
@@ -822,10 +834,10 @@
                     "emoji1": "\uD83C\uDF28",
                     "emoji2": "\uD83C\uDF27"
                 },
-                "earth1": {
-                    "name": "Earth",
-                    "emoji1": "\uD83C\uDF0F",
-                    "emoji2": "\uD83C\uDF0E"
+                "lock1": {
+                    "name": "Locks",
+                    "emoji1": "\uD83D\uDD13",
+                    "emoji2": "\uD83D\uDD12"
                 },
                 "folder1": {
                     "name": "Folders",
@@ -835,12 +847,11 @@
             },
             "trivia": {
                 "name": "Boar Trivia",
-                "description": "Answer the trivia question about boars correctly!",
                 "rightStyle": 1,
                 "wrongStyle": 1,
                 "normal1": {
                     "name": "Normal Boar",
-                    "question": "What is normal boar?",
+                    "description": "What is normal boar?",
                     "choices": [
                         "Unremarkable",
                         "Unexceptional",
@@ -850,7 +861,7 @@
                 },
                 "tiny1": {
                     "name": "Tiny Boar",
-                    "question": "What boar is mentioned in Tiny Boar's description?",
+                    "description": "What boar is mentioned in Tiny Boar's description?",
                     "choices": [
                         "Wizard Boar",
                         "Boarfish",
@@ -860,7 +871,7 @@
                 },
                 "explosionless1": {
                     "name": "Explosionless Boar",
-                    "question": "What adjective describes Explosionless Boar's potential explosivity?",
+                    "description": "What adjective describes Explosionless Boar's potential explosivity?",
                     "choices": [
                         "Cataclysmic",
                         "Explosive",
@@ -870,7 +881,7 @@
                 },
                 "chocolate1": {
                     "name": "Chocolate Boar",
-                    "question": "What year was Chocolate Boar pulled off shelves?",
+                    "description": "What year was Chocolate Boar pulled off shelves?",
                     "choices": [
                         "1999",
                         "1995",
@@ -880,7 +891,7 @@
                 },
                 "matrix1": {
                     "name": "Matrix Boar",
-                    "question": "What color pill does Matrix Boar keep taking?",
+                    "description": "What color pill does Matrix Boar keep taking?",
                     "choices": [
                         "Red",
                         "Blue",
@@ -891,38 +902,29 @@
             },
             "fast": {
                 "name": "Quick Click",
-                "description": "Click the green button as fast as you can!",
+                "description": "Be the first to click the green button!",
                 "rightStyle": 3,
                 "wrongStyle": 4,
                 "one": {
                     "name": "One button",
-                    "numButtons": 1,
-                    "emoji1": "\uD83D\uDFE2",
-                    "emoji2": "\uD83D\uDD34"
+                    "numButtons": 1
                 },
                 "two": {
                     "name": "Two buttons",
-                    "numButtons": 2,
-                    "emoji1": "\uD83D\uDFE2",
-                    "emoji2": "\uD83D\uDD34"
+                    "description": "",
+                    "numButtons": 2
                 },
                 "three": {
                     "name": "Three buttons",
-                    "numButtons": 3,
-                    "emoji1": "\uD83D\uDFE2",
-                    "emoji2": "\uD83D\uDD34"
+                    "numButtons": 3
                 },
                 "six": {
                     "name": "Six buttons",
-                    "numButtons": 6,
-                    "emoji1": "\uD83D\uDFE2",
-                    "emoji2": "\uD83D\uDD34"
+                    "numButtons": 6
                 },
                 "nine": {
                     "name": "Nine buttons",
-                    "numButtons": 9,
-                    "emoji1": "\uD83D\uDFE2",
-                    "emoji2": "\uD83D\uDD34"
+                    "numButtons": 9
                 }
             }
         },
@@ -1363,11 +1365,10 @@
         "font": "#FFFFFF",
         "badge": "#4D4278",
         "powerup": "#40DEA9",
-        "bucks": "#14802A",
-        "editionEmbed": "#248046",
-        "baseEmbed": "#4F545C",
+        "bucks": "#00AA00",
+        "green": "#55FF55",
         "maintenance": "#FFFF00",
-        "error": "#ED4245",
+        "error": "#FF5555",
         "rarity1": "#FFFFFF",
         "rarity2": "#00FF0F",
         "rarity3": "#0064FF",
@@ -1378,7 +1379,7 @@
         "rarity8": "#FFEEB0",
         "rarity9": "#FF3136"
     },
-    "unlimitedBoars": true,
+    "unlimitedBoars": false,
     "debugMode": true,
     "maintenanceMode": false
 }

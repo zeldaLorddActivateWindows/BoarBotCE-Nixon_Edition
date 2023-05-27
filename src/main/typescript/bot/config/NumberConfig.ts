@@ -181,6 +181,10 @@ export class NumberConfig {
     public readonly collEnhancerCols: number = 0;
     public readonly collEnhancerSize: [number, number] = [0, 0];
 
+    public readonly powSpawnSize: [number, number] = [0, 0];
+    public readonly powSpawnDescriptionPos: [number, number] = [0, 0];
+    public readonly powSpawnDescriptionWidth: number = 0;
+    public readonly powSpawnRewardPos: [number, number] = [0, 0];
     public readonly border: number = 0;
     public readonly embedMaxWidth: number = 0;
     public readonly embedMinHeight: number = 0;

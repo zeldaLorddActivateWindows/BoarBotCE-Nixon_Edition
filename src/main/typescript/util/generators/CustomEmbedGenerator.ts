@@ -13,7 +13,7 @@ import {AttachmentBuilder} from 'discord.js';
  */
 
 export class CustomEmbedGenerator {
-    public static makeEmbed(str: string, config: BotConfig) {
+    public static makeEmbed(str: string, color: string, config: BotConfig, coloredText?: string, color2?: string) {
         const strConfig = config.stringConfig;
         const nums = config.numberConfig;
         const colorConfig = config.colorConfig;
@@ -24,11 +24,14 @@ export class CustomEmbedGenerator {
         const ctx = canvas.getContext('2d');
 
         ctx.font = font;
-        canvas.width = Math.min(ctx.measureText(str).width + nums.border * 4, nums.embedMaxWidth);
+        canvas.width = Math.min(
+            ctx.measureText(str.replace('%@', coloredText ? coloredText : '%@')).width + nums.border * 4,
+            nums.embedMaxWidth
+        );
 
         canvas.height += CanvasUtils.drawText(
-            ctx, str, nums.originPos, font, 'center',
-            colorConfig.font, canvas.width === nums.embedMaxWidth ? nums.embedMaxWidth - nums.border * 4 : undefined,
+            ctx, str, nums.originPos, font, 'center', colorConfig.font,
+            canvas.width === nums.embedMaxWidth ? nums.embedMaxWidth - nums.border * 4 : undefined,
             true
         );
         ctx.clearRect(nums.originPos[0], nums.originPos[1], canvas.width, canvas.height);
@@ -49,9 +52,9 @@ export class CustomEmbedGenerator {
         ctx.fill();
 
         CanvasUtils.drawText(
-            ctx, str, [canvas.width / 2, canvas.height / 2 + nums.fontSmallMedium / 2 + 7], font, 'center',
-            colorConfig.font, canvas.width === nums.embedMaxWidth ? nums.embedMaxWidth - nums.border * 4 : undefined,
-            true
+            ctx, str, [canvas.width / 2, canvas.height / 2 + nums.fontSmallMedium / 2 + 7], font, 'center', color,
+            canvas.width === nums.embedMaxWidth ? nums.embedMaxWidth - nums.border * 4 : undefined,
+            true, coloredText, color2
         );
 
         return new AttachmentBuilder(canvas.toBuffer(), { name: `${strConfig.imageName}.png` });

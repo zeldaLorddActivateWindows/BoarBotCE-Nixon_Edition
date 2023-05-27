@@ -1,6 +1,6 @@
 import {
     AutocompleteInteraction,
-    ChatInputCommandInteraction, ColorResolvable,
+    ChatInputCommandInteraction,
     Events,
     Interaction,
 } from 'discord.js';
@@ -78,7 +78,7 @@ export default class InteractionListener implements Listener {
             && !this.config.devs.includes(this.interaction.user.id)
         ) {
             await Replies.handleReply(
-                this.interaction, strConfig.maintenance, this.config.colorConfig.maintenance as ColorResolvable
+                this.interaction, strConfig.maintenance, this.config.colorConfig.maintenance
             );
             return false;
         }

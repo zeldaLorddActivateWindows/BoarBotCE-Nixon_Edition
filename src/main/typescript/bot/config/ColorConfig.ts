@@ -19,8 +19,7 @@ export class ColorConfig {
     public readonly powerup: string = '#000000';
     public readonly bucks: string = '#000000';
 
-    public readonly editionEmbed: string = '#000000';
-    public readonly baseEmbed: string = '#000000';
+    public readonly green: string = '#000000';
     public readonly maintenance: string = '#000000';
     public readonly error: string = '#000000';
 

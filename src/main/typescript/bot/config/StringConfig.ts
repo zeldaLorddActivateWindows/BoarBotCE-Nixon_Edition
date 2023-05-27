@@ -112,6 +112,12 @@ export class StringConfig {
     // Miscellaneous strings
 
     public readonly giftFail: string = ' ';
+    public readonly enhanceGotten: string = ' ';
+    public readonly powRightFull: string = ' ';
+    public readonly powRight: string = ' ';
+    public readonly powWrongFull: string = ' ';
+    public readonly powWrong: string = ' ';
+    public readonly powAttempted: string = ' ';
     public readonly noParentChannel: string = ' ';
     public readonly notValidChannel: string = ' ';
     public readonly defaultSelectPlaceholder: string = ' ';

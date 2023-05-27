@@ -82,7 +82,7 @@ export class BoarGift {
                 components: [claimRows[0]]
             });
         } catch {
-            await Replies.handleReply(interaction, this.config.stringConfig.giftFail);
+            await Replies.handleReply(interaction, this.config.stringConfig.giftFail, this.config.colorConfig.error);
             return;
         }
 

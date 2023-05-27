@@ -1,7 +1,7 @@
 import {AttachmentBuilder, ChatInputCommandInteraction} from 'discord.js';
 import {BoarUser} from '../../util/boar/BoarUser';
 import {BoarBotApp} from '../../BoarBotApp';
-import {FormatStrings} from '../../util/discord/FormatStrings';
+import moment from 'moment/moment';
 import {Subcommand} from '../../api/commands/Subcommand';
 import {Queue} from '../../util/interactions/Queue';
 import {InteractionUtils} from '../../util/interactions/InteractionUtils';
@@ -170,7 +170,7 @@ export default class DailySubcommand implements Subcommand {
         if (boarUser.lastDaily >= nextBoarTime - (1000 * 60 * 60 * 24) && !this.config.unlimitedBoars) {
             await Replies.handleReply(
                 this.interaction,
-                this.config.stringConfig.dailyUsed + FormatStrings.toRelTime(nextBoarTime / 1000)
+                this.config.stringConfig.dailyUsed + moment(nextBoarTime).fromNow()
             );
             return false;
         }

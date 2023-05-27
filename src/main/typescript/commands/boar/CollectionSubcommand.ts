@@ -27,7 +27,6 @@ import {FormatStrings} from '../../util/discord/FormatStrings';
 import {RarityConfig} from '../../bot/config/items/RarityConfig';
 import createRBTree, {Node, Tree} from 'functional-red-black-tree';
 import {BoarGift} from '../../util/boar/BoarGift';
-import fs from 'fs';
 import {GuildData} from '../../util/data/GuildData';
 
 enum View {
@@ -62,7 +61,6 @@ export default class CollectionSubcommand implements Subcommand {
     private curPage: number = 0;
     private maxPageNormal: number = 0;
     private enhanceStage: number = 0;
-    private giftStage: number = 0;
     private timerVars = {
         timeUntilNextCollect: 0,
         updateTime: setTimeout(() => {})
@@ -170,7 +168,6 @@ export default class CollectionSubcommand implements Subcommand {
                 await this.modalHandle(inter);
 
                 this.enhanceStage--;
-                this.giftStage--;
 
                 clearInterval(this.timerVars.updateTime);
                 return;
@@ -218,43 +215,28 @@ export default class CollectionSubcommand implements Subcommand {
 
                 case collComponents.enhance.customId:
                     if (this.enhanceStage !== 1) {
+                        this.enhanceStage = 2;
                         await this.firstInter.followUp({
                             files: [await this.collectionImage.finalizeEnhanceConfirm(this.curPage)],
                             ephemeral: true
                         });
-                        this.enhanceStage = 2;
                     } else {
                         await this.doEnhance();
                     }
                     break;
 
                 case collComponents.gift.customId:
-                    if (this.giftStage !== 1) {
-                        const confirmFile = this.config.pathConfig.collAssets + this.config.pathConfig.collGiftConfirm;
-                        await this.firstInter.followUp({
-                            files: [
-                                new AttachmentBuilder(
-                                    Buffer.from(fs.readFileSync(confirmFile)),
-                                    { name:`${this.config.stringConfig.imageName}.png` }
-                                )
-                            ],
-                            ephemeral: true
-                        });
-                        this.giftStage = 2;
-                    } else {
-                        await Queue.addQueue(() => {
-                            this.boarUser.refreshUserData();
-                            this.boarUser.powerups.numGifts--;
-                            this.boarUser.powerups.giftsUsed++;
-                            this.boarUser.updateUserData();
-                        }, inter.id + this.boarUser.user.id);
-                        await new BoarGift(this.boarUser, this.collectionImage, this.config).sendMessage(inter);
-                    }
+                    await Queue.addQueue(() => {
+                        this.boarUser.refreshUserData();
+                        this.boarUser.powerups.numGifts--;
+                        this.boarUser.powerups.giftsUsed++;
+                        this.boarUser.updateUserData();
+                    }, inter.id + this.boarUser.user.id);
+                    await new BoarGift(this.boarUser, this.collectionImage, this.config).sendMessage(inter);
                     break;
             }
 
             this.enhanceStage--;
-            this.giftStage--;
             await this.showCollection();
         } catch (err: unknown) {
             await LogDebug.handleError(err);
@@ -328,6 +310,11 @@ export default class CollectionSubcommand implements Subcommand {
             this.config.boarItemConfigs[enhancedBoar].name.toLowerCase().replace(/\s+/g, ''), this.allBoarsTree.root
         ) - 1;
 
+        await Replies.handleReply(this.compInter, this.config.stringConfig.enhanceGotten,
+            this.config.colorConfig.font, this.allBoars[this.curPage].name,
+            this.allBoars[this.curPage].color, true
+        );
+
         this.collectionImage.updateInfo(this.boarUser, this.allBoars, this.config);
         await this.collectionImage.createNormalBase();
     }
@@ -376,7 +363,8 @@ export default class CollectionSubcommand implements Subcommand {
             // Updates the cooldown to interact again
             CollectorUtils.canInteract(this.timerVars);
 
-            if (!submittedModal.isModalSubmit() || this.collector.ended ||
+            if (
+                !submittedModal.isModalSubmit() || this.collector.ended ||
                 !submittedModal.guild || submittedModal.customId !== this.modalShowing.data.custom_id
             ) {
                 clearInterval(this.timerVars.updateTime);
@@ -425,7 +413,7 @@ export default class CollectionSubcommand implements Subcommand {
             if (reason == CollectorUtils.Reasons.Error) {
                 await Replies.handleReply(
                     this.firstInter, this.config.stringConfig.setupError,
-                    this.config.colorConfig.error as ColorResolvable, true
+                    this.config.colorConfig.error, undefined, undefined, true
                 );
             }
 

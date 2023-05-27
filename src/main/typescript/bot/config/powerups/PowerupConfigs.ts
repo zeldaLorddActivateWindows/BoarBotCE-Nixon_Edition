@@ -12,6 +12,8 @@ import {RowConfig} from '../components/RowConfig';
  */
 
 export class PowerupConfigs {
+    [powerupKey: string]: PowerupConfig | PromptTypeConfigs | RowConfig[];
+
     public readonly multiBoost: PowerupConfig = new PowerupConfig;
     public readonly gift: PowerupConfig = new PowerupConfig;
     public readonly extraChance: PowerupConfig = new PowerupConfig;

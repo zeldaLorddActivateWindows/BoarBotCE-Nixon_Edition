@@ -65,7 +65,7 @@ export class CanvasUtils {
                 }
             }
 
-            lines.push(curLine);
+            lines.push(curLine.substring(0, curLine.length-1));
 
             newHeight -= lineHeight * (lines.length-1) / 2;
 

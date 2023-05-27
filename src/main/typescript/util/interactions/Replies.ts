@@ -1,8 +1,7 @@
 import {
     ChatInputCommandInteraction,
-    ColorResolvable,
     MessageComponentInteraction,
-    ModalSubmitInteraction, TextChannel
+    ModalSubmitInteraction
 } from 'discord.js';
 import {BotConfig} from '../../bot/config/BotConfig';
 import {LogDebug} from '../logging/LogDebug';
@@ -31,7 +30,7 @@ export class Replies {
         config: BotConfig
     ): Promise<void> {
         LogDebug.sendDebug('Tried to run command while setup being configured', config, interaction);
-        await Replies.handleReply(interaction, config.stringConfig.doingSetup);
+        await Replies.handleReply(interaction, config.stringConfig.doingSetup, config.colorConfig.error);
     }
 
     /**
@@ -49,36 +48,7 @@ export class Replies {
         includeTrade: boolean = false
     ): Promise<void> {
         LogDebug.sendDebug('Used in the wrong channel', config, interaction);
-
-        let strChannels = ' ';
-
-        if (guildData) {
-            for (const ch of guildData.channels) {
-                try {
-                    strChannels += '#' + (
-                        await BoarBotApp.getBot().getClient().channels.fetch(ch) as TextChannel
-                    ).name + ', ';
-                } catch {}
-            }
-
-            if (includeTrade) {
-                try {
-                    strChannels += '#' + (
-                        await BoarBotApp.getBot().getClient().channels.fetch(guildData.tradeChannel) as TextChannel
-                    ).name;
-                } catch {}
-            }
-        }
-
-        if (strChannels === ' ') {
-            strChannels += 'No channels found';
-        }
-
-        if (strChannels.endsWith(', ')) {
-            strChannels = strChannels.substring(0, strChannels.length-2);
-        }
-
-        await Replies.handleReply(interaction, config.stringConfig.wrongChannel + strChannels);
+        await Replies.handleReply(interaction, config.stringConfig.wrongChannel, config.colorConfig.error);
     }
 
     /**
@@ -92,7 +62,7 @@ export class Replies {
         config: BotConfig
     ): Promise<void> {
         LogDebug.sendDebug('Not a developer', config, interaction);
-        await Replies.handleReply(interaction, config.stringConfig.noPermission);
+        await Replies.handleReply(interaction, config.stringConfig.noPermission, config.colorConfig.error);
     }
 
     /**
@@ -106,7 +76,7 @@ export class Replies {
         config: BotConfig
     ): Promise<void> {
         LogDebug.sendDebug('Currently on cooldown', config, interaction);
-        await Replies.handleReply(interaction, config.stringConfig.onCooldown);
+        await Replies.handleReply(interaction, config.stringConfig.onCooldown, config.colorConfig.error);
     }
 
     /**
@@ -115,28 +85,40 @@ export class Replies {
      * @param interaction - Interaction to reply to
      * @param content - Content of the reply
      * @param color - Color of the embed
+     * @param coloredContent
+     * @param color2
      * @param forceFollowup - Forces interaction reply to be a followup
      */
     public static async handleReply(
         interaction: ChatInputCommandInteraction | MessageComponentInteraction | ModalSubmitInteraction,
         content: string,
-        color: ColorResolvable = BoarBotApp.getBot().getConfig().colorConfig.baseEmbed as ColorResolvable,
+        color: string = BoarBotApp.getBot().getConfig().colorConfig.font,
+        coloredContent?: string,
+        color2?: string,
         forceFollowup: boolean = false
     ): Promise<void> {
-        const embedImage = CustomEmbedGenerator.makeEmbed(content, BoarBotApp.getBot().getConfig());
+        const embedImage = CustomEmbedGenerator.makeEmbed(
+            content, color, BoarBotApp.getBot().getConfig(), coloredContent, color2
+        );
 
         if (!forceFollowup && interaction.deferred && interaction.isChatInputCommand()) {
             await interaction.editReply({
-                files: [embedImage]
+                content: '',
+                files: [embedImage],
+                components: []
             });
         } else if (forceFollowup || interaction.replied || !interaction.isChatInputCommand()) {
             await interaction.followUp({
+                content: '',
                 files: [embedImage],
+                components: [],
                 ephemeral: true
             });
         } else {
             await interaction.reply({
+                content: '',
                 files: [embedImage],
+                components: [],
                 ephemeral: true
             });
         }

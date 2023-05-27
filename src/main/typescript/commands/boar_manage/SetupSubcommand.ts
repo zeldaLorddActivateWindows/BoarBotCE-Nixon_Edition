@@ -3,7 +3,7 @@ import {
     ButtonBuilder,
     ButtonInteraction,
     ButtonStyle,
-    ChannelType, ChatInputCommandInteraction, ColorResolvable,
+    ChannelType, ChatInputCommandInteraction,
     ComponentType, Events, Interaction,
     InteractionCollector, ModalBuilder, PermissionsBitField, SelectMenuComponentOptionData,
     StringSelectMenuBuilder, StringSelectMenuInteraction, TextChannel,
@@ -346,7 +346,7 @@ export default class SetupSubcommand implements Subcommand {
             const strConfig = this.config.stringConfig;
 
             let replyContent: string;
-            let color: ColorResolvable | undefined;
+            let color: string | undefined;
 
             if (reason && reason !== CollectorUtils.Reasons.Finished || !this.compInter.guild) {
                 await DataHandlers.removeGuildFile(this.guildDataPath, this.guildData);
@@ -358,7 +358,7 @@ export default class SetupSubcommand implements Subcommand {
                     break;
                 case CollectorUtils.Reasons.Error:
                     replyContent = strConfig.setupError;
-                    color = 0xED4245;
+                    color = this.config.colorConfig.error;
                     break;
                 case CollectorUtils.Reasons.Expired:
                     replyContent = strConfig.setupExpired;
@@ -374,7 +374,7 @@ export default class SetupSubcommand implements Subcommand {
                     fs.writeFileSync(this.guildDataPath, JSON.stringify(this.guildData));
 
                     replyContent = strConfig.setupFinishedAll;
-                    color = 0x3BA55C;
+                    color = this.config.colorConfig.green;
 
                     break;
                 default:
