@@ -32,7 +32,6 @@ export class PathConfig {
     public readonly itemOverlay: string = '';
     public readonly itemUnderlay: string = '';
     public readonly itemBackplate: string = '';
-    public readonly itemNameplate: string = '';
 
     // Image/asset file names for collection attachments
 
@@ -44,6 +43,9 @@ export class PathConfig {
     public readonly collPowerUnderlay: string = '';
     public readonly collPowerUnderlay2: string = '';
     public readonly collPowerUnderlay3: string = '';
+    public readonly collEnhanceUnderlay: string = '';
+    public readonly collGiftConfirm: string = '';
+    public readonly collGiftUnderlay: string = '';
     public readonly clanNone: string = '';
     public readonly enhancerOn: string = '';
     public readonly enhancerOff: string = '';
@@ -51,10 +53,14 @@ export class PathConfig {
 
     // Other image/asset file names
 
+    public readonly powerupSpawn: string = '';
+    public readonly powerupEnd: string = '';
     public readonly thankYouImage: string = '';
     public readonly mainFont: string = '';
     public readonly helpBackground: string = '';
     public readonly circleMask: string = '';
+    public readonly bucks: string = '';
+    public readonly powerup: string = '';
 
     // Python scripts
 

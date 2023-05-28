@@ -2,6 +2,7 @@ import {ChatInputCommandInteraction, SlashCommandBuilder} from 'discord.js';
 import {BoarBotApp} from '../../BoarBotApp';
 import {Command} from '../../api/commands/Command';
 import {LogDebug} from '../../util/logging/LogDebug';
+import {Subcommand} from '../../api/commands/Subcommand';
 
 /**
  * {@link BoarManageCommand BoarManageCommand.ts}
@@ -28,12 +29,13 @@ export default class BoarManageCommand implements Command {
      *
      * @param interaction - An interaction that could've called a boar-manage subcommand
      */
-    public async execute(interaction: ChatInputCommandInteraction) {
-        const subcommand = BoarBotApp.getBot().getSubcommands().get(interaction.options.getSubcommand());
+    public async execute(interaction: ChatInputCommandInteraction): Promise<void> {
+        const subcommand: Subcommand | undefined = BoarBotApp.getBot().getSubcommands()
+            .get(interaction.options.getSubcommand());
 
         if (subcommand) {
-            const exports = require(subcommand.data.path);
-            const commandClass = new exports.default();
+            const exports: any = require(subcommand.data.path);
+            const commandClass: any = new exports.default();
 
             try {
                 await commandClass.execute(interaction);

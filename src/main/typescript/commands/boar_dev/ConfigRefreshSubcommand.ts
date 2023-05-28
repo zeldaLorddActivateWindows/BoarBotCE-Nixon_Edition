@@ -1,11 +1,7 @@
-import {ChatInputCommandInteraction, User} from 'discord.js';
-import {BoarUser} from '../../util/boar/BoarUser';
+import {ChatInputCommandInteraction} from 'discord.js';
 import {BoarBotApp} from '../../BoarBotApp';
 import {Subcommand} from '../../api/commands/Subcommand';
-import {Queue} from '../../util/interactions/Queue';
-import {InteractionUtils} from '../../util/interactions/InteractionUtils';
 import {Replies} from '../../util/interactions/Replies';
-import {LogDebug} from '../../util/logging/LogDebug';
 
 /**
  * {@link ConfigRefreshSubcommand ConfigRefreshSubcommand.ts}
@@ -25,9 +21,8 @@ export default class ConfigRefreshSubcommand implements Subcommand {
      *
      * @param interaction - The interaction that called the subcommand
      */
-    public async execute(interaction: ChatInputCommandInteraction) {
+    public async execute(interaction: ChatInputCommandInteraction): Promise<void> {
         BoarBotApp.getBot().loadConfig();
-
-        await interaction.reply({ content: 'Successfully refreshed the config.', ephemeral: true });
+        await Replies.handleReply(interaction, 'Successfully refreshed the config.');
     }
 }

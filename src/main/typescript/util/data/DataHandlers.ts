@@ -1,7 +1,11 @@
 import fs from 'fs';
-import {ChatInputCommandInteraction} from 'discord.js';
+import {ChatInputCommandInteraction, MessageComponentInteraction} from 'discord.js';
 import {BoarBotApp} from '../../BoarBotApp';
 import {LogDebug} from '../logging/LogDebug';
+import {Replies} from '../interactions/Replies';
+import {GuildData} from './GuildData';
+import {BotConfig} from '../../bot/config/BotConfig';
+import {StringConfig} from '../../bot/config/StringConfig';
 
 /**
  * {@link DataHandlers DataHandlers.ts}
@@ -20,9 +24,9 @@ export class DataHandlers {
      * @return globalData - Global data parsed from JSON
      */
     public static getGlobalData(): any {
-        const config = BoarBotApp.getBot().getConfig();
+        const config: BotConfig = BoarBotApp.getBot().getConfig();
 
-        const globalFile = config.pathConfig.globalDataFile;
+        const globalFile: string = config.pathConfig.globalDataFile;
 
         return JSON.parse(fs.readFileSync(globalFile, 'utf-8'));
     }
@@ -32,37 +36,33 @@ export class DataHandlers {
      *
      * @param interaction - Interaction to reply to
      * @param create - Whether to create the guildData file if it doesn't exist
+     * @param guildID - Used as replacement for interaction
      * @return guildData - Guild data parsed from JSON (or undefined if it doesn't exist)
      */
     public static async getGuildData(
-        interaction: ChatInputCommandInteraction,
-        create: boolean = false
-    ): Promise<any> {
-        const config = BoarBotApp.getBot().getConfig();
+        guildID: string | undefined,
+        interaction?: ChatInputCommandInteraction | MessageComponentInteraction,
+        create: boolean = false,
+    ): Promise<GuildData | undefined> {
+        if (!guildID) return;
 
-        const strConfig = config.stringConfig;
+        const config: BotConfig = BoarBotApp.getBot().getConfig();
+        const strConfig: StringConfig = config.stringConfig;
 
-        const guildDataPath = config.pathConfig.guildDataFolder + interaction.guild?.id + '.json';
-        let guildData: any;
+        const guildDataPath: string = config.pathConfig.guildDataFolder + guildID + '.json';
 
         try {
-            guildData = JSON.parse(fs.readFileSync(guildDataPath, 'utf-8'));
-            return guildData;
+            return JSON.parse(fs.readFileSync(guildDataPath, 'utf-8'));
         } catch {
             if (create) {
-                fs.writeFileSync(guildDataPath, '{}');
-                guildData = JSON.parse(fs.readFileSync(guildDataPath, 'utf-8'));
-                return guildData;
+                fs.writeFileSync(guildDataPath, JSON.stringify(new GuildData));
+                return JSON.parse(fs.readFileSync(guildDataPath, 'utf-8'));
             }
 
-            LogDebug.sendDebug('Setup not configured', config, interaction);
-
-            await interaction.reply({
-                content: strConfig.noSetup,
-                ephemeral: true
-            });
-
-            return undefined;
+            if (interaction) {
+                LogDebug.sendDebug('Setup not configured', config, interaction);
+                await Replies.handleReply(interaction, strConfig.noSetup);
+            }
         }
     }
 
@@ -72,8 +72,8 @@ export class DataHandlers {
      * @param guildDataPath - Path of guild data file
      * @param guildData - Guild data parsed from JSON (or undefined if it doesn't exist)
      */
-    public static async removeGuildFile(guildDataPath: string, guildData: any): Promise<void> {
-        if (Object.keys(guildData).length !== 0) return;
+    public static async removeGuildFile(guildDataPath: string, guildData: GuildData | undefined): Promise<void> {
+        if (!guildData || guildData.fullySetup) return;
 
         try {
             fs.rmSync(guildDataPath);

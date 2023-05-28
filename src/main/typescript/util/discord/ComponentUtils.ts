@@ -4,6 +4,7 @@ import {
     ComponentType, SelectMenuComponentOptionData, StringSelectMenuBuilder
 } from 'discord.js';
 import {RowConfig} from '../../bot/config/components/RowConfig';
+import {ComponentConfig} from '../../bot/config/components/ComponentConfig';
 
 /**
  * {@link ComponentUtils ComponentUtils.ts}
@@ -18,22 +19,40 @@ export class ComponentUtils {
     /**
      * Adds an addition to all custom ids in an action row
      *
-     * @param rowConfig - The configuration of the row
-     * @param row - The actual row
-     * @param addition - What to add
+     * @param rowsConfig - The configuration of a collection of rows
+     * @param rows - The rows to modify
+     * @param id - The ID to append to the custom ID
+     * @param userID - A user ID to append
+     * @param options - Options to add to a select menu
      * @return row - Updated row with addition to ids
      */
     public static addToIDs(
-        rowConfig: RowConfig,
-        row: ActionRowBuilder<StringSelectMenuBuilder | ButtonBuilder>,
-        addition: string
-    ): ActionRowBuilder<StringSelectMenuBuilder | ButtonBuilder> {
-        for (const component in row.components) {
-            const componentConfig = rowConfig.components[component];
-            row.components[component].setCustomId(componentConfig.customId + '|' + addition);
-        }
+        rowsConfig: RowConfig[],
+        rows: ActionRowBuilder<StringSelectMenuBuilder | ButtonBuilder>[],
+        id: string,
+        userID?: string,
+        options?: SelectMenuComponentOptionData[]
+    ): void {
+        let rowIndex: number = 0;
 
-        return row;
+        for (const row of rows) {
+            for (const component in row.components) {
+                const componentConfig: ComponentConfig = rowsConfig[rowIndex].components[component];
+                let curID: string = componentConfig.customId + '|' + id;
+
+                if (userID) {
+                    curID += '|' + userID;
+                }
+
+                row.components[component].setCustomId(curID);
+            }
+
+            if (options) {
+                ComponentUtils.addOptionsToSelectRow(row, options);
+            }
+
+            rowIndex++;
+        }
     }
 
     /**
@@ -51,5 +70,15 @@ export class ComponentUtils {
         }
 
         return row;
+    }
+
+    public static makeRows(rowsConfig: RowConfig[]): ActionRowBuilder<StringSelectMenuBuilder | ButtonBuilder>[] {
+        const newRows: ActionRowBuilder<StringSelectMenuBuilder | ButtonBuilder>[] = [];
+
+        for (const rowConfig of rowsConfig) {
+            newRows.push(new ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>(rowConfig));
+        }
+
+        return newRows;
     }
 }

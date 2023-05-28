@@ -3,10 +3,10 @@ import {
     ButtonBuilder,
     ButtonInteraction,
     ButtonStyle,
-    ChannelType, ChatInputCommandInteraction, ColorResolvable,
-    ComponentType, Events, Interaction,
-    InteractionCollector, ModalBuilder, SelectMenuComponentOptionData,
-    StringSelectMenuBuilder, StringSelectMenuInteraction,
+    ChannelType, ChatInputCommandInteraction, Collection,
+    ComponentType, Events, GuildBasedChannel, Interaction,
+    InteractionCollector, ModalBuilder, PermissionsBitField, SelectMenuComponentOptionData,
+    StringSelectMenuBuilder, StringSelectMenuInteraction, TextChannel,
     TextInputStyle,
 } from 'discord.js';
 import fs from 'fs';
@@ -21,6 +21,10 @@ import {CollectorUtils} from '../../util/discord/CollectorUtils';
 import {SubcommandConfig} from '../../bot/config/commands/SubcommandConfig';
 import {ComponentUtils} from '../../util/discord/ComponentUtils';
 import {Replies} from '../../util/interactions/Replies';
+import {GuildData} from '../../util/data/GuildData';
+import {RowConfig} from '../../bot/config/components/RowConfig';
+import {StringConfig} from '../../bot/config/StringConfig';
+import {ModalConfig} from '../../bot/config/modals/ModalConfig';
 
 /**
  * {@link SetupSubcommand SetupSubcommand.ts}
@@ -40,10 +44,10 @@ export default class SetupSubcommand implements Subcommand {
     private compInter: StringSelectMenuInteraction | ButtonInteraction =
         {} as StringSelectMenuInteraction | ButtonInteraction;
 
-    private staticRow = new ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>();
+    private staticRows: ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>[] = [];
     private setupFields: FormField[] = [];
     private guildDataPath: string = '';
-    private guildData: any = {};
+    private guildData: GuildData = {} as GuildData;
     private userResponses = {
         isSBServer: false,
         tradeChannelId: '',
@@ -75,17 +79,18 @@ export default class SetupSubcommand implements Subcommand {
 
         this.config = BoarBotApp.getBot().getConfig();
         
-        this.staticRow = this.getStaticRow();
-        this.setupFields = this.getSetupFields(this.staticRow);
+        this.staticRows = this.getStaticRows();
+        this.setupFields = this.getSetupFields(this.staticRows);
 
         this.guildDataPath = this.config.pathConfig.guildDataFolder + interaction.guild.id + '.json';
-        this.guildData = await DataHandlers.getGuildData(interaction, true);
+        this.guildData = await DataHandlers.getGuildData(interaction.guild.id, interaction, true) as GuildData;
         
-        this.collector = await CollectorUtils.createCollector(interaction, interaction.id)
-            .catch(async (err: unknown) => {
-                await DataHandlers.removeGuildFile(this.guildDataPath, this.guildData);
-                throw err;
-            });
+        this.collector = await CollectorUtils.createCollector(
+            interaction.channel as TextChannel, interaction.id, this.config.numberConfig
+        ).catch(async (err: unknown) => {
+            await DataHandlers.removeGuildFile(this.guildDataPath, this.guildData);
+            throw err;
+        });
 
         await this.setupFields[0].editReply(interaction).catch(async (err: unknown) => {
             await DataHandlers.removeGuildFile(this.guildDataPath, this.guildData);
@@ -106,7 +111,7 @@ export default class SetupSubcommand implements Subcommand {
      */
     private async handleCollect(inter: StringSelectMenuInteraction | ButtonInteraction): Promise<void> {
         try {
-            const canInteract = await CollectorUtils.canInteract(this.timerVars, inter);
+            const canInteract: boolean = await CollectorUtils.canInteract(this.timerVars, inter);
             if (!canInteract) return;
 
             if (!inter.isMessageComponent()) return;
@@ -117,7 +122,7 @@ export default class SetupSubcommand implements Subcommand {
                 `${inter.customId.split('|')[0]} on field ${this.curField}`, this.config, this.firstInter
             );
 
-            const setupRowConfig = this.config.commandConfigs.boarManage.setup.componentFields;
+            const setupRowConfig: RowConfig[][] = this.config.commandConfigs.boarManage.setup.componentFields;
             const setupComponents = {
                 tradeSelect: setupRowConfig[0][0].components[0],
                 refreshTrade: setupRowConfig[0][1].components[0],
@@ -218,7 +223,7 @@ export default class SetupSubcommand implements Subcommand {
      * @private
      */
     private async doNext(): Promise<void> {
-        const nextButton: ButtonBuilder = this.staticRow.components[2] as ButtonBuilder;
+        const nextButton: ButtonBuilder = this.staticRows[0].components[2] as ButtonBuilder;
         nextButton.setDisabled(true);
 
         if (this.curField === 1) {
@@ -237,11 +242,11 @@ export default class SetupSubcommand implements Subcommand {
      * @private
      */
     private async doTradeSelect(): Promise<void> {
-        const selectInter = this.compInter as StringSelectMenuInteraction;
+        const selectInter: StringSelectMenuInteraction = this.compInter as StringSelectMenuInteraction;
         this.userResponses.tradeChannelId = selectInter.values[0];
 
         // Gets the label of the chosen option
-        const placeholder = selectInter.component.options.filter(option =>
+        const placeholder: string = selectInter.component.options.filter(option =>
             option.value === selectInter.values[0]
         )[0].label;
 
@@ -255,7 +260,7 @@ export default class SetupSubcommand implements Subcommand {
      * @private
      */
     private async doBoarSelect(): Promise<void> {
-        const selectInter = this.compInter as StringSelectMenuInteraction;
+        const selectInter: StringSelectMenuInteraction = this.compInter as StringSelectMenuInteraction;
 
         // Gets index to change based on ending number in select menu ID
         const selectIndex: number =
@@ -263,7 +268,7 @@ export default class SetupSubcommand implements Subcommand {
         this.userResponses.boarChannels[selectIndex] = selectInter.values[0];
 
         // Gets the label of the chosen option
-        const placeholder = selectInter.component.options.filter(option =>
+        const placeholder: string = selectInter.component.options.filter(option =>
             option.value === selectInter.values[0]
         )[0].label;
 
@@ -279,9 +284,9 @@ export default class SetupSubcommand implements Subcommand {
      * @private
      */
     private async doRefreshRestart(setupComponents: any): Promise<void> {
-        const strConfig = this.config.stringConfig;
-        const isRestart = this.compInter.customId.startsWith(setupComponents.restart.customId);
-        const nextButton: ButtonBuilder = this.staticRow.components[2] as ButtonBuilder;
+        const strConfig: StringConfig = this.config.stringConfig;
+        const isRestart: boolean = this.compInter.customId.startsWith(setupComponents.restart.customId);
+        const nextButton: ButtonBuilder = this.staticRows[0].components[2] as ButtonBuilder;
 
         if (isRestart || this.curField === 1) {
             this.userResponses.tradeChannelId = '';
@@ -319,14 +324,14 @@ export default class SetupSubcommand implements Subcommand {
      * @private
      */
     private async doSb(setupComponents: any): Promise<void> {
-        const strConfig = this.config.stringConfig;
+        const strConfig: StringConfig = this.config.stringConfig;
         this.userResponses.isSBServer = this.compInter.customId.startsWith(setupComponents.sbYes.customId);
 
         this.setupFields[2].content = strConfig.setupFinished3 + (this.userResponses.isSBServer
             ? setupComponents.sbYes.label
             : setupComponents.sbNo.label);
 
-        this.staticRow.components[2].setDisabled(false);
+        this.staticRows[0].components[2].setDisabled(false);
 
         await this.setupFields[2].editReply(this.compInter);
     }
@@ -341,12 +346,12 @@ export default class SetupSubcommand implements Subcommand {
         try {
             LogDebug.sendDebug('Ended collection with reason: ' + reason, this.config, this.firstInter);
 
-            const strConfig = this.config.stringConfig;
+            const strConfig: StringConfig = this.config.stringConfig;
 
             let replyContent: string;
-            let color: ColorResolvable | undefined;
+            let color: string | undefined;
 
-            if (reason && reason !== CollectorUtils.Reasons.Finished) {
+            if (reason && reason !== CollectorUtils.Reasons.Finished || !this.compInter.guild) {
                 await DataHandlers.removeGuildFile(this.guildDataPath, this.guildData);
             }
 
@@ -356,13 +361,14 @@ export default class SetupSubcommand implements Subcommand {
                     break;
                 case CollectorUtils.Reasons.Error:
                     replyContent = strConfig.setupError;
-                    color = 0xED4245;
+                    color = this.config.colorConfig.error;
                     break;
                 case CollectorUtils.Reasons.Expired:
                     replyContent = strConfig.setupExpired;
                     break;
                 case CollectorUtils.Reasons.Finished:
                     this.guildData = {
+                        fullySetup: true,
                         isSBServer: this.userResponses.isSBServer,
                         tradeChannel: this.userResponses.tradeChannelId,
                         channels: this.userResponses.boarChannels.filter((ch) => ch !== '')
@@ -371,7 +377,7 @@ export default class SetupSubcommand implements Subcommand {
                     fs.writeFileSync(this.guildDataPath, JSON.stringify(this.guildData));
 
                     replyContent = strConfig.setupFinishedAll;
-                    color = 0x3BA55C;
+                    color = this.config.colorConfig.green;
 
                     break;
                 default:
@@ -397,15 +403,24 @@ export default class SetupSubcommand implements Subcommand {
         interaction: Interaction = this.firstInter,
         blackList?: string[]
     ): SelectMenuComponentOptionData[] {
-        const strConfig = this.config.stringConfig;
+        const strConfig: StringConfig = this.config.stringConfig;
 
         const channelOptions: SelectMenuComponentOptionData[] = [];
         const noChannelOptions: SelectMenuComponentOptionData[] = [{
             label: strConfig.emptySelect,
             value: strConfig.emptySelect
         }];
-        
-        const textChannels = interaction.guild?.channels.cache.filter(ch => ch.type === ChannelType.GuildText);
+
+        const textChannels: Collection<string, GuildBasedChannel> | undefined = interaction.guild?.channels.cache
+            .filter(ch => {
+                return ch.type === ChannelType.GuildText && ch.guild && ch.guild.members.me &&
+                    ch.permissionsFor(ch.guild.members.me).has([
+                        PermissionsBitField.Flags.ViewChannel,
+                        PermissionsBitField.Flags.SendMessages,
+                        PermissionsBitField.Flags.AttachFiles
+                    ]);
+            }
+        );
 
         if (!textChannels) {
             return noChannelOptions;
@@ -443,7 +458,7 @@ export default class SetupSubcommand implements Subcommand {
      * @private
      */
     private async modalHandle(inter: StringSelectMenuInteraction | ButtonInteraction): Promise<void> {
-        const modals = this.config.commandConfigs.boarManage.setup.modals;
+        const modals: ModalConfig[] = this.config.commandConfigs.boarManage.setup.modals;
 
         this.modalShowing = new ModalBuilder(modals[this.curField-1]);
         this.modalShowing.setCustomId(modals[this.curField-1].customId + + '|' + inter.id);
@@ -468,7 +483,7 @@ export default class SetupSubcommand implements Subcommand {
     private modalListener = async (submittedModal: Interaction) => {
         try  {
             // If not a modal submission on current interaction, destroy the modal listener
-            if (submittedModal.isMessageComponent() && submittedModal.customId.endsWith(this.firstInter.id) ||
+            if (submittedModal.isMessageComponent() && submittedModal.customId.endsWith(this.firstInter.id as string) ||
                 BoarBotApp.getBot().getConfig().maintenanceMode && !this.config.devs.includes(this.compInter.user.id)
             ) {
                 clearInterval(this.timerVars.updateTime);
@@ -490,13 +505,14 @@ export default class SetupSubcommand implements Subcommand {
             await submittedModal.deferUpdate();
             await submittedModal.guild.channels.fetch();
 
-            const strConfig = this.config.stringConfig;
+            const strConfig: StringConfig = this.config.stringConfig;
 
-            const submittedChannelID = submittedModal.fields.getTextInputValue(
+            const submittedChannelID: string = submittedModal.fields.getTextInputValue(
                 this.modalShowing.components[0].components[0].data.custom_id as string
             );
-            const submittedChannel = submittedModal.guild.channels.cache.get(submittedChannelID);
-            const notAlreadyChosen = !this.userResponses.boarChannels.includes(submittedChannelID) &&
+            const submittedChannel: GuildBasedChannel | undefined = submittedModal.guild.channels.cache
+                .get(submittedChannelID);
+            const notAlreadyChosen: boolean = !this.userResponses.boarChannels.includes(submittedChannelID) &&
                 this.userResponses.tradeChannelId !== submittedChannelID;
 
             let submittedChannelName: string;
@@ -509,7 +525,7 @@ export default class SetupSubcommand implements Subcommand {
             );
 
             // Checking if channel exists and getting properties of channel
-            if (submittedChannel && submittedChannel.isTextBased() && notAlreadyChosen) {
+            if (submittedChannel && submittedChannel.type === ChannelType.GuildText && notAlreadyChosen) {
                 submittedChannelName = submittedChannel.name;
 
                 if (submittedChannel.parent) {
@@ -523,7 +539,7 @@ export default class SetupSubcommand implements Subcommand {
                 return;
             }
 
-            const placeholder = strConfig.channelOptionLabel
+            const placeholder: string = strConfig.channelOptionLabel
                 .replace('%@', submittedChannelName)
                 .replace('%@', submittedChannelParentName)
                 .substring(0, 100);
@@ -574,8 +590,8 @@ export default class SetupSubcommand implements Subcommand {
         placeholder: string,
         selectIndex: number = 0,
     ): Promise<void> {
-        const strConfig = this.config.stringConfig;
-        const setupRowConfigs = this.config.commandConfigs.boarManage.setup.componentFields;
+        const strConfig: StringConfig = this.config.stringConfig;
+        const setupRowConfigs: RowConfig[][] = this.config.commandConfigs.boarManage.setup.componentFields;
         const setupComponents = {
             tradeRefresh: setupRowConfigs[0][1].components[0],
             boarRefresh: setupRowConfigs[1][3].components[0],
@@ -588,12 +604,12 @@ export default class SetupSubcommand implements Subcommand {
         const fieldTwoSelectMenus: ActionRowBuilder<StringSelectMenuBuilder>[] =
             this.setupFields[1].components.slice(0,3) as ActionRowBuilder<StringSelectMenuBuilder>[];
         const nextButton: ButtonBuilder =
-            this.staticRow.components[2] as ButtonBuilder;
+            this.staticRows[0].components[2] as ButtonBuilder;
 
         // Information about the state of the interaction
         const chosenChannels: string[] =
             this.userResponses.boarChannels.concat(this.userResponses.tradeChannelId);
-        const isRefresh = this.compInter.customId.startsWith(setupComponents.tradeRefresh.customId) ||
+        const isRefresh: boolean = this.compInter.customId.startsWith(setupComponents.tradeRefresh.customId) ||
             this.compInter.customId.startsWith(setupComponents.boarRefresh.customId) ||
             this.compInter.customId.startsWith(setupComponents.restart.customId);
 
@@ -635,7 +651,7 @@ export default class SetupSubcommand implements Subcommand {
             const selectMenu: StringSelectMenuBuilder =
                 this.setupFields[1].components[selectIndex].components[0] as StringSelectMenuBuilder;
 
-            let channelsString = '';
+            let channelsString: string = '';
 
             for (const channel of this.userResponses.boarChannels) {
                 if (channel === '') continue;
@@ -657,42 +673,41 @@ export default class SetupSubcommand implements Subcommand {
      *
      * @private
      */
-    private getStaticRow(): ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder> {
-        const setupRowConfigs = this.config.commandConfigs.boarManage.setup.componentFields;
-        let staticRow = new ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>(setupRowConfigs[3][0]);
+    private getStaticRows(): ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>[] {
+        const staticRowsConfig: RowConfig[] = this.config.commandConfigs.boarManage.setup.componentFields[3];
+        let staticRows: ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>[] =
+            ComponentUtils.makeRows(staticRowsConfig);
 
-        staticRow = ComponentUtils.addToIDs(setupRowConfigs[3][0], staticRow, this.firstInter.id);
+        ComponentUtils.addToIDs(staticRowsConfig, staticRows, this.firstInter.id);
 
-        return staticRow;
+        return staticRows;
     }
 
     /**
      * Creates {@link FormField form fields} from configurations and returns them
      *
-     * @param staticRow - The row that all setup fields have
      * @private
+     * @param staticRows
      */
     private getSetupFields(
-        staticRow: ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>,
+        staticRows: ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>[],
     ): FormField[] {
-        const strConfig = this.config.stringConfig;
-        const setupFieldConfigs = this.config.commandConfigs.boarManage.setup.componentFields;
+        const strConfig: StringConfig = this.config.stringConfig;
+        const setupFieldConfigs: RowConfig[][] = this.config.commandConfigs.boarManage.setup.componentFields;
 
         const allFields: ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>[][] = [];
 
         for (const field in setupFieldConfigs) {
-            allFields.push([]);
+            const rowsConfig: RowConfig[] = setupFieldConfigs[field];
+            const newRows: ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>[] =
+                ComponentUtils.makeRows(rowsConfig);
 
-            for (const rowConfig of setupFieldConfigs[field]) {
-                let newRow = new ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>(rowConfig);
+            ComponentUtils.addToIDs(
+                rowsConfig, newRows, this.firstInter.id, undefined, this.getTextChannels()
+            );
 
-                newRow = ComponentUtils.addToIDs(rowConfig, newRow, this.firstInter.id);
-                newRow = ComponentUtils.addOptionsToSelectRow(newRow, this.getTextChannels());
-
-                allFields[field].push(newRow);
-            }
-
-            allFields[field].push(staticRow);
+            allFields[field] = newRows;
+            allFields[field].push(staticRows[0]);
         }
 
         return [

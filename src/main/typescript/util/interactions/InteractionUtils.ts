@@ -1,9 +1,15 @@
-import {ChatInputCommandInteraction, TextChannel} from 'discord.js';
+import {
+    ChatInputCommandInteraction,
+    GuildMember,
+    PermissionsString,
+    TextChannel
+} from 'discord.js';
 import {BoarBotApp} from '../../BoarBotApp';
 import {BotConfig} from '../../bot/config/BotConfig';
 import {DataHandlers} from '../data/DataHandlers';
 import {Replies} from './Replies';
 import {LogDebug} from '../logging/LogDebug';
+import {GuildData} from '../data/GuildData';
 
 /**
  * {@link InteractionUtils InteractionUtils.ts}
@@ -23,35 +29,40 @@ export class InteractionUtils {
      * @return guildData - Guild data parsed from JSON
      */
     public static async handleStart(
-        config: BotConfig,
         interaction: ChatInputCommandInteraction,
+        config: BotConfig,
         includeTrade: boolean = false
     ): Promise<any> {
         if (!interaction.guild || !interaction.channel) return;
 
-        const guildData = await DataHandlers.getGuildData(interaction);
+        const guildData: GuildData | undefined = await DataHandlers.getGuildData(interaction.guild.id, interaction);
         if (!guildData) return;
 
-        if (!guildData.channels) {
-            await Replies.currentConfigReply(config, interaction);
+        if (!guildData.fullySetup) {
+            await Replies.currentConfigReply(interaction, config);
             return;
         }
 
-        const acceptableChannels: string[] = [].concat(guildData.channels);
+        const acceptableChannels: string[] = [...guildData.channels];
 
         if (includeTrade) {
             acceptableChannels.push(guildData.tradeChannel);
         }
 
         if (!acceptableChannels.includes(interaction.channel.id)) {
-            await Replies.wrongChannelReply(config, interaction, guildData, includeTrade);
+            await Replies.wrongChannelReply(interaction, guildData, config, includeTrade);
             return;
         }
 
         return guildData;
     }
 
-    public static async getTextChannel(config: BotConfig, channelID: string): Promise<TextChannel | undefined> {
+    /**
+     * Gets a text channel from ID
+     *
+     * @param channelID - ID of channel
+     */
+    public static async getTextChannel(channelID: string): Promise<TextChannel | undefined> {
         let channel: TextChannel;
 
         try {
@@ -61,19 +72,19 @@ export class InteractionUtils {
                 'Bot cannot find the channel.\nIs the channel ID \'' + channelID +
                 '\' correct? Does the bot have view channel permissions?'
             );
-            return undefined;
+            return;
         }
 
-        const memberMe = channel.guild.members.me;
+        const memberMe: GuildMember | null = channel.guild.members.me;
         if (!memberMe) {
             LogDebug.handleError('Bot doesn\'t exist in the server the channel is in.');
-            return undefined;
+            return;
         }
 
-        const memberMePerms = memberMe.permissions.toArray();
+        const memberMePerms: PermissionsString[] = memberMe.permissions.toArray();
         if (!memberMePerms.includes('SendMessages')) {
-            LogDebug.handleError('Bot doesn\'t have permission to send messages to channel.');
-            return undefined;
+            LogDebug.handleError('Bot doesn\'t have permission to send messages to channel.', undefined, false);
+            return;
         }
 
         return channel;

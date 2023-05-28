@@ -1,4 +1,4 @@
-import {ChatInputCommandInteraction, MessageComponentInteraction, PermissionResolvable} from 'discord.js';
+import {Guild, PermissionResolvable} from 'discord.js';
 
 /**
  * {@link PermissionUtils PermissionUtils.ts}
@@ -12,14 +12,14 @@ export class PermissionUtils {
     /**
      * Gets whether bot has a permission
      *
-     * @param interaction - Gets information from guild
+     * @param guild
      * @param perm - The permissions to check
      */
     public static hasPerm(
-        interaction: MessageComponentInteraction | ChatInputCommandInteraction,
+        guild: Guild | undefined,
         perm: PermissionResolvable
     ): boolean {
-        if (!interaction.guild || !interaction.guild.members.me) return false;
-        return interaction.guild.members.me.permissions.has(perm);
+        if (!guild || !guild.members.me) return false;
+        return guild.members.me.permissions.has(perm);
     }
 }

@@ -9,7 +9,7 @@ import {
     MessageComponentInteraction,
     ModalBuilder,
     StringSelectMenuBuilder,
-    StringSelectMenuInteraction,
+    StringSelectMenuInteraction, TextChannel,
     User
 } from 'discord.js';
 import {BoarUser} from '../../util/boar/BoarUser';
@@ -26,6 +26,13 @@ import {Replies} from '../../util/interactions/Replies';
 import {FormatStrings} from '../../util/discord/FormatStrings';
 import {RarityConfig} from '../../bot/config/items/RarityConfig';
 import createRBTree, {Node, Tree} from 'functional-red-black-tree';
+import {BoarGift} from '../../util/boar/BoarGift';
+import {GuildData} from '../../util/data/GuildData';
+import {RowConfig} from '../../bot/config/components/RowConfig';
+import {StringConfig} from '../../bot/config/StringConfig';
+import {ModalConfig} from '../../bot/config/modals/ModalConfig';
+import {CollectedBoar} from '../../util/boar/CollectedBoar';
+import {BoarItemConfig} from '../../bot/config/items/BoarItemConfig';
 
 enum View {
     Normal,
@@ -45,6 +52,7 @@ enum View {
 export default class CollectionSubcommand implements Subcommand {
     private config = BoarBotApp.getBot().getConfig();
     private subcommandInfo = this.config.commandConfigs.boar.collection;
+    private guildData: GuildData | undefined;
     private firstInter: ChatInputCommandInteraction = {} as ChatInputCommandInteraction;
     private compInter: ButtonInteraction = {} as ButtonInteraction;
     private collectionImage = {} as CollectionImageGenerator;
@@ -57,6 +65,7 @@ export default class CollectionSubcommand implements Subcommand {
     private curView: View = View.Normal;
     private curPage: number = 0;
     private maxPageNormal: number = 0;
+    private enhanceStage: number = 0;
     private timerVars = {
         timeUntilNextCollect: 0,
         updateTime: setTimeout(() => {})
@@ -74,21 +83,19 @@ export default class CollectionSubcommand implements Subcommand {
      *
      * @param interaction - The interaction that called the subcommand
      */
-    public async execute(interaction: ChatInputCommandInteraction) {
-        const config = BoarBotApp.getBot().getConfig();
-
-        const guildData = await InteractionUtils.handleStart(config, interaction);
-        if (!guildData) return;
+    public async execute(interaction: ChatInputCommandInteraction): Promise<void> {
+        this.guildData = await InteractionUtils.handleStart(interaction, this.config);
+        if (!this.guildData) return;
 
         await interaction.deferReply();
         this.firstInter = interaction;
 
         // Gets user to interact with
-        const userInput = interaction.options.getUser(this.subcommandInfo.args[0].name)
+        const userInput: User = interaction.options.getUser(this.subcommandInfo.args[0].name)
             ? interaction.options.getUser(this.subcommandInfo.args[0].name) as User
             : interaction.user;
-        const viewInput = interaction.options.getInteger(this.subcommandInfo.args[1].name) as View;
-        const pageInput = interaction.options.getString(this.subcommandInfo.args[2].name)
+        const viewInput: View = interaction.options.getInteger(this.subcommandInfo.args[1].name) as View;
+        const pageInput: string = interaction.options.getString(this.subcommandInfo.args[2].name)
             ? (interaction.options.getString(this.subcommandInfo.args[2].name) as string)
                 .toLowerCase().replace(/\s+/g, '')
             : "1";
@@ -100,7 +107,7 @@ export default class CollectionSubcommand implements Subcommand {
 
         await Queue.addQueue(() => this.getUserInfo(userInput), interaction.id + userInput.id);
 
-        this.maxPageNormal = Math.floor(Object.keys(this.allBoars).length / config.numberConfig.collBoarsPerPage);
+        this.maxPageNormal = Math.floor(Object.keys(this.allBoars).length / this.config.numberConfig.collBoarsPerPage);
 
         if (viewInput === View.Detailed && this.allBoars.length > 0 || viewInput === View.Powerups) {
             this.curView = viewInput;
@@ -109,30 +116,32 @@ export default class CollectionSubcommand implements Subcommand {
         let pageVal: number = 1;
         if (!Number.isNaN(parseInt(pageInput))) {
             pageVal = parseInt(pageInput);
-        } else if (this.curView == View.Detailed) {
+        } else if (this.curView === View.Detailed) {
             pageVal = this.getPageFromName(pageInput, this.allBoarsTree.root);
         }
 
-        if (this.curView == View.Normal) {
-            this.curPage = Math.max(Math.min(pageVal-1, this.maxPageNormal), 0);
-        } else if (this.curView == View.Detailed) {
-            this.curPage = Math.max(Math.min(pageVal-1, this.allBoars.length-1), 0);
-        } else {
-            this.curPage = Math.max(Math.min(pageVal-1, this.config.numberConfig.maxPowPages-1), 0);
-        }
+        this.setPage(pageVal);
 
-        this.collector = await CollectorUtils.createCollector(interaction, interaction.id + interaction.user.id);
+        this.collector = await CollectorUtils.createCollector(
+            interaction.channel as TextChannel, interaction.id, this.config.numberConfig
+        );
 
-        this.collectionImage = new CollectionImageGenerator(this.boarUser, this.config, this.allBoars);
+        this.collectionImage = new CollectionImageGenerator(this.boarUser, this.allBoars, this.config);
         await this.showCollection();
 
         this.collector.on('collect', async (inter: ButtonInteraction) => await this.handleCollect(inter));
         this.collector.once('end', async (collected, reason) => await this.handleEndCollect(reason));
     }
 
-    private async handleCollect(inter: ButtonInteraction) {
+    /**
+     * Handles collecting button interactions
+     *
+     * @param inter - The button interaction
+     * @private
+     */
+    private async handleCollect(inter: ButtonInteraction): Promise<void> {
         try {
-            const canInteract = await CollectorUtils.canInteract(this.timerVars, inter);
+            const canInteract: boolean = await CollectorUtils.canInteract(this.timerVars, inter);
             if (!canInteract) return;
 
             if (!inter.isMessageComponent()) return;
@@ -140,11 +149,10 @@ export default class CollectionSubcommand implements Subcommand {
             this.compInter = inter;
 
             LogDebug.sendDebug(
-                `${inter.customId.split('|')[0]} on page ${this.curPage} in view ${this.curView}`,
-                this.config, this.firstInter
+                `${inter.customId.split('|')[0]} on page ${this.curPage} in view ${this.curView}`, this.config, this.firstInter
             );
 
-            const collRowConfig = this.config.commandConfigs.boar.collection.componentFields;
+            const collRowConfig: RowConfig[][] = this.config.commandConfigs.boar.collection.componentFields;
             const collComponents = {
                 leftPage: collRowConfig[0][0].components[0],
                 inputPage: collRowConfig[0][0].components[1],
@@ -154,12 +162,16 @@ export default class CollectionSubcommand implements Subcommand {
                 powerupView: collRowConfig[0][1].components[2],
                 favorite: collRowConfig[1][0].components[0],
                 gift: collRowConfig[1][0].components[1],
-                editions: collRowConfig[1][0].components[2]
+                editions: collRowConfig[1][0].components[2],
+                enhance: collRowConfig[1][0].components[3]
             };
 
             // User wants to input a page manually
             if (inter.customId.startsWith(collComponents.inputPage.customId)) {
                 await this.modalHandle(inter);
+
+                this.enhanceStage--;
+
                 clearInterval(this.timerVars.updateTime);
                 return;
             }
@@ -194,6 +206,7 @@ export default class CollectionSubcommand implements Subcommand {
 
                 case collComponents.favorite.customId:
                     await Queue.addQueue(() => {
+                        this.boarUser.refreshUserData();
                         this.boarUser.favoriteBoar = this.allBoars[this.curPage].id;
                         this.boarUser.updateUserData();
                     }, inter.id + this.boarUser.user.id);
@@ -202,8 +215,31 @@ export default class CollectionSubcommand implements Subcommand {
                 case collComponents.editions.customId:
                     await this.doEditions();
                     break;
+
+                case collComponents.enhance.customId:
+                    if (this.enhanceStage !== 1) {
+                        this.enhanceStage = 2;
+                        await this.firstInter.followUp({
+                            files: [await this.collectionImage.finalizeEnhanceConfirm(this.curPage)],
+                            ephemeral: true
+                        });
+                    } else {
+                        await this.doEnhance();
+                    }
+                    break;
+
+                case collComponents.gift.customId:
+                    await Queue.addQueue(() => {
+                        this.boarUser.refreshUserData();
+                        this.boarUser.powerups.numGifts--;
+                        this.boarUser.powerups.giftsUsed++;
+                        this.boarUser.updateUserData();
+                    }, inter.id + this.boarUser.user.id);
+                    await new BoarGift(this.boarUser, this.collectionImage, this.config).sendMessage(inter);
+                    break;
             }
 
+            this.enhanceStage--;
             await this.showCollection();
         } catch (err: unknown) {
             await LogDebug.handleError(err);
@@ -213,16 +249,21 @@ export default class CollectionSubcommand implements Subcommand {
         clearInterval(this.timerVars.updateTime);
     }
 
+    /**
+     * Gets the editions of the current boar and send them and their dates
+     *
+     * @private
+     */
     private async doEditions(): Promise<void> {
-        const strConfig = this.config.stringConfig;
-        let replyString = '';
+        const strConfig: StringConfig = this.config.stringConfig;
+        let replyString: string = '';
 
         for (let i=0; i<this.allBoars[this.curPage].editions.length; i++) {
-            const edition = this.allBoars[this.curPage].editions[i];
-            const editionDate = Math.floor(this.allBoars[this.curPage].editionDates[i] / 1000);
+            const edition: number = this.allBoars[this.curPage].editions[i];
+            const editionDate: number = Math.floor(this.allBoars[this.curPage].editionDates[i] / 1000);
 
             replyString += strConfig.collEditionLine
-                .replace('%@', edition)
+                .replace('%@', edition.toString())
                 .replace('%@', FormatStrings.toShortDateTime(editionDate));
         }
 
@@ -232,20 +273,63 @@ export default class CollectionSubcommand implements Subcommand {
                 new EmbedBuilder()
                     .setTitle(strConfig.collEditionTitle.replace('%@', this.allBoars[this.curPage].name))
                     .setDescription(replyString)
-                    .setColor(this.config.colorConfig.editionEmbed as ColorResolvable)
+                    .setColor(this.config.colorConfig.green as ColorResolvable)
             ],
             ephemeral: true
         });
     }
 
     /**
-     * Sends modals and receives information on modal submission
+     * Enhances a boar by removing it, giving a random boar of the next rarity, and giving some boar bucks
+     *
+     * @private
+     */
+    private async doEnhance(): Promise<void> {
+        const enhancedBoar: string =
+            BoarUtils.findValid(this.allBoars[this.curPage].rarity[0], this.guildData, this.config);
+
+        if (enhancedBoar === '') {
+            await LogDebug.handleError(this.config.stringConfig.dailyNoBoarFound, this.firstInter);
+            return;
+        }
+
+        LogDebug.sendDebug(`Enhanced boar to '${enhancedBoar}'`, this.config, this.firstInter);
+
+        await Queue.addQueue(() => {
+            const enhancersUsed = this.allBoars[this.curPage].rarity[1].enhancersNeeded;
+            this.boarUser.refreshUserData();
+            this.boarUser.boarCollection[this.allBoars[this.curPage].id].num--;
+            this.boarUser.boarScore -= enhancersUsed * 5;
+            this.boarUser.powerups.numEnhancers -= enhancersUsed;
+            this.boarUser.powerups.enhancedRarities[this.allBoars[this.curPage].rarity[0]-1]++;
+            this.boarUser.updateUserData();
+        }, this.compInter.id + this.compInter.user.id);
+
+        await this.boarUser.addBoars([enhancedBoar], this.firstInter, this.config);
+
+        await Queue.addQueue(() => this.getUserInfo(this.boarUser.user), this.compInter.id + this.boarUser.user.id);
+
+        this.curPage = this.getPageFromName(
+            this.config.boarItemConfigs[enhancedBoar].name.toLowerCase().replace(/\s+/g, ''), this.allBoarsTree.root
+        ) - 1;
+
+        await Replies.handleReply(this.compInter, this.config.stringConfig.enhanceGotten,
+            this.config.colorConfig.font, this.allBoars[this.curPage].name,
+            this.allBoars[this.curPage].color, true
+        );
+
+        this.collectionImage.updateInfo(this.boarUser, this.allBoars, this.config);
+        await this.collectionImage.createNormalBase();
+    }
+
+    /**
+     * Sends the modal that gets page input
      *
      * @param inter - Used to show the modal and create/remove listener
      * @private
      */
     private async modalHandle(inter: MessageComponentInteraction): Promise<void> {
-        const modals = this.config.commandConfigs.boar.collection.modals;
+        const modals: ModalConfig[] = this.config.commandConfigs.boar.collection.modals;
 
         this.modalShowing = new ModalBuilder(modals[0]);
         this.modalShowing.setCustomId(modals[0].customId + '|' + inter.id);
@@ -262,12 +346,12 @@ export default class CollectionSubcommand implements Subcommand {
     }
 
     /**
-     * Handles when the user makes an interaction that could be a modal submission
+     * Handles page input that was input in modal
      *
      * @param submittedModal - The interaction to respond to
      * @private
      */
-    private modalListener = async (submittedModal: Interaction) => {
+    private modalListener = async (submittedModal: Interaction): Promise<void> => {
         try  {
             // If not a modal submission on current interaction, destroy the modal listener
             if (submittedModal.isMessageComponent() && submittedModal.customId.endsWith(this.firstInter.id + this.firstInter.user.id) ||
@@ -282,7 +366,8 @@ export default class CollectionSubcommand implements Subcommand {
             // Updates the cooldown to interact again
             CollectorUtils.canInteract(this.timerVars);
 
-            if (!submittedModal.isModalSubmit() || this.collector.ended ||
+            if (
+                !submittedModal.isModalSubmit() || this.collector.ended ||
                 !submittedModal.guild || submittedModal.customId !== this.modalShowing.data.custom_id
             ) {
                 clearInterval(this.timerVars.updateTime);
@@ -291,7 +376,7 @@ export default class CollectionSubcommand implements Subcommand {
 
             await submittedModal.deferUpdate();
 
-            const submittedPage = submittedModal.fields.getTextInputValue(
+            const submittedPage: string = submittedModal.fields.getTextInputValue(
                 this.modalShowing.components[0].components[0].data.custom_id as string
             ).toLowerCase().replace(/\s+/g, '');
 
@@ -302,17 +387,11 @@ export default class CollectionSubcommand implements Subcommand {
             let pageVal: number = 1;
             if (!Number.isNaN(parseInt(submittedPage))) {
                 pageVal = parseInt(submittedPage);
-            } else if (this.curView == View.Detailed) {
+            } else if (this.curView === View.Detailed) {
                 pageVal = this.getPageFromName(submittedPage, this.allBoarsTree.root)
             }
 
-            if (this.curView === View.Normal) {
-                this.curPage = Math.max(Math.min(pageVal-1, this.maxPageNormal), 0);
-            } else if (this.curView === View.Detailed) {
-                this.curPage = Math.max(Math.min(pageVal-1, this.allBoars.length-1), 0);
-            } else {
-                this.curPage = Math.max(Math.min(pageVal-1, this.config.numberConfig.maxPowPages-1), 0);
-            }
+            this.setPage(pageVal);
 
             await this.showCollection();
         } catch (err: unknown) {
@@ -324,14 +403,20 @@ export default class CollectionSubcommand implements Subcommand {
         submittedModal.client.removeListener(Events.InteractionCreate, this.modalListener);
     };
 
-    private async handleEndCollect(reason: string) {
+    /**
+     * Handles when the collection for navigating through collection is finished
+     *
+     * @param reason - Why the collection ended
+     * @private
+     */
+    private async handleEndCollect(reason: string): Promise<void> {
         try {
             LogDebug.sendDebug('Ended collection with reason: ' + reason, this.config, this.firstInter);
 
             if (reason == CollectorUtils.Reasons.Error) {
                 await Replies.handleReply(
                     this.firstInter, this.config.stringConfig.setupError,
-                    this.config.colorConfig.error as ColorResolvable, true
+                    this.config.colorConfig.error, undefined, undefined, true
                 );
             }
 
@@ -353,18 +438,19 @@ export default class CollectionSubcommand implements Subcommand {
         if (!this.firstInter.guild || !this.firstInter.channel) return;
 
         this.boarUser = new BoarUser(userInput);
+        this.allBoars = [];
 
         // Adds information about each boar in user's boar collection to an array
         for (const boarID of Object.keys(this.boarUser.boarCollection)) {
             // Local user boar information
-            const boarInfo = this.boarUser.boarCollection[boarID];
+            const boarInfo: CollectedBoar = this.boarUser.boarCollection[boarID];
             if (boarInfo.num === 0) continue;
 
-            const rarity: [number, RarityConfig] = BoarUtils.findRarity(boarID);
+            const rarity: [number, RarityConfig] = BoarUtils.findRarity(boarID, this.config);
             if (rarity[0] === 0) continue;
 
             // Global boar information
-            const boarDetails = this.config.boarItemConfigs[boarID];
+            const boarDetails: BoarItemConfig = this.config.boarItemConfigs[boarID];
 
             this.allBoars.push({
                 id: boarID,
@@ -376,7 +462,7 @@ export default class CollectionSubcommand implements Subcommand {
                 editionDates: boarInfo.editionDates,
                 firstObtained: boarInfo.firstObtained,
                 lastObtained: boarInfo.lastObtained,
-                rarity: rarity[1],
+                rarity: rarity,
                 color: this.config.colorConfig['rarity' + rarity[0]],
                 description: boarDetails.description
             });
@@ -388,7 +474,7 @@ export default class CollectionSubcommand implements Subcommand {
     }
 
     /**
-     * Displays the collection image
+     * Displays the collection image and modifies button states
      *
      * @private
      */
@@ -423,16 +509,18 @@ export default class CollectionSubcommand implements Subcommand {
             finalImage = await this.collectionImage.finalizeNormalImage(this.curPage);
         } else if (this.curView == View.Detailed) {
             finalImage = await this.collectionImage.finalizeDetailedImage(this.curPage);
-            optionalRow.addComponents(this.optionalButtons.components[0].setDisabled(false));
+            optionalRow.addComponents(this.optionalButtons.components[0].setDisabled(
+                this.firstInter.user.id !== this.boarUser.user.id
+            )); // Favorite button
         } else {
             finalImage = await this.collectionImage.finalizePowerupsImage();
         }
 
         // Enables next button if there's more than one page
         if (
-            this.curView == View.Normal && this.maxPageNormal > this.curPage ||
-            this.curView == View.Detailed && this.allBoars.length > this.curPage + 1 ||
-            this.curView == View.Powerups && this.config.numberConfig.maxPowPages > this.curPage + 1
+            this.curView === View.Normal && this.maxPageNormal > this.curPage ||
+            this.curView === View.Detailed && this.allBoars.length > this.curPage + 1 ||
+            this.curView === View.Powerups && this.config.numberConfig.maxPowPages > this.curPage + 1
         ) {
             this.baseRows[0].components[2].setDisabled(false);
         }
@@ -444,8 +532,9 @@ export default class CollectionSubcommand implements Subcommand {
 
         // Enables manual input button if there's more than one page
         if (
-            this.curView == View.Normal && this.maxPageNormal > 0 ||
-            this.curView == View.Detailed && this.allBoars.length > 1
+            this.curView === View.Normal && this.maxPageNormal > 0 ||
+            this.curView === View.Detailed && this.allBoars.length > 1 ||
+            this.curView === View.Powerups
         ) {
             this.baseRows[0].components[1].setDisabled(false);
         }
@@ -465,8 +554,31 @@ export default class CollectionSubcommand implements Subcommand {
             this.baseRows[1].components[2].setDisabled(false);
         }
 
-        if (this.curView == View.Detailed && this.allBoars[this.curPage].rarity.score === 0) {
+        // Enables edition viewing on special boars
+        if (this.curView === View.Detailed && this.allBoars[this.curPage].rarity[1].name === 'Special') {
             optionalRow.addComponents(this.optionalButtons.components[2].setDisabled(false));
+        }
+
+        // Enables enhance button for daily boars
+        if (
+            this.curView === View.Detailed &&
+            this.allBoars[this.curPage].rarity[1].enhancersNeeded > 0
+        ) {
+            optionalRow.addComponents(this.optionalButtons.components[3]
+                .setDisabled(
+                    this.boarUser.powerups.numEnhancers < this.allBoars[this.curPage].rarity[1].enhancersNeeded ||
+                    this.firstInter.user.id !== this.boarUser.user.id
+                )
+            );
+        }
+
+        // Gift button enabling
+        if (this.curView === View.Powerups) {
+            optionalRow.addComponents(
+                this.optionalButtons.components[1].setDisabled(
+                    this.boarUser.powerups.numGifts === 0 || this.firstInter.user.id !== this.boarUser.user.id
+                )
+            );
         }
 
         if (optionalRow.components.length > 0) {
@@ -476,24 +588,35 @@ export default class CollectionSubcommand implements Subcommand {
         }
     }
 
+    /**
+     * Creates the buttons and rows used for collection by adding information to IDs
+     *
+     * @private
+     */
     private initButtons(): void {
-        const collFieldConfigs = this.config.commandConfigs.boar.collection.componentFields;
+        const collFieldConfigs: RowConfig[][] = this.config.commandConfigs.boar.collection.componentFields;
 
         for (let i=0; i<collFieldConfigs.length; i++) {
-            for (const rowConfig of collFieldConfigs[i]) {
-                let newRow = new ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>(rowConfig);
+            const newRows: ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>[] =
+                ComponentUtils.makeRows(collFieldConfigs[i]);
 
-                newRow = ComponentUtils.addToIDs(rowConfig, newRow, this.firstInter.id + this.firstInter.user.id);
+            ComponentUtils.addToIDs(collFieldConfigs[i], newRows, this.firstInter.id, this.firstInter.user.id);
 
-                if (i == 0) {
-                    this.baseRows.push(newRow);
-                } else {
-                    this.optionalButtons = newRow;
-                }
+            if (i === 0) {
+                this.baseRows = newRows
+            }
+
+            if (i === 1) {
+                this.optionalButtons = newRows[0];
             }
         }
     }
 
+    /**
+     * Disables all buttons
+     *
+     * @private
+     */
     private disableButtons(): void {
         for (const row of this.baseRows) {
             for (const component of row.components) {
@@ -506,6 +629,13 @@ export default class CollectionSubcommand implements Subcommand {
         }
     }
 
+    /**
+     * Uses a BST to get a page from boar name input (closest match)
+     *
+     * @param pageInput - The boar name input to look for
+     * @param root - The root of the tree
+     * @private
+     */
     private getPageFromName(pageInput: string, root: Node<string, number>): number {
         if (root.key.includes(pageInput))
             return root.value;
@@ -514,5 +644,21 @@ export default class CollectionSubcommand implements Subcommand {
         if (pageInput < root.key && root.left !== null)
             return this.getPageFromName(pageInput, root.left);
         return root.value;
+    }
+
+    /**
+     * Sets the page by min maxing the input value to be within bounds
+     *
+     * @param pageVal - The page integer to min max
+     * @private
+     */
+    private setPage(pageVal: number): void {
+        if (this.curView === View.Normal) {
+            this.curPage = Math.max(Math.min(pageVal-1, this.maxPageNormal), 0);
+        } else if (this.curView === View.Detailed) {
+            this.curPage = Math.max(Math.min(pageVal-1, this.allBoars.length-1), 0);
+        } else {
+            this.curPage = Math.max(Math.min(pageVal-1, this.config.numberConfig.maxPowPages-1), 0);
+        }
     }
 }

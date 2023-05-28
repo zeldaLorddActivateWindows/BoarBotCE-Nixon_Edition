@@ -1,3 +1,5 @@
+import {RowConfig} from '../components/RowConfig';
+
 /**
  * {@link PromptConfig PromptConfig.ts}
  *
@@ -9,9 +11,10 @@
 
 export class PromptConfig {
     public readonly name: string = ' ';
+    public readonly description: string = ' ';
+    public readonly rows: RowConfig[] = [];
     public readonly emoji1: string = ' ';
     public readonly emoji2: string = ' ';
-    public readonly question: string = ' ';
     public readonly choices: string[] = [' ', ' ', ' ', ' '];
     public readonly numButtons: number = 0;
 }

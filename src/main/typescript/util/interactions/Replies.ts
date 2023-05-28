@@ -1,15 +1,14 @@
 import {
+    AttachmentBuilder,
     ChatInputCommandInteraction,
-    ColorResolvable,
-    EmbedBuilder,
     MessageComponentInteraction,
     ModalSubmitInteraction
 } from 'discord.js';
 import {BotConfig} from '../../bot/config/BotConfig';
-import {FormatStrings} from '../discord/FormatStrings';
 import {LogDebug} from '../logging/LogDebug';
-import {BoarBot} from '../../bot/BoarBot';
 import {BoarBotApp} from '../../BoarBotApp';
+import {GuildData} from '../data/GuildData';
+import {CustomEmbedGenerator} from '../generators/CustomEmbedGenerator';
 
 /**
  * {@link Replies Replies.ts}
@@ -28,11 +27,11 @@ export class Replies {
      * @param interaction - Interaction to reply to
      */
     public static async currentConfigReply(
-        config: BotConfig,
-        interaction: ChatInputCommandInteraction
+        interaction: ChatInputCommandInteraction,
+        config: BotConfig
     ): Promise<void> {
         LogDebug.sendDebug('Tried to run command while setup being configured', config, interaction);
-        await Replies.handleReply(interaction, config.stringConfig.doingSetup);
+        await Replies.handleReply(interaction, config.stringConfig.doingSetup, config.colorConfig.error);
     }
 
     /**
@@ -44,24 +43,13 @@ export class Replies {
      * @param includeTrade - Whether to include trade channel in usable channels
      */
     public static async wrongChannelReply(
-        config: BotConfig,
         interaction: ChatInputCommandInteraction,
-        guildData: any,
+        guildData: GuildData | undefined,
+        config: BotConfig,
         includeTrade: boolean = false
     ): Promise<void> {
         LogDebug.sendDebug('Used in the wrong channel', config, interaction);
-
-        let strChannels = '';
-
-        for (const ch of guildData.channels) {
-            strChannels += '\n> ' + FormatStrings.toBasicChannel(ch);
-        }
-
-        if (includeTrade) {
-            strChannels += '\n> ' + FormatStrings.toBasicChannel(guildData.tradeChannel);
-        }
-
-        await Replies.handleReply(interaction, config.stringConfig.wrongChannel + strChannels);
+        await Replies.handleReply(interaction, config.stringConfig.wrongChannel, config.colorConfig.error);
     }
 
     /**
@@ -71,11 +59,11 @@ export class Replies {
      * @param interaction - Interaction to reply to
      */
     public static async noPermsReply(
-        config: BotConfig,
-        interaction: ChatInputCommandInteraction
+        interaction: ChatInputCommandInteraction,
+        config: BotConfig
     ): Promise<void> {
         LogDebug.sendDebug('Not a developer', config, interaction);
-        await Replies.handleReply(interaction, config.stringConfig.noPermission);
+        await Replies.handleReply(interaction, config.stringConfig.noPermission, config.colorConfig.error);
     }
 
     /**
@@ -85,11 +73,11 @@ export class Replies {
      * @param interaction - Interaction to reply to
      */
     public static async onCooldownReply(
-        config: BotConfig,
-        interaction: ChatInputCommandInteraction
+        interaction: ChatInputCommandInteraction,
+        config: BotConfig
     ): Promise<void> {
         LogDebug.sendDebug('Currently on cooldown', config, interaction);
-        await Replies.handleReply(interaction, config.stringConfig.onCooldown);
+        await Replies.handleReply(interaction, config.stringConfig.onCooldown, config.colorConfig.error);
     }
 
     /**
@@ -98,44 +86,40 @@ export class Replies {
      * @param interaction - Interaction to reply to
      * @param content - Content of the reply
      * @param color - Color of the embed
+     * @param coloredContent - Secondary text to color
+     * @param color2 - Secondary color
      * @param forceFollowup - Forces interaction reply to be a followup
      */
     public static async handleReply(
         interaction: ChatInputCommandInteraction | MessageComponentInteraction | ModalSubmitInteraction,
         content: string,
-        color: ColorResolvable = BoarBotApp.getBot().getConfig().colorConfig.baseEmbed as ColorResolvable,
+        color: string = BoarBotApp.getBot().getConfig().colorConfig.font,
+        coloredContent?: string,
+        color2?: string,
         forceFollowup: boolean = false
     ): Promise<void> {
-        const responseEmbed: EmbedBuilder = new EmbedBuilder()
-            .setColor(color);
-
-        if (content.length > 256) {
-            responseEmbed.setDescription(content);
-        } else {
-            responseEmbed.setTitle(content);
-        }
+        const embedImage: AttachmentBuilder = CustomEmbedGenerator.makeEmbed(
+            content, color, BoarBotApp.getBot().getConfig(), coloredContent, color2
+        );
 
         if (!forceFollowup && interaction.deferred && interaction.isChatInputCommand()) {
             await interaction.editReply({
                 content: '',
-                files: [],
-                components: [],
-                embeds: [responseEmbed]
+                files: [embedImage],
+                components: []
             });
         } else if (forceFollowup || interaction.replied || !interaction.isChatInputCommand()) {
             await interaction.followUp({
                 content: '',
-                files: [],
+                files: [embedImage],
                 components: [],
-                embeds: [responseEmbed],
                 ephemeral: true
             });
         } else {
             await interaction.reply({
                 content: '',
-                files: [],
+                files: [embedImage],
                 components: [],
-                embeds: [responseEmbed],
                 ephemeral: true
             });
         }

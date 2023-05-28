@@ -1,16 +1,20 @@
-import {ChatInputCommandInteraction} from 'discord.js';
+import {AttachmentBuilder, ChatInputCommandInteraction} from 'discord.js';
 import {BoarUser} from '../../util/boar/BoarUser';
 import {BoarBotApp} from '../../BoarBotApp';
-import {FormatStrings} from '../../util/discord/FormatStrings';
+import moment from 'moment/moment';
 import {Subcommand} from '../../api/commands/Subcommand';
-import {RarityConfig} from '../../bot/config/items/RarityConfig';
-import {BoarItemConfigs} from '../../bot/config/items/BoarItemConfigs';
 import {Queue} from '../../util/interactions/Queue';
 import {InteractionUtils} from '../../util/interactions/InteractionUtils';
 import {LogDebug} from '../../util/logging/LogDebug';
 import {BotConfig} from '../../bot/config/BotConfig';
 import {SubcommandConfig} from '../../bot/config/commands/SubcommandConfig';
 import {Replies} from '../../util/interactions/Replies';
+import {BoarUtils} from '../../util/boar/BoarUtils';
+import {ItemImageGenerator} from '../../util/generators/ItemImageGenerator';
+import {GuildData} from '../../util/data/GuildData';
+import {StringConfig} from '../../bot/config/StringConfig';
+import {ColorConfig} from '../../bot/config/ColorConfig';
+import {PowerupConfigs} from '../../bot/config/powerups/PowerupConfigs';
 
 /**
  * {@link DailySubcommand DailySubcommand.ts}
@@ -23,7 +27,7 @@ import {Replies} from '../../util/interactions/Replies';
 export default class DailySubcommand implements Subcommand {
     private config: BotConfig = BoarBotApp.getBot().getConfig();
     private subcommandInfo: SubcommandConfig = this.config.commandConfigs.boar.daily;
-    private guildData: any = {};
+    private guildData: GuildData | undefined;
     private interaction: ChatInputCommandInteraction = {} as ChatInputCommandInteraction;
     public readonly data = { name: this.subcommandInfo.name, path: __filename, cooldown: this.subcommandInfo.cooldown };
 
@@ -35,7 +39,7 @@ export default class DailySubcommand implements Subcommand {
     public async execute(interaction: ChatInputCommandInteraction): Promise<void> {
         this.config = BoarBotApp.getBot().getConfig();
 
-        this.guildData = await InteractionUtils.handleStart(this.config, interaction);
+        this.guildData = await InteractionUtils.handleStart(interaction, this.config);
         if(!this.guildData) return;
 
         await interaction.deferReply();
@@ -53,30 +57,69 @@ export default class DailySubcommand implements Subcommand {
     private async doDaily(): Promise<void> {
         if (!this.interaction.guild || !this.interaction.channel) return;
 
+        const strConfig: StringConfig = this.config.stringConfig;
+        const colorConfig: ColorConfig = this.config.colorConfig;
+        const powConfig: PowerupConfigs = this.config.powerupConfig;
+
         let boarUser: BoarUser = {} as BoarUser;
-        let boarID: string | undefined;
+        let boarIDs: string[] = [''];
+
+        let usedBoost: boolean = false;
+        let usedExtra: boolean = false;
 
         await Queue.addQueue(async () => {
             // New boar user object used for easier manipulation of data
             boarUser = new BoarUser(this.interaction.user, true);
 
-            const canUseDaily = await this.canUseDaily(boarUser);
+            const canUseDaily: boolean = await this.canUseDaily(boarUser);
             if (!canUseDaily) return;
 
+            // Gets whether to use boost
+            const boostInput: boolean = this.interaction.options.getBoolean(this.subcommandInfo.args[0].name)
+                ? this.interaction.options.getBoolean(this.subcommandInfo.args[0].name) as boolean
+                : false;
+            const extraInput: boolean = this.interaction.options.getBoolean(this.subcommandInfo.args[1].name)
+                ? this.interaction.options.getBoolean(this.subcommandInfo.args[1].name) as boolean
+                : false;
+
             // Map of rarity index keys and weight values
-            let rarityWeights = this.getRarityWeights();
-            const userMultiplier: number = boarUser.powerups.multiplier;
+            let rarityWeights: Map<number, number> = BoarUtils.getBaseRarityWeights(this.config);
+            let userMultiplier: number = boarUser.powerups.multiplier;
+
+            if (boostInput) {
+                userMultiplier += boarUser.powerups.multiBoostTotal;
+            }
+
+            usedBoost = boostInput && boarUser.powerups.multiBoostTotal > 0;
+            usedExtra = extraInput && boarUser.powerups.extraChanceTotal > 0;
+
             rarityWeights = this.applyMultiplier(userMultiplier, rarityWeights);
 
-            boarID = await this.getDaily(rarityWeights);
+            boarIDs = BoarUtils.getRandBoars(
+                this.guildData, this.interaction, rarityWeights,
+                extraInput, boarUser.powerups.extraChanceTotal, this.config
+            );
 
-            if (!boarID) {
+            if (boarIDs.includes('')) {
                 await LogDebug.handleError(this.config.stringConfig.dailyNoBoarFound, this.interaction);
                 return;
             }
 
+            if (boostInput && boarUser.powerups.multiBoostTotal > 0) {
+                boarUser.powerups.multiBoostTotal = 0;
+                boarUser.powerups.multiBoostsUsed++;
+            }
+
+            if (extraInput && boarUser.powerups.extraChanceTotal > 0) {
+                boarUser.powerups.extraChanceTotal = 0;
+                boarUser.powerups.extraChancesUsed++;
+            }
+
             boarUser.boarStreak++;
             boarUser.powerups.multiplier++;
+
+            boarUser.powerups.highestMulti = Math.max(boarUser.powerups.multiplier, boarUser.powerups.highestMulti);
+
             boarUser.lastDaily = Date.now();
             boarUser.numDailies++;
 
@@ -87,9 +130,60 @@ export default class DailySubcommand implements Subcommand {
             boarUser.updateUserData();
         }, this.interaction.id + this.interaction.user.id);
 
-        if (!boarID) return;
+        if (boarIDs.includes('')) return;
 
-        await boarUser.addBoar(this.config, boarID as string, this.interaction);
+        const randScores: number[] = [];
+        const attachments: AttachmentBuilder[] = [];
+
+        // Gets slightly deviated scores for each boar
+        for (let i=0; i<boarIDs.length; i++) {
+            randScores.push(
+                Math.round(
+                    this.config.rarityConfigs[BoarUtils.findRarity(boarIDs[i], this.config)[0]-1].baseScore *
+                    (Math.random() * (1.1 - .9) + .9)
+                )
+            );
+        }
+
+        await boarUser.addBoars(boarIDs, this.interaction, this.config, randScores);
+
+        // Gets item images for each boar
+        for (let i=0; i<boarIDs.length; i++) {
+            attachments.push(
+                await new ItemImageGenerator(
+                    boarUser.user, boarIDs[i], i === 0 ? strConfig.dailyTitle : strConfig.extraTitle, this.config
+                ).handleImageCreate(
+                    false, undefined, undefined, undefined, randScores[i]
+                )
+            );
+        }
+
+        for (let i=0; i<attachments.length; i++) {
+            if (i === 0) {
+                await this.interaction.editReply({ files: [attachments[i]] })
+            } else {
+                await this.interaction.followUp({ files: [attachments[i]] })
+            }
+        }
+
+        let coloredText: string = '';
+
+        if (usedBoost) {
+            coloredText += powConfig.multiBoost.name;
+        }
+
+        if (usedExtra) {
+            coloredText += coloredText === ''
+                ? powConfig.extraChance.name
+                : ' and ' + powConfig.extraChance.name
+        }
+
+        if (coloredText !== '') {
+            await Replies.handleReply(
+                this.interaction, strConfig.dailyPowUsed, colorConfig.font, coloredText, colorConfig.powerup, true
+            );
+        }
+
     }
 
     /**
@@ -102,40 +196,18 @@ export default class DailySubcommand implements Subcommand {
         boarUser: BoarUser
     ): Promise<boolean> {
         // Midnight of next day (UTC)
-        const nextBoarTime = Math.floor(new Date().setUTCHours(24,0,0,0));
+        const nextBoarTime: number = Math.floor(new Date().setUTCHours(24,0,0,0));
 
         // Returns if user has already used their daily boar
         if (boarUser.lastDaily >= nextBoarTime - (1000 * 60 * 60 * 24) && !this.config.unlimitedBoars) {
             await Replies.handleReply(
                 this.interaction,
-                this.config.stringConfig.dailyUsed + FormatStrings.toRelTime(nextBoarTime / 1000)
+                this.config.stringConfig.dailyUsed + moment(nextBoarTime).fromNow()
             );
             return false;
         }
 
         return true
-    }
-
-    /**
-     * Returns a map storing rarity weights and their indexes
-     *
-     * @private
-     */
-    private getRarityWeights(): Map<number, number> {
-        const rarities = this.config.rarityConfigs;
-        const rarityWeights: Map<number, number> = new Map();
-
-        // Gets weight of each rarity and assigns it to Map object with its index
-        for (let i=0; i<rarities.length; i++) {
-            let weight: number = rarities[i].weight;
-
-            if (!rarities[i].fromDaily)
-                weight = 0;
-
-            rarityWeights.set(i, weight);
-        }
-
-        return rarityWeights;
     }
 
     /**
@@ -147,16 +219,18 @@ export default class DailySubcommand implements Subcommand {
      */
     private applyMultiplier(userMultiplier: number, rarityWeights: Map<number, number>): Map<number, number> {
         // Sorts from the highest weight to the lowest weight
-        const newWeights = new Map([...rarityWeights.entries()].sort((a,b) => { return b[1] - a[1]; }));
+        const newWeights: Map<number, number> = new Map([...rarityWeights.entries()]
+            .sort((a,b) => { return b[1] - a[1]; })
+        );
 
         const highestWeight: number = newWeights.values().next().value;
-        const rarityIncreaseConst = this.config.numberConfig.rarityIncreaseConst;
+        const rarityIncreaseConst: number = this.config.numberConfig.rarityIncreaseConst;
 
         // Increases probability by increasing weight
         // https://www.desmos.com/calculator/74inrkixxa | x = multiplier, o = weight
         for (const weightInfo of newWeights) {
-            const rarityIndex = weightInfo[0];
-            const oldWeight = weightInfo[1];
+            const rarityIndex: number = weightInfo[0];
+            const oldWeight: number = weightInfo[1];
 
             if (oldWeight == 0) continue;
 
@@ -169,77 +243,5 @@ export default class DailySubcommand implements Subcommand {
 
         // Restores the original order of the Map
         return new Map([...newWeights.entries()].sort((a,b) => { return a[0] - b[0]; }));
-    }
-
-    /**
-     * Gets the boar to give to the user
-     *
-     * @param rarityWeights - Map of weights and their indexes
-     * @private
-     */
-    private async getDaily(rarityWeights: Map<number, number>) {
-        const randomRarity: number = Math.random();
-
-        // Sorts from the lowest weight to the highest weight
-        rarityWeights = new Map([...rarityWeights.entries()].sort((a, b) => { return a[1] - b[1]; }));
-        const weightTotal = [...rarityWeights.values()].reduce((curSum, weight) => curSum + weight);
-
-        // Sets probabilities by adding the previous probability to the current probability
-
-        let prevProb = 0;
-        const probabilities = new Map([...rarityWeights.entries()].map((val) => {
-            const prob: [number, number] = [val[0], val[1] / weightTotal + prevProb];
-            prevProb = prob[1];
-            return prob;
-        }));
-
-        LogDebug.sendDebug(`Probabilities: ${[...probabilities]}`, this.config, this.interaction);
-
-        // Finds the rarity that was rolled and adds a random boar from that rarity to user profile
-        for (const probabilityInfo of probabilities) {
-            const rarityIndex = probabilityInfo[0];
-            const probability = probabilityInfo[1];
-
-            // Goes to next probability if randomRarity is higher
-            // Keeps going if it's the rarity with the highest probability
-            if (randomRarity > probability && Math.max(...probabilities.values()) !== probability)
-                continue;
-
-            const boarGotten = this.findValid(rarityIndex);
-
-            LogDebug.sendDebug(`Rolled boar with ID '${boarGotten}'`, this.config, this.interaction);
-
-            return boarGotten;
-        }
-    }
-
-    /**
-     * Finds a boar that meets the requirements of the
-     * guild and isn't blacklisted
-     *
-     * @param rarityIndex - The rarity index that's being checked
-     * @private
-     */
-    private findValid(rarityIndex: number): string | undefined {
-        const rarities: RarityConfig[] = this.config.rarityConfigs;
-        const boarIDs: BoarItemConfigs = this.config.boarItemConfigs;
-        let randomBoar = Math.random();
-
-        // Stores the IDs of the current rarity being checked
-
-        const validRarityBoars: string[] = [];
-
-        for (const boarID of rarities[rarityIndex].boars) {
-            const isBlacklisted = boarIDs[boarID].blacklisted;
-            const isSB = boarIDs[boarID].isSB;
-
-            if (isBlacklisted || (!this.guildData.isSBServer && isSB))
-                continue;
-            validRarityBoars.push(boarID);
-        }
-
-        if (validRarityBoars.length == 0) return;
-
-        return validRarityBoars[Math.floor(randomBoar * validRarityBoars.length)];
     }
 }

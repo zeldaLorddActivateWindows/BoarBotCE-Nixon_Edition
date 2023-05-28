@@ -1,6 +1,13 @@
 import dotenv from 'dotenv';
 import fs from 'fs';
-import {ActivityType, Client, Events, GatewayIntentBits, Partials} from 'discord.js';
+import {
+	ActivityType,
+	Client,
+	Events,
+	GatewayIntentBits,
+	Partials,
+	TextChannel
+} from 'discord.js';
 import {Bot} from '../api/bot/Bot';
 import {FormatStrings} from '../util/discord/FormatStrings';
 import {ConfigHandler} from './handlers/ConfigHandler';
@@ -11,6 +18,10 @@ import {Command} from '../api/commands/Command';
 import {Subcommand} from '../api/commands/Subcommand';
 import {LogDebug} from '../util/logging/LogDebug';
 import {InteractionUtils} from '../util/interactions/InteractionUtils';
+import {PowerupSpawner} from '../util/boar/PowerupSpawner';
+import {Queue} from '../util/interactions/Queue';
+import {DataHandlers} from '../util/data/DataHandlers';
+import {GuildData} from '../util/data/GuildData';
 
 dotenv.config();
 
@@ -103,7 +114,7 @@ export class BoarBot implements Bot {
 	/**
 	 * Registers event listeners from files
 	 */
-	public registerListeners() { this.eventHandler.registerListeners(); }
+	public registerListeners(): void { this.eventHandler.registerListeners(); }
 
 	/**
 	 * Logs the bot in using token
@@ -113,7 +124,7 @@ export class BoarBot implements Bot {
 			LogDebug.sendDebug('Logging in...', this.getConfig());
 			await this.client.login(process.env.TOKEN);
 		} catch {
-			LogDebug.handleError('Client wasn\'t initialized or you used an invalid token!');
+			await LogDebug.handleError('Client wasn\'t initialized or you used an invalid token!');
 			process.exit(-1);
 		}
 	}
@@ -128,9 +139,17 @@ export class BoarBot implements Bot {
 			LogDebug.sendDebug('Interaction Listeners: ' + this.client.listenerCount(Events.InteractionCreate), this.getConfig())
 		}, 600000);
 
-		const botStatusChannel = await InteractionUtils.getTextChannel(
-			this.getConfig(), this.getConfig().botStatusChannel
-		);
+		let timeUntilPow: number = 0;
+
+		await Queue.addQueue(() => {
+			const globalData = DataHandlers.getGlobalData();
+			timeUntilPow = globalData.nextPowerup;
+		}, 'start' + 'global');
+
+		new PowerupSpawner(timeUntilPow).startSpawning();
+
+		const botStatusChannel: TextChannel | undefined =
+			await InteractionUtils.getTextChannel(this.getConfig().botStatusChannel);
 
 		if (!botStatusChannel) return;
 
@@ -140,7 +159,8 @@ export class BoarBot implements Bot {
 				FormatStrings.toRelTime(Math.round(Date.now() / 1000))
 			);
 		} catch (err: unknown) {
-			LogDebug.handleError(err);
+			await LogDebug.handleError(err);
+			return;
 		}
 
 		LogDebug.sendDebug('Successfully sent status message!', this.getConfig());
@@ -163,14 +183,13 @@ export class BoarBot implements Bot {
 			process.exit(-1);
 		}
 
-		for (const guildData of guildDataFiles) {
-			const data = JSON.parse(fs.readFileSync(guildDataFolder + guildData, 'utf-8'));
+		for (const guildFile of guildDataFiles) {
+			const guildData: GuildData = JSON.parse(fs.readFileSync(guildDataFolder + guildFile, 'utf-8')) as GuildData;
+			if (guildData.fullySetup) continue;
 
-			if (Object.keys(data).length !== 0) continue;
+			fs.rmSync(guildDataFolder + guildFile);
 
-			fs.rmSync(guildDataFolder + guildData);
-
-			LogDebug.sendDebug('Deleted empty guild file: ' + guildData, this.getConfig());
+			LogDebug.sendDebug('Deleted unfinished guild file: ' + guildFile, this.getConfig());
 		}
 
 		LogDebug.sendDebug('Guild data fixed!', this.getConfig())

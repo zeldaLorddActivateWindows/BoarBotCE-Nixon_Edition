@@ -36,22 +36,32 @@ export class NumberConfig {
 
     // A constant used to determine how quickly to increase rarity
     public readonly rarityIncreaseConst: number = 0;
+    public readonly responseDetailsPos: [number, number] = [0, 0];
+    public readonly responseDetailsWidth: number = 0;
+
+    public readonly responseImageSize: [number, number] = [0, 0];
 
     // Item image positions, sizes, and values
 
     public readonly itemImageSize: [number, number] = [0, 0];
-    public readonly itemBoarPos: [number, number] = [0, 0];
-    public readonly itemBoarSize: [number, number] = [0, 0];
-    public readonly itemBadgePos: [number, number] = [0, 0];
-    public readonly itemBadgeSize: [number, number] = [0, 0];
+    public readonly itemPos: [number, number] = [0, 0];
+    public readonly itemSize: [number, number] = [0, 0];
     public readonly itemTitlePos: [number, number] = [0, 0];
     public readonly itemNamePos: [number, number] = [0, 0];
-    public readonly itemNameplatePos: [number, number] = [0, 0];
-    public readonly itemNameplatePadding: number = 0;
-    public readonly itemNameplateHeight: number = 0;
-    public readonly itemUserTagPos: [number, number] = [0, 0];
-    public readonly itemUserAvatarPos: [number, number] = [0, 0];
+    public readonly itemUserTagX: number = 0;
+    public readonly itemUserAvatarX: number = 0;
+    public readonly itemUserAvatarYOffset: number = 0;
     public readonly itemUserAvatarWidth: number = 0;
+    public readonly itemUserBoxExtra: number = 0;
+    public readonly itemTextX: number = 0;
+    public readonly itemTextYOffset: number = 0;
+    public readonly itemTextBoxExtra: number = 0;
+    public readonly itemBoxX: number = 0;
+    public readonly itemBoxOneY: number = 0;
+    public readonly itemBoxTwoY: number = 0;
+    public readonly itemBoxThreeY: number = 0;
+    public readonly itemBoxFourY: number = 0;
+    public readonly itemBoxHeight: number = 0;
 
     // Collection image positions, sizes, and values
 
@@ -140,6 +150,11 @@ export class NumberConfig {
     public readonly collEnhancersClaimedPos: [number, number] = [0, 0];
     public readonly collEnhancedLabelPositions: [number, number][] = [];
     public readonly collEnhancedPositions: [number, number][] = [];
+    public readonly collEnhanceBoarLosePos: [number, number] = [0, 0];
+    public readonly collEnhanceBoarGainPos: [number, number] = [0, 0];
+    public readonly collEnhanceLosePos: [number, number] = [0, 0];
+    public readonly collEnhanceScoreGainPos: [number, number] = [0, 0];
+    public readonly collEnhanceResultWidth: number = 0;
     public readonly collPowDataWidth: number = 0;
     public readonly collBoarStartX: number = 0;
     public readonly collBoarStartY: number = 0;
@@ -165,4 +180,24 @@ export class NumberConfig {
     public readonly collEnhancerSpacingY: number = 0;
     public readonly collEnhancerCols: number = 0;
     public readonly collEnhancerSize: [number, number] = [0, 0];
+
+    public readonly powSpawnSize: [number, number] = [0, 0];
+    public readonly powSpawnDescriptionPos: [number, number] = [0, 0];
+    public readonly powSpawnDescriptionWidth: number = 0;
+    public readonly powSpawnRewardPos: [number, number] = [0, 0];
+    public readonly powTopOnePos: [number, number] = [0, 0];
+    public readonly powTopTenPos: [number, number] = [0, 0];
+    public readonly powTopFiftyPos: [number, number] = [0, 0];
+    public readonly powResultsYOffset: number = 0;
+    public readonly border: number = 0;
+    public readonly embedMaxWidth: number = 0;
+    public readonly embedMinHeight: number = 0;
+    public readonly powInterval: number = 0;
+    public readonly powDuration: number = 0;
+    public readonly collectorIdle: number = 0;
+    public readonly emojiRows: number = 0;
+    public readonly emojiCols: number = 0;
+    public readonly triviaRows: number = 0;
+    public readonly triviaCols: number = 0;
+    public readonly fastCols: number = 0;
 }

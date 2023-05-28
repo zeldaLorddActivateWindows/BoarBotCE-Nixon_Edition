@@ -36,7 +36,7 @@ export class FormField {
      */
     public async editReply(
         interaction: ChatInputCommandInteraction | StringSelectMenuInteraction | ButtonInteraction | ModalSubmitInteraction
-    ) {
+    ): Promise<void> {
         await interaction.editReply({
             content: this.content,
             components: [...this.components]
@@ -46,7 +46,5 @@ export class FormField {
     /**
      * Resets the field back to its original contents
      */
-    public reset() {
-        this.content = this.defaultContent;
-    }
+    public reset(): void { this.content = this.defaultContent; }
 }

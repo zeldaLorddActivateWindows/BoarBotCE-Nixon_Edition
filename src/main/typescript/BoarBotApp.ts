@@ -15,7 +15,7 @@ export class BoarBotApp {
     private static bot: Bot;
 
     public static async main(): Promise<void> {
-        const boarBot = new BoarBot();
+        const boarBot: BoarBot = new BoarBot();
         this.bot = boarBot;
 
         await boarBot.create();

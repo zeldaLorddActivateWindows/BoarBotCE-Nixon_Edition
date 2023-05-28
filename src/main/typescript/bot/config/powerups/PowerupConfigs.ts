@@ -1,5 +1,6 @@
 import {PowerupConfig} from './PowerupConfig';
 import {PromptTypeConfigs} from './PromptTypeConfigs';
+import {RowConfig} from '../components/RowConfig';
 
 /**
  * {@link PowerupConfigs PowerupConfigs.ts}
@@ -11,9 +12,12 @@ import {PromptTypeConfigs} from './PromptTypeConfigs';
  */
 
 export class PowerupConfigs {
+    [powerupKey: string]: PowerupConfig | PromptTypeConfigs | RowConfig[];
+
     public readonly multiBoost: PowerupConfig = new PowerupConfig;
     public readonly gift: PowerupConfig = new PowerupConfig;
     public readonly extraChance: PowerupConfig = new PowerupConfig;
     public readonly enhancer: PowerupConfig = new PowerupConfig;
     public readonly promptTypes: PromptTypeConfigs = new PromptTypeConfigs;
+    public readonly rows: RowConfig[] = [];
 }

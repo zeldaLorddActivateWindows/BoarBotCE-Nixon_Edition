@@ -1,10 +1,8 @@
 import {
     ButtonInteraction,
-    ChatInputCommandInteraction,
-    InteractionCollector, MessageComponentInteraction, StringSelectMenuInteraction,
+    InteractionCollector, MessageComponentInteraction, StringSelectMenuInteraction, TextChannel,
 } from 'discord.js';
-import {LogDebug} from '../logging/LogDebug';
-import {BoarBotApp} from '../../BoarBotApp';
+import {NumberConfig} from '../../bot/config/NumberConfig';
 
 // Reasons for ending collection
 enum Reasons {
@@ -55,22 +53,44 @@ export class CollectorUtils {
     /**
      * Creates and returns a message component collector
      *
-     * @param interaction - The interaction to create the collector with
-     * @param addition - What should be found at the end of custom ID
+     * @param channel - The channel to put the collector
+     * @param id - The id to look for
+     * @param nums - Used to get number configurations
+     * @param excludeUser - Whether to exclude the user instead of it only being them
+     * @param time - The time it takes for the collector to end
      * @private
      */
     public static async createCollector(
-        interaction: ChatInputCommandInteraction,
-        addition: string
+        channel: TextChannel,
+        id: string,
+        nums: NumberConfig,
+        excludeUser: boolean = false,
+        time?: number
     ): Promise<InteractionCollector<ButtonInteraction | StringSelectMenuInteraction>> {
         // Only allows button presses from current interaction
-        const filter = (compInter: MessageComponentInteraction) => {
-            return compInter.customId.endsWith(addition);
+        const filter = async (compInter: MessageComponentInteraction) => {
+            const modifiers: string[] = compInter.customId.split('|').slice(1);
+            let returnVal: boolean = modifiers[0] === id;
+
+            if (modifiers.length > 1 && excludeUser) {
+                return returnVal && modifiers[1] !== compInter.user.id;
+            } else if (modifiers.length > 1) {
+                return returnVal && modifiers[1] === compInter.user.id;
+            }
+
+            return returnVal;
         };
 
-        return interaction.channel?.createMessageComponentCollector({
-            filter,
-            idle: 1000 * 60 * 2
-        }) as InteractionCollector<ButtonInteraction | StringSelectMenuInteraction>;
+        if (!time) {
+            return channel.createMessageComponentCollector({
+                filter,
+                idle: nums.collectorIdle
+            }) as InteractionCollector<ButtonInteraction | StringSelectMenuInteraction>;
+        } else {
+            return channel.createMessageComponentCollector({
+                filter,
+                time: time
+            }) as InteractionCollector<ButtonInteraction | StringSelectMenuInteraction>;
+        }
     }
 }

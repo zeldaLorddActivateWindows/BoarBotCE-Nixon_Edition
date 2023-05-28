@@ -6,8 +6,12 @@
  * @license {@link http://www.apache.org/licenses/ Apache-2.0}
  * @copyright WeslayCodes 2023
  */
+import {OutcomeConfig} from './OutcomeConfig';
+
 export class PowerupConfig {
     public readonly name: string = ' ';
+    public readonly pluralName: string = ' ';
     public readonly description: string = ' ';
     public readonly tiers: number[] = [0, 0, 0];
+    public readonly outcomes: OutcomeConfig[] = [];
 }

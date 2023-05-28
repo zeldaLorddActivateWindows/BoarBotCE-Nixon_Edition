@@ -7,6 +7,13 @@ import {BoarUser} from '../boar/BoarUser';
 import moment from 'moment/moment';
 import {RarityConfig} from '../../bot/config/items/RarityConfig';
 import {PromptConfig} from '../../bot/config/powerups/PromptConfig';
+import {StringConfig} from '../../bot/config/StringConfig';
+import {NumberConfig} from '../../bot/config/NumberConfig';
+import {ColorConfig} from '../../bot/config/ColorConfig';
+import {PathConfig} from '../../bot/config/PathConfig';
+import {BoarItemConfig} from '../../bot/config/items/BoarItemConfig';
+import {PowerupConfigs} from '../../bot/config/powerups/PowerupConfigs';
+import {PowerupData} from '../boar/PowerupData';
 
 /**
  * {@link CollectionImageGenerator CollectionImageGenerator.ts}
@@ -17,14 +24,34 @@ import {PromptConfig} from '../../bot/config/powerups/PromptConfig';
  * @copyright WeslayCodes 2023
  */
 export class CollectionImageGenerator {
-    private readonly boarUser: BoarUser = {} as BoarUser;
-    private readonly config: BotConfig = {} as BotConfig;
-    private readonly allBoars: any[] = [];
+    private boarUser: BoarUser = {} as BoarUser;
+    private config: BotConfig = {} as BotConfig;
+    private allBoars: any[] = [];
     private normalBase: Buffer = {} as Buffer;
     private detailedBase: Buffer = {} as Buffer;
     private powerupsBase: Buffer = {} as Buffer;
 
-    constructor(boarUser: BoarUser, config: BotConfig, boars: any[]) {
+    /**
+     * Creates a new collection image generator
+     *
+     * @param boarUser - The user that has their collection open
+     * @param boars - All boars and information about those boars that a user has
+     * @param config - Used to get strings, paths, and other information
+     */
+    constructor(boarUser: BoarUser, boars: any[], config: BotConfig) {
+        this.boarUser = boarUser;
+        this.config = config;
+        this.allBoars = boars;
+    }
+
+    /**
+     * Used when collection information needs to be updated internally
+     *
+     * @param boarUser - The user that has their collection open
+     * @param boars - All boars and information about those boars that a user has
+     * @param config - Used to get strings, paths, and other information
+     */
+    public updateInfo(boarUser: BoarUser, boars: any[], config: BotConfig): void {
         this.boarUser = boarUser;
         this.config = config;
         this.allBoars = boars;
@@ -32,40 +59,38 @@ export class CollectionImageGenerator {
 
     /**
      * Creates the base image of the Normal view
-     *
-     * @private
      */
     public async createNormalBase(): Promise<void> {
         // Config aliases
 
-        const strConfig = this.config.stringConfig;
-        const nums = this.config.numberConfig;
-        const colorConfig = this.config.colorConfig;
+        const strConfig: StringConfig = this.config.stringConfig;
+        const nums: NumberConfig = this.config.numberConfig;
+        const colorConfig: ColorConfig = this.config.colorConfig;
 
-        const collectionUnderlay = this.config.pathConfig.collAssets + this.config.pathConfig.collUnderlay;
+        const collectionUnderlay: string = this.config.pathConfig.collAssets + this.config.pathConfig.collUnderlay;
 
-        const maxUniques = Object.keys(this.config.boarItemConfigs).length;
-        const userUniques = Object.keys(this.boarUser.boarCollection).length;
+        const maxUniques: number = Object.keys(this.config.boarItemConfigs).length;
+        const userUniques: number = Object.keys(this.boarUser.boarCollection).length;
 
         // Fixes stats through flooring/alternate values
 
-        const scoreString = Math.min(this.boarUser.boarScore, nums.maxScore).toLocaleString();
-        const totalString = Math.min(this.boarUser.totalBoars, nums.maxBoars).toLocaleString();
-        const uniqueString = Math.min(userUniques, maxUniques).toLocaleString();
-        const dailiesString = Math.min(this.boarUser.numDailies, nums.maxDailies).toLocaleString();
-        const streakString = Math.min(this.boarUser.boarStreak, nums.maxStreak).toLocaleString();
-        const lastDailyString = this.boarUser.lastDaily > 0
+        const scoreString: string = Math.min(this.boarUser.boarScore, nums.maxScore).toLocaleString();
+        const totalString: string = Math.min(this.boarUser.totalBoars, nums.maxBoars).toLocaleString();
+        const uniqueString: string = Math.min(userUniques, maxUniques).toLocaleString();
+        const dailiesString: string = Math.min(this.boarUser.numDailies, nums.maxDailies).toLocaleString();
+        const streakString: string = Math.min(this.boarUser.boarStreak, nums.maxStreak).toLocaleString();
+        const lastDailyString: string = this.boarUser.lastDaily > 0
             ? moment(this.boarUser.lastDaily).fromNow()
             : strConfig.unavailable;
 
         // Font info
 
-        const bigFont = `${nums.fontBig}px ${strConfig.fontName}`;
-        const mediumFont = `${nums.fontMedium}px ${strConfig.fontName}`;
-        const smallFont = `${nums.fontSmallMedium}px ${strConfig.fontName}`;
+        const bigFont: string = `${nums.fontBig}px ${strConfig.fontName}`;
+        const mediumFont: string = `${nums.fontMedium}px ${strConfig.fontName}`;
+        const smallFont: string = `${nums.fontSmallMedium}px ${strConfig.fontName}`;
 
-        const canvas = Canvas.createCanvas(nums.collImageSize[0], nums.collImageSize[1]);
-        const ctx = canvas.getContext('2d');
+        const canvas: Canvas.Canvas = Canvas.createCanvas(nums.collImageSize[0], nums.collImageSize[1]);
+        const ctx: Canvas.CanvasRenderingContext2D = canvas.getContext('2d');
 
         ctx.drawImage(await Canvas.loadImage(collectionUnderlay), ...nums.originPos, ...nums.collImageSize);
         await this.drawTopBar(ctx);
@@ -75,7 +100,10 @@ export class CollectionImageGenerator {
         CanvasUtils.drawText(
             ctx, strConfig.collScoreLabel, nums.collScoreLabelPos, mediumFont, 'center', colorConfig.font
         );
-        CanvasUtils.drawText(ctx, scoreString, nums.collScorePos, smallFont, 'center', colorConfig.font);
+        CanvasUtils.drawText(
+            ctx, '%@' + scoreString, nums.collScorePos, smallFont, 'center',
+            colorConfig.font, undefined, false, '$', colorConfig.bucks
+        );
 
         CanvasUtils.drawText(
             ctx, strConfig.collTotalLabel, nums.collTotalLabelPos, mediumFont, 'center', colorConfig.font
@@ -105,39 +133,40 @@ export class CollectionImageGenerator {
         this.normalBase = canvas.toBuffer();
     }
 
-    public normalBaseMade(): boolean {
-        return Object.keys(this.normalBase).length !== 0;
-    }
+    /**
+     * Returns whether the normal base has been made
+     */
+    public normalBaseMade(): boolean { return Object.keys(this.normalBase).length !== 0; }
 
     /**
      * Finalizes the Normal view image
      *
-     * @private
+     * @param page - The page to finalize
      */
     public async finalizeNormalImage(page: number): Promise<AttachmentBuilder> {
         // Config aliases
 
-        const strConfig = this.config.stringConfig;
-        const pathConfig = this.config.pathConfig;
-        const nums = this.config.numberConfig;
-        const colorConfig = this.config.colorConfig;
+        const strConfig: StringConfig = this.config.stringConfig;
+        const pathConfig: PathConfig = this.config.pathConfig;
+        const nums: NumberConfig = this.config.numberConfig;
+        const colorConfig: ColorConfig = this.config.colorConfig;
 
         // Asset path info
 
-        const boarsFolder = pathConfig.boarImages;
-        const collectionOverlay = pathConfig.collAssets + pathConfig.collOverlay;
+        const boarsFolder: string = pathConfig.boarImages;
+        const collectionOverlay: string = pathConfig.collAssets + pathConfig.collOverlay;
 
-        const boarsPerPage = nums.collBoarsPerPage;
+        const boarsPerPage: number = nums.collBoarsPerPage;
 
-        const smallestFont = `${nums.fontSmallest}px ${strConfig.fontName}`;
+        const smallestFont: string = `${nums.fontSmallest}px ${strConfig.fontName}`;
 
-        const lastBoarRarity: [number, RarityConfig] = BoarUtils.findRarity(this.boarUser.lastBoar);
-        const favBoarRarity: [number, RarityConfig] = BoarUtils.findRarity(this.boarUser.favoriteBoar);
+        const lastBoarRarity: [number, RarityConfig] = BoarUtils.findRarity(this.boarUser.lastBoar, this.config);
+        const favBoarRarity: [number, RarityConfig] = BoarUtils.findRarity(this.boarUser.favoriteBoar, this.config);
 
-        const curBoars = this.allBoars.slice(page * boarsPerPage, (page+1)*boarsPerPage);
+        const curBoars: any[] = this.allBoars.slice(page * boarsPerPage, (page+1)*boarsPerPage);
 
-        const canvas = Canvas.createCanvas(nums.collImageSize[0], nums.collImageSize[1]);
-        const ctx = canvas.getContext('2d');
+        const canvas: Canvas.Canvas = Canvas.createCanvas(nums.collImageSize[0], nums.collImageSize[1]);
+        const ctx: Canvas.CanvasRenderingContext2D = canvas.getContext('2d');
 
         ctx.drawImage(await Canvas.loadImage(this.normalBase), ...nums.originPos, ...nums.collImageSize);
 
@@ -150,18 +179,18 @@ export class CollectionImageGenerator {
                 nums.collBoarStartY + Math.floor(i / nums.collBoarCols) * nums.collBoarSpacingY
             ];
 
-            const lineStartPos = [
+            const lineStartPos: [number, number] = [
                 nums.collRarityStartX + (i % nums.collBoarCols) * nums.collBoarSpacingX,
                 nums.collRarityStartY + Math.floor(i / nums.collBoarCols) * nums.collBoarSpacingY
             ];
 
-            const lineEndPos = [
+            const lineEndPos: [number, number] = [
                 nums.collRarityStartX + nums.collRarityEndDiff + (i % nums.collBoarCols) * nums.collBoarSpacingX,
                 nums.collRarityStartY - nums.collRarityEndDiff +
                 Math.floor(i / nums.collBoarCols) * nums.collBoarSpacingY
             ];
 
-            const boarFile = curBoars[i].staticFile
+            const boarFile: string = curBoars[i].staticFile
                 ? boarsFolder + curBoars[i].staticFile
                 : boarsFolder + curBoars[i].file;
 
@@ -173,8 +202,8 @@ export class CollectionImageGenerator {
 
         // Draws last boar gotten and rarity
         if (this.boarUser.lastBoar !== '') {
-            const lastBoarDetails = this.config.boarItemConfigs[this.boarUser.lastBoar];
-            const boarFile = lastBoarDetails.staticFile
+            const lastBoarDetails: BoarItemConfig = this.config.boarItemConfigs[this.boarUser.lastBoar];
+            const boarFile: string = lastBoarDetails.staticFile
                 ? boarsFolder + lastBoarDetails.staticFile
                 : boarsFolder + lastBoarDetails.file;
 
@@ -183,8 +212,8 @@ export class CollectionImageGenerator {
 
         // Draws favorite boar and rarity
         if (this.boarUser.favoriteBoar !== '') {
-            const favoriteBoarDetails = this.config.boarItemConfigs[this.boarUser.favoriteBoar];
-            const boarFile = favoriteBoarDetails.staticFile
+            const favoriteBoarDetails: BoarItemConfig = this.config.boarItemConfigs[this.boarUser.favoriteBoar];
+            const boarFile: string = favoriteBoarDetails.staticFile
                 ? boarsFolder + favoriteBoarDetails.staticFile
                 : boarsFolder + favoriteBoarDetails.file;
 
@@ -208,22 +237,21 @@ export class CollectionImageGenerator {
 
     /**
      * Creates the base image of the Detailed view
-     *
-     * @private
      */
     public async createDetailedBase(): Promise<void> {
         // Config aliases
 
-        const strConfig = this.config.stringConfig;
-        const nums = this.config.numberConfig;
-        const colorConfig = this.config.colorConfig;
+        const strConfig: StringConfig = this.config.stringConfig;
+        const nums: NumberConfig = this.config.numberConfig;
+        const colorConfig: ColorConfig = this.config.colorConfig;
 
-        const collectionUnderlay = this.config.pathConfig.collAssets + this.config.pathConfig.collDetailUnderlay;
+        const collectionUnderlay: string = this.config.pathConfig.collAssets +
+            this.config.pathConfig.collDetailUnderlay;
 
-        const mediumFont = `${nums.fontMedium}px ${strConfig.fontName}`;
+        const mediumFont: string = `${nums.fontMedium}px ${strConfig.fontName}`;
 
-        const canvas = Canvas.createCanvas(nums.collImageSize[0], nums.collImageSize[1]);
-        const ctx = canvas.getContext('2d');
+        const canvas: Canvas.Canvas = Canvas.createCanvas(nums.collImageSize[0], nums.collImageSize[1]);
+        const ctx: Canvas.CanvasRenderingContext2D = canvas.getContext('2d');
 
         ctx.drawImage(await Canvas.loadImage(collectionUnderlay), ...nums.originPos, ...nums.collImageSize);
         await this.drawTopBar(ctx);
@@ -250,48 +278,49 @@ export class CollectionImageGenerator {
         this.detailedBase = canvas.toBuffer();
     }
 
-    public detailedBaseMade(): boolean {
-        return Object.keys(this.detailedBase).length !== 0;
-    }
+    /**
+     * Returns whether the detailed base has been made
+     */
+    public detailedBaseMade(): boolean { return Object.keys(this.detailedBase).length !== 0; }
 
     /**
      * Finalizes the Detailed view image
      *
-     * @private
+     * @param page - The page to finalize
      */
     public async finalizeDetailedImage(page: number): Promise<AttachmentBuilder> {
         // Config aliases
 
-        const strConfig = this.config.stringConfig;
-        const pathConfig = this.config.pathConfig;
-        const nums = this.config.numberConfig;
-        const colorConfig = this.config.colorConfig;
+        const strConfig: StringConfig = this.config.stringConfig;
+        const pathConfig: PathConfig = this.config.pathConfig;
+        const nums: NumberConfig = this.config.numberConfig;
+        const colorConfig: ColorConfig = this.config.colorConfig;
 
         // Asset path info
 
-        const boarsFolder = pathConfig.boarImages;
-        const collectionOverlay = pathConfig.collAssets + pathConfig.collDetailOverlay;
+        const boarsFolder: string = pathConfig.boarImages;
+        const collectionOverlay: string = pathConfig.collAssets + pathConfig.collDetailOverlay;
 
         // Font info
 
-        const bigFont = `${nums.fontBig}px ${strConfig.fontName}`;
-        const mediumFont = `${nums.fontMedium}px ${strConfig.fontName}`;
-        const smallMediumFont = `${nums.fontSmallMedium}px ${strConfig.fontName}`;
-        const smallestFont = `${nums.fontSmallest}px ${strConfig.fontName}`;
+        const bigFont: string = `${nums.fontBig}px ${strConfig.fontName}`;
+        const mediumFont: string = `${nums.fontMedium}px ${strConfig.fontName}`;
+        const smallMediumFont: string = `${nums.fontSmallMedium}px ${strConfig.fontName}`;
+        const smallestFont: string = `${nums.fontSmallest}px ${strConfig.fontName}`;
 
-        const curBoar = this.allBoars[page];
+        const curBoar: any = this.allBoars[page];
 
         // Dynamic information (stats, images)
 
-        const boarFile = curBoar.staticFile ? boarsFolder + curBoar.staticFile : boarsFolder + curBoar.file;
-        const numCollectedString = Math.min(curBoar.num, nums.maxIndivBoars).toLocaleString();
-        const firstObtainedDate = new Date(curBoar.firstObtained)
+        const boarFile: string = curBoar.staticFile ? boarsFolder + curBoar.staticFile : boarsFolder + curBoar.file;
+        const numCollectedString: string = Math.min(curBoar.num, nums.maxIndivBoars).toLocaleString();
+        const firstObtainedDate: string = new Date(curBoar.firstObtained)
             .toLocaleString('en-US',{month:'long',day:'numeric',year:'numeric'});
-        const lastObtainedDate = new Date(curBoar.lastObtained)
+        const lastObtainedDate: string = new Date(curBoar.lastObtained)
             .toLocaleString('en-US',{month:'long',day:'numeric',year:'numeric'});
 
-        const canvas = Canvas.createCanvas(nums.collImageSize[0], nums.collImageSize[1]);
-        const ctx = canvas.getContext('2d');
+        const canvas: Canvas.Canvas = Canvas.createCanvas(nums.collImageSize[0], nums.collImageSize[1]);
+        const ctx: Canvas.CanvasRenderingContext2D = canvas.getContext('2d');
 
         ctx.drawImage(await Canvas.loadImage(this.detailedBase), ...nums.originPos, ...nums.collImageSize);
         ctx.drawImage(canvas, ...nums.originPos, ...nums.collImageSize);
@@ -301,13 +330,13 @@ export class CollectionImageGenerator {
 
         let indivRarityPos: [number, number] = [...nums.collIndivRarityPos];
         if (curBoar.id == this.boarUser.favoriteBoar) {
-            const favoriteFile = pathConfig.collAssets + pathConfig.favorite;
+            const favoriteFile: string = pathConfig.collAssets + pathConfig.favorite;
             let favoritePos: [number, number];
 
             indivRarityPos[0] -= nums.collIndivFavSize[0] / 2 + 10;
             ctx.font = mediumFont;
             favoritePos = [
-                ctx.measureText(curBoar.rarity.name.toUpperCase()).width / 2 + indivRarityPos[0] + 10,
+                ctx.measureText(curBoar.rarity[1].name.toUpperCase()).width / 2 + indivRarityPos[0] + 10,
                 nums.collIndivFavHeight
             ];
 
@@ -317,7 +346,7 @@ export class CollectionImageGenerator {
         // Draws stats
 
         CanvasUtils.drawText(
-            ctx, curBoar.rarity.name.toUpperCase(), indivRarityPos,
+            ctx, curBoar.rarity[1].name.toUpperCase(), indivRarityPos,
             mediumFont, 'center', curBoar.color
         );
 
@@ -351,49 +380,54 @@ export class CollectionImageGenerator {
     /**
      * Creates the base image of the Powerups view
      *
-     * @private
+     * @param page - The page to make the base for
      */
     public async createPowerupsBase(page: number): Promise<void> {
         switch (page) {
             case 2:
-                await this.createBaseThree();
+                await this.createPowBaseThree();
                 break;
             case 1:
-                await this.createBaseTwo();
+                await this.createPowBaseTwo();
                 break;
             default:
-                await this.createBaseOne();
+                await this.createPowBaseOne();
         }
     }
 
-    private async createBaseOne(): Promise<void> {
+    /**
+     * Creates the base image for the first page of Powerups view
+     *
+     * @private
+     */
+    private async createPowBaseOne(): Promise<void> {
         // Config aliases
 
-        const strConfig = this.config.stringConfig;
-        const nums = this.config.numberConfig;
-        const pathConfig = this.config.pathConfig;
-        const colorConfig = this.config.colorConfig;
-        const powConfig = this.config.powerupConfig;
+        const strConfig: StringConfig = this.config.stringConfig;
+        const nums: NumberConfig = this.config.numberConfig;
+        const pathConfig: PathConfig = this.config.pathConfig;
+        const colorConfig: ColorConfig = this.config.colorConfig;
+        const powConfig: PowerupConfigs = this.config.powerupConfig;
 
-        const collectionUnderlay = pathConfig.collAssets + pathConfig.collPowerUnderlay;
-        const enhancerActive = pathConfig.collAssets + pathConfig.enhancerOn;
-        const enhancerInactive = pathConfig.collAssets + pathConfig.enhancerOff;
+        const collectionUnderlay: string = pathConfig.collAssets + pathConfig.collPowerUnderlay;
+        const enhancerActive: string = pathConfig.collAssets + pathConfig.enhancerOn;
+        const enhancerInactive: string = pathConfig.collAssets + pathConfig.enhancerOff;
 
-        const mediumFont = `${nums.fontMedium}px ${strConfig.fontName}`;
-        const smallMedium = `${nums.fontSmallMedium}px ${strConfig.fontName}`;
+        const mediumFont: string = `${nums.fontMedium}px ${strConfig.fontName}`;
+        const smallMedium: string = `${nums.fontSmallMedium}px ${strConfig.fontName}`;
 
-        const powerupData = this.boarUser.powerups;
+        const powerupData: PowerupData = this.boarUser.powerups;
 
-        const totalAttempts = Math.min(powerupData.powerupAttempts, nums.maxPowBase).toLocaleString();
-        const totalAttempts1 = Math.min(powerupData.powerupAttempts1, nums.maxPowBase).toLocaleString();
-        const totalAttempts10 = Math.min(powerupData.powerupAttempts10, nums.maxPowBase).toLocaleString();
-        const totalAttempts50 = Math.min(powerupData.powerupAttempts50, nums.maxPowBase).toLocaleString();
+        const totalAttempts: string = Math.min(powerupData.powerupAttempts, nums.maxPowBase).toLocaleString();
+        const totalAttempts1: string = Math.min(powerupData.powerupAttempts1, nums.maxPowBase).toLocaleString();
+        const totalAttempts10: string = Math.min(powerupData.powerupAttempts10, nums.maxPowBase).toLocaleString();
+        const totalAttempts50: string = Math.min(powerupData.powerupAttempts50, nums.maxPowBase).toLocaleString();
 
         const claimedMap: Map<string, number> = new Map<string, number>([
             [powConfig.multiBoost.name, powerupData.multiBoostsClaimed],
-            [powConfig.gift.name, powerupData.giftsClaimed],
+            [powConfig.gift.pluralName, powerupData.giftsClaimed],
             [powConfig.extraChance.name, powerupData.extraChancesClaimed],
-            [powConfig.enhancer.name, powerupData.enhancersClaimed]
+            [powConfig.enhancer.pluralName, powerupData.enhancersClaimed]
         ]);
 
         let mostClaimed: [string, number] = [strConfig.unavailable, 0];
@@ -405,11 +439,16 @@ export class CollectionImageGenerator {
 
         const promptMap: Map<string, number> = new Map<string, number>();
         for (const promptType of Object.keys(powerupData.promptData)) {
-            const typeName = powConfig.promptTypes[promptType].name;
+            const typeName: string = powConfig.promptTypes[promptType].name;
             for (const prompt of Object.keys(powerupData.promptData[promptType])) {
-                if (typeof powConfig.promptTypes[promptType][prompt] === 'string') continue;
+                if (
+                    typeof powConfig.promptTypes[promptType][prompt] === 'string' ||
+                    typeof powConfig.promptTypes[promptType][prompt] === 'number'
+                ) {
+                    continue;
+                }
 
-                const promptName = (powConfig.promptTypes[promptType][prompt] as PromptConfig).name;
+                const promptName: string = (powConfig.promptTypes[promptType][prompt] as PromptConfig).name;
 
                 promptMap.set(typeName + ' - ' + promptName, powerupData.promptData[promptType][prompt].avg);
             }
@@ -417,18 +456,18 @@ export class CollectionImageGenerator {
 
         let bestPrompt: [string, number] = [strConfig.unavailable, 100];
         for (const [key, val] of promptMap) {
-            if (val < bestPrompt[1]) {
+            if (val <= bestPrompt[1]) {
                 bestPrompt = [key, val];
             }
         }
 
-        const multiplier = Math.min(powerupData.multiplier, nums.maxMulti).toLocaleString() + 'x';
-        const multiBoost = '+' + Math.min(powerupData.multiBoostTotal, nums.maxMultiBoost).toLocaleString();
-        const gifts = Math.min(powerupData.numGifts, nums.maxPowBase).toLocaleString();
-        const extraChance = Math.min(powerupData.extraChanceTotal, nums.maxExtraChance).toLocaleString() + '%';
+        const multiplier: string = Math.min(powerupData.multiplier, nums.maxMulti).toLocaleString() + 'x';
+        const multiBoost: string = '+' + Math.min(powerupData.multiBoostTotal, nums.maxMultiBoost).toLocaleString();
+        const gifts: string = Math.min(powerupData.numGifts, nums.maxPowBase).toLocaleString();
+        const extraChance: string = Math.min(powerupData.extraChanceTotal, nums.maxExtraChance).toLocaleString() + '%';
 
-        const canvas = Canvas.createCanvas(nums.collImageSize[0], nums.collImageSize[1]);
-        const ctx = canvas.getContext('2d');
+        const canvas: Canvas.Canvas = Canvas.createCanvas(nums.collImageSize[0], nums.collImageSize[1]);
+        const ctx: Canvas.CanvasRenderingContext2D = canvas.getContext('2d');
 
         ctx.drawImage(await Canvas.loadImage(collectionUnderlay), ...nums.originPos, ...nums.collImageSize);
         await this.drawTopBar(ctx);
@@ -504,7 +543,7 @@ export class CollectionImageGenerator {
                 nums.collEnhancerStartY + Math.floor(i / nums.collEnhancerCols) * nums.collEnhancerSpacingY
             ];
 
-            const enhancerFile = i < powerupData.numEnhancers
+            const enhancerFile: string = i < powerupData.numEnhancers
                 ? enhancerActive
                 : enhancerInactive;
 
@@ -514,32 +553,38 @@ export class CollectionImageGenerator {
         this.powerupsBase = canvas.toBuffer();
     }
 
-    private async createBaseTwo(): Promise<void> {
+    /**
+     * Creates the base image for the second page of Powerups view
+     *
+     * @private
+     */
+    private async createPowBaseTwo(): Promise<void> {
         // Config aliases
 
-        const strConfig = this.config.stringConfig;
-        const nums = this.config.numberConfig;
-        const pathConfig = this.config.pathConfig;
-        const colorConfig = this.config.colorConfig;
+        const strConfig: StringConfig = this.config.stringConfig;
+        const nums: NumberConfig = this.config.numberConfig;
+        const pathConfig: PathConfig = this.config.pathConfig;
+        const colorConfig: ColorConfig = this.config.colorConfig;
 
-        const collectionUnderlay = pathConfig.collAssets + pathConfig.collPowerUnderlay2;
+        const collectionUnderlay: string = pathConfig.collAssets + pathConfig.collPowerUnderlay2;
 
-        const mediumFont = `${nums.fontMedium}px ${strConfig.fontName}`;
-        const smallMedium = `${nums.fontSmallMedium}px ${strConfig.fontName}`;
+        const mediumFont: string = `${nums.fontMedium}px ${strConfig.fontName}`;
+        const smallMedium: string = `${nums.fontSmallMedium}px ${strConfig.fontName}`;
 
-        const powerupData = this.boarUser.powerups;
+        const powerupData: PowerupData = this.boarUser.powerups;
 
-        const multiBoostClaimed = Math.min(powerupData.multiBoostsClaimed, nums.maxPowBase).toLocaleString();
-        const multiBoostsUsed = Math.min(powerupData.multiBoostsUsed, nums.maxPowBase).toLocaleString();
-        const highestMulti = Math.min(powerupData.highestMulti, nums.maxMulti).toLocaleString() + 'x';
-        const highestMultiBoost = '+' + Math.min(powerupData.highestMultiBoost, nums.maxMultiBoost).toLocaleString();
-        const giftsClaimed = Math.min(powerupData.giftsClaimed, nums.maxPowBase).toLocaleString();
-        const giftsUsed = Math.min(powerupData.giftsUsed, nums.maxPowBase).toLocaleString();
-        const giftsOpened = Math.min(powerupData.giftsOpened, nums.maxPowBase).toLocaleString();
-        const giftsMost = Math.min(powerupData.mostGifts, nums.maxPowBase).toLocaleString();
+        const multiBoostClaimed: string = Math.min(powerupData.multiBoostsClaimed, nums.maxPowBase).toLocaleString();
+        const multiBoostsUsed: string = Math.min(powerupData.multiBoostsUsed, nums.maxPowBase).toLocaleString();
+        const highestMulti: string = Math.min(powerupData.highestMulti, nums.maxMulti).toLocaleString() + 'x';
+        const highestMultiBoost: string = '+' + Math.min(powerupData.highestMultiBoost, nums.maxMultiBoost)
+            .toLocaleString();
+        const giftsClaimed: string = Math.min(powerupData.giftsClaimed, nums.maxPowBase).toLocaleString();
+        const giftsUsed: string = Math.min(powerupData.giftsUsed, nums.maxPowBase).toLocaleString();
+        const giftsOpened: string = Math.min(powerupData.giftsOpened, nums.maxPowBase).toLocaleString();
+        const giftsMost: string = Math.min(powerupData.mostGifts, nums.maxPowBase).toLocaleString();
 
-        const canvas = Canvas.createCanvas(nums.collImageSize[0], nums.collImageSize[1]);
-        const ctx = canvas.getContext('2d');
+        const canvas: Canvas.Canvas = Canvas.createCanvas(nums.collImageSize[0], nums.collImageSize[1]);
+        const ctx: Canvas.CanvasRenderingContext2D = canvas.getContext('2d');
 
         ctx.drawImage(await Canvas.loadImage(collectionUnderlay), ...nums.originPos, ...nums.collImageSize);
         await this.drawTopBar(ctx);
@@ -591,28 +636,34 @@ export class CollectionImageGenerator {
         this.powerupsBase = canvas.toBuffer();
     }
 
-    private async createBaseThree(): Promise<void> {
+    /**
+     * Creates the base image for the third page of Powerups view
+     *
+     * @private
+     */
+    private async createPowBaseThree(): Promise<void> {
         // Config aliases
 
-        const strConfig = this.config.stringConfig;
-        const nums = this.config.numberConfig;
-        const pathConfig = this.config.pathConfig;
-        const colorConfig = this.config.colorConfig;
-        const rarityConfig = this.config.rarityConfigs;
+        const strConfig: StringConfig = this.config.stringConfig;
+        const nums: NumberConfig = this.config.numberConfig;
+        const pathConfig: PathConfig = this.config.pathConfig;
+        const colorConfig: ColorConfig = this.config.colorConfig;
+        const rarityConfig: RarityConfig[] = this.config.rarityConfigs;
 
-        const collectionUnderlay = pathConfig.collAssets + pathConfig.collPowerUnderlay3;
+        const collectionUnderlay: string = pathConfig.collAssets + pathConfig.collPowerUnderlay3;
 
-        const mediumFont = `${nums.fontMedium}px ${strConfig.fontName}`;
-        const smallMedium = `${nums.fontSmallMedium}px ${strConfig.fontName}`;
+        const mediumFont: string = `${nums.fontMedium}px ${strConfig.fontName}`;
+        const smallMedium: string = `${nums.fontSmallMedium}px ${strConfig.fontName}`;
 
-        const powerupData = this.boarUser.powerups;
+        const powerupData: PowerupData = this.boarUser.powerups;
 
-        const extraChancesClaimed = Math.min(powerupData.extraChancesClaimed, nums.maxPowBase).toLocaleString();
-        const extraChancesUsed = Math.min(powerupData.extraChancesUsed, nums.maxPowBase).toLocaleString();
-        const highestExtraChance = Math.min(powerupData.highestExtraChance, nums.maxExtraChance).toLocaleString() + '%';
-        const enhancersClaimed = Math.min(powerupData.enhancersClaimed, nums.maxPowBase).toLocaleString();
+        const extraChancesClaimed: string = Math.min(powerupData.extraChancesClaimed, nums.maxPowBase).toLocaleString();
+        const extraChancesUsed: string = Math.min(powerupData.extraChancesUsed, nums.maxPowBase).toLocaleString();
+        const highestExtraChance: string = Math.min(powerupData.highestExtraChance, nums.maxExtraChance)
+            .toLocaleString() + '%';
+        const enhancersClaimed: string = Math.min(powerupData.enhancersClaimed, nums.maxPowBase).toLocaleString();
 
-        const enhanced = [];
+        const enhanced: string[] = [];
         for (let i=0; i<powerupData.enhancedRarities.length; i++) {
             if (i < 3) {
                 enhanced.push(Math.min(powerupData.enhancedRarities[i], nums.maxPowBase).toLocaleString())
@@ -621,8 +672,8 @@ export class CollectionImageGenerator {
             }
         }
 
-        const canvas = Canvas.createCanvas(nums.collImageSize[0], nums.collImageSize[1]);
-        const ctx = canvas.getContext('2d');
+        const canvas: Canvas.Canvas = Canvas.createCanvas(nums.collImageSize[0], nums.collImageSize[1]);
+        const ctx: Canvas.CanvasRenderingContext2D = canvas.getContext('2d');
 
         ctx.drawImage(await Canvas.loadImage(collectionUnderlay), ...nums.originPos, ...nums.collImageSize);
         await this.drawTopBar(ctx);
@@ -681,16 +732,20 @@ export class CollectionImageGenerator {
         this.powerupsBase = canvas.toBuffer();
     }
 
-    public powerupsBaseMade(): boolean {
-        return Object.keys(this.powerupsBase).length !== 0;
-    }
+    /**
+     * Returns whether a powerups base has been made
+     */
+    public powerupsBaseMade(): boolean { return Object.keys(this.powerupsBase).length !== 0; }
 
+    /**
+     * Finalizes the Powerups view image
+     */
     public async finalizePowerupsImage(): Promise<AttachmentBuilder> {
-        const nums = this.config.numberConfig;
-        const collectionOverlay = this.config.pathConfig.collAssets + this.config.pathConfig.collPowerOverlay;
+        const nums: NumberConfig = this.config.numberConfig;
+        const collectionOverlay: string = this.config.pathConfig.collAssets + this.config.pathConfig.collPowerOverlay;
 
-        const canvas = Canvas.createCanvas(nums.collImageSize[0], nums.collImageSize[1]);
-        const ctx = canvas.getContext('2d');
+        const canvas: Canvas.Canvas = Canvas.createCanvas(nums.collImageSize[0], nums.collImageSize[1]);
+        const ctx: Canvas.CanvasRenderingContext2D = canvas.getContext('2d');
 
         ctx.drawImage(await Canvas.loadImage(this.powerupsBase), ...nums.originPos, ...nums.collImageSize);
         ctx.drawImage(canvas, ...nums.originPos, ...nums.collImageSize);
@@ -700,29 +755,33 @@ export class CollectionImageGenerator {
         return new AttachmentBuilder(canvas.toBuffer(), { name:`${this.config.stringConfig.imageName}.png` });
     }
 
+    /**
+     * Creates the top bar present on all views
+     *
+     * @param ctx - CanvasRenderingContext2D
+     */
     public async drawTopBar(ctx: Canvas.CanvasRenderingContext2D,): Promise<void> {
         // Config aliases
 
-        const strConfig = this.config.stringConfig;
-        const pathConfig = this.config.pathConfig;
-        const nums = this.config.numberConfig;
-        const colorConfig = this.config.colorConfig;
+        const strConfig: StringConfig = this.config.stringConfig;
+        const pathConfig: PathConfig = this.config.pathConfig;
+        const nums: NumberConfig = this.config.numberConfig;
+        const colorConfig: ColorConfig = this.config.colorConfig;
 
-        const noClan = pathConfig.collAssets + pathConfig.clanNone;
+        const noClan: string = pathConfig.collAssets + pathConfig.clanNone;
 
         // Non-trivial user information
 
-        const userTag = this.boarUser.user.username.substring(0, nums.maxUsernameLength) + '#' +
-            this.boarUser.user.discriminator;
-        const userAvatar = this.boarUser.user.displayAvatarURL({ extension: 'png' });
+        const userTag: string = this.boarUser.user.username.substring(0, nums.maxUsernameLength);
+        const userAvatar: string = this.boarUser.user.displayAvatarURL({ extension: 'png' });
 
         // Fixes stats through flooring/alternate values
 
-        const firstDate = this.boarUser.firstDaily > 0
+        const firstDate: string = this.boarUser.firstDaily > 0
             ? new Date(this.boarUser.firstDaily).toLocaleString('en-US',{month:'long',day:'numeric',year:'numeric'})
             : strConfig.unavailable;
 
-        const mediumFont = `${nums.fontMedium}px ${strConfig.fontName}`;
+        const mediumFont: string = `${nums.fontMedium}px ${strConfig.fontName}`;
 
         ctx.drawImage(await Canvas.loadImage(userAvatar), ...nums.collUserAvatarPos, ...nums.collUserAvatarSize);
         CanvasUtils.drawText(ctx, userTag, nums.collUserTagPos, mediumFont, 'left', colorConfig.font);
@@ -739,11 +798,100 @@ export class CollectionImageGenerator {
         // Draws badge information if the user has badges
 
         for (let i=0; i<this.boarUser.badges.length; i++) {
-            const badgesFolder = pathConfig.badgeImages;
+            const badgesFolder: string = pathConfig.badgeImages;
             const badgeXY: [number, number] = [nums.collBadgeStart + i * nums.collBadgeSpacing, nums.collBadgeY];
-            const badgeFile = badgesFolder + this.config.badgeItemConfigs[this.boarUser.badges[i]].file;
+            const badgeFile: string = badgesFolder + this.config.badgeItemConfigs[this.boarUser.badges[i]].file;
 
             ctx.drawImage(await Canvas.loadImage(badgeFile), ...badgeXY, ...nums.collBadgeSize);
         }
+    }
+
+    /**
+     * Creates enhancer confirmation image
+     *
+     * @param page - The page of the boar that's being enhanced
+     */
+    public async finalizeEnhanceConfirm(page: number): Promise<AttachmentBuilder> {
+        // Config aliases
+
+        const strConfig: StringConfig = this.config.stringConfig;
+        const nums: NumberConfig = this.config.numberConfig;
+        const pathConfig: PathConfig = this.config.pathConfig;
+        const colorConfig: ColorConfig = this.config.colorConfig;
+        const rarityConfig: RarityConfig[] = this.config.rarityConfigs;
+        const powConfig: PowerupConfigs = this.config.powerupConfig;
+
+        const bigFont: string = `${nums.fontBig}px ${strConfig.fontName}`;
+        const mediumFont: string = `${nums.fontMedium}px ${strConfig.fontName}`;
+
+        const confirmUnderlay: string = pathConfig.collAssets + pathConfig.collEnhanceUnderlay;
+
+        const nextRarityIndex: number = this.allBoars[page].rarity[0];
+        const nextRarityName: string = rarityConfig[nextRarityIndex].name;
+        const nextRarityColor: string = colorConfig['rarity' + (nextRarityIndex + 1)];
+        const enhancersLost: number = this.allBoars[page].rarity[1].enhancersNeeded;
+        const scoreGained: number = enhancersLost * 5;
+
+        const canvas: Canvas.Canvas = Canvas.createCanvas(...nums.responseImageSize);
+        const ctx: Canvas.CanvasRenderingContext2D = canvas.getContext('2d');
+
+        ctx.drawImage(await Canvas.loadImage(confirmUnderlay), ...nums.originPos, ...nums.responseImageSize);
+
+        CanvasUtils.drawText(
+            ctx, strConfig.collEnhanceBoarLose, nums.collEnhanceBoarLosePos, bigFont, 'center', colorConfig.font,
+            nums.collEnhanceResultWidth, false, this.allBoars[page].name, this.allBoars[page].color
+        );
+
+        CanvasUtils.drawText(
+            ctx, strConfig.collEnhanceBoarGain, nums.collEnhanceBoarGainPos, bigFont, 'center', colorConfig.font,
+            nums.collEnhanceResultWidth, false, nextRarityName, nextRarityColor
+        );
+
+        CanvasUtils.drawText(
+            ctx, '-' + enhancersLost + 'x %@', nums.collEnhanceLosePos, bigFont, 'center', colorConfig.font,
+            nums.collEnhanceResultWidth, false, powConfig.enhancer.pluralName, colorConfig.powerup
+        );
+
+        CanvasUtils.drawText(
+            ctx, '+' + scoreGained + ' %@', nums.collEnhanceScoreGainPos, bigFont, 'center', colorConfig.font,
+            nums.collEnhanceResultWidth, false, strConfig.collScoreLabel, colorConfig.bucks
+        );
+
+        CanvasUtils.drawText(
+            ctx, strConfig.collEnhanceDetails, nums.responseDetailsPos, mediumFont, 'center', colorConfig.font,
+            nums.responseDetailsWidth, true, this.allBoars[page].name, this.allBoars[page].color
+        );
+
+        return new AttachmentBuilder(canvas.toBuffer(), { name:`${this.config.stringConfig.imageName}.png` });
+    }
+
+    /**
+     * Creates gift confirmation image
+     */
+    public async finalizeGift(): Promise<AttachmentBuilder> {
+        // Config aliases
+
+        const strConfig: StringConfig = this.config.stringConfig;
+        const nums: NumberConfig = this.config.numberConfig;
+        const pathConfig: PathConfig = this.config.pathConfig;
+        const colorConfig: ColorConfig = this.config.colorConfig;
+        const powConfig: PowerupConfigs = this.config.powerupConfig;
+
+        const mediumFont: string = `${nums.fontMedium}px ${strConfig.fontName}`;
+
+        const confirmUnderlay: string = pathConfig.collAssets + pathConfig.collGiftUnderlay;
+        const userTag: string = this.boarUser.user.username.substring(0, nums.maxUsernameLength);
+
+        const canvas: Canvas.Canvas = Canvas.createCanvas(...nums.responseImageSize);
+        const ctx: Canvas.CanvasRenderingContext2D = canvas.getContext('2d');
+
+        ctx.drawImage(await Canvas.loadImage(confirmUnderlay), ...nums.originPos, ...nums.responseImageSize);
+
+        CanvasUtils.drawText(
+            ctx, userTag + strConfig.collGiftDetails, nums.responseDetailsPos, mediumFont, 'center', colorConfig.font,
+            nums.responseDetailsWidth, true, powConfig.gift.name, colorConfig.powerup
+        );
+
+        return new AttachmentBuilder(canvas.toBuffer(), { name:`${this.config.stringConfig.imageName}.png` });
     }
 }

@@ -77,16 +77,6 @@ export class BotConfig {
     public readonly rarityConfigs: RarityConfig[] = [];
 
     /**
-     * Object storing initial user data
-     */
-    public readonly emptyUser: any;
-
-    /**
-     * Object storing initial boar data in collection
-     */
-    public readonly emptyBoar: any;
-
-    /**
      * {@link ColorConfig Color configurations} used by the bot
      */
     public readonly colorConfig: ColorConfig = new ColorConfig;

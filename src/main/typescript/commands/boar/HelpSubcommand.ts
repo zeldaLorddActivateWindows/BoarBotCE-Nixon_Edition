@@ -3,7 +3,7 @@ import fs from 'fs';
 import {BoarBotApp} from '../../BoarBotApp';
 import {Subcommand} from '../../api/commands/Subcommand';
 import {InteractionUtils} from '../../util/interactions/InteractionUtils';
-import {LogDebug} from '../../util/logging/LogDebug';
+import {GuildData} from '../../util/data/GuildData';
 
 /**
  * {@link HelpSubcommand HelpSubcommand.ts}
@@ -23,16 +23,15 @@ export default class HelpSubcommand implements Subcommand {
      *
      * @param interaction - The interaction that called the subcommand
      */
-    public async execute(interaction: ChatInputCommandInteraction) {
+    public async execute(interaction: ChatInputCommandInteraction): Promise<void> {
         this.config = BoarBotApp.getBot().getConfig();
 
-        const guildData = await InteractionUtils.handleStart(this.config, interaction, true);
-
+        const guildData: GuildData | undefined = await InteractionUtils.handleStart(interaction, this.config, true);
         if (!guildData) return;
 
         await interaction.deferReply({ ephemeral: true });
 
-        const helpImagePath = this.config.pathConfig.otherAssets + this.config.pathConfig.helpBackground;
+        const helpImagePath: string = this.config.pathConfig.otherAssets + this.config.pathConfig.helpBackground;
 
         await interaction.editReply({ files: [fs.readFileSync(helpImagePath)] });
     }

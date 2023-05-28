@@ -9,15 +9,17 @@
 export class ColorConfig {
     [colorKey: string]: string;
 
-    public readonly foregroundGray: string = '#000000';
+    public readonly dark: string = '#000000';
+    public readonly mid: string = '#000000';
+    public readonly light: string = '#000000';
     public readonly font: string = '#000000';
 
     public readonly badge: string = '#000000';
 
     public readonly powerup: string = '#000000';
+    public readonly bucks: string = '#000000';
 
-    public readonly editionEmbed: string = '#000000';
-    public readonly baseEmbed: string = '#000000';
+    public readonly green: string = '#000000';
     public readonly maintenance: string = '#000000';
     public readonly error: string = '#000000';
 

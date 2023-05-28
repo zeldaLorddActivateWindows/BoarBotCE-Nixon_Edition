@@ -11,7 +11,6 @@ import {BoarCommandConfig} from './BoarCommandConfig';
 import {BoarDevCommandConfig} from './BoarDevCommandConfig';
 import {BoarManageCommandConfig} from './BoarManageCommandConfig';
 import {CommandConfig} from './CommandConfig';
-import {BadgeItemConfig} from '../items/BadgeItemConfig';
 
 export class CommandConfigs {
     /**

@@ -46,8 +46,10 @@ export class StringConfig {
 
     // Daily command messages/strings
 
+    public readonly dailyPowUsed: string = ' ';
     public readonly dailyUsed: string = ' ';
     public readonly dailyTitle: string = ' ';
+    public readonly extraTitle: string = ' ';
     public readonly dailyNoBoarFound: string = ' ';
 
     // Give command messages/strings (also badges)
@@ -57,11 +59,10 @@ export class StringConfig {
     public readonly giveBoar: string = ' ';
     public readonly giveBadID: string = '';
     public readonly giveTitle: string = ' ';
-    public readonly giveSpecialTitle: string = ' ';
     public readonly giveBadge: string = ' ';
     public readonly giveBadgeTitle: string = ' ';
     public readonly giveBadgeHas: string = ' ';
-    public readonly obtainedBadgeTitle: string = ' ';
+    public readonly giftOpenTitle: string = ' ';
 
     // Collection command strings
 
@@ -102,11 +103,32 @@ export class StringConfig {
     public readonly collChanceHighestLabel: string = ' ';
     public readonly collEnhancersClaimedLabel: string = ' ';
     public readonly collEnhancedLabel: string = ' ';
+    public readonly collEnhanceDetails: string = ' ';
+    public readonly collEnhanceBoarLose: string = ' ';
+    public readonly collEnhanceBoarGain: string = ' ';
+    public readonly collGiftDetails: string = ' ';
     public readonly collEditionTitle: string = ' ';
     public readonly collEditionLine: string = ' ';
 
     // Miscellaneous strings
 
+    public readonly giftFail: string = ' ';
+    public readonly enhanceGotten: string = ' ';
+    public readonly powRightFull: string = ' ';
+    public readonly powRight: string = ' ';
+    public readonly powWrongFull: string = ' ';
+    public readonly powWrong: string = ' ';
+    public readonly powAttempted: string = ' ';
+    public readonly powLessThan: string = ' ';
+    public readonly powTopOne: string = ' ';
+    public readonly powTopOneResponse: string = ' ';
+    public readonly powTopTen: string = ' ';
+    public readonly powTopTenResponse: string = ' ';
+    public readonly powTopFifty: string = ' ';
+    public readonly powTopFiftyResponse: string = ' ';
+    public readonly powNoRewardResponse: string = ' ';
+    public readonly powNoClaim: string = ' ';
+    public readonly powReward: string = ' ';
     public readonly noParentChannel: string = ' ';
     public readonly notValidChannel: string = ' ';
     public readonly defaultSelectPlaceholder: string = ' ';

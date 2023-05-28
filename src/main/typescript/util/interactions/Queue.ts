@@ -1,5 +1,3 @@
-import {LogDebug} from '../logging/LogDebug';
-
 /**
  * {@link Queue Queue.ts}
  *
@@ -23,7 +21,7 @@ export class Queue {
      * @param id - ID of queue item
      */
     public static async addQueue(func: () => void, id: string): Promise<unknown> {
-        const queueIndex = id.endsWith('global') ? 0 : parseInt(id[id.length-1]) + 1;
+        const queueIndex: number = id.endsWith('global') ? 0 : parseInt(id[id.length-1]) + 1;
         Queue.queues[queueIndex][id] = func;
 
         if (!Queue.queueRunning[queueIndex]) {
@@ -57,12 +55,7 @@ export class Queue {
         if (Object.keys(Queue.queues[queueIndex]).length > 0) {
             Queue.queueRunning[queueIndex] = true;
 
-            try {
-                await Queue.queues[queueIndex][Object.keys(Queue.queues[queueIndex])[0]]();
-            } catch (err: unknown) {
-                await LogDebug.handleError(err);
-            }
-
+            await Queue.queues[queueIndex][Object.keys(Queue.queues[queueIndex])[0]]();
             delete Queue.queues[queueIndex][Object.keys(Queue.queues[queueIndex])[0]];
 
             Queue.runQueue(queueIndex);

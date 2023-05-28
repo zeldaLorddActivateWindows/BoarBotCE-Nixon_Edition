@@ -36,8 +36,8 @@ export class CommandHandler {
             process.exit(-1);
         }
 
-        const allFiles: string[][] = this.findCommandFiles(config, commandFolders);
-        this.registerCommandFiles(config, allFiles);
+        const allFiles: string[][] = this.findCommandFiles(commandFolders, config);
+        this.registerCommandFiles(allFiles, config);
     }
 
     /**
@@ -45,17 +45,17 @@ export class CommandHandler {
      *
      * @param config - The config file to use. Parameterized to prevent bugs when updating config
      * @param commandFolders - All folders that store commands
-     * @return allFiles - All command ans subcommand files
+     * @return allFiles - All command and subcommand files
      * @private
      */
-    private findCommandFiles(config: BotConfig, commandFolders: string[]): string[][] {
+    private findCommandFiles(commandFolders: string[], config: BotConfig): string[][] {
         let allCommandFiles: string[] = [];
         let allSubcommandFiles: string[] = [];
 
         for (const commandFolder of commandFolders) {
-            const folderFiles = fs.readdirSync(config.pathConfig.commands + commandFolder);
+            const folderFiles: string[] = fs.readdirSync(config.pathConfig.commands + commandFolder);
 
-            const subcommandFiles = folderFiles.filter(fileName => {
+            const subcommandFiles: string[] = folderFiles.filter(fileName => {
                 return fileName.toLowerCase().includes('subcommand');
             });
 
@@ -65,7 +65,7 @@ export class CommandHandler {
 
             allSubcommandFiles = allSubcommandFiles.concat(subcommandFiles);
 
-            const commandFile = folderFiles.find(fileName => {
+            const commandFile: string | undefined = folderFiles.find(fileName => {
                 return !subcommandFiles.includes(fileName);
             });
 
@@ -91,14 +91,14 @@ export class CommandHandler {
      * @param allFiles - All command and subcommand files
      * @private
      */
-    private registerCommandFiles(config: BotConfig, allFiles: string[][]): void {
+    private registerCommandFiles(allFiles: string[][], config: BotConfig): void {
         const commandFiles: string[] = allFiles[0];
         const subcommandFiles: string[] = allFiles[1];
 
         for (const commandFile of commandFiles) {
             try {
-                const exports = require('../../commands/' + commandFile);
-                const commandClass = new exports.default();
+                const exports: any = require('../../commands/' + commandFile);
+                const commandClass: any = new exports.default();
 
                 if (!subcommandFiles.includes(commandFile)) {
                     this.commands.set(commandClass.data.name, commandClass);
@@ -119,13 +119,16 @@ export class CommandHandler {
      */
     public getCommands(): Map<string, Command> { return this.commands; }
 
+    /**
+     * Grabs the {@link Map} storing {@link Subcommand} data
+     */
     public getSubcommands(): Map<string, Subcommand> { return this.subcommands; }
 
     /**
-     * Deploys application commands to Discord API
+     * Deploys application commands to Discord's API
      */
     public async deployCommands(): Promise<void> {
-        const config = BoarBotApp.getBot().getConfig();
+        const config: BotConfig = BoarBotApp.getBot().getConfig();
         const applicationCommandData: (SlashCommandBuilder | SlashCommandSubcommandsOnlyBuilder)[] = [];
         const guildCommandData: (SlashCommandBuilder | SlashCommandSubcommandsOnlyBuilder)[]  = [];
 
@@ -138,7 +141,7 @@ export class CommandHandler {
             applicationCommandData.push(command.data);
         }
 
-        const rest = new REST({ version: '10' }).setToken(process.env.TOKEN as string);
+        const rest: REST = new REST({ version: '10' }).setToken(process.env.TOKEN as string);
         await this.deployApplicationCommands(rest, applicationCommandData, config);
         await this.deployGuildCommands(rest, guildCommandData, config);
     }
@@ -160,7 +163,7 @@ export class CommandHandler {
             await rest.put(Routes.applicationCommands(process.env.CLIENT_ID as string), { body: commandData });
             LogDebug.sendDebug('Application commands have successfully been registered!', config);
         } catch (err: unknown) {
-            LogDebug.handleError(err);
+            await LogDebug.handleError(err);
         }
     }
 
@@ -184,7 +187,7 @@ export class CommandHandler {
             );
             LogDebug.sendDebug('Guild commands have successfully been registered!', config);
         } catch (err: unknown) {
-            LogDebug.handleError(err);
+            await LogDebug.handleError(err);
         }
     }
 }
