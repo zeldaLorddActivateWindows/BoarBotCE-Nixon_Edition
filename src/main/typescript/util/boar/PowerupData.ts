@@ -19,7 +19,7 @@ export class PowerupData {
     public multiBoostTotal: number = 0;
     public multiBoostsClaimed: number = 0;
     public multiBoostsUsed: number = 0;
-    public highestMulti: number = 0;
+    public highestMulti: number = 1;
     public highestMultiBoost: number = 0;
 
     public numGifts: number = 0;

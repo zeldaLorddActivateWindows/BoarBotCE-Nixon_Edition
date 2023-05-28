@@ -48,15 +48,15 @@ export class BoarUtils {
     public static findValid(rarityIndex: number, guildData: GuildData | undefined, config: BotConfig): string {
         const rarities: RarityConfig[] = config.rarityConfigs;
         const boarIDs: BoarItemConfigs = config.boarItemConfigs;
-        let randomBoar = Math.random();
+        let randomBoar: number = Math.random();
 
         // Stores the IDs of the current rarity being checked
 
         const validRarityBoars: string[] = [];
 
         for (const boarID of rarities[rarityIndex].boars) {
-            const isBlacklisted = boarIDs[boarID].blacklisted;
-            const isSB = boarIDs[boarID].isSB;
+            const isBlacklisted: boolean = boarIDs[boarID].blacklisted;
+            const isSB: boolean = boarIDs[boarID].isSB;
 
             if (isBlacklisted || (!guildData?.isSBServer && isSB))
                 continue;
@@ -117,8 +117,8 @@ export class BoarUtils {
 
             // Finds the rarity that was rolled and adds a random boar from that rarity to user profile
             for (const probabilityInfo of probabilities) {
-                const rarityIndex = probabilityInfo[0];
-                const probability = probabilityInfo[1];
+                const rarityIndex: number = probabilityInfo[0];
+                const probability: number = probabilityInfo[1];
 
                 // Goes to next probability if randomRarity is higher
                 // Keeps going if it's the rarity with the highest probability
@@ -144,7 +144,7 @@ export class BoarUtils {
      * @private
      */
     public static getBaseRarityWeights(config: BotConfig): Map<number, number> {
-        const rarities = config.rarityConfigs;
+        const rarities: RarityConfig[] = config.rarityConfigs;
         const rarityWeights: Map<number, number> = new Map();
 
         // Gets weight of each rarity and assigns it to Map object with its index

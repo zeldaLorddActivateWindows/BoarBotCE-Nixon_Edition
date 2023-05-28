@@ -46,6 +46,7 @@ export class StringConfig {
 
     // Daily command messages/strings
 
+    public readonly dailyPowUsed: string = ' ';
     public readonly dailyUsed: string = ' ';
     public readonly dailyTitle: string = ' ';
     public readonly extraTitle: string = ' ';
@@ -118,6 +119,16 @@ export class StringConfig {
     public readonly powWrongFull: string = ' ';
     public readonly powWrong: string = ' ';
     public readonly powAttempted: string = ' ';
+    public readonly powLessThan: string = ' ';
+    public readonly powTopOne: string = ' ';
+    public readonly powTopOneResponse: string = ' ';
+    public readonly powTopTen: string = ' ';
+    public readonly powTopTenResponse: string = ' ';
+    public readonly powTopFifty: string = ' ';
+    public readonly powTopFiftyResponse: string = ' ';
+    public readonly powNoRewardResponse: string = ' ';
+    public readonly powNoClaim: string = ' ';
+    public readonly powReward: string = ' ';
     public readonly noParentChannel: string = ' ';
     public readonly notValidChannel: string = ' ';
     public readonly defaultSelectPlaceholder: string = ' ';

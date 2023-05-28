@@ -12,6 +12,9 @@ import {Replies} from '../../util/interactions/Replies';
 import {BoarUtils} from '../../util/boar/BoarUtils';
 import {ItemImageGenerator} from '../../util/generators/ItemImageGenerator';
 import {GuildData} from '../../util/data/GuildData';
+import {StringConfig} from '../../bot/config/StringConfig';
+import {ColorConfig} from '../../bot/config/ColorConfig';
+import {PowerupConfigs} from '../../bot/config/powerups/PowerupConfigs';
 
 /**
  * {@link DailySubcommand DailySubcommand.ts}
@@ -54,16 +57,21 @@ export default class DailySubcommand implements Subcommand {
     private async doDaily(): Promise<void> {
         if (!this.interaction.guild || !this.interaction.channel) return;
 
-        const strConfig = this.config.stringConfig;
+        const strConfig: StringConfig = this.config.stringConfig;
+        const colorConfig: ColorConfig = this.config.colorConfig;
+        const powConfig: PowerupConfigs = this.config.powerupConfig;
 
         let boarUser: BoarUser = {} as BoarUser;
         let boarIDs: string[] = [''];
+
+        let usedBoost: boolean = false;
+        let usedExtra: boolean = false;
 
         await Queue.addQueue(async () => {
             // New boar user object used for easier manipulation of data
             boarUser = new BoarUser(this.interaction.user, true);
 
-            const canUseDaily = await this.canUseDaily(boarUser);
+            const canUseDaily: boolean = await this.canUseDaily(boarUser);
             if (!canUseDaily) return;
 
             // Gets whether to use boost
@@ -75,12 +83,15 @@ export default class DailySubcommand implements Subcommand {
                 : false;
 
             // Map of rarity index keys and weight values
-            let rarityWeights = BoarUtils.getBaseRarityWeights(this.config);
+            let rarityWeights: Map<number, number> = BoarUtils.getBaseRarityWeights(this.config);
             let userMultiplier: number = boarUser.powerups.multiplier;
 
             if (boostInput) {
                 userMultiplier += boarUser.powerups.multiBoostTotal;
             }
+
+            usedBoost = boostInput && boarUser.powerups.multiBoostTotal > 0;
+            usedExtra = extraInput && boarUser.powerups.extraChanceTotal > 0;
 
             rarityWeights = this.applyMultiplier(userMultiplier, rarityWeights);
 
@@ -124,6 +135,7 @@ export default class DailySubcommand implements Subcommand {
         const randScores: number[] = [];
         const attachments: AttachmentBuilder[] = [];
 
+        // Gets slightly deviated scores for each boar
         for (let i=0; i<boarIDs.length; i++) {
             randScores.push(
                 Math.round(
@@ -135,6 +147,7 @@ export default class DailySubcommand implements Subcommand {
 
         await boarUser.addBoars(boarIDs, this.interaction, this.config, randScores);
 
+        // Gets item images for each boar
         for (let i=0; i<boarIDs.length; i++) {
             attachments.push(
                 await new ItemImageGenerator(
@@ -152,6 +165,25 @@ export default class DailySubcommand implements Subcommand {
                 await this.interaction.followUp({ files: [attachments[i]] })
             }
         }
+
+        let coloredText: string = '';
+
+        if (usedBoost) {
+            coloredText += powConfig.multiBoost.name;
+        }
+
+        if (usedExtra) {
+            coloredText += coloredText === ''
+                ? powConfig.extraChance.name
+                : ' and ' + powConfig.extraChance.name
+        }
+
+        if (coloredText !== '') {
+            await Replies.handleReply(
+                this.interaction, strConfig.dailyPowUsed, colorConfig.font, coloredText, colorConfig.powerup, true
+            );
+        }
+
     }
 
     /**
@@ -164,7 +196,7 @@ export default class DailySubcommand implements Subcommand {
         boarUser: BoarUser
     ): Promise<boolean> {
         // Midnight of next day (UTC)
-        const nextBoarTime = Math.floor(new Date().setUTCHours(24,0,0,0));
+        const nextBoarTime: number = Math.floor(new Date().setUTCHours(24,0,0,0));
 
         // Returns if user has already used their daily boar
         if (boarUser.lastDaily >= nextBoarTime - (1000 * 60 * 60 * 24) && !this.config.unlimitedBoars) {
@@ -187,16 +219,18 @@ export default class DailySubcommand implements Subcommand {
      */
     private applyMultiplier(userMultiplier: number, rarityWeights: Map<number, number>): Map<number, number> {
         // Sorts from the highest weight to the lowest weight
-        const newWeights = new Map([...rarityWeights.entries()].sort((a,b) => { return b[1] - a[1]; }));
+        const newWeights: Map<number, number> = new Map([...rarityWeights.entries()]
+            .sort((a,b) => { return b[1] - a[1]; })
+        );
 
         const highestWeight: number = newWeights.values().next().value;
-        const rarityIncreaseConst = this.config.numberConfig.rarityIncreaseConst;
+        const rarityIncreaseConst: number = this.config.numberConfig.rarityIncreaseConst;
 
         // Increases probability by increasing weight
         // https://www.desmos.com/calculator/74inrkixxa | x = multiplier, o = weight
         for (const weightInfo of newWeights) {
-            const rarityIndex = weightInfo[0];
-            const oldWeight = weightInfo[1];
+            const rarityIndex: number = weightInfo[0];
+            const oldWeight: number = weightInfo[1];
 
             if (oldWeight == 0) continue;
 

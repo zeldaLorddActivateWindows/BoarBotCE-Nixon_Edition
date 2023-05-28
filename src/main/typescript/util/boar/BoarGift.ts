@@ -18,6 +18,7 @@ import {DataHandlers} from '../data/DataHandlers';
 import {ItemImageGenerator} from '../generators/ItemImageGenerator';
 import {LogDebug} from '../logging/LogDebug';
 import {Replies} from '../interactions/Replies';
+import {RowConfig} from '../../bot/config/components/RowConfig';
 
 /**
  * {@link BoarGift BoarGift.ts}
@@ -67,7 +68,7 @@ export class BoarGift {
 
         this.firstInter = interaction;
 
-        const giftFieldConfig = this.config.commandConfigs.boar.collection.componentFields[2];
+        const giftFieldConfig: RowConfig[] = this.config.commandConfigs.boar.collection.componentFields[2];
 
         const claimRows: ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>[] =
             ComponentUtils.makeRows(giftFieldConfig);
@@ -145,7 +146,7 @@ export class BoarGift {
     private async doGift(inter: ButtonInteraction): Promise<void> {
         const outcome: number = this.getOutcome();
         let subOutcome: number = this.getOutcome(outcome);
-        const claimedButton = new ButtonBuilder()
+        const claimedButton: ButtonBuilder = new ButtonBuilder()
             .setDisabled(true)
             .setCustomId('GIFT_CLAIMED')
             .setLabel('Claiming...')
@@ -249,8 +250,8 @@ export class BoarGift {
      * @private
      */
     private async giveBucks(suboutcome: number, inter: ButtonInteraction): Promise<void> {
-        const outcomeConfig = this.config.powerupConfig.gift.outcomes[1];
-        let outcomeName = outcomeConfig.suboutcomes[suboutcome].name;
+        const outcomeConfig: OutcomeConfig = this.config.powerupConfig.gift.outcomes[1];
+        let outcomeName: string = outcomeConfig.suboutcomes[suboutcome].name;
         let numBucks: number = 0;
 
         if (suboutcome === 0) {
@@ -299,8 +300,8 @@ export class BoarGift {
      * @private
      */
     private async givePowerup(suboutcome: number, inter: ButtonInteraction): Promise<void> {
-        const outcomeConfig = this.config.powerupConfig.gift.outcomes[2];
-        const outcomeName = outcomeConfig.suboutcomes[suboutcome].name;
+        const outcomeConfig: OutcomeConfig = this.config.powerupConfig.gift.outcomes[2];
+        const outcomeName: string = outcomeConfig.suboutcomes[suboutcome].name;
 
         await Queue.addQueue(() => {
             this.giftedUser.refreshUserData();
@@ -351,9 +352,9 @@ export class BoarGift {
      * @private
      */
     private async giveBoar(inter: ButtonInteraction): Promise<void> {
-        const rarityWeights = BoarUtils.getBaseRarityWeights(this.config);
+        const rarityWeights: Map<number, number> = BoarUtils.getBaseRarityWeights(this.config);
 
-        const boarIDs = BoarUtils.getRandBoars(
+        const boarIDs: string[] = BoarUtils.getRandBoars(
             await DataHandlers.getGuildData(inter.guild?.id, inter), inter, rarityWeights, false, 0, this.config
         );
 

@@ -24,9 +24,10 @@ export class Cooldown {
         interaction: ChatInputCommandInteraction,
         config: BotConfig
     ): Promise<boolean> {
-        const subcommandName = interaction.options.getSubcommand();
-        const needsCooldown = BoarBotApp.getBot().getSubcommands().get(subcommandName)?.data.cooldown;
-        const userID = interaction.user.id;
+        const subcommandName: string = interaction.options.getSubcommand();
+        const needsCooldown: boolean | undefined = BoarBotApp.getBot().getSubcommands()
+            .get(subcommandName)?.data.cooldown;
+        const userID: string = interaction.user.id;
 
         if (!needsCooldown) return false;
 
@@ -42,7 +43,7 @@ export class Cooldown {
         this.cooldowns[subcommandName].push(userID);
 
         setTimeout(() => {
-            const index = this.cooldowns[subcommandName].indexOf(userID);
+            const index: number = this.cooldowns[subcommandName].indexOf(userID);
             this.cooldowns[subcommandName].splice(index, 1);
         }, 5000);
 

@@ -53,11 +53,11 @@ export class CollectorUtils {
     /**
      * Creates and returns a message component collector
      *
-     * @param channel
-     * @param id
-     * @param nums
+     * @param channel - The channel to put the collector
+     * @param id - The id to look for
+     * @param nums - Used to get number configurations
      * @param excludeUser - Whether to exclude the user instead of it only being them
-     * @param time
+     * @param time - The time it takes for the collector to end
      * @private
      */
     public static async createCollector(
@@ -69,8 +69,8 @@ export class CollectorUtils {
     ): Promise<InteractionCollector<ButtonInteraction | StringSelectMenuInteraction>> {
         // Only allows button presses from current interaction
         const filter = async (compInter: MessageComponentInteraction) => {
-            const modifiers = compInter.customId.split('|').slice(1);
-            let returnVal = modifiers[0] === id;
+            const modifiers: string[] = compInter.customId.split('|').slice(1);
+            let returnVal: boolean = modifiers[0] === id;
 
             if (modifiers.length > 1 && excludeUser) {
                 return returnVal && modifiers[1] !== compInter.user.id;
@@ -84,7 +84,7 @@ export class CollectorUtils {
         if (!time) {
             return channel.createMessageComponentCollector({
                 filter,
-                idle: 1000 * 60 * 2
+                idle: nums.collectorIdle
             }) as InteractionCollector<ButtonInteraction | StringSelectMenuInteraction>;
         } else {
             return channel.createMessageComponentCollector({

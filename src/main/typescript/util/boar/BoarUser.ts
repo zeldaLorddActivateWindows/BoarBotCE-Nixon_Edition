@@ -393,12 +393,12 @@ export class BoarUser {
         // Looping through all boar classes (Common -> Special)
         for (const rarity of orderedRarities) {
             const orderedBoars: string[] = [];
-            const boarsOfRarity = rarity.boars;
+            const boarsOfRarity: string[] = rarity.boars;
 
             // Looping through user's boar collection
             for (let j=0; j<obtainedBoars.length; j++) {
-                const curBoarID = obtainedBoars[j]; // ID of current boar
-                const curBoarData = this.boarCollection[curBoarID];    // Data of current boar
+                const curBoarID: string = obtainedBoars[j];                        // ID of current boar
+                const curBoarData: CollectedBoar = this.boarCollection[curBoarID]; // Data of current boar
 
                 if (!boarsOfRarity.includes(curBoarID) || orderedBoars.includes(curBoarID))
                     continue;

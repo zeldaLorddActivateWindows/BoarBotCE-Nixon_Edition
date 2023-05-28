@@ -4,6 +4,7 @@ import {
     ComponentType, SelectMenuComponentOptionData, StringSelectMenuBuilder
 } from 'discord.js';
 import {RowConfig} from '../../bot/config/components/RowConfig';
+import {ComponentConfig} from '../../bot/config/components/ComponentConfig';
 
 /**
  * {@link ComponentUtils ComponentUtils.ts}
@@ -18,11 +19,11 @@ export class ComponentUtils {
     /**
      * Adds an addition to all custom ids in an action row
      *
-     * @param rowsConfig - The configuration of the row
-     * @param rows
-     * @param id
-     * @param userID
-     * @param options
+     * @param rowsConfig - The configuration of a collection of rows
+     * @param rows - The rows to modify
+     * @param id - The ID to append to the custom ID
+     * @param userID - A user ID to append
+     * @param options - Options to add to a select menu
      * @return row - Updated row with addition to ids
      */
     public static addToIDs(
@@ -32,12 +33,12 @@ export class ComponentUtils {
         userID?: string,
         options?: SelectMenuComponentOptionData[]
     ): void {
-        let rowIndex = 0;
+        let rowIndex: number = 0;
 
         for (const row of rows) {
             for (const component in row.components) {
-                const componentConfig = rowsConfig[rowIndex].components[component];
-                let curID = componentConfig.customId + '|' + id;
+                const componentConfig: ComponentConfig = rowsConfig[rowIndex].components[component];
+                let curID: string = componentConfig.customId + '|' + id;
 
                 if (userID) {
                     curID += '|' + userID;

@@ -14,7 +14,7 @@ import fs from 'fs';
 import {
     ActionRowBuilder, AttachmentBuilder,
     ButtonBuilder, ButtonInteraction, Channel,
-    ChannelType, Message,
+    ChannelType, Client, InteractionCollector, Message, StringSelectMenuInteraction,
     TextChannel,
 } from 'discord.js';
 import {GuildData} from '../data/GuildData';
@@ -24,10 +24,13 @@ import {Replies} from '../interactions/Replies';
 import {PromptConfig} from '../../bot/config/powerups/PromptConfig';
 import {NumberConfig} from '../../bot/config/NumberConfig';
 import {RowConfig} from '../../bot/config/components/RowConfig';
-import {PromptTypeConfig} from '../../bot/config/powerups/PromptTypeConfig';
-import Canvas from 'canvas';
-import {CanvasUtils} from '../generators/CanvasUtils';
 import {PowerupConfig} from '../../bot/config/powerups/PowerupConfig';
+import {PowerupImageGenerator} from '../generators/PowerupImageGenerator';
+import {BoarUser} from './BoarUser';
+import {PromptData} from './PromptData';
+import {PowerupConfigs} from '../../bot/config/powerups/PowerupConfigs';
+import {PromptTypeConfigs} from '../../bot/config/powerups/PromptTypeConfigs';
+import {StringConfig} from '../../bot/config/StringConfig';
 
 export class PowerupSpawner {
     private readonly intervalVal: number =
@@ -35,10 +38,13 @@ export class PowerupSpawner {
     private readonly initIntervalVal: number = 0;
     private claimers: Map<string, number> = new Map<string, number>();
     private powerupType: PowerupConfig = {} as PowerupConfig;
+    private promptTypeID: string = '';
+    private promptID: string = '';
     private topOnePercent: number = -1;
     private topTenPercent: number = -1;
     private topFiftyPercent: number = -1;
     private powEndImage: AttachmentBuilder = {} as AttachmentBuilder;
+    private interactions: ButtonInteraction[] = [];
     private numMsgs: number = 0;
     private numNotFinished: number = 0;
     private readyToEnd: boolean = false;
@@ -47,17 +53,29 @@ export class PowerupSpawner {
         this.initIntervalVal = initPowTime !== undefined ? Math.max(initPowTime - Date.now(), 5000) : this.intervalVal;
     }
 
+    /**
+     * Sets a timeout for when the next powerup should spawn
+     */
     public startSpawning() {
         setTimeout(() => this.doSpawn(), this.initIntervalVal);
     }
 
+    /**
+     * Spawns the powerup
+     *
+     * @private
+     */
     private async doSpawn() {
         try {
-            const config = BoarBotApp.getBot().getConfig();
-            const nums = config.numberConfig;
+            const config: BotConfig = BoarBotApp.getBot().getConfig();
+            const nums: NumberConfig = config.numberConfig;
             const allBoarChannels: TextChannel[] = [];
 
             LogDebug.sendDebug('Spawning powerup', config);
+
+            setTimeout(() => this.doSpawn(),
+                Math.round(config.numberConfig.powInterval * (Math.random() * (1.25 - .75) + .75))
+            );
 
             await Queue.addQueue(() => {
                 const globalData = DataHandlers.getGlobalData();
@@ -65,11 +83,12 @@ export class PowerupSpawner {
                 fs.writeFileSync(config.pathConfig.globalDataFile, JSON.stringify(globalData));
             }, 'pow' + 'global');
 
+            // Get all channels to send powerups in
             for (const guildFile of fs.readdirSync(config.pathConfig.guildDataFolder)) {
                 const guildData: GuildData | undefined = await DataHandlers.getGuildData(guildFile.split('.')[0]);
                 if (!guildData) continue;
 
-                const client = BoarBotApp.getBot().getClient();
+                const client: Client = BoarBotApp.getBot().getClient();
                 for (const channelID of guildData.channels) {
                     let channel: Channel | null;
 
@@ -85,24 +104,25 @@ export class PowerupSpawner {
                 }
             }
 
-            const curTime = Date.now();
+            const curTime: number = Date.now();
 
-            const powConfig = config.powerupConfig;
-            const promptTypes = powConfig.promptTypes;
-            const randPromptType = Object.keys(promptTypes)[Math.floor(
+            const powConfig: PowerupConfigs = config.powerupConfig;
+            const promptTypes: PromptTypeConfigs = powConfig.promptTypes;
+            this.promptTypeID = Object.keys(promptTypes)[Math.floor(
                 Math.random() * Object.keys(promptTypes).length
             )];
-            const chosenPrompt = this.getRandPrompt(randPromptType, config);
+            this.promptID = this.getRandPromptID(this.promptTypeID, config);
+            const chosenPrompt: PromptConfig = powConfig.promptTypes[this.promptTypeID][this.promptID] as PromptConfig;
 
             this.powerupType = this.getRandPowerup(config);
 
-            const rightStyle = promptTypes[randPromptType].rightStyle;
-            const wrongStyle = promptTypes[randPromptType].wrongStyle;
+            const rightStyle: number = promptTypes[this.promptTypeID].rightStyle;
+            const wrongStyle: number = promptTypes[this.promptTypeID].wrongStyle;
 
-            const rowsConfig = config.powerupConfig.rows;
+            const rowsConfig: RowConfig[] = config.powerupConfig.rows;
             let rows: ActionRowBuilder<ButtonBuilder>[] = [];
 
-            switch (randPromptType) {
+            switch (this.promptTypeID) {
                 case 'emojiFind':
                     rows = this.makeEmojiRows(chosenPrompt, rightStyle, wrongStyle, rowsConfig, curTime, nums);
                     break;
@@ -114,20 +134,22 @@ export class PowerupSpawner {
                     break;
             }
 
-            const powerupSpawnImage = await this.makePowerupSpawnImage(
-                promptTypes[randPromptType], chosenPrompt, config
+            const powerupSpawnImage: AttachmentBuilder = await PowerupImageGenerator.makePowerupSpawnImage(
+                this.powerupType, promptTypes[this.promptTypeID], chosenPrompt, config
             );
 
+            // Sends powerup message to all boar channels
             for (const channel of allBoarChannels) {
                 try {
-                    const collector = await CollectorUtils.createCollector(
-                        channel, curTime.toString(), nums, false, nums.powDuration
-                    );
+                    const collector: InteractionCollector<ButtonInteraction | StringSelectMenuInteraction> =
+                        await CollectorUtils.createCollector(channel, curTime.toString(),
+                            nums, false, nums.powDuration
+                        );
 
-                    const powMsg = await channel.send({
+                    const powMsg: Message = await channel.send({
                         files: [powerupSpawnImage],
                         components: rows
-                    });
+                    }).catch((err) => { throw err; });
 
                     this.numMsgs++;
 
@@ -140,6 +162,15 @@ export class PowerupSpawner {
         }
     }
 
+    /**
+     * Handles collecting and users  interacting with the powerup. Also
+     * responds depending on correctness and attempt status
+     *
+     * @param inter - The interaction made by the user
+     * @param powMsg - Used to get accurate timing of interaction speed
+     * @param config - Used to get config info
+     * @private
+     */
     private async handleCollect(inter: ButtonInteraction, powMsg: Message, config: BotConfig) {
         try {
             await inter.deferUpdate();
@@ -147,12 +178,14 @@ export class PowerupSpawner {
             LogDebug.sendDebug(inter.customId, config);
 
             if (!this.claimers.has(inter.user.id) && inter.customId.toLowerCase().includes('correct')) {
-                let correctString = config.stringConfig.powRightFull;
-                const timeToClaim = inter.createdTimestamp - powMsg.createdTimestamp;
+                let correctString: string = config.stringConfig.powRightFull;
+                const timeToClaim: number = inter.createdTimestamp - powMsg.createdTimestamp;
 
                 this.claimers.set(inter.user.id, timeToClaim);
+                this.interactions.push(inter);
 
-                let occur = 0;
+                // Modify the 2nd modifiable value
+                let occur: number = 0;
                 correctString = correctString.replace(/%@/g, match => ++occur === 2 ? timeToClaim.toString() : match);
 
                 await Replies.handleReply(inter, correctString, config.colorConfig.font,
@@ -173,6 +206,14 @@ export class PowerupSpawner {
         }
     }
 
+    /**
+     * Handles when the powerup ends, editing the message and
+     * replying to all user interactions.
+     *
+     * @param powMsg - The powerup message to edit
+     * @param config - Used to get config info
+     * @private
+     */
     private async handleEndCollect(
         powMsg: Message,
         config: BotConfig
@@ -182,15 +223,16 @@ export class PowerupSpawner {
 
             await powMsg.edit({
                 components: [new ActionRowBuilder<ButtonBuilder>(config.powerupConfig.rows[1])]
-            });
+            }).catch((err) => { throw err; });
 
+            // Gets percentages once all powerup messages are tabulating
             if (--this.numMsgs === 0) {
                 this.claimers = new Map([...this.claimers.entries()].sort((a, b) => a[1] - b[1]));
 
-                const values = [...this.claimers.values()];
-                const topOneIndex = Math.floor(this.claimers.size * .01);
-                let topTenIndex = Math.floor(this.claimers.size * .1);
-                let topFiftyIndex = Math.floor(this.claimers.size * .5);
+                const values: number[] = [...this.claimers.values()];
+                const topOneIndex: number = Math.floor(this.claimers.size * .01);
+                let topTenIndex: number = Math.floor(this.claimers.size * .1);
+                let topFiftyIndex: number = Math.floor(this.claimers.size * .5);
 
                 if (this.claimers.size > 0) {
                     this.topOnePercent = values[topOneIndex];
@@ -210,7 +252,9 @@ export class PowerupSpawner {
                     this.topFiftyPercent = values[topFiftyIndex];
                 }
 
-                this.powEndImage = await this.makePowerupEndImage(config);
+                this.powEndImage = await PowerupImageGenerator.makePowerupEndImage(
+                    this.topOnePercent, this.topTenPercent, this.topFiftyPercent, this.powerupType, config
+                );
 
                 await this.finishPow(powMsg, config);
 
@@ -218,6 +262,7 @@ export class PowerupSpawner {
                 return;
             }
 
+            // Waits until percentages have been calculated (after last message has tabulated)
             const finishInterval = setInterval(async () => {
                 if (this.readyToEnd) {
                     await this.finishPow(powMsg, config);
@@ -229,9 +274,16 @@ export class PowerupSpawner {
         }
     }
 
-    private getRandPrompt(promptType: string, config: BotConfig) {
-        const promptTypes = config.powerupConfig.promptTypes;
-        const prompts: PromptConfig[] = [];
+    /**
+     * Gets a random prompt ID
+     *
+     * @param promptType - Used to get a prompt within the prompt type
+     * @param config - Used for config info
+     * @private
+     */
+    private getRandPromptID(promptType: string, config: BotConfig) {
+        const promptTypes: PromptTypeConfigs = config.powerupConfig.promptTypes;
+        const prompts: string[] = [];
 
         for (const promptTypeProperty of Object.keys(promptTypes[promptType])) {
             if (
@@ -241,12 +293,18 @@ export class PowerupSpawner {
                 continue;
             }
 
-            prompts.push(promptTypes[promptType][promptTypeProperty] as PromptConfig);
+            prompts.push(promptTypeProperty);
         }
 
-        return prompts[Math.floor(Math.random() * prompts.length)] as PromptConfig;
+        return prompts[Math.floor(Math.random() * prompts.length)];
     }
 
+    /**
+     * Gets a random powerup
+     *
+     * @param config - Used to get all powerup types
+     * @private
+     */
     private getRandPowerup(config: BotConfig) {
         const powerupTypes = config.powerupConfig;
         const powerups: PowerupConfig[] = [];
@@ -262,6 +320,17 @@ export class PowerupSpawner {
         return powerups[Math.floor(Math.random() * powerups.length)] as PowerupConfig;
     }
 
+    /**
+     * Creates a 4x4 button array of emojis with one being different
+     *
+     * @param prompt - Used to get which emojis to place
+     * @param rightStyle - The style of button for right emoji
+     * @param wrongStyle - The style of button for wrong emoji
+     * @param rowsConfig - The buttons and their IDs
+     * @param id - ID to place at the end of each button (timestamp of message)
+     * @param nums - Used to get number configurations
+     * @private
+     */
     private makeEmojiRows(
         prompt: PromptConfig,
         rightStyle: number,
@@ -272,12 +341,12 @@ export class PowerupSpawner {
     ): ActionRowBuilder<ButtonBuilder>[] {
         const rows: ActionRowBuilder<ButtonBuilder>[] = [];
 
-        const randEmojiIndex = Math.floor(Math.random() * nums.emojiRows * nums.emojiCols);
+        const randEmojiIndex: number = Math.floor(Math.random() * nums.emojiRows * nums.emojiCols);
 
-        const emoji1 = prompt.emoji1;
-        const emoji2 = prompt.emoji2;
+        const emoji1: string = prompt.emoji1;
+        const emoji2: string = prompt.emoji2;
 
-        let curIndex = 0;
+        let curIndex: number = 0;
 
         for (let i=0; i<nums.emojiRows; i++) {
             const row: ActionRowBuilder<ButtonBuilder> = new ActionRowBuilder<ButtonBuilder>();
@@ -305,6 +374,17 @@ export class PowerupSpawner {
         return rows;
     }
 
+    /**
+     * Makes a 2x2 button array of possible answer choices to a trivia question
+     *
+     * @param prompt - Used to get choices
+     * @param rightStyle - The style of button for right answer
+     * @param wrongStyle - The style of button for wrong answer
+     * @param rowsConfig - The buttons and their IDs
+     * @param id - ID to place at the end of each button (timestamp of message)
+     * @param nums - Used to get number configurations
+     * @private
+     */
     private makeTriviaRows(
         prompt: PromptConfig,
         rightStyle: number,
@@ -323,7 +403,7 @@ export class PowerupSpawner {
         for (let i=0; i<nums.triviaRows; i++) {
             const row: ActionRowBuilder<ButtonBuilder> = new ActionRowBuilder<ButtonBuilder>();
             for (let j=0; j<nums.triviaCols; j++) {
-                const randChoice = choices[Math.floor(Math.random() * choices.length)];
+                const randChoice: string = choices[Math.floor(Math.random() * choices.length)];
                 let button: ButtonBuilder;
 
                 if (randChoice === answer) {
@@ -348,6 +428,17 @@ export class PowerupSpawner {
         return rows;
     }
 
+    /**
+     * Makes a predetermined array of green and red buttons
+     *
+     * @param prompt - Used to get the number of buttons
+     * @param rightStyle - The style of button for right answer
+     * @param wrongStyle - The style of button for wrong answer
+     * @param rowsConfig - The buttons and their IDs
+     * @param id - ID to place at the end of each button (timestamp of message)
+     * @param nums - Used to get number configurations
+     * @private
+     */
     private makeFastRows(
         prompt: PromptConfig,
         rightStyle: number,
@@ -390,149 +481,133 @@ export class PowerupSpawner {
         return rows;
     }
 
+    /**
+     * Handles when the powerup ends. Edits the spawn message and updates all user info
+     *
+     * @param powMsg - The message to update
+     * @param config - Used to get config info
+     * @private
+     */
     private async finishPow(powMsg: Message, config: BotConfig) {
-        await powMsg.edit({
-            files: [this.powEndImage],
-            components: []
-        });
+        const powConfig: PowerupConfigs = config.powerupConfig;
+        const strConfig: StringConfig = config.stringConfig;
 
+        try {
+            await powMsg.edit({
+                files: [this.powEndImage],
+                components: []
+            });
+        } catch {}
+
+        // Updates and restores information to what it should be once the final message is done processing
         if (--this.numNotFinished === 0) {
+            for (const interaction of this.interactions) {
+                const userTime: number | undefined = this.claimers.get(interaction.user.id);
+                const userPercent: number = (
+                    ([...this.claimers.keys()].indexOf(interaction.user.id) + 1) /
+                    this.claimers.size
+                ) * 100;
+                let userPowTier: number = -1;
+                let responseString: string = strConfig.powNoRewardResponse;
+
+                if (!userTime) {
+                    await LogDebug.handleError('Failed to find user\'s powerup data.', interaction);
+                    continue;
+                }
+
+                if (userTime <= this.topOnePercent) {
+                    userPowTier = 0;
+                    responseString = strConfig.powTopOneResponse;
+                } else if (userTime <= this.topTenPercent) {
+                    userPowTier = 1;
+                    responseString = strConfig.powTopTenResponse;
+                } else if (userTime <= this.topFiftyPercent) {
+                    userPowTier = 2;
+                    responseString = strConfig.powTopFiftyResponse;
+
+                }
+
+                if (this.powerupType.tiers[userPowTier] === 0) {
+                    responseString = strConfig.powNoRewardResponse;
+                }
+
+                await Replies.handleReply(
+                    interaction,
+                    responseString.replace('%@', userTime.toString()), config.colorConfig.font,
+                    PowerupImageGenerator.getPowerupString(
+                        this.powerupType, this.powerupType.tiers[userPowTier], config
+                    ),
+                    config.colorConfig.powerup
+                );
+
+                Queue.addQueue(() => {
+                    try {
+                        const boarUser: BoarUser = new BoarUser(interaction.user, true);
+
+                        if (!boarUser.powerups.promptData[this.promptTypeID][this.promptID]) {
+                            boarUser.powerups.promptData[this.promptTypeID][this.promptID] = new PromptData();
+                        }
+
+                        boarUser.powerups.promptData[this.promptTypeID][this.promptID].avg =
+                            (boarUser.powerups.promptData[this.promptTypeID][this.promptID].avg *
+                                boarUser.powerups.promptData[this.promptTypeID][this.promptID].attempts++ +
+                                userPercent) / boarUser.powerups.promptData[this.promptTypeID][this.promptID].attempts;
+
+                        boarUser.powerups.powerupAttempts++;
+
+                        if (userPowTier === 0) {
+                            boarUser.powerups.powerupAttempts1++;
+                        } else if (userPowTier === 1) {
+                            boarUser.powerups.powerupAttempts10++;
+                        } else if (userPowTier === 2) {
+                            boarUser.powerups.powerupAttempts50++;
+                        }
+
+                        if (userPowTier !== -1 && this.powerupType.name === powConfig.multiBoost.name) {
+                            boarUser.powerups.multiBoostTotal += this.powerupType.tiers[userPowTier];
+                            boarUser.powerups.multiBoostsClaimed++;
+                            boarUser.powerups.highestMultiBoost = Math.max(
+                                boarUser.powerups.highestMultiBoost, boarUser.powerups.multiBoostTotal
+                            );
+                        }
+
+                        if (userPowTier !== -1 && this.powerupType.name === powConfig.extraChance.name) {
+                            boarUser.powerups.extraChanceTotal += this.powerupType.tiers[userPowTier];
+                            boarUser.powerups.extraChancesClaimed++;
+                            boarUser.powerups.highestExtraChance = Math.max(
+                                boarUser.powerups.highestExtraChance, boarUser.powerups.extraChanceTotal
+                            );
+                        }
+
+                        if (userPowTier !== -1 && this.powerupType.name === powConfig.gift.name) {
+                            boarUser.powerups.numGifts += this.powerupType.tiers[userPowTier];
+                            boarUser.powerups.giftsClaimed++;
+                            boarUser.powerups.mostGifts = Math.max(
+                                boarUser.powerups.mostGifts, boarUser.powerups.numGifts
+                            )
+                        }
+
+                        if (userPowTier !== -1 && this.powerupType.name === powConfig.enhancer.name) {
+                            boarUser.powerups.numEnhancers += this.powerupType.tiers[userPowTier];
+                            boarUser.powerups.enhancersClaimed++;
+                        }
+
+                        boarUser.updateUserData();
+                    } catch (err: unknown) {
+                        LogDebug.handleError(err, interaction);
+                    }
+                }, interaction.id + interaction.user.id);
+            }
+
             this.claimers = new Map<string, number>();
+            this.interactions = [];
             this.topOnePercent = -1;
             this.topTenPercent = -1;
             this.topFiftyPercent = -1;
             this.powerupType = {} as PowerupConfig;
             this.readyToEnd = false;
 
-            setTimeout(() => this.doSpawn(),
-                Math.round(config.numberConfig.powInterval * (Math.random() * (1.25 - .75) + .75))
-            );
-
             LogDebug.sendDebug('Finished', config);
-        }
-    }
-
-    private async makePowerupSpawnImage(
-        promptType: PromptTypeConfig,
-        prompt: PromptConfig,
-        config: BotConfig
-    ) {
-        const strConfig = config.stringConfig;
-        const nums = config.numberConfig;
-        const pathConfig = config.pathConfig;
-        const colorConfig = config.colorConfig;
-
-        const font = `${nums.fontBig}px ${strConfig.fontName}`;
-
-        const canvas = Canvas.createCanvas(...nums.powSpawnSize);
-        const ctx = canvas.getContext('2d');
-
-        ctx.drawImage(await Canvas.loadImage(pathConfig.otherAssets + pathConfig.powerupSpawn), ...nums.originPos);
-
-        const promptDescription: string = promptType.description ? promptType.description : prompt.description;
-
-        CanvasUtils.drawText(
-            ctx, promptDescription, nums.powSpawnDescriptionPos, font, 'center', colorConfig.font,
-            nums.powSpawnDescriptionWidth, true
-        );
-
-        CanvasUtils.drawText(
-            ctx, 'Reward: %@', nums.powSpawnRewardPos, font, 'center', colorConfig.font,
-            nums.powSpawnDescriptionWidth, false, this.powerupType.pluralName, colorConfig.powerup
-        );
-
-        return new AttachmentBuilder(canvas.toBuffer(), { name: `${config.stringConfig.imageName}.png` });
-    }
-
-    private async makePowerupEndImage(
-        config: BotConfig
-    ) {
-        const strConfig = config.stringConfig;
-        const nums = config.numberConfig;
-        const pathConfig = config.pathConfig;
-        const colorConfig = config.colorConfig;
-
-        const font = `${nums.fontBig}px ${strConfig.fontName}`;
-
-        const canvas = Canvas.createCanvas(...nums.powSpawnSize);
-        const ctx = canvas.getContext('2d');
-
-        ctx.drawImage(await Canvas.loadImage(pathConfig.otherAssets + pathConfig.powerupEnd), ...nums.originPos);
-
-        if (this.topOnePercent !== -1) {
-            const topOneStr = '(Less than ' + (this.topOnePercent + 1) + 'ms)';
-            const topTenStr = this.topTenPercent !== -1
-                ? '(Less than ' + (this.topTenPercent + 1) + 'ms)'
-                : 'N/A';
-            const topFiftyStr = this.topFiftyPercent !== -1
-                ? '(Less than ' + (this.topFiftyPercent + 1) + 'ms)'
-                : 'N/A';
-
-            CanvasUtils.drawText(
-                ctx, 'Top 1%: %@', [745, 365], font, 'center', colorConfig.font,
-                nums.powSpawnDescriptionWidth, false, this.getPowerupString(this.powerupType.tiers[0]),
-                colorConfig.powerup
-            );
-            CanvasUtils.drawText(
-                ctx, topOneStr, [745, 435], font, 'center', colorConfig.font,
-                nums.powSpawnDescriptionWidth
-            );
-
-            CanvasUtils.drawText(
-                ctx, 'Top 10%: %@', [745, 565], font, 'center', colorConfig.font,
-                nums.powSpawnDescriptionWidth, false, this.getPowerupString(this.powerupType.tiers[1]),
-                colorConfig.powerup
-            );
-            CanvasUtils.drawText(
-                ctx, topTenStr, [745, 635], font, 'center', colorConfig.font,
-                nums.powSpawnDescriptionWidth
-            );
-
-            CanvasUtils.drawText(
-                ctx, 'Top 50%: %@', [745, 765], font, 'center', colorConfig.font,
-                nums.powSpawnDescriptionWidth, false, this.getPowerupString(this.powerupType.tiers[2]),
-                colorConfig.powerup
-            );
-            CanvasUtils.drawText(
-                ctx, topFiftyStr, [745, 835], font, 'center', colorConfig.font,
-                nums.powSpawnDescriptionWidth
-            );
-        } else {
-            CanvasUtils.drawText(
-                ctx, 'Nobody claimed the powerup!', nums.powSpawnDescriptionPos, font, 'center', colorConfig.font,
-                nums.powSpawnDescriptionWidth, true
-            );
-        }
-
-        CanvasUtils.drawText(
-            ctx, 'Reward: %@', nums.powSpawnRewardPos, font, 'center', colorConfig.font,
-            nums.powSpawnDescriptionWidth, false, this.powerupType.pluralName, colorConfig.powerup
-        );
-
-        return new AttachmentBuilder(canvas.toBuffer(), { name: `${config.stringConfig.imageName}.png` });
-    }
-
-    private getPowerupString(num: number) {
-        let usePluralName = false;
-
-        if (num > 1 || num === 0) {
-            usePluralName = true;
-        }
-
-        if (this.powerupType.name === 'Multiplier Boost') {
-            return '+' + num + ' ' + this.powerupType.name;
-        }
-
-        if (this.powerupType.name === 'Extra Boar Chance') {
-            return '+' + num + '% ' + this.powerupType.name;
-        }
-
-        if (this.powerupType.name === 'Boar Gift') {
-            return '+' + num + ' ' + (usePluralName ? this.powerupType.pluralName : this.powerupType.name);
-        }
-
-        if (this.powerupType.name === 'Boar Enhancer') {
-            return '+' + num + ' ' + (usePluralName ? this.powerupType.pluralName : this.powerupType.name);
         }
     }
 }

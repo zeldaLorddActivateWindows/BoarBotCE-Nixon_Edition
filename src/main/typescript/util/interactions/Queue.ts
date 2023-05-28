@@ -21,7 +21,7 @@ export class Queue {
      * @param id - ID of queue item
      */
     public static async addQueue(func: () => void, id: string): Promise<unknown> {
-        const queueIndex = id.endsWith('global') ? 0 : parseInt(id[id.length-1]) + 1;
+        const queueIndex: number = id.endsWith('global') ? 0 : parseInt(id[id.length-1]) + 1;
         Queue.queues[queueIndex][id] = func;
 
         if (!Queue.queueRunning[queueIndex]) {

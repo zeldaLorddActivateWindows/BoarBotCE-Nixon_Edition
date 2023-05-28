@@ -82,12 +82,12 @@ export class LogDebug {
         logToChannel: boolean = true
     ): Promise<void> {
         try {
-            let errString = typeof err === 'string' ? err : (err as Error).stack;
-            const prefix = `[${Colors.Green}CAUGHT ERROR${Colors.White}] `;
-            const time = LogDebug.getPrefixTime();
-            const config = BoarBotApp.getBot().getConfig();
+            let errString: string | undefined = typeof err === 'string' ? err : (err as Error).stack;
+            const prefix: string = `[${Colors.Green}CAUGHT ERROR${Colors.White}] `;
+            const time: string = LogDebug.getPrefixTime();
+            const config: BotConfig = BoarBotApp.getBot().getConfig();
 
-            let completeString = prefix + time;
+            let completeString: string = prefix + time;
             if (interaction && interaction.isChatInputCommand()) {
                 completeString += config.stringConfig.commandDebugPrefix
                     .replace('%@', interaction.user.username + ' (' + interaction.user.id + ')')
@@ -102,9 +102,9 @@ export class LogDebug {
                 await this.sendLogMessage(completeString, config);
             }
 
-            if (!interaction || !interaction.isChatInputCommand()) return;
+            if (!interaction || interaction.isAutocomplete()) return;
 
-            let errResponse = config.stringConfig.error;
+            let errResponse: string = config.stringConfig.error;
 
             await Replies.handleReply(interaction, errResponse, config.colorConfig.error);
         } catch (err: unknown) {
@@ -119,10 +119,10 @@ export class LogDebug {
      * @param config - Used to get DM reply string
      */
     public static async sendReport(message: Message, config: BotConfig): Promise<void> {
-        const prefix = `[${Colors.Blue}DM REPORT${Colors.White}] `;
-        const time = LogDebug.getPrefixTime();
-        const completeString = prefix + time + `${message.author.username + '(' + message.author.id + ')'} sent: ` +
-            message.content;
+        const prefix: string = `[${Colors.Blue}DM REPORT${Colors.White}] `;
+        const time: string = LogDebug.getPrefixTime();
+        const completeString: string = prefix + time +
+            `${message.author.username + '(' + message.author.id + ')'} sent: ` + message.content;
 
         await this.sendLogMessage(completeString, config);
 

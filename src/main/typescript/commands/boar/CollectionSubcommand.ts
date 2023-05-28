@@ -28,6 +28,11 @@ import {RarityConfig} from '../../bot/config/items/RarityConfig';
 import createRBTree, {Node, Tree} from 'functional-red-black-tree';
 import {BoarGift} from '../../util/boar/BoarGift';
 import {GuildData} from '../../util/data/GuildData';
+import {RowConfig} from '../../bot/config/components/RowConfig';
+import {StringConfig} from '../../bot/config/StringConfig';
+import {ModalConfig} from '../../bot/config/modals/ModalConfig';
+import {CollectedBoar} from '../../util/boar/CollectedBoar';
+import {BoarItemConfig} from '../../bot/config/items/BoarItemConfig';
 
 enum View {
     Normal,
@@ -79,20 +84,18 @@ export default class CollectionSubcommand implements Subcommand {
      * @param interaction - The interaction that called the subcommand
      */
     public async execute(interaction: ChatInputCommandInteraction): Promise<void> {
-        const config = BoarBotApp.getBot().getConfig();
-
-        this.guildData = await InteractionUtils.handleStart(interaction, config);
+        this.guildData = await InteractionUtils.handleStart(interaction, this.config);
         if (!this.guildData) return;
 
         await interaction.deferReply();
         this.firstInter = interaction;
 
         // Gets user to interact with
-        const userInput = interaction.options.getUser(this.subcommandInfo.args[0].name)
+        const userInput: User = interaction.options.getUser(this.subcommandInfo.args[0].name)
             ? interaction.options.getUser(this.subcommandInfo.args[0].name) as User
             : interaction.user;
-        const viewInput = interaction.options.getInteger(this.subcommandInfo.args[1].name) as View;
-        const pageInput = interaction.options.getString(this.subcommandInfo.args[2].name)
+        const viewInput: View = interaction.options.getInteger(this.subcommandInfo.args[1].name) as View;
+        const pageInput: string = interaction.options.getString(this.subcommandInfo.args[2].name)
             ? (interaction.options.getString(this.subcommandInfo.args[2].name) as string)
                 .toLowerCase().replace(/\s+/g, '')
             : "1";
@@ -104,7 +107,7 @@ export default class CollectionSubcommand implements Subcommand {
 
         await Queue.addQueue(() => this.getUserInfo(userInput), interaction.id + userInput.id);
 
-        this.maxPageNormal = Math.floor(Object.keys(this.allBoars).length / config.numberConfig.collBoarsPerPage);
+        this.maxPageNormal = Math.floor(Object.keys(this.allBoars).length / this.config.numberConfig.collBoarsPerPage);
 
         if (viewInput === View.Detailed && this.allBoars.length > 0 || viewInput === View.Powerups) {
             this.curView = viewInput;
@@ -138,7 +141,7 @@ export default class CollectionSubcommand implements Subcommand {
      */
     private async handleCollect(inter: ButtonInteraction): Promise<void> {
         try {
-            const canInteract = await CollectorUtils.canInteract(this.timerVars, inter);
+            const canInteract: boolean = await CollectorUtils.canInteract(this.timerVars, inter);
             if (!canInteract) return;
 
             if (!inter.isMessageComponent()) return;
@@ -146,10 +149,10 @@ export default class CollectionSubcommand implements Subcommand {
             this.compInter = inter;
 
             LogDebug.sendDebug(
-                `${inter.customId} on page ${this.curPage} in view ${this.curView}`, this.config, this.firstInter
+                `${inter.customId.split('|')[0]} on page ${this.curPage} in view ${this.curView}`, this.config, this.firstInter
             );
 
-            const collRowConfig = this.config.commandConfigs.boar.collection.componentFields;
+            const collRowConfig: RowConfig[][] = this.config.commandConfigs.boar.collection.componentFields;
             const collComponents = {
                 leftPage: collRowConfig[0][0].components[0],
                 inputPage: collRowConfig[0][0].components[1],
@@ -252,15 +255,15 @@ export default class CollectionSubcommand implements Subcommand {
      * @private
      */
     private async doEditions(): Promise<void> {
-        const strConfig = this.config.stringConfig;
-        let replyString = '';
+        const strConfig: StringConfig = this.config.stringConfig;
+        let replyString: string = '';
 
         for (let i=0; i<this.allBoars[this.curPage].editions.length; i++) {
-            const edition = this.allBoars[this.curPage].editions[i];
-            const editionDate = Math.floor(this.allBoars[this.curPage].editionDates[i] / 1000);
+            const edition: number = this.allBoars[this.curPage].editions[i];
+            const editionDate: number = Math.floor(this.allBoars[this.curPage].editionDates[i] / 1000);
 
             replyString += strConfig.collEditionLine
-                .replace('%@', edition)
+                .replace('%@', edition.toString())
                 .replace('%@', FormatStrings.toShortDateTime(editionDate));
         }
 
@@ -270,7 +273,7 @@ export default class CollectionSubcommand implements Subcommand {
                 new EmbedBuilder()
                     .setTitle(strConfig.collEditionTitle.replace('%@', this.allBoars[this.curPage].name))
                     .setDescription(replyString)
-                    .setColor(this.config.colorConfig.editionEmbed as ColorResolvable)
+                    .setColor(this.config.colorConfig.green as ColorResolvable)
             ],
             ephemeral: true
         });
@@ -326,7 +329,7 @@ export default class CollectionSubcommand implements Subcommand {
      * @private
      */
     private async modalHandle(inter: MessageComponentInteraction): Promise<void> {
-        const modals = this.config.commandConfigs.boar.collection.modals;
+        const modals: ModalConfig[] = this.config.commandConfigs.boar.collection.modals;
 
         this.modalShowing = new ModalBuilder(modals[0]);
         this.modalShowing.setCustomId(modals[0].customId + '|' + inter.id);
@@ -373,7 +376,7 @@ export default class CollectionSubcommand implements Subcommand {
 
             await submittedModal.deferUpdate();
 
-            const submittedPage = submittedModal.fields.getTextInputValue(
+            const submittedPage: string = submittedModal.fields.getTextInputValue(
                 this.modalShowing.components[0].components[0].data.custom_id as string
             ).toLowerCase().replace(/\s+/g, '');
 
@@ -440,14 +443,14 @@ export default class CollectionSubcommand implements Subcommand {
         // Adds information about each boar in user's boar collection to an array
         for (const boarID of Object.keys(this.boarUser.boarCollection)) {
             // Local user boar information
-            const boarInfo = this.boarUser.boarCollection[boarID];
+            const boarInfo: CollectedBoar = this.boarUser.boarCollection[boarID];
             if (boarInfo.num === 0) continue;
 
             const rarity: [number, RarityConfig] = BoarUtils.findRarity(boarID, this.config);
             if (rarity[0] === 0) continue;
 
             // Global boar information
-            const boarDetails = this.config.boarItemConfigs[boarID];
+            const boarDetails: BoarItemConfig = this.config.boarItemConfigs[boarID];
 
             this.allBoars.push({
                 id: boarID,
@@ -591,7 +594,7 @@ export default class CollectionSubcommand implements Subcommand {
      * @private
      */
     private initButtons(): void {
-        const collFieldConfigs = this.config.commandConfigs.boar.collection.componentFields;
+        const collFieldConfigs: RowConfig[][] = this.config.commandConfigs.boar.collection.componentFields;
 
         for (let i=0; i<collFieldConfigs.length; i++) {
             const newRows: ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>[] =

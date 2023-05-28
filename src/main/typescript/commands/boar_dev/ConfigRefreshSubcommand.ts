@@ -23,7 +23,6 @@ export default class ConfigRefreshSubcommand implements Subcommand {
      */
     public async execute(interaction: ChatInputCommandInteraction): Promise<void> {
         BoarBotApp.getBot().loadConfig();
-
         await Replies.handleReply(interaction, 'Successfully refreshed the config.');
     }
 }

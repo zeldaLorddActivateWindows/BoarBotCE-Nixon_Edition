@@ -185,6 +185,10 @@ export class NumberConfig {
     public readonly powSpawnDescriptionPos: [number, number] = [0, 0];
     public readonly powSpawnDescriptionWidth: number = 0;
     public readonly powSpawnRewardPos: [number, number] = [0, 0];
+    public readonly powTopOnePos: [number, number] = [0, 0];
+    public readonly powTopTenPos: [number, number] = [0, 0];
+    public readonly powTopFiftyPos: [number, number] = [0, 0];
+    public readonly powResultsYOffset: number = 0;
     public readonly border: number = 0;
     public readonly embedMaxWidth: number = 0;
     public readonly embedMinHeight: number = 0;

@@ -1,4 +1,5 @@
 import {
+    AttachmentBuilder,
     ChatInputCommandInteraction,
     MessageComponentInteraction,
     ModalSubmitInteraction
@@ -85,8 +86,8 @@ export class Replies {
      * @param interaction - Interaction to reply to
      * @param content - Content of the reply
      * @param color - Color of the embed
-     * @param coloredContent
-     * @param color2
+     * @param coloredContent - Secondary text to color
+     * @param color2 - Secondary color
      * @param forceFollowup - Forces interaction reply to be a followup
      */
     public static async handleReply(
@@ -97,7 +98,7 @@ export class Replies {
         color2?: string,
         forceFollowup: boolean = false
     ): Promise<void> {
-        const embedImage = CustomEmbedGenerator.makeEmbed(
+        const embedImage: AttachmentBuilder = CustomEmbedGenerator.makeEmbed(
             content, color, BoarBotApp.getBot().getConfig(), coloredContent, color2
         );
 

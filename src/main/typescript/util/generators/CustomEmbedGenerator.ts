@@ -1,7 +1,10 @@
 import {BotConfig} from '../../bot/config/BotConfig';
-import {Canvas} from 'canvas';
+import Canvas from 'canvas';
 import {CanvasUtils} from './CanvasUtils';
 import {AttachmentBuilder} from 'discord.js';
+import {StringConfig} from '../../bot/config/StringConfig';
+import {NumberConfig} from '../../bot/config/NumberConfig';
+import {ColorConfig} from '../../bot/config/ColorConfig';
 
 /**
  * {@link CustomEmbedGenerator CustomEmbedGenerator.ts}
@@ -13,15 +16,24 @@ import {AttachmentBuilder} from 'discord.js';
  */
 
 export class CustomEmbedGenerator {
+    /**
+     * Creates a dynamic generic embed
+     *
+     * @param str - The string to put in the embed
+     * @param color - Color of the string
+     * @param config - Used to get position and other config info
+     * @param coloredText - A portion of text to color differently
+     * @param color2 - The secondary color
+     */
     public static makeEmbed(str: string, color: string, config: BotConfig, coloredText?: string, color2?: string) {
-        const strConfig = config.stringConfig;
-        const nums = config.numberConfig;
-        const colorConfig = config.colorConfig;
+        const strConfig: StringConfig = config.stringConfig;
+        const nums: NumberConfig = config.numberConfig;
+        const colorConfig: ColorConfig = config.colorConfig;
 
-        const font = `${nums.fontBig}px ${strConfig.fontName}`;
+        const font: string = `${nums.fontBig}px ${strConfig.fontName}`;
 
-        const canvas = new Canvas(0, nums.embedMinHeight);
-        const ctx = canvas.getContext('2d');
+        const canvas: Canvas.Canvas = Canvas.createCanvas(0, nums.embedMinHeight);
+        const ctx: Canvas.CanvasRenderingContext2D = canvas.getContext('2d');
 
         ctx.font = font;
         canvas.width = Math.min(
@@ -30,7 +42,7 @@ export class CustomEmbedGenerator {
         );
 
         canvas.height += CanvasUtils.drawText(
-            ctx, str, nums.originPos, font, 'center', colorConfig.font,
+            ctx, str.replace('%@', coloredText ? coloredText : '%@'), nums.originPos, font, 'center', colorConfig.font,
             canvas.width === nums.embedMaxWidth ? nums.embedMaxWidth - nums.border * 4 : undefined,
             true
         );

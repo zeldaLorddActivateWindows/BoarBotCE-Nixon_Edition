@@ -75,6 +75,7 @@
         "setupInfoResponse2": "This bot has slash commands, which can produce spammy content depending on how large your server is, so you'll need to decide which channel(s) the bot is enabled in. These channels can be changed at any time using /boar-manage setup. Use the pencil button to enter a channel ID (right-click channel name, Copy ID) that isn't shown in the select box.",
         "setupInfoResponse3": "This bot originated on a Discord server dedicated to Hypixel Skyblock. If you don't know what that is, no sweat! Just click \"No\". If you do and you're part of the community, it's highly recommended that you click \"Yes\". This can be changed at any time using /boar-manage setup.",
         "dailyUsed": "You've already used your daily boar! The next time you can use the command is ",
+        "dailyPowUsed": "Successfully used your %@!",
         "dailyTitle": "Daily Boar!",
         "extraTitle": "Extra Boar!",
         "dailyNoBoarFound": "Failed to find one or more valid boars!",
@@ -111,18 +112,18 @@
         "collGiftsLabel": "Boar Gifts",
         "collExtraBoarLabel": "Extra Boar Chance",
         "collEnhancerLabel": "Boar Enhancers",
-        "collBoostsClaimedLabel": "Multiplier Boosts Claimed",
+        "collBoostsClaimedLabel": "Boost Powerups Claimed",
         "collBoostsUsedLabel": "Multiplier Boosts Used",
         "collHighestMultiLabel": "Highest Multiplier",
         "collHighestBoostLabel": "Highest Multiplier Boost",
-        "collGiftsClaimedLabel": "Boar Gifts Claimed",
+        "collGiftsClaimedLabel": "Gift Powerups Claimed",
         "collGiftsUsedLabel": "Boar Gifts Used",
         "collGiftsOpenedLabel": "Boar Gifts Opened",
         "collMostGiftsLabel": "Most Boar Gifts",
-        "collChancesClaimedLabel": "Extra Chances Claimed",
+        "collChancesClaimedLabel": "Chance Powerups Claimed",
         "collChancesUsedLabel": "Extra Chances Used",
         "collChanceHighestLabel": "Highest Extra Chance",
-        "collEnhancersClaimedLabel": "Enhancers Claimed",
+        "collEnhancersClaimedLabel": "Enhance Powerups Claimed",
         "collEnhancedLabel": "Enhanced %@",
         "collEnhanceDetails": "This action will take your %@ and convert it into a random boar of the next rarity. The result of this interaction is shown above. Click \"Enhance\" again to confirm.",
         "collEnhanceBoarLose": "-1 %@",
@@ -137,6 +138,16 @@
         "powWrongFull": "%@ Try again!",
         "powWrong": "Incorrect!",
         "powAttempted": "You've already attempted this powerup!",
+        "powLessThan": "(Less than %@ms)",
+        "powTopOne": "Top 1%: %@",
+        "powTopOneResponse": "You had a time of %@ms, putting you in the Top 1%! You received %@!",
+        "powTopTen": "Top 10%: %@",
+        "powTopTenResponse": "You had a time of %@ms, putting you in the Top 10%! You received %@!",
+        "powTopFifty": "Top 50%: %@",
+        "powTopFiftyResponse": "You had a time of %@ms, putting you in the Top 50%! You received %@!",
+        "powNoRewardResponse": "You had a time of %@ms, putting you outside any bracket that gives rewards. Better luck next time!",
+        "powNoClaim": "Nobody claimed the powerup!",
+        "powReward": "Reward: %@",
         "noParentChannel": "NO CATEGORY",
         "notValidChannel": "This channel isn't valid! Try a different one! The channel should be:\n- A text channel\n- Not already chosen\n- Exists in this server",
         "defaultSelectPlaceholder": "UNSELECTED",
@@ -325,12 +336,16 @@
         "powSpawnDescriptionPos": [745, 623],
         "powSpawnDescriptionWidth": 1100,
         "powSpawnRewardPos": [745, 999],
+        "powTopOnePos": [745, 365],
+        "powTopTenPos": [745, 565],
+        "powTopFiftyPos": [745, 765],
+        "powResultsYOffset": 70,
         "border": 25,
         "embedMaxWidth": 1500,
         "embedMinHeight": 204,
         "embedTextPadding": 50,
-        "powInterval": 30000,
-        "powDuration": 20000,
+        "powInterval": 7200000,
+        "powDuration": 30000,
         "collectorIdle": 120000,
         "emojiRows": 4,
         "emojiCols": 4,
@@ -759,7 +774,7 @@
                     "suboutcomes": []
                 },
                 {
-                    "weight": 1,
+                    "weight": 400,
                     "category": "Boar Bucks",
                     "suboutcomes": [
                         {
@@ -777,7 +792,7 @@
                     ]
                 },
                 {
-                    "weight": 1,
+                    "weight": 199,
                     "category": "Powerups",
                     "suboutcomes": [
                         {
@@ -795,7 +810,7 @@
                     ]
                 },
                 {
-                    "weight": 1,
+                    "weight": 400,
                     "category": "Random Boar",
                     "suboutcomes": []
                 }
@@ -1379,7 +1394,7 @@
         "rarity8": "#FFEEB0",
         "rarity9": "#FF3136"
     },
-    "unlimitedBoars": false,
+    "unlimitedBoars": true,
     "debugMode": true,
     "maintenanceMode": false
 }

@@ -2,6 +2,7 @@ import {AutocompleteInteraction, ChatInputCommandInteraction, SlashCommandBuilde
 import {BoarBotApp} from '../../BoarBotApp';
 import {Command} from '../../api/commands/Command';
 import {LogDebug} from '../../util/logging/LogDebug';
+import {Subcommand} from '../../api/commands/Subcommand';
 
 /**
  * {@link BoarDevCommand BoarDevCommand.ts}
@@ -41,12 +42,13 @@ export default class BoarDevCommand implements Command {
      * @param interaction - An interaction that could've called a boar-dev subcommand
      */
     public async execute(interaction: AutocompleteInteraction | ChatInputCommandInteraction): Promise<void> {
-        const subcommand = BoarBotApp.getBot().getSubcommands().get(interaction.options.getSubcommand());
+        const subcommand: Subcommand | undefined = BoarBotApp.getBot().getSubcommands()
+            .get(interaction.options.getSubcommand());
 
         if (!subcommand) return;
 
-        const exports = require(subcommand.data.path);
-        const commandClass = new exports.default();
+        const exports: any = require(subcommand.data.path);
+        const commandClass: any = new exports.default();
 
         if (interaction.isAutocomplete()) {
             try {

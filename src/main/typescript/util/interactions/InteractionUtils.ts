@@ -1,4 +1,9 @@
-import {ChatInputCommandInteraction, TextChannel} from 'discord.js';
+import {
+    ChatInputCommandInteraction,
+    GuildMember,
+    PermissionsString,
+    TextChannel
+} from 'discord.js';
 import {BoarBotApp} from '../../BoarBotApp';
 import {BotConfig} from '../../bot/config/BotConfig';
 import {DataHandlers} from '../data/DataHandlers';
@@ -70,13 +75,13 @@ export class InteractionUtils {
             return;
         }
 
-        const memberMe = channel.guild.members.me;
+        const memberMe: GuildMember | null = channel.guild.members.me;
         if (!memberMe) {
             LogDebug.handleError('Bot doesn\'t exist in the server the channel is in.');
             return;
         }
 
-        const memberMePerms = memberMe.permissions.toArray();
+        const memberMePerms: PermissionsString[] = memberMe.permissions.toArray();
         if (!memberMePerms.includes('SendMessages')) {
             LogDebug.handleError('Bot doesn\'t have permission to send messages to channel.', undefined, false);
             return;

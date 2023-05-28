@@ -4,6 +4,8 @@ import {BoarBotApp} from '../../BoarBotApp';
 import {LogDebug} from '../logging/LogDebug';
 import {Replies} from '../interactions/Replies';
 import {GuildData} from './GuildData';
+import {BotConfig} from '../../bot/config/BotConfig';
+import {StringConfig} from '../../bot/config/StringConfig';
 
 /**
  * {@link DataHandlers DataHandlers.ts}
@@ -22,9 +24,9 @@ export class DataHandlers {
      * @return globalData - Global data parsed from JSON
      */
     public static getGlobalData(): any {
-        const config = BoarBotApp.getBot().getConfig();
+        const config: BotConfig = BoarBotApp.getBot().getConfig();
 
-        const globalFile = config.pathConfig.globalDataFile;
+        const globalFile: string = config.pathConfig.globalDataFile;
 
         return JSON.parse(fs.readFileSync(globalFile, 'utf-8'));
     }
@@ -44,10 +46,10 @@ export class DataHandlers {
     ): Promise<GuildData | undefined> {
         if (!guildID) return;
 
-        const config = BoarBotApp.getBot().getConfig();
-        const strConfig = config.stringConfig;
+        const config: BotConfig = BoarBotApp.getBot().getConfig();
+        const strConfig: StringConfig = config.stringConfig;
 
-        const guildDataPath = config.pathConfig.guildDataFolder + guildID + '.json';
+        const guildDataPath: string = config.pathConfig.guildDataFolder + guildID + '.json';
 
         try {
             return JSON.parse(fs.readFileSync(guildDataPath, 'utf-8'));

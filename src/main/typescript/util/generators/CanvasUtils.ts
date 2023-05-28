@@ -41,26 +41,32 @@ export class CanvasUtils {
         ctx.textBaseline = 'alphabetic';
         ctx.fillStyle = color;
 
-        let replaceIndex = text.indexOf('%@');
+        let replaceIndex: number = text.indexOf('%@');
         text = text.replace('%@', coloredText);
 
-        let heightDiff = 0;
+        let heightDiff: number = 0;
 
         if (width != undefined && wrap) {
             const words: string[] = text.split(' ');
             const lineHeight: number = (ctx.measureText('Sp').actualBoundingBoxAscent +
                 ctx.measureText('Sp').actualBoundingBoxDescent) * 1.1;
-            let newHeight = pos[1];
+            let newHeight: number = pos[1];
             let lines: string[] = [];
             let curLine: string = '';
+            let curIndex: number = -1;
 
             for (let i=0; i<words.length; i++) {
                 const word: string = words[i];
 
                 if (ctx.measureText(curLine + word + ' ').width < width) {
                     curLine += word + ' ';
+                    curIndex += (word + ' ').length;
                 } else {
                     lines.push(curLine.substring(0, curLine.length-1));
+                    if (replaceIndex > curIndex) {
+                        replaceIndex--;
+                    }
+                    curIndex--;
                     curLine = word + ' ';
                 }
             }
@@ -69,20 +75,24 @@ export class CanvasUtils {
 
             newHeight -= lineHeight * (lines.length-1) / 2;
 
-            let charIndex = 0;
-            const originalColorLength = coloredText.length;
+            let charIndex: number = 0;
+            const originalColorLength: number = coloredText.length;
+            let numColoredLines: number = 0;
             for (const line of lines) {
-                let prevCharIndex = charIndex;
+                let prevCharIndex: number = charIndex;
                 charIndex += line.length;
 
                 if (charIndex > replaceIndex && prevCharIndex < replaceIndex + originalColorLength) {
-                    const relReplaceIndex = replaceIndex-prevCharIndex;
-                    const textPart1 = line.substring(0, Math.min(relReplaceIndex, line.length));
-                    const textPart2 = line.substring(Math.min(relReplaceIndex+coloredText.length, line.length));
-                    let coloredToPlace = coloredText;
+                    const relReplaceIndex: number = numColoredLines > 0
+                        ? replaceIndex-prevCharIndex-1
+                        : replaceIndex-prevCharIndex;
+                    const textPart1: string = line.substring(0, Math.min(relReplaceIndex, line.length));
+                    const textPart2: string = line.substring(Math.min(relReplaceIndex+coloredText.length, line.length));
+                    let coloredToPlace: string = coloredText;
 
+                    numColoredLines++;
                     if (relReplaceIndex+coloredText.length > line.length) {
-                        coloredToPlace = line.substring(replaceIndex, line.length);
+                        coloredToPlace = line.substring(relReplaceIndex, line.length);
                         replaceIndex = charIndex;
                     }
 
@@ -95,7 +105,7 @@ export class CanvasUtils {
                     ctx.fillStyle = color;
                     ctx.fillText(textPart2, pos[0] + ctx.measureText(textPart1+coloredToPlace).width/2, newHeight);
 
-                    coloredText = coloredText.replace(coloredToPlace + ' ', '');
+                    coloredText = coloredText.substring(coloredText.indexOf(coloredToPlace) + coloredToPlace.length);
                 } else {
                     ctx.fillText(line, pos[0], newHeight);
                 }
@@ -140,8 +150,8 @@ export class CanvasUtils {
         color: string,
         color2: string
     ): void {
-        const textPart1 = text.substring(0, replaceIndex);
-        const textPart2 = text.substring(replaceIndex+coloredText.length);
+        const textPart1: string = text.substring(0, replaceIndex);
+        const textPart2: string = text.substring(replaceIndex+coloredText.length);
 
         if (align === 'center') {
             ctx.fillText(textPart1, pos[0] - ctx.measureText(coloredText+textPart2).width/2, pos[1]);
@@ -176,7 +186,7 @@ export class CanvasUtils {
         pos: number[],
         diameter: number
     ): void {
-        const radius = diameter / 2;
+        const radius: number = diameter / 2;
 
         ctx.beginPath();
         ctx.arc(pos[0] + radius, pos[1] + radius, radius, 0, Math.PI * 2);
