@@ -175,8 +175,6 @@ export class PowerupSpawner {
         try {
             await inter.deferUpdate();
 
-            LogDebug.sendDebug(inter.customId, config);
-
             if (!this.claimers.has(inter.user.id) && inter.customId.toLowerCase().includes('correct')) {
                 let correctString: string = config.stringConfig.powRightFull;
                 const timeToClaim: number = inter.createdTimestamp - powMsg.createdTimestamp;
@@ -191,15 +189,15 @@ export class PowerupSpawner {
                 await Replies.handleReply(inter, correctString, config.colorConfig.font,
                     config.stringConfig.powRight, config.colorConfig.green
                 );
-                LogDebug.sendDebug('Collected ' + inter.user.username, config);
+                LogDebug.sendDebug('Collected: ' + inter.user.username + ' (' + inter.user.id + ')', config);
             } else if (!this.claimers.has(inter.user.id)) {
                 await Replies.handleReply(inter, config.stringConfig.powWrongFull, config.colorConfig.font,
                     config.stringConfig.powWrong, config.colorConfig.error
                 );
-                LogDebug.sendDebug('Failed attempt ' + inter.user.username, config);
+                LogDebug.sendDebug('Failed attempt: ' + inter.user.username + ' (' + inter.user.id + ')', config);
             } else {
                 await Replies.handleReply(inter, config.stringConfig.powAttempted, config.colorConfig.error);
-                LogDebug.sendDebug('Already collected ' + inter.user.username, config);
+                LogDebug.sendDebug('Already collected: ' + inter.user.username + ' (' + inter.user.id + ')', config);
             }
         } catch (err: unknown) {
             await LogDebug.handleError(err);
