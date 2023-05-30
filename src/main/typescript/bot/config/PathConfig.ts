@@ -55,6 +55,7 @@ export class PathConfig {
 
     public readonly powerupSpawn: string = '';
     public readonly powerupEnd: string = '';
+    public readonly leaderboardUnderlay: string = '';
     public readonly thankYouImage: string = '';
     public readonly mainFont: string = '';
     public readonly helpBackground: string = '';

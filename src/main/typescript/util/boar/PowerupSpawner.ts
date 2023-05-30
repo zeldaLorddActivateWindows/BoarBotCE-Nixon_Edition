@@ -223,7 +223,7 @@ export class PowerupSpawner {
                 components: [new ActionRowBuilder<ButtonBuilder>(config.powerupConfig.rows[1])]
             }).catch((err) => { throw err; });
 
-            // Gets percentages once all powerup messages are tabulating
+            // Gets percentages once all powerup messages are waiting for tabulation
             if (--this.numMsgs === 0) {
                 this.claimers = new Map([...this.claimers.entries()].sort((a, b) => a[1] - b[1]));
 
@@ -260,7 +260,7 @@ export class PowerupSpawner {
                 return;
             }
 
-            // Waits until percentages have been calculated (after last message has tabulated)
+            // Waits until percentages have been calculated to finish (after last message has tabulated)
             const finishInterval = setInterval(async () => {
                 if (this.readyToEnd) {
                     await this.finishPow(powMsg, config);
@@ -538,7 +538,7 @@ export class PowerupSpawner {
                     config.colorConfig.powerup
                 );
 
-                Queue.addQueue(() => {
+                Queue.addQueue(async () => {
                     try {
                         const boarUser: BoarUser = new BoarUser(interaction.user, true);
 
@@ -591,6 +591,9 @@ export class PowerupSpawner {
                         }
 
                         boarUser.updateUserData();
+                        await Queue.addQueue(() =>
+                            DataHandlers.updateLeaderboardData(boarUser), interaction.id + 'global'
+                        );
                     } catch (err: unknown) {
                         LogDebug.handleError(err, interaction);
                     }

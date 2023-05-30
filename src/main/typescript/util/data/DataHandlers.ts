@@ -6,6 +6,7 @@ import {Replies} from '../interactions/Replies';
 import {GuildData} from './GuildData';
 import {BotConfig} from '../../bot/config/BotConfig';
 import {StringConfig} from '../../bot/config/StringConfig';
+import {BoarUser} from '../boar/BoarUser';
 
 /**
  * {@link DataHandlers DataHandlers.ts}
@@ -29,6 +30,53 @@ export class DataHandlers {
         const globalFile: string = config.pathConfig.globalDataFile;
 
         return JSON.parse(fs.readFileSync(globalFile, 'utf-8'));
+    }
+
+    public static updateLeaderboardData(boarUser: BoarUser): void {
+        const globalData = DataHandlers.getGlobalData();
+        const userID = boarUser.user.id;
+
+        globalData.leaderboardData.bucks[userID] = boarUser.boarScore > 0
+            ? boarUser.boarScore
+            : undefined;
+        globalData.leaderboardData.total[userID] = boarUser.totalBoars > 0
+            ? boarUser.totalBoars
+            : undefined;
+        globalData.leaderboardData.uniques[userID] = Object.keys(boarUser.boarCollection).length > 0
+            ? Object.keys(boarUser.boarCollection).length
+            : undefined;
+        globalData.leaderboardData.streak[userID] = boarUser.boarStreak > 0
+            ? boarUser.boarStreak
+            : undefined;
+        globalData.leaderboardData.attempts[userID] = boarUser.powerups.powerupAttempts > 0
+            ? boarUser.powerups.powerupAttempts
+            : undefined;
+        globalData.leaderboardData.topAttempts[userID] = boarUser.powerups.powerupAttempts1 > 0
+            ? boarUser.powerups.powerupAttempts1
+            : undefined;
+        globalData.leaderboardData.giftsUsed[userID] = boarUser.powerups.giftsUsed > 0
+            ? boarUser.powerups.giftsUsed
+            : undefined;
+        globalData.leaderboardData.multiplier[userID] = boarUser.powerups.multiplier > 1
+            ? boarUser.powerups.multiplier
+            : undefined;
+
+        fs.writeFileSync(BoarBotApp.getBot().getConfig().pathConfig.globalDataFile, JSON.stringify(globalData));
+    }
+
+    public static removeLeaderboardUser(userID: string) {
+        const globalData = DataHandlers.getGlobalData();
+
+        globalData.leaderboardData.bucks[userID] = undefined;
+        globalData.leaderboardData.total[userID] = undefined;
+        globalData.leaderboardData.uniques[userID] = undefined;
+        globalData.leaderboardData.streak[userID] = undefined;
+        globalData.leaderboardData.attempts[userID] = undefined;
+        globalData.leaderboardData.topAttempts[userID] = undefined;
+        globalData.leaderboardData.giftsUsed[userID] = undefined;
+        globalData.leaderboardData.multiplier[userID] = undefined;
+
+        fs.writeFileSync(BoarBotApp.getBot().getConfig().pathConfig.globalDataFile, JSON.stringify(globalData));
     }
 
     /**

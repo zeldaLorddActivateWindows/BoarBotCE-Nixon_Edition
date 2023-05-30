@@ -129,6 +129,10 @@ export class StringConfig {
     public readonly powNoRewardResponse: string = ' ';
     public readonly powNoClaim: string = ' ';
     public readonly powReward: string = ' ';
+    public readonly notInBoard: string = ' ';
+    public readonly boardHeader: string = ' ';
+    public readonly boardFooter: string = ' ';
+    public readonly deletedUsername: string = ' ';
     public readonly noParentChannel: string = ' ';
     public readonly notValidChannel: string = ' ';
     public readonly defaultSelectPlaceholder: string = ' ';

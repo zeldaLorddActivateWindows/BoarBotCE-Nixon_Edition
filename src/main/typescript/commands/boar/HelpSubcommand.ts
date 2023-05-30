@@ -24,8 +24,6 @@ export default class HelpSubcommand implements Subcommand {
      * @param interaction - The interaction that called the subcommand
      */
     public async execute(interaction: ChatInputCommandInteraction): Promise<void> {
-        this.config = BoarBotApp.getBot().getConfig();
-
         const guildData: GuildData | undefined = await InteractionUtils.handleStart(interaction, this.config, true);
         if (!guildData) return;
 

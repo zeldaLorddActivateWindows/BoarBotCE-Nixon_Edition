@@ -176,6 +176,16 @@ export class BoarGift {
             this.giftedUser.powerups.giftsOpened++;
             this.giftedUser.updateUserData();
         }, inter.id + inter.user.id);
+
+        await Queue.addQueue(() =>
+            DataHandlers.updateLeaderboardData(this.boarUser),
+            inter.id + this.boarUser.user.id + 'global'
+        );
+
+        await Queue.addQueue(() =>
+            DataHandlers.updateLeaderboardData(this.giftedUser),
+            inter.id + this.giftedUser.user.id + 'global'
+        );
     }
 
     /**

@@ -98,7 +98,7 @@ export default class CollectionSubcommand implements Subcommand {
         const pageInput: string = interaction.options.getString(this.subcommandInfo.args[2].name)
             ? (interaction.options.getString(this.subcommandInfo.args[2].name) as string)
                 .toLowerCase().replace(/\s+/g, '')
-            : "1";
+            : '1';
 
         LogDebug.sendDebug(
             `User: ${userInput}, View: ${viewInput}, Page: ${pageInput}`,
@@ -354,7 +354,9 @@ export default class CollectionSubcommand implements Subcommand {
     private modalListener = async (submittedModal: Interaction): Promise<void> => {
         try  {
             // If not a modal submission on current interaction, destroy the modal listener
-            if (submittedModal.isMessageComponent() && submittedModal.customId.endsWith(this.firstInter.id + this.firstInter.user.id) ||
+            if (
+                submittedModal.isMessageComponent() &&
+                submittedModal.customId.endsWith(this.firstInter.id + '|' + this.firstInter.user.id) ||
                 BoarBotApp.getBot().getConfig().maintenanceMode && !this.config.devs.includes(this.compInter.user.id)
             ) {
                 clearInterval(this.timerVars.updateTime);

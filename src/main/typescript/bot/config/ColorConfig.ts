@@ -19,6 +19,10 @@ export class ColorConfig {
     public readonly powerup: string = '#000000';
     public readonly bucks: string = '#000000';
 
+    public readonly gold: string = '#000000';
+    public readonly silver: string = '#000000';
+    public readonly bronze: string = '#000000';
+
     public readonly green: string = '#000000';
     public readonly maintenance: string = '#000000';
     public readonly error: string = '#000000';

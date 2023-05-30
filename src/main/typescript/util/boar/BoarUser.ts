@@ -268,7 +268,6 @@ export class BoarUser {
         // Updates global edition data
         await Queue.addQueue(() => {
             LogDebug.sendDebug('Updating global edition info...', config, interaction);
-
             const globalData: any = DataHandlers.getGlobalData();
 
             // Sets edition numbers
@@ -279,7 +278,6 @@ export class BoarUser {
             }
 
             fs.writeFileSync(pathConfig.globalDataFile, JSON.stringify(globalData));
-
             LogDebug.sendDebug('Finished updating global edition info.', config, interaction);
         }, interaction.id + 'global');
 
@@ -293,6 +291,7 @@ export class BoarUser {
                 if (!this.boarCollection[boarID]) {
                     this.boarCollection[boarID] = new CollectedBoar;
                     this.boarCollection[boarID].firstObtained = Date.now();
+                    this.powerups.multiplier += rarityInfos[i].name === 'Special' ? 0 : 1;
                 }
 
                 this.boarCollection[boarID].num++;
@@ -315,6 +314,8 @@ export class BoarUser {
             await this.orderBoars(interaction, config);
             LogDebug.sendDebug('Finished updating user info.', config, interaction);
         }, interaction.id + interaction.user.id);
+
+        await Queue.addQueue(() => DataHandlers.updateLeaderboardData(this), interaction.id + 'global');
     }
 
     /**

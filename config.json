@@ -35,6 +35,7 @@
         "enhancerOff": "EnhancerInactive.png",
         "powerupSpawn": "BoarPowerupSpawn.png",
         "powerupEnd": "BoarPowerupEnd.png",
+        "leaderboardUnderlay": "LeaderboardUnderlay.png",
         "favorite": "favorite.png",
         "thankYouImage": "BoarBotThanks.png",
         "mainFont": "MinecraftFont.ttf",
@@ -148,6 +149,10 @@
         "powNoRewardResponse": "You had a time of %@ms, putting you outside any bracket that gives rewards. Better luck next time!",
         "powNoClaim": "Nobody claimed the powerup!",
         "powReward": "Reward: %@",
+        "notInBoard": "The user you entered isn't on this leaderboard! Defaulting to first page.",
+        "boardHeader": "LEADERBOARD - %@",
+        "boardFooter": "Users: %@ | Page: %@/%@ | Viewing %@-%@",
+        "deletedUsername": "Deleted User",
         "noParentChannel": "NO CATEGORY",
         "notValidChannel": "This channel isn't valid! Try a different one! The channel should be:\n- A text channel\n- Not already chosen\n- Exists in this server",
         "defaultSelectPlaceholder": "UNSELECTED",
@@ -351,7 +356,16 @@
         "emojiCols": 4,
         "triviaRows": 2,
         "triviaCols": 2,
-        "fastCols": 3
+        "fastCols": 3,
+        "leaderboardNumPlayers": 28,
+        "leaderboardRows": 14,
+        "leaderboardStart": [486, 300],
+        "leaderboardIncX": 950,
+        "leaderboardIncY": 70,
+        "leaderboardHeaderPos": [300, 125],
+        "leaderboardTopBotWidth": 1550,
+        "leaderboardFooterPos": [960, 1330],
+        "leaderboardEntryWidth": 875
     },
     "commandConfigs": {
         "boar": {
@@ -515,16 +529,129 @@
                 ],
                 "modals": [
                     {
-                        "title": "Input Page Number",
-                        "customId": "FIELD_ONE_MODAL",
+                        "title": "Input Page Number or Boar Name",
+                        "customId": "COLLECTION_MODAL",
                         "components": [
                             {
                                 "type": 1,
                                 "components": [
                                     {
                                         "type": 4,
-                                        "customId": "PAGE_INPUT",
+                                        "customId": "COLL_PAGE_INPUT",
                                         "label": "PAGE NUMBER/BOAR NAME",
+                                        "style": 1,
+                                        "required": true
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
+            "top": {
+                "name": "top",
+                "description": "View leaderboards showcasing a ranking of player stats",
+                "args": [
+                    {
+                        "name": "leaderboard",
+                        "description": "The leaderboard to view",
+                        "choices": [
+                            {
+                                "name": "Boar Bucks",
+                                "value": "bucks"
+                            },
+                            {
+                                "name": "Total Boars",
+                                "value": "total"
+                            },
+                            {
+                                "name": "Unique Boars",
+                                "value": "uniques"
+                            },
+                            {
+                                "name": "Boar Streak",
+                                "value": "streak"
+                            },
+                            {
+                                "name": "Powerup Attempts",
+                                "value": "attempts"
+                            },
+                            {
+                                "name": "Top 1% Powerup Attempts",
+                                "value": "topAttempts"
+                            },
+                            {
+                                "name": "Gifts Used",
+                                "value": "giftsUsed"
+                            },
+                            {
+                                "name": "Multiplier",
+                                "value": "multiplier"
+                            }
+                        ]
+                    },
+                    {
+                        "name": "user",
+                        "description": "The user to find on the leaderboard"
+                    },
+                    {
+                        "name": "page",
+                        "description": "The page to start out on"
+                    }
+                ],
+                "cooldown": true,
+                "componentFields": [
+                    [
+                        {
+                            "type": 1,
+                            "components": [
+                                {
+                                    "type": 2,
+                                    "customId": "LEADER_BACK",
+                                    "emoji": "<:back:1073072529507369072>",
+                                    "style": 2,
+                                    "disabled": true
+                                },
+                                {
+                                    "type": 2,
+                                    "customId": "LEADER_PAGE",
+                                    "emoji": "\uD83D\uDCDD",
+                                    "style": 2,
+                                    "disabled": true
+                                },
+                                {
+                                    "type": 2,
+                                    "customId": "LEADER_FORWARD",
+                                    "emoji": "<:forward:1073071982096175184>",
+                                    "style": 2,
+                                    "disabled": true
+                                }
+                            ]
+                        },
+                        {
+                            "type": 1,
+                            "components": [
+                                {
+                                    "type": 3,
+                                    "customId": "LEADER_BOARD_SELECT",
+                                    "placeholder": "Choose Leaderboard..."
+                                }
+                            ]
+                        }
+                    ]
+                ],
+                "modals": [
+                    {
+                        "title": "Input Page Number",
+                        "customId": "LEADER_MODAL",
+                        "components": [
+                            {
+                                "type": 1,
+                                "components": [
+                                    {
+                                        "type": 4,
+                                        "customId": "LEADER_PAGE_INPUT",
+                                        "label": "PAGE NUMBER",
                                         "style": 1,
                                         "required": true
                                     }
@@ -1381,6 +1508,9 @@
         "badge": "#4D4278",
         "powerup": "#40DEA9",
         "bucks": "#00AA00",
+        "gold": "#FCBA03",
+        "silver": "#BABABA",
+        "bronze": "#96460C",
         "green": "#55FF55",
         "maintenance": "#FFFF00",
         "error": "#FF5555",
