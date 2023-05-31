@@ -368,7 +368,7 @@ export class BoarGift {
             await DataHandlers.getGuildData(inter.guild?.id, inter), inter, rarityWeights, false, 0, this.config
         );
 
-        await this.giftedUser.addBoars(boarIDs, inter, this.config);
+        const editions: number[] = await this.giftedUser.addBoars(boarIDs, inter, this.config);
 
         await inter.editReply({
             files: [
@@ -381,5 +381,16 @@ export class BoarGift {
             ],
             components: []
         });
+
+        for (const edition of editions) {
+            if (edition !== 1) continue;
+            await inter.followUp({
+                files: [
+                    await new ItemImageGenerator(
+                        inter.user, 'racer', this.config.stringConfig.giveTitle, this.config
+                    ).handleImageCreate()
+                ]
+            });
+        }
     }
 }

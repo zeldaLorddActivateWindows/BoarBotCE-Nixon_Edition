@@ -89,6 +89,7 @@ export class Replies {
      * @param coloredContent - Secondary text to color
      * @param color2 - Secondary color
      * @param forceFollowup - Forces interaction reply to be a followup
+     * @param ephemeral
      */
     public static async handleReply(
         interaction: ChatInputCommandInteraction | MessageComponentInteraction | ModalSubmitInteraction,
@@ -96,7 +97,8 @@ export class Replies {
         color: string = BoarBotApp.getBot().getConfig().colorConfig.font,
         coloredContent?: string,
         color2?: string,
-        forceFollowup: boolean = false
+        forceFollowup: boolean = false,
+        ephemeral: boolean = true
     ): Promise<void> {
         const embedImage: AttachmentBuilder = CustomEmbedGenerator.makeEmbed(
             content, color, BoarBotApp.getBot().getConfig(), coloredContent, color2
@@ -113,14 +115,14 @@ export class Replies {
                 content: '',
                 files: [embedImage],
                 components: [],
-                ephemeral: true
+                ephemeral: ephemeral
             });
         } else {
             await interaction.reply({
                 content: '',
                 files: [embedImage],
                 components: [],
-                ephemeral: true
+                ephemeral: ephemeral
             });
         }
     }

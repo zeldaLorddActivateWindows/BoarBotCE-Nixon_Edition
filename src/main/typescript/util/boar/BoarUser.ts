@@ -236,7 +236,7 @@ export class BoarUser {
         interaction: ChatInputCommandInteraction | MessageComponentInteraction,
         config: BotConfig,
         scores: number[] = []
-    ): Promise<void> {
+    ): Promise<number[]> {
         // Config aliases
         const pathConfig: PathConfig = config.pathConfig;
         const strConfig: StringConfig = config.stringConfig;
@@ -259,11 +259,12 @@ export class BoarUser {
         for (const info of rarityInfos) {
             if (Object.keys(info).length === 0 || boarIDs.length === 0) {
                 await LogDebug.handleError(strConfig.dailyNoBoarFound, interaction);
-                return;
+                return [];
             }
         }
 
-        let boarEdition: number = 0;
+        const boarEditions: number[] = [];
+        const racerEditions: number[] = [];
 
         // Updates global edition data
         await Queue.addQueue(() => {
@@ -272,9 +273,15 @@ export class BoarUser {
 
             // Sets edition numbers
             for (const boarID of boarIDs) {
-                if (!globalData.editions[boarID])
+                if (!globalData.editions[boarID]) {
                     globalData.editions[boarID] = 0;
-                boarEdition = ++globalData.editions[boarID];
+                    const specialEdition: number = globalData.editions['racer'] = globalData.editions['racer']
+                        ? ++globalData.editions['racer']
+                        : 1;
+
+                    racerEditions.push(specialEdition);
+                }
+                boarEditions.push(++globalData.editions[boarID]);
             }
 
             fs.writeFileSync(pathConfig.globalDataFile, JSON.stringify(globalData));
@@ -297,8 +304,8 @@ export class BoarUser {
                 this.boarCollection[boarID].num++;
                 this.boarCollection[boarID].lastObtained = Date.now();
 
-                if (boarEdition <= numConfig.maxTrackedEditions || rarityInfos[i].name === 'Special') {
-                    this.boarCollection[boarID].editions.push(boarEdition);
+                if (boarEditions[i] <= numConfig.maxTrackedEditions || rarityInfos[i].name === 'Special') {
+                    this.boarCollection[boarID].editions.push(boarEditions[i]);
                     this.boarCollection[boarID].editions.sort((a, b) => a-b);
                     this.boarCollection[boarID].editionDates.push(Date.now());
                     this.boarCollection[boarID].editionDates.sort((a, b) => a-b);
@@ -315,7 +322,32 @@ export class BoarUser {
             LogDebug.sendDebug('Finished updating user info.', config, interaction);
         }, interaction.id + interaction.user.id);
 
+        if (racerEditions.length > 0) {
+            await Queue.addQueue(async () => {
+                if (!this.boarCollection['racer']) {
+                    this.boarCollection['racer'] = new CollectedBoar;
+                    this.boarCollection['racer'].firstObtained = Date.now();
+                }
+
+                this.boarCollection['racer'].num += racerEditions.length;
+                this.boarCollection['racer'].lastObtained = Date.now();
+
+                this.boarCollection['racer'].editions = this.boarCollection['racer'].editions.concat(racerEditions);
+                this.boarCollection['racer'].editions.sort((a, b) => a - b);
+                this.boarCollection['racer'].editionDates =
+                    this.boarCollection['racer'].editionDates.concat(Array(racerEditions.length).fill(Date.now()));
+                this.boarCollection['racer'].editionDates.sort((a, b) => a - b);
+
+                this.lastBoar = 'racer';
+
+                this.updateUserData();
+                await this.orderBoars(interaction, config);
+            }, interaction.id + interaction.user.id);
+        }
+
         await Queue.addQueue(() => DataHandlers.updateLeaderboardData(this), interaction.id + 'global');
+
+        return boarEditions;
     }
 
     /**

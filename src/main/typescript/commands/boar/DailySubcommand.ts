@@ -145,7 +145,7 @@ export default class DailySubcommand implements Subcommand {
             );
         }
 
-        await boarUser.addBoars(boarIDs, this.interaction, this.config, randScores);
+        const editions: number[] = await boarUser.addBoars(boarIDs, this.interaction, this.config, randScores);
 
         // Gets item images for each boar
         for (let i=0; i<boarIDs.length; i++) {
@@ -164,6 +164,17 @@ export default class DailySubcommand implements Subcommand {
             } else {
                 await this.interaction.followUp({ files: [attachments[i]] })
             }
+        }
+
+        for (const edition of editions) {
+            if (edition !== 1) continue;
+            await this.interaction.followUp({
+                files: [
+                    await new ItemImageGenerator(
+                        this.interaction.user, 'racer', this.config.stringConfig.giveTitle, this.config
+                    ).handleImageCreate()
+                ]
+            });
         }
 
         let coloredText: string = '';

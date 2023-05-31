@@ -660,6 +660,100 @@
                         ]
                     }
                 ]
+            },
+            "market": {
+                "name": "market",
+                "description": "Buy and sell boars/items",
+                "args": [
+                    {
+                        "name": "view",
+                        "description": "What view to start off in (Overview, Buy/Sell)",
+                        "choices": [
+                            {
+                                "name": "Overview",
+                                "value": 0
+                            },
+                            {
+                                "name": "Items",
+                                "value": 1
+                            }
+                        ]
+                    },
+                    {
+                        "name": "page",
+                        "description": "The page to start out on"
+                    }
+                ],
+                "cooldown": true,
+                "componentFields": [
+                    [
+                        {
+                            "type": 1,
+                            "components": [
+                                {
+                                    "type": 2,
+                                    "customId": "MARKET_BACK",
+                                    "emoji": "<:back:1073072529507369072>",
+                                    "style": 2,
+                                    "disabled": true
+                                },
+                                {
+                                    "type": 2,
+                                    "customId": "MARKET_PAGE",
+                                    "emoji": "\uD83D\uDCDD",
+                                    "style": 2,
+                                    "disabled": true
+                                },
+                                {
+                                    "type": 2,
+                                    "customId": "MARKET_FORWARD",
+                                    "emoji": "<:forward:1073071982096175184>",
+                                    "style": 2,
+                                    "disabled": true
+                                }
+                            ]
+                        },
+                        {
+                            "type": 1,
+                            "components": [
+                                {
+                                    "type": 2,
+                                    "customId": "MARKET_OVERVIEW",
+                                    "label": "Overview",
+                                    "style": 1,
+                                    "disabled": true
+                                },
+                                {
+                                    "type": 2,
+                                    "customId": "MARKET_BUYSELL",
+                                    "label": "Buy/Sell",
+                                    "style": 1,
+                                    "disabled": true
+                                }
+                            ]
+                        }
+                    ]
+                ],
+                "modals": [
+                    {
+                        "title": "Input Page Number or Boar/Item Name",
+                        "customId": "MARKET_MODAL",
+                        "components": [
+                            {
+                                "type": 1,
+                                "components": [
+                                    {
+                                        "type": 4,
+                                        "customId": "MARKET_PAGE_INPUT",
+                                        "label": "PAGE NUMBER/ITEM NAME",
+                                        "style": 1,
+                                        "required": true
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
             }
         },
         "boarManage": {
@@ -1351,6 +1445,13 @@
             "description": "This boar takes explosion to a whole other level, fusing its cells with gunpowder to create bigger explosions. Awarded to those who find and report several bugs.",
             "isSB": false,
             "blacklisted": false
+        },
+        "racer": {
+            "name": "Racer Boar",
+            "file": "RacerBoar.png",
+            "description": "The fastest boar of all time. Races in a car to make it fair to others. Awarded to those who obtain the first edition of any non-special boar.",
+            "isSB": false,
+            "blacklisted": false
         }
     },
     "badgeItemConfigs": {
@@ -1496,7 +1597,8 @@
             "fromDaily": false,
             "enhancersNeeded": 0,
             "boars": [
-                "gamebreaker"
+                "gamebreaker",
+                "racer"
             ]
         }
     ],

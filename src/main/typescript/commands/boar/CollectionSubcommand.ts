@@ -33,6 +33,7 @@ import {StringConfig} from '../../bot/config/StringConfig';
 import {ModalConfig} from '../../bot/config/modals/ModalConfig';
 import {CollectedBoar} from '../../util/boar/CollectedBoar';
 import {BoarItemConfig} from '../../bot/config/items/BoarItemConfig';
+import {ItemImageGenerator} from '../../util/generators/ItemImageGenerator';
 
 enum View {
     Normal,
@@ -305,7 +306,7 @@ export default class CollectionSubcommand implements Subcommand {
             this.boarUser.updateUserData();
         }, this.compInter.id + this.compInter.user.id);
 
-        await this.boarUser.addBoars([enhancedBoar], this.firstInter, this.config);
+        const editions: number[] = await this.boarUser.addBoars([enhancedBoar], this.firstInter, this.config);
 
         await Queue.addQueue(() => this.getUserInfo(this.boarUser.user), this.compInter.id + this.boarUser.user.id);
 
@@ -317,6 +318,17 @@ export default class CollectionSubcommand implements Subcommand {
             this.config.colorConfig.font, this.allBoars[this.curPage].name,
             this.allBoars[this.curPage].color, true
         );
+
+        for (const edition of editions) {
+            if (edition !== 1) continue;
+            await this.compInter.followUp({
+                files: [
+                    await new ItemImageGenerator(
+                        this.compInter.user, 'racer', this.config.stringConfig.giveTitle, this.config
+                    ).handleImageCreate()
+                ]
+            });
+        }
 
         this.collectionImage.updateInfo(this.boarUser, this.allBoars, this.config);
         await this.collectionImage.createNormalBase();
