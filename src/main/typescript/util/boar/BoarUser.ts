@@ -10,13 +10,18 @@ import {RarityConfig} from '../../bot/config/items/RarityConfig';
 import {Queue} from '../interactions/Queue';
 import {DataHandlers} from '../data/DataHandlers';
 import {LogDebug} from '../logging/LogDebug';
-import {CollectedBoar} from './CollectedBoar';
-import {PowerupData} from './PowerupData';
-import {PromptTypeData} from './PromptTypeData';
+import {CollectedBoar} from '../data/userdata/collectibles/CollectedBoar';
+import {PromptTypeData} from '../data/userdata/stats/PromptTypeData';
 import {BoarUtils} from './BoarUtils';
 import {NumberConfig} from '../../bot/config/NumberConfig';
 import {PathConfig} from '../../bot/config/PathConfig';
 import {StringConfig} from '../../bot/config/StringConfig';
+import {CollectedItems} from '../data/userdata/collectibles/CollectedItems';
+import {UserStats} from '../data/userdata/stats/UserStats';
+import {CollectedBadge} from '../data/userdata/collectibles/CollectedBadge';
+import {CollectedPowerup} from '../data/userdata/collectibles/CollectedPowerup';
+import {GlobalData} from '../data/global/GlobalData';
+import {ItemData} from '../data/global/ItemData';
 
 /**
  * {@link BoarUser BoarUser.ts}
@@ -30,19 +35,8 @@ import {StringConfig} from '../../bot/config/StringConfig';
 export class BoarUser {
     public readonly user: User;
 
-    public lastDaily: number = 0;
-    public numDailies: number = 0;
-    public totalBoars: number = 0;
-    public boarScore: number = 0;
-    public favoriteBoar: string = '';
-    public lastBoar: string = '';
-    public firstDaily: number = 0;
-    public boarStreak: number = 0;
-    public powerups: PowerupData = new PowerupData;
-    public theme: string = 'normal';
-    public themes: string[] = ['normal'];
-    public badges: string[] = [];
-    public boarCollection: Record<string, CollectedBoar> = {};
+    public itemCollection: CollectedItems = new CollectedItems;
+    public stats: UserStats = new UserStats;
 
     /**
      * Creates a new BoarUser from data file.
@@ -55,7 +49,7 @@ export class BoarUser {
 
         const userData: any = this.refreshUserData(createFile);
 
-        if (createFile || this.boarStreak > 0) {
+        if (createFile || this.stats.general.boarStreak > 0) {
             this.fixUserData(userData);
         }
     }
@@ -95,19 +89,8 @@ export class BoarUser {
     public updateUserData(): void {
         const userData: any = this.getUserData();
 
-        userData.lastDaily = this.lastDaily;
-        userData.numDailies = this.numDailies;
-        userData.boarScore = this.boarScore;
-        userData.totalBoars = this.totalBoars;
-        userData.favoriteBoar = this.favoriteBoar;
-        userData.lastBoar = this.lastBoar;
-        userData.firstDaily = this.firstDaily;
-        userData.boarStreak = this.boarStreak;
-        userData.powerups = this.powerups;
-        userData.theme = this.theme;
-        userData.themes = this.themes;
-        userData.badges = this.badges;
-        userData.boarCollection = this.boarCollection;
+        userData.itemCollection = this.itemCollection;
+        userData.stats = this.stats;
 
         this.fixUserData(userData);
     }
@@ -120,19 +103,8 @@ export class BoarUser {
     public refreshUserData(createFile: boolean = false): any {
         const userData: any = this.getUserData(createFile);
 
-        this.lastDaily = userData.lastDaily;
-        this.numDailies = userData.numDailies;
-        this.totalBoars = userData.totalBoars;
-        this.boarScore = userData.boarScore;
-        this.favoriteBoar = userData.favoriteBoar;
-        this.lastBoar = userData.lastBoar;
-        this.firstDaily = userData.firstDaily;
-        this.boarStreak = userData.boarStreak;
-        this.powerups = userData.powerups;
-        this.theme = userData.theme;
-        this.themes = userData.themes;
-        this.badges = userData.badges;
-        this.boarCollection = userData.boarCollection;
+        this.itemCollection = userData.itemCollection;
+        this.stats = userData.stats;
 
         return userData;
     }
@@ -148,59 +120,78 @@ export class BoarUser {
         const config: BotConfig = BoarBotApp.getBot().getConfig();
         const userFile: string = config.pathConfig.userDataFolder + this.user.id + '.json';
 
-        const boarsGottenIDs: string[] = Object.keys(this.boarCollection);
+        const boarsGottenIDs: string[] = Object.keys(this.itemCollection.boars);
         const twoDailiesAgo: number = Math.floor(new Date().setUTCHours(24,0,0,0)) - (1000 * 60 * 60 * 24 * 2);
 
         const nums: NumberConfig = BoarBotApp.getBot().getConfig().numberConfig;
 
         for (const boarID of boarsGottenIDs) {
-            if (boarID !in config.boarItemConfigs) continue;
+            if (boarID !in config.itemConfigs.boars) continue;
 
-            this.totalBoars -= this.boarCollection[boarID].num;
-            delete this.boarCollection[boarID];
+            this.stats.general.totalBoars -= this.itemCollection.boars[boarID].num;
+            delete this.itemCollection.boars[boarID];
 
-            if (this.lastBoar === boarID)
-                this.lastBoar = '';
+            if (this.stats.general.lastBoar === boarID)
+                this.stats.general.lastBoar = '';
 
-            if (this.favoriteBoar === boarID)
-                this.favoriteBoar = '';
+            if (this.stats.general.favoriteBoar === boarID)
+                this.stats.general.favoriteBoar = '';
         }
 
-        for (const promptType of Object.keys(config.powerupConfig.promptTypes)) {
-            if (!this.powerups.promptData[promptType]) {
-                this.powerups.promptData[promptType] = new PromptTypeData;
+        for (const promptType of Object.keys(config.promptConfigs.types)) {
+            if (!this.stats.powerups.prompts[promptType]) {
+                this.stats.powerups.prompts[promptType] = new PromptTypeData;
             }
         }
 
-        for (const promptType of Object.keys(this.powerups.promptData)) {
-            if (!config.powerupConfig.promptTypes[promptType]) {
-                delete this.powerups.promptData[promptType];
+        for (const promptType of Object.keys(this.stats.powerups.prompts)) {
+            if (!config.promptConfigs.types[promptType]) {
+                delete this.stats.powerups.prompts[promptType];
                 continue;
             }
 
-            for (const promptID of Object.keys(this.powerups.promptData[promptType])) {
+            for (const promptID of Object.keys(this.stats.powerups.prompts[promptType])) {
                 if (!this.promptExists(promptType, promptID, config)) {
-                    delete this.powerups.promptData[promptType][promptID];
+                    delete this.stats.powerups.prompts[promptType][promptID];
                 }
             }
         }
 
-        this.powerups.multiplier = Math.min(this.powerups.multiplier, nums.maxMulti);
-        this.powerups.multiBoostTotal = Math.min(this.powerups.multiBoostTotal, nums.maxMultiBoost);
-        this.powerups.numGifts = Math.min(this.powerups.numGifts, nums.maxPowBase);
-        this.powerups.extraChanceTotal = Math.min(this.powerups.extraChanceTotal, nums.maxExtraChance);
-        this.powerups.numEnhancers = Math.min(this.powerups.numEnhancers, nums.maxEnhancers);
-
-        userData.boarCollection = this.boarCollection;
-        userData.totalBoars = this.totalBoars;
-        userData.favoriteBoar = this.favoriteBoar;
-        userData.lastBoar = this.lastBoar;
-        userData.powerups = this.powerups;
-
-        if (this.lastDaily < twoDailiesAgo) {
-            userData.powerups.multiplier = this.powerups.multiplier -= this.boarStreak;
-            userData.boarStreak = this.boarStreak = 0;
+        if (!this.itemCollection.powerups.multiBoost) {
+            this.itemCollection.powerups.multiBoost = new CollectedPowerup;
         }
+
+        if (!this.itemCollection.powerups.gift) {
+            this.itemCollection.powerups.gift = new CollectedPowerup;
+            this.itemCollection.powerups.gift.numOpened = 0;
+        }
+
+        if (!this.itemCollection.powerups.extraChance) {
+            this.itemCollection.powerups.extraChance = new CollectedPowerup;
+        }
+
+        if (!this.itemCollection.powerups.enhancer) {
+            this.itemCollection.powerups.enhancer = new CollectedPowerup;
+            this.itemCollection.powerups.enhancer.raritiesUsed = [0,0,0,0,0,0,0];
+        }
+
+        this.stats.general.multiplier = Math.min(this.stats.general.multiplier, nums.maxMulti);
+        this.itemCollection.powerups.multiBoost.numTotal =
+            Math.min(this.itemCollection.powerups.multiBoost.numTotal, nums.maxMultiBoost);
+        this.itemCollection.powerups.gift.numTotal =
+            Math.min(this.itemCollection.powerups.gift.numTotal, nums.maxPowBase);
+        this.itemCollection.powerups.extraChance.numTotal =
+            Math.min(this.itemCollection.powerups.extraChance.numTotal, nums.maxExtraChance);
+        this.itemCollection.powerups.enhancer.numTotal =
+            Math.min(this.itemCollection.powerups.enhancer.numTotal, nums.maxEnhancers);
+
+        if (this.stats.general.lastDaily < twoDailiesAgo) {
+            this.stats.general.multiplier -= this.stats.general.boarStreak;
+            this.stats.general.boarStreak = 0;
+        }
+
+        userData.itemCollection = this.itemCollection;
+        userData.stats = this.stats;
 
         fs.writeFileSync(userFile, JSON.stringify(userData));
     }
@@ -214,7 +205,7 @@ export class BoarUser {
      * @private
      */
     private promptExists(promptType: string, promptID: string, config: BotConfig): boolean {
-        const promptIDs: string[] = Object.keys(config.powerupConfig.promptTypes[promptType]);
+        const promptIDs: string[] = Object.keys(config.promptConfigs.types[promptType]);
 
         for (let i=0; i<promptIDs.length; i++) {
             if (promptIDs[i] === promptID) return true;
@@ -269,21 +260,28 @@ export class BoarUser {
         // Updates global edition data
         await Queue.addQueue(() => {
             LogDebug.sendDebug('Updating global edition info...', config, interaction);
-            const globalData: any = DataHandlers.getGlobalData();
+            const globalData: GlobalData = DataHandlers.getGlobalData();
 
             // Sets edition numbers
             for (const boarID of boarIDs) {
-                if (!globalData.editions[boarID]) {
-                    globalData.editions[boarID] = 0;
-                    const specialEdition: number = globalData.editions['racer'] = globalData.editions['racer']
-                        ? ++globalData.editions['racer']
-                        : 1;
+                if (!globalData.itemData.boars[boarID]) {
+                    globalData.itemData.boars[boarID] = new ItemData;
+                    globalData.itemData.boars[boarID].curEdition = 0;
+                    let specialEdition: number = 0;
+
+                    if (!globalData.itemData.boars['racer']) {
+                        globalData.itemData.boars['racer'] = new ItemData;
+                        globalData.itemData.boars['racer'].curEdition = 0;
+                    }
+
+                    specialEdition = ++(globalData.itemData.boars['racer'].curEdition as number);
 
                     racerEditions.push(specialEdition);
                 }
-                boarEditions.push(++globalData.editions[boarID]);
+                boarEditions.push(++(globalData.itemData.boars[boarID].curEdition as number));
             }
 
+            this.orderGlobalBoars(globalData, config);
             fs.writeFileSync(pathConfig.globalDataFile, JSON.stringify(globalData));
             LogDebug.sendDebug('Finished updating global edition info.', config, interaction);
         }, interaction.id + 'global');
@@ -295,27 +293,29 @@ export class BoarUser {
             for (let i=0; i<boarIDs.length; i++) {
                 const boarID: string = boarIDs[i];
 
-                if (!this.boarCollection[boarID]) {
-                    this.boarCollection[boarID] = new CollectedBoar;
-                    this.boarCollection[boarID].firstObtained = Date.now();
-                    this.powerups.multiplier += rarityInfos[i].name === 'Special' ? 0 : 1;
+                if (!this.itemCollection.boars[boarID]) {
+                    this.itemCollection.boars[boarID] = new CollectedBoar;
+                    this.itemCollection.boars[boarID].firstObtained = Date.now();
+                    this.stats.general.multiplier += rarityInfos[i].name === 'Special' ? 0 : 1;
+                    this.stats.general.highestMulti =
+                        Math.max(this.stats.general.multiplier, this.stats.general.highestMulti);
                 }
 
-                this.boarCollection[boarID].num++;
-                this.boarCollection[boarID].lastObtained = Date.now();
+                this.itemCollection.boars[boarID].num++;
+                this.itemCollection.boars[boarID].lastObtained = Date.now();
 
                 if (boarEditions[i] <= numConfig.maxTrackedEditions || rarityInfos[i].name === 'Special') {
-                    this.boarCollection[boarID].editions.push(boarEditions[i]);
-                    this.boarCollection[boarID].editions.sort((a, b) => a-b);
-                    this.boarCollection[boarID].editionDates.push(Date.now());
-                    this.boarCollection[boarID].editionDates.sort((a, b) => a-b);
+                    this.itemCollection.boars[boarID].editions.push(boarEditions[i]);
+                    this.itemCollection.boars[boarID].editions.sort((a, b) => a-b);
+                    this.itemCollection.boars[boarID].editionDates.push(Date.now());
+                    this.itemCollection.boars[boarID].editionDates.sort((a, b) => a-b);
                 }
 
-                this.lastBoar = boarID;
-                this.boarScore += scores[i] ? scores[i] : 0;
+                this.stats.general.lastBoar = boarID;
+                this.stats.general.boarScore += scores[i] ? scores[i] : 0;
             }
 
-            this.totalBoars += boarIDs.length;
+            this.stats.general.totalBoars += boarIDs.length;
 
             this.updateUserData();
             await this.orderBoars(interaction, config);
@@ -324,21 +324,24 @@ export class BoarUser {
 
         if (racerEditions.length > 0) {
             await Queue.addQueue(async () => {
-                if (!this.boarCollection['racer']) {
-                    this.boarCollection['racer'] = new CollectedBoar;
-                    this.boarCollection['racer'].firstObtained = Date.now();
+                if (!this.itemCollection.boars['racer']) {
+                    this.itemCollection.boars['racer'] = new CollectedBoar;
+                    this.itemCollection.boars['racer'].firstObtained = Date.now();
                 }
 
-                this.boarCollection['racer'].num += racerEditions.length;
-                this.boarCollection['racer'].lastObtained = Date.now();
+                this.itemCollection.boars['racer'].num += racerEditions.length;
+                this.itemCollection.boars['racer'].lastObtained = Date.now();
 
-                this.boarCollection['racer'].editions = this.boarCollection['racer'].editions.concat(racerEditions);
-                this.boarCollection['racer'].editions.sort((a, b) => a - b);
-                this.boarCollection['racer'].editionDates =
-                    this.boarCollection['racer'].editionDates.concat(Array(racerEditions.length).fill(Date.now()));
-                this.boarCollection['racer'].editionDates.sort((a, b) => a - b);
+                this.itemCollection.boars['racer'].editions =
+                    this.itemCollection.boars['racer'].editions.concat(racerEditions);
+                this.itemCollection.boars['racer'].editions.sort((a, b) => a - b);
+                this.itemCollection.boars['racer'].editionDates = this.itemCollection.boars['racer'].editionDates
+                    .concat(Array(racerEditions.length).fill(Date.now()));
+                this.itemCollection.boars['racer'].editionDates.sort((a, b) => a - b);
 
-                this.lastBoar = 'racer';
+                this.stats.general.lastBoar = 'racer';
+
+                this.stats.general.totalBoars += racerEditions.length;
 
                 this.updateUserData();
                 await this.orderBoars(interaction, config);
@@ -366,22 +369,31 @@ export class BoarUser {
         let hasBadge: boolean = false;
 
         if (inQueue) {
-            hasBadge = this.badges.includes(badgeID);
-            if (hasBadge) return hasBadge;
-
-            this.badges.push(badgeID);
+            hasBadge = this.addBadgeToUser(badgeID);
             this.updateUserData();
         } else {
             await Queue.addQueue(async () => {
                 this.refreshUserData();
-                hasBadge = this.badges.includes(badgeID);
-                if (hasBadge) return;
-
-                this.badges.push(badgeID);
+                hasBadge = this.addBadgeToUser(badgeID);
                 this.updateUserData();
             }, interaction.id + interaction.user.id);
         }
 
+        return hasBadge;
+    }
+
+    private addBadgeToUser(badgeID: string): boolean {
+        const hasBadge = this.itemCollection.badges[badgeID] !== undefined &&
+            this.itemCollection.badges[badgeID].possession;
+        if (hasBadge) return hasBadge;
+
+        if (!this.itemCollection.badges[badgeID]) {
+            this.itemCollection.badges[badgeID] = new CollectedBadge;
+            this.itemCollection.badges[badgeID].firstObtained = Date.now();
+        }
+
+        this.itemCollection.badges[badgeID].possession = true;
+        this.itemCollection.badges[badgeID].curObtained = Date.now();
         return hasBadge;
     }
 
@@ -393,9 +405,12 @@ export class BoarUser {
     public async removeBadge(
         badgeID: string
     ): Promise<void> {
-        if (!this.badges.includes(badgeID)) return;
+        if (!this.itemCollection.badges[badgeID] || !this.itemCollection.badges[badgeID].possession) return;
 
-        this.badges.splice(this.badges.indexOf(badgeID), 1);
+        this.itemCollection.badges[badgeID].possession = false;
+        this.itemCollection.badges[badgeID].curObtained = -1;
+        this.itemCollection.badges[badgeID].lastLost = Date.now();
+        this.itemCollection.badges[badgeID].timesLost++;
         this.updateUserData();
     }
 
@@ -409,9 +424,17 @@ export class BoarUser {
         interaction: ChatInputCommandInteraction | MessageComponentInteraction,
         config: BotConfig
     ): Promise<void> {
+        const obtainedBoars: string[] = Object.keys(this.itemCollection.boars);
+
+        if (
+            obtainedBoars.length === Object.keys(config.itemConfigs.boars).length &&
+            this.itemCollection.badges['hunter'] && this.itemCollection.badges['hunter'].possession
+        ) {
+            return;
+        }
+
         const orderedRarities: RarityConfig[] = [...config.rarityConfigs]
             .sort((rarity1, rarity2) => { return rarity1.weight - rarity2.weight; });
-        const obtainedBoars: string[] = Object.keys(this.boarCollection);
         let numSpecial: number = 0;
         let numZeroBoars: number = 0;
 
@@ -430,21 +453,21 @@ export class BoarUser {
 
             // Looping through user's boar collection
             for (let j=0; j<obtainedBoars.length; j++) {
-                const curBoarID: string = obtainedBoars[j];                        // ID of current boar
-                const curBoarData: CollectedBoar = this.boarCollection[curBoarID]; // Data of current boar
+                const curBoarID: string = obtainedBoars[j];                              // ID of current boar
+                const curBoarData: CollectedBoar = this.itemCollection.boars[curBoarID]; // Data of current boar
 
                 if (!boarsOfRarity.includes(curBoarID) || orderedBoars.includes(curBoarID))
                     continue;
 
                 // Removes boar from front and add it to the back of the list to refresh the order
-                delete this.boarCollection[curBoarID];
-                this.boarCollection[curBoarID] = curBoarData;
+                delete this.itemCollection.boars[curBoarID];
+                this.itemCollection.boars[curBoarID] = curBoarData;
 
                 if (rarity.name == 'Special') {
                     numSpecial++;
                 }
 
-                if (this.boarCollection[curBoarID].num == 0) {
+                if (this.itemCollection.boars[curBoarID].num == 0) {
                     numZeroBoars++;
                 }
 
@@ -460,5 +483,36 @@ export class BoarUser {
         }
 
         this.updateUserData();
+    }
+
+    private orderGlobalBoars(globalData: GlobalData, config: BotConfig): void {
+        const globalBoars: string[] = Object.keys(globalData.itemData.boars);
+
+        if (globalBoars.length === Object.keys(config.itemConfigs.boars).length) return;
+
+        const orderedRarities: RarityConfig[] = [...config.rarityConfigs]
+            .sort((rarity1, rarity2) => { return rarity1.weight - rarity2.weight; });
+
+        // Looping through all boar classes (Common -> Special)
+        for (const rarity of orderedRarities) {
+            const orderedBoars: string[] = [];
+            const boarsOfRarity: string[] = rarity.boars;
+
+            // Looping through user's boar collection
+            for (let j=0; j<globalBoars.length; j++) {
+                const curBoarID: string = globalBoars[j];                           // ID of current boar
+                const curBoarData: ItemData = globalData.itemData.boars[curBoarID]; // Data of current boar
+
+                if (!boarsOfRarity.includes(curBoarID) || orderedBoars.includes(curBoarID))
+                    continue;
+
+                // Removes boar from front and add it to the back of the list to refresh the order
+                delete globalData.itemData.boars[curBoarID];
+                globalData.itemData.boars[curBoarID] = curBoarData;
+
+                orderedBoars.push(curBoarID);
+                j--;
+            }
+        }
     }
 }

@@ -9,7 +9,7 @@ import {BotConfig} from '../../bot/config/BotConfig';
 import {DataHandlers} from '../data/DataHandlers';
 import {Replies} from './Replies';
 import {LogDebug} from '../logging/LogDebug';
-import {GuildData} from '../data/GuildData';
+import {GuildData} from '../data/global/GuildData';
 
 /**
  * {@link InteractionUtils InteractionUtils.ts}
@@ -83,7 +83,7 @@ export class InteractionUtils {
 
         const memberMePerms: PermissionsString[] = memberMe.permissions.toArray();
         if (!memberMePerms.includes('SendMessages')) {
-            LogDebug.handleError('Bot doesn\'t have permission to send messages to channel.', undefined, false);
+            LogDebug.handleError('Bot doesn\'t have permission to send messages to channel.');
             return;
         }
 

@@ -21,7 +21,7 @@ import {InteractionUtils} from '../util/interactions/InteractionUtils';
 import {PowerupSpawner} from '../util/boar/PowerupSpawner';
 import {Queue} from '../util/interactions/Queue';
 import {DataHandlers} from '../util/data/DataHandlers';
-import {GuildData} from '../util/data/GuildData';
+import {GuildData} from '../util/data/global/GuildData';
 
 dotenv.config();
 
@@ -66,11 +66,6 @@ export class BoarBot implements Bot {
 			],
 			intents: [
 				GatewayIntentBits.Guilds,
-				GatewayIntentBits.GuildMessages,
-				GatewayIntentBits.GuildMessageReactions,
-				GatewayIntentBits.GuildEmojisAndStickers,
-				GatewayIntentBits.GuildMembers,
-				GatewayIntentBits.MessageContent,
 				GatewayIntentBits.DirectMessages
 			]
 		});

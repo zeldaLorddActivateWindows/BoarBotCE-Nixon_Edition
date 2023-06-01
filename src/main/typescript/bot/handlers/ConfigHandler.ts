@@ -4,9 +4,8 @@ import {registerFont} from 'canvas';
 import moment from 'moment/moment';
 import {LogDebug} from '../../util/logging/LogDebug';
 import {RarityConfig} from '../config/items/RarityConfig';
-import {BoarItemConfigs} from '../config/items/BoarItemConfigs';
-import {BadgeItemConfigs} from '../config/items/BadgeItemConfigs';
 import {PathConfig} from '../config/PathConfig';
+import {ItemConfigs} from '../config/items/ItemConfigs';
 
 /**
  * {@link ConfigHandler ConfigHandler.ts}
@@ -58,9 +57,9 @@ export class ConfigHandler {
      */
     private async validateConfig(parsedConfig: BotConfig): Promise<boolean> {
         const rarities: RarityConfig[] = parsedConfig.rarityConfigs;
-        const boars: BoarItemConfigs = parsedConfig.boarItemConfigs;
+        const boars: ItemConfigs = parsedConfig.itemConfigs.boars;
         const boarIDs: string[] = Object.keys(boars);
-        const badges: BadgeItemConfigs = parsedConfig.badgeItemConfigs;
+        const badges: ItemConfigs = parsedConfig.itemConfigs.badges;
         const badgeIDs: string[] = Object.keys(badges);
         const foundBoars: string[] = [];
 

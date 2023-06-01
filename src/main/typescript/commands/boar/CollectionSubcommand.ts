@@ -27,13 +27,13 @@ import {FormatStrings} from '../../util/discord/FormatStrings';
 import {RarityConfig} from '../../bot/config/items/RarityConfig';
 import createRBTree, {Node, Tree} from 'functional-red-black-tree';
 import {BoarGift} from '../../util/boar/BoarGift';
-import {GuildData} from '../../util/data/GuildData';
+import {GuildData} from '../../util/data/global/GuildData';
 import {RowConfig} from '../../bot/config/components/RowConfig';
 import {StringConfig} from '../../bot/config/StringConfig';
 import {ModalConfig} from '../../bot/config/modals/ModalConfig';
-import {CollectedBoar} from '../../util/boar/CollectedBoar';
-import {BoarItemConfig} from '../../bot/config/items/BoarItemConfig';
+import {CollectedBoar} from '../../util/data/userdata/collectibles/CollectedBoar';
 import {ItemImageGenerator} from '../../util/generators/ItemImageGenerator';
+import {ItemConfig} from '../../bot/config/items/ItemConfig';
 
 enum View {
     Normal,
@@ -208,7 +208,7 @@ export default class CollectionSubcommand implements Subcommand {
                 case collComponents.favorite.customId:
                     await Queue.addQueue(() => {
                         this.boarUser.refreshUserData();
-                        this.boarUser.favoriteBoar = this.allBoars[this.curPage].id;
+                        this.boarUser.stats.general.favoriteBoar = this.allBoars[this.curPage].id;
                         this.boarUser.updateUserData();
                     }, inter.id + this.boarUser.user.id);
                     break;
@@ -232,8 +232,8 @@ export default class CollectionSubcommand implements Subcommand {
                 case collComponents.gift.customId:
                     await Queue.addQueue(() => {
                         this.boarUser.refreshUserData();
-                        this.boarUser.powerups.numGifts--;
-                        this.boarUser.powerups.giftsUsed++;
+                        this.boarUser.itemCollection.powerups.gift.numTotal--;
+                        this.boarUser.itemCollection.powerups.gift.numUsed++;
                         this.boarUser.updateUserData();
                     }, inter.id + this.boarUser.user.id);
                     await new BoarGift(this.boarUser, this.collectionImage, this.config).sendMessage(inter);
@@ -299,10 +299,13 @@ export default class CollectionSubcommand implements Subcommand {
         await Queue.addQueue(() => {
             const enhancersUsed = this.allBoars[this.curPage].rarity[1].enhancersNeeded;
             this.boarUser.refreshUserData();
-            this.boarUser.boarCollection[this.allBoars[this.curPage].id].num--;
-            this.boarUser.boarScore -= enhancersUsed * 5;
-            this.boarUser.powerups.numEnhancers -= enhancersUsed;
-            this.boarUser.powerups.enhancedRarities[this.allBoars[this.curPage].rarity[0]-1]++;
+            this.boarUser.itemCollection.boars[this.allBoars[this.curPage].id].num--;
+            this.boarUser.itemCollection.boars[this.allBoars[this.curPage].id].editions.pop();
+            this.boarUser.itemCollection.boars[this.allBoars[this.curPage].id].editionDates.pop();
+            this.boarUser.stats.general.boarScore -= enhancersUsed * 5;
+            this.boarUser.itemCollection.powerups.enhancer.numTotal -= enhancersUsed;
+            (this.boarUser.itemCollection.powerups.enhancer.raritiesUsed as number[])
+                [this.allBoars[this.curPage].rarity[0]-1]++;
             this.boarUser.updateUserData();
         }, this.compInter.id + this.compInter.user.id);
 
@@ -311,7 +314,7 @@ export default class CollectionSubcommand implements Subcommand {
         await Queue.addQueue(() => this.getUserInfo(this.boarUser.user), this.compInter.id + this.boarUser.user.id);
 
         this.curPage = this.getPageFromName(
-            this.config.boarItemConfigs[enhancedBoar].name.toLowerCase().replace(/\s+/g, ''), this.allBoarsTree.root
+            this.config.itemConfigs.boars[enhancedBoar].name.toLowerCase().replace(/\s+/g, ''), this.allBoarsTree.root
         ) - 1;
 
         await Replies.handleReply(this.compInter, this.config.stringConfig.enhanceGotten,
@@ -455,16 +458,16 @@ export default class CollectionSubcommand implements Subcommand {
         this.allBoars = [];
 
         // Adds information about each boar in user's boar collection to an array
-        for (const boarID of Object.keys(this.boarUser.boarCollection)) {
+        for (const boarID of Object.keys(this.boarUser.itemCollection.boars)) {
             // Local user boar information
-            const boarInfo: CollectedBoar = this.boarUser.boarCollection[boarID];
+            const boarInfo: CollectedBoar = this.boarUser.itemCollection.boars[boarID];
             if (boarInfo.num === 0) continue;
 
             const rarity: [number, RarityConfig] = BoarUtils.findRarity(boarID, this.config);
             if (rarity[0] === 0) continue;
 
             // Global boar information
-            const boarDetails: BoarItemConfig = this.config.boarItemConfigs[boarID];
+            const boarDetails: ItemConfig = this.config.itemConfigs.boars[boarID];
 
             this.allBoars.push({
                 id: boarID,
@@ -580,7 +583,8 @@ export default class CollectionSubcommand implements Subcommand {
         ) {
             optionalRow.addComponents(this.optionalButtons.components[3]
                 .setDisabled(
-                    this.boarUser.powerups.numEnhancers < this.allBoars[this.curPage].rarity[1].enhancersNeeded ||
+                    this.boarUser.itemCollection.powerups.enhancer.numTotal <
+                    this.allBoars[this.curPage].rarity[1].enhancersNeeded ||
                     this.firstInter.user.id !== this.boarUser.user.id
                 )
             );
@@ -590,7 +594,8 @@ export default class CollectionSubcommand implements Subcommand {
         if (this.curView === View.Powerups) {
             optionalRow.addComponents(
                 this.optionalButtons.components[1].setDisabled(
-                    this.boarUser.powerups.numGifts === 0 || this.firstInter.user.id !== this.boarUser.user.id
+                    this.boarUser.itemCollection.powerups.gift.numTotal === 0 ||
+                    this.firstInter.user.id !== this.boarUser.user.id
                 )
             );
         }

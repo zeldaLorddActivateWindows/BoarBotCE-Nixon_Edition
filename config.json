@@ -976,80 +976,8 @@
             }
         }
     },
-    "powerupConfig": {
-        "multiBoost": {
-            "name": "Multiplier Boost",
-            "pluralName": "Multiplier Boosts",
-            "description": "Boosts your multiplier by adding to its current value, making it more likely to get rarer boars when you do /boar daily.",
-            "tiers": [50, 25, 10]
-        },
-        "gift": {
-            "name": "Boar Gift",
-            "pluralName": "Boar Gifts",
-            "description": "A gift that you can be sent to and opened by other people. Contains boar bucks, boars, rare surprises, and more.",
-            "tiers": [3, 1, 0],
-            "outcomes": [
-                {
-                    "weight": 1,
-                    "category": "Special Boar",
-                    "suboutcomes": []
-                },
-                {
-                    "weight": 400,
-                    "category": "Boar Bucks",
-                    "suboutcomes": [
-                        {
-                            "weight": 90,
-                            "name": "+%@ Boar Bucks"
-                        },
-                        {
-                            "weight": 9,
-                            "name": "+%@ Boar Bucks"
-                        },
-                        {
-                            "weight": 1,
-                            "name": "+%@ Boar Bucks"
-                        }
-                    ]
-                },
-                {
-                    "weight": 199,
-                    "category": "Powerups",
-                    "suboutcomes": [
-                        {
-                            "weight": 45,
-                            "name": "+15 Multiplier Boost"
-                        },
-                        {
-                            "weight": 45,
-                            "name": "+3% Extra Boar Chance"
-                        },
-                        {
-                            "weight": 10,
-                            "name": "+1 Enhancer"
-                        }
-                    ]
-                },
-                {
-                    "weight": 400,
-                    "category": "Random Boar",
-                    "suboutcomes": []
-                }
-            ]
-        },
-        "extraChance": {
-            "name": "Extra Boar Chance",
-            "pluralName": "Extra Boar Chances",
-            "description": "Increases your chance of getting an extra boar when you do /boar daily. Capped at 300%. Multiplier boosts apply to all extra boars.",
-            "tiers": [10, 5, 1]
-        },
-        "enhancer": {
-            "name": "Boar Enhancer",
-            "pluralName": "Boar Enhancers",
-            "description": "Can be used to enhance a boar to a random boar of the next rarity. Capped at 16. Divine is the maximum rarity that can be enhanced.",
-            "tiers": [1, 1, 0]
-        },
-        "promptTypes": {
+    "promptConfigs": {
+        "types": {
             "emojiFind": {
                 "name": "Emoji Find",
                 "description": "Click the emoji that's different from the others!",
@@ -1196,284 +1124,360 @@
             }
         ]
     },
-    "boarItemConfigs": {
-        "normal": {
-            "name": "Normal Boar",
-            "file": "NormalBoar.png",
-            "description": "The origin of all boars. Quite unremarkable.",
-            "isSB": false,
-            "blacklisted": false
+    "itemConfigs": {
+        "boars": {
+            "normal": {
+                "name": "Normal Boar",
+                "file": "NormalBoar.png",
+                "description": "The origin of all boars. Quite unremarkable.",
+                "isSB": false,
+                "blacklisted": false
+            },
+            "explosionless": {
+                "name": "Explosionless Boar",
+                "file": "ExplosionlessBoar.png",
+                "description": "Its mind was blown so hard that it refuses to ignite anymore. If it ever does, though, it's assumed its explosion would be... cataclysmic.",
+                "isSB": false,
+                "blacklisted": false
+            },
+            "tiny": {
+                "name": "Tiny Boar",
+                "file": "TinyBoar.png",
+                "description": "The result of an experiment gone wrong with the Wizard Boar. Has come to terms with its condition by living with ants.",
+                "isSB": false,
+                "blacklisted": false
+            },
+            "carrot": {
+                "name": "Carrot Boar",
+                "file": "CarrotBoar.png",
+                "description": "On the surface, it's indistinguishable from the grass around it. The only one capable of spotting them is Farmer Boar.",
+                "isSB": false,
+                "blacklisted": false
+            },
+            "buff": {
+                "name": "Buff Boar",
+                "file": "BuffBoar.png",
+                "description": "It's said this boar can crush rocks with its bare hands. Stuck in a toxic relationship with Coffee Girl Boar simply for appearances.",
+                "isSB": false,
+                "blacklisted": false
+            },
+            "chocolate": {
+                "name": "Chocolate Boar",
+                "file": "ChocolateBoar.png",
+                "description": "A discontinued chocolate bar from 1999. It was pulled off shelves after traces of boar meat were discovered inside it.",
+                "isSB": false,
+                "blacklisted": false
+            },
+            "emo": {
+                "name": "Emo Boar",
+                "file": "EmoBoar.png",
+                "description": "Is said to be so emotional and sensitive that it can feel the emotions of those around them. Its parents say it's a phase, but it most definitely is not.",
+                "isSB": false,
+                "blacklisted": false
+            },
+            "matrix": {
+                "name": "Matrix Boar",
+                "file": "MatrixBoar.png",
+                "description": "Keeps taking Acetaminophen because of its red color. Believes it's its destiny to save humanity from its AI overlords.",
+                "isSB": false,
+                "blacklisted": false
+            },
+            "soda": {
+                "name": "Soda Boar",
+                "file": "SodaBoar.png",
+                "description": "After much engineering and toil, scientists created this boar, which replaces the signature explosion with a constant stream of soda.",
+                "isSB": false,
+                "blacklisted": false
+            },
+            "clown": {
+                "name": "Clown Boar",
+                "file": "ClownBoar.png",
+                "description": "It is said that this boar was directly modeled after someone that posted cringe on the internet.",
+                "isSB": false,
+                "blacklisted": false
+            },
+            "sphere": {
+                "name": "Sphere Boar",
+                "file": "SphereBoar.gif",
+                "staticFile": "SphereBoarSTATIC.png",
+                "description": "After many millennia of the concretion process, this boar took the form of a perfect sphere. What's at its core? Nobody knows.",
+                "isSB": false,
+                "blacklisted": false
+            },
+            "killer": {
+                "name": "Killer Boar",
+                "file": "KillerBoar.png",
+                "description": "Has a thirst for killing that must be sated every night. If it isn't, chaos is bound to ensue.",
+                "isSB": false,
+                "blacklisted": false
+            },
+            "fish": {
+                "name": "Boarfish",
+                "file": "FishBoar.png",
+                "description": "A highly invasive fish species. It has a friendly personality around humans but vicious predatory instincts for other fish in its environment.",
+                "isSB": false,
+                "blacklisted": false
+            },
+            "fruit": {
+                "name": "Fruit Boar",
+                "file": "FruitBoar.png",
+                "description": "This boar is part of a cult with shape-shifting abilities. Instead of doing anything cool, though, they only shape shift into various fruits.",
+                "isSB": false,
+                "blacklisted": false
+            },
+            "rainy": {
+                "name": "Rainy Boar",
+                "file": "RainyBoar.png",
+                "description": "Cursed by the God of All Boars for something unspeakable, this boar constantly has a rain cloud pouring down around it. Lightning smites it at random intervals.",
+                "isSB": false,
+                "blacklisted": false
+            },
+            "golden": {
+                "name": "Golden Boar",
+                "file": "GoldenBoar.png",
+                "description": "This boar is rumored to be buried deep in the treasures of the Mines of Divan. Since it's 100% pure gold, jewelers use it as a standard for gold quality.",
+                "isSB": true,
+                "blacklisted": false
+            },
+            "creepy": {
+                "name": "Creepy Boar",
+                "file": "CreepyBoar.png",
+                "description": "Looks strikingly similar to a normal boar at first glance, but is actually a paranormal being that lives in the skin of recently perished boars.",
+                "isSB": false,
+                "blacklisted": false
+            },
+            "robot": {
+                "name": "RoboBoar-9000",
+                "file": "RobotBoar.png",
+                "description": "A sentient robot capable of overthrowing the human race but simply decides not to. Matrix Boar is convinced they're up to something nefarious but can't prove it.",
+                "isSB": false,
+                "blacklisted": false
+            },
+            "coffee": {
+                "name": "Coffee Girl Boar",
+                "file": "CoffeeGirlBoar.png",
+                "description": "Rarely seen not drinking coffee. When she's not, she's typically getting her nails done or posting a selfie of herself on social media.",
+                "isSB": false,
+                "blacklisted": false
+            },
+            "moon": {
+                "name": "Moon Boar",
+                "file": "MoonBoar.png",
+                "description": "Moon Boar is actually just the other side of the Moon that we can't see. NASA spends billions a year to keep the secret from getting out.",
+                "isSB": false,
+                "blacklisted": false
+            },
+            "necron": {
+                "name": "Necron Boar",
+                "file": "NecronBoar.png",
+                "description": "One of the five Wither Boars residing on the fifth floor of the Catacombs. Releases nuclear energy inside its body to prevent invaders from seeing its King.",
+                "isSB": true,
+                "blacklisted": false
+            },
+            "wizard": {
+                "name": "Wizard Boar",
+                "file": "WizardBoar.png",
+                "description": "Cheated its way to an Honors Boarwarts diploma. It now performs street magic to pay its bills as it never learned how to actually cast spells.",
+                "isSB": false,
+                "blacklisted": false
+            },
+            "aurora": {
+                "name": "Aurora Boarealis",
+                "file": "AuroraBoar.png",
+                "description": "People travel across the world to see its beauty. It only appears when Moon Boar is eclipsing the sun.",
+                "isSB": false,
+                "blacklisted": false
+            },
+            "minimumwage": {
+                "name": "Minimum Wage Boar",
+                "file": "MinimumWageBoar.png",
+                "description": "One of the smartest boars in the universe. Nobody's quite sure why it works at a fast food restaurant, but there must be a reason.",
+                "isSB": false,
+                "blacklisted": false
+            },
+            "backrooms": {
+                "name": "Backrooms Boar",
+                "file": "BackroomsBoar.png",
+                "description": "This boar fell into the backrooms while recording a skateboarding montage with its friends. Neither it nor the walls around it seem to age.",
+                "isSB": false,
+                "blacklisted": false
+            },
+            "jumpscare": {
+                "name": "Jumpscare Boar",
+                "file": "JumpscareBoar.gif",
+                "staticFile": "JumpscareBoarSTATIC.png",
+                "description": "Shoves its face into peoples' doorbell cameras to make them think it's a Creepy Boar. Creepy Boars abuse this to find new victims.",
+                "isSB": false,
+                "blacklisted": false
+            },
+            "cowboy": {
+                "name": "Cowboar",
+                "file": "CowboyBoar.png",
+                "description": "Unparalleled skills when it comes to the lasso and piloting horses. Refuses to touch any modern technology.",
+                "isSB": false,
+                "blacklisted": false
+            },
+            "realistic": {
+                "name": "Realistic Boar",
+                "file": "RealisticBoar.png",
+                "description": "A taxidermy of a boar that came before the current generation of boars. To have it appeal to modern society, they had to make its head explode.",
+                "isSB": false,
+                "blacklisted": false
+            },
+            "farmer": {
+                "name": "Farmer Boar",
+                "file": "FarmerBoar.png",
+                "description": "Harvests Carrot Boars to sell to Cowboar. Lives a mundane, yet comforting life with a wife and kids.",
+                "isSB": true,
+                "blacklisted": false
+            },
+            "rickroll": {
+                "name": "Rickroll Boar",
+                "file": "RickrollBoar.gif",
+                "staticFile": "RickrollBoarSTATIC.png",
+                "description": "Spreads the word of the God of All Boars. He'll never give you up, nor will he let you down. He'll never run around and... desert you.",
+                "isSB": false,
+                "blacklisted": false
+            },
+            "morbius": {
+                "name": "Boarbius",
+                "file": "Boarbius.png",
+                "description": "A boar whose sense of humor is exclusive to April and May of 2022. Thinks Morbius is the greatest movie of all time.",
+                "isSB": false,
+                "blacklisted": false
+            },
+            "god": {
+                "name": "God of All Boars",
+                "file": "GodofAllBoars.png",
+                "description": "Created all boars in the universe. While it may seem like a divine being, it's actually just an albino boar hellbent on artificially creating new boar species.",
+                "isSB": false,
+                "blacklisted": false
+            },
+            "imposter": {
+                "name": "Imposter Boar",
+                "file": "ImposterBoar.png",
+                "description": "Kills its crew mates on the International Boar Station and frames it as a spacewalking accident. Its kill count is said to be in the dozens.",
+                "isSB": false,
+                "blacklisted": false
+            },
+            "curious": {
+                "name": "Curious Boarge",
+                "file": "CuriousBoarge.png",
+                "description": "With the extinction of all apes, a new mascot for the classic children's book was needed to appeal to modern society.",
+                "isSB": false,
+                "blacklisted": false
+            },
+            "gamebreaker": {
+                "name": "Gameboarker",
+                "file": "Gameboarker.gif",
+                "staticFile": "GameboarkerSTATIC.png",
+                "description": "This boar takes explosion to a whole other level, fusing its cells with gunpowder to create bigger explosions. Awarded to those who find and report several bugs.",
+                "isSB": false,
+                "blacklisted": false
+            },
+            "racer": {
+                "name": "Racer Boar",
+                "file": "RacerBoar.png",
+                "description": "The fastest boar of all time. Races in a car to make it fair to others. Awarded to those who obtain the first edition of any non-special boar.",
+                "isSB": false,
+                "blacklisted": false
+            }
         },
-        "explosionless": {
-            "name": "Explosionless Boar",
-            "file": "ExplosionlessBoar.png",
-            "description": "Its mind was blown so hard that it refuses to ignite anymore. If it ever does, though, it's assumed its explosion would be... cataclysmic.",
-            "isSB": false,
-            "blacklisted": false
+        "badges": {
+            "early_supporter": {
+                "name": "Early Subboarter",
+                "file": "EarlySupporter.png",
+                "description": "Anyone with this badge boosted in the server BoarBot originated in!"
+            },
+            "hunter": {
+                "name": "Boar Hunter",
+                "file": "Hunter.png",
+                "description": "Those that obtain ALL unique boars get this badge!"
+            },
+            "artist": {
+                "name": "Boartist",
+                "file": "Artist.png",
+                "description": "If you made your own boar and it made it into BoarBot, you get this badge!"
+            },
+            "athlete": {
+                "name": "Boarthlete",
+                "file": "Athlete.png",
+                "description": "Only those that are #1 on any leaderboard receive this badge!"
+            }
         },
-        "tiny": {
-            "name": "Tiny Boar",
-            "file": "TinyBoar.png",
-            "description": "The result of an experiment gone wrong with the Wizard Boar. Has come to terms with its condition by living with ants.",
-            "isSB": false,
-            "blacklisted": false
-        },
-        "carrot": {
-            "name": "Carrot Boar",
-            "file": "CarrotBoar.png",
-            "description": "On the surface, it's indistinguishable from the grass around it. The only one capable of spotting them is Farmer Boar.",
-            "isSB": false,
-            "blacklisted": false
-        },
-        "buff": {
-            "name": "Buff Boar",
-            "file": "BuffBoar.png",
-            "description": "It's said this boar can crush rocks with its bare hands. Stuck in a toxic relationship with Coffee Girl Boar simply for appearances.",
-            "isSB": false,
-            "blacklisted": false
-        },
-        "chocolate": {
-            "name": "Chocolate Boar",
-            "file": "ChocolateBoar.png",
-            "description": "A discontinued chocolate bar from 1999. It was pulled off shelves after traces of boar meat were discovered inside it.",
-            "isSB": false,
-            "blacklisted": false
-        },
-        "emo": {
-            "name": "Emo Boar",
-            "file": "EmoBoar.png",
-            "description": "Is said to be so emotional and sensitive that it can feel the emotions of those around them. Its parents say it's a phase, but it most definitely is not.",
-            "isSB": false,
-            "blacklisted": false
-        },
-        "matrix": {
-            "name": "Matrix Boar",
-            "file": "MatrixBoar.png",
-            "description": "Keeps taking Acetaminophen because of its red color. Believes it's its destiny to save humanity from its AI overlords.",
-            "isSB": false,
-            "blacklisted": false
-        },
-        "soda": {
-            "name": "Soda Boar",
-            "file": "SodaBoar.png",
-            "description": "After much engineering and toil, scientists created this boar, which replaces the signature explosion with a constant stream of soda.",
-            "isSB": false,
-            "blacklisted": false
-        },
-        "clown": {
-            "name": "Clown Boar",
-            "file": "ClownBoar.png",
-            "description": "It is said that this boar was directly modeled after someone that posted cringe on the internet.",
-            "isSB": false,
-            "blacklisted": false
-        },
-        "sphere": {
-            "name": "Sphere Boar",
-            "file": "SphereBoar.gif",
-            "staticFile": "SphereBoarSTATIC.png",
-            "description": "After many millennia of the concretion process, this boar took the form of a perfect sphere. What's at its core? Nobody knows.",
-            "isSB": false,
-            "blacklisted": false
-        },
-        "killer": {
-            "name": "Killer Boar",
-            "file": "KillerBoar.png",
-            "description": "Has a thirst for killing that must be sated every night. If it isn't, chaos is bound to ensue.",
-            "isSB": false,
-            "blacklisted": false
-        },
-        "fish": {
-            "name": "Boarfish",
-            "file": "FishBoar.png",
-            "description": "A highly invasive fish species. It has a friendly personality around humans but vicious predatory instincts for other fish in its environment.",
-            "isSB": false,
-            "blacklisted": false
-        },
-        "fruit": {
-            "name": "Fruit Boar",
-            "file": "FruitBoar.png",
-            "description": "This boar is part of a cult with shape-shifting abilities. Instead of doing anything cool, though, they only shape shift into various fruits.",
-            "isSB": false,
-            "blacklisted": false
-        },
-        "rainy": {
-            "name": "Rainy Boar",
-            "file": "RainyBoar.png",
-            "description": "Cursed by the God of All Boars for something unspeakable, this boar constantly has a rain cloud pouring down around it. Lightning smites it at random intervals.",
-            "isSB": false,
-            "blacklisted": false
-        },
-        "golden": {
-            "name": "Golden Boar",
-            "file": "GoldenBoar.png",
-            "description": "This boar is rumored to be buried deep in the treasures of the Mines of Divan. Since it's 100% pure gold, jewelers use it as a standard for gold quality.",
-            "isSB": true,
-            "blacklisted": false
-        },
-        "creepy": {
-            "name": "Creepy Boar",
-            "file": "CreepyBoar.png",
-            "description": "Looks strikingly similar to a normal boar at first glance, but is actually a paranormal being that lives in the skin of recently perished boars.",
-            "isSB": false,
-            "blacklisted": false
-        },
-        "robot": {
-            "name": "RoboBoar-9000",
-            "file": "RobotBoar.png",
-            "description": "A sentient robot capable of overthrowing the human race but simply decides not to. Matrix Boar is convinced they're up to something nefarious but can't prove it.",
-            "isSB": false,
-            "blacklisted": false
-        },
-        "coffee": {
-            "name": "Coffee Girl Boar",
-            "file": "CoffeeGirlBoar.png",
-            "description": "Rarely seen not drinking coffee. When she's not, she's typically getting her nails done or posting a selfie of herself on social media.",
-            "isSB": false,
-            "blacklisted": false
-        },
-        "moon": {
-            "name": "Moon Boar",
-            "file": "MoonBoar.png",
-            "description": "Moon Boar is actually just the other side of the Moon that we can't see. NASA spends billions a year to keep the secret from getting out.",
-            "isSB": false,
-            "blacklisted": false
-        },
-        "necron": {
-            "name": "Necron Boar",
-            "file": "NecronBoar.png",
-            "description": "One of the five Wither Boars residing on the fifth floor of the Catacombs. Releases nuclear energy inside its body to prevent invaders from seeing its King.",
-            "isSB": true,
-            "blacklisted": false
-        },
-        "wizard": {
-            "name": "Wizard Boar",
-            "file": "WizardBoar.png",
-            "description": "Cheated its way to an Honors Boarwarts diploma. It now performs street magic to pay its bills as it never learned how to actually cast spells.",
-            "isSB": false,
-            "blacklisted": false
-        },
-        "aurora": {
-            "name": "Aurora Boarealis",
-            "file": "AuroraBoar.png",
-            "description": "People travel across the world to see its beauty. It only appears when Moon Boar is eclipsing the sun.",
-            "isSB": false,
-            "blacklisted": false
-        },
-        "minimumwage": {
-            "name": "Minimum Wage Boar",
-            "file": "MinimumWageBoar.png",
-            "description": "One of the smartest boars in the universe. Nobody's quite sure why it works at a fast food restaurant, but there must be a reason.",
-            "isSB": false,
-            "blacklisted": false
-        },
-        "backrooms": {
-            "name": "Backrooms Boar",
-            "file": "BackroomsBoar.png",
-            "description": "This boar fell into the backrooms while recording a skateboarding montage with its friends. Neither it nor the walls around it seem to age.",
-            "isSB": false,
-            "blacklisted": false
-        },
-        "jumpscare": {
-            "name": "Jumpscare Boar",
-            "file": "JumpscareBoar.gif",
-            "staticFile": "JumpscareBoarSTATIC.png",
-            "description": "Shoves its face into peoples' doorbell cameras to make them think it's a Creepy Boar. Creepy Boars abuse this to find new victims.",
-            "isSB": false,
-            "blacklisted": false
-        },
-        "cowboy": {
-            "name": "Cowboar",
-            "file": "CowboyBoar.png",
-            "description": "Unparalleled skills when it comes to the lasso and piloting horses. Refuses to touch any modern technology.",
-            "isSB": false,
-            "blacklisted": false
-        },
-        "realistic": {
-            "name": "Realistic Boar",
-            "file": "RealisticBoar.png",
-            "description": "A taxidermy of a boar that came before the current generation of boars. To have it appeal to modern society, they had to make its head explode.",
-            "isSB": false,
-            "blacklisted": false
-        },
-        "farmer": {
-            "name": "Farmer Boar",
-            "file": "FarmerBoar.png",
-            "description": "Harvests Carrot Boars to sell to Cowboar. Lives a mundane, yet comforting life with a wife and kids.",
-            "isSB": true,
-            "blacklisted": false
-        },
-        "rickroll": {
-            "name": "Rickroll Boar",
-            "file": "RickrollBoar.gif",
-            "staticFile": "RickrollBoarSTATIC.png",
-            "description": "Spreads the word of the God of All Boars. He'll never give you up, nor will he let you down. He'll never run around and... desert you.",
-            "isSB": false,
-            "blacklisted": false
-        },
-        "morbius": {
-            "name": "Boarbius",
-            "file": "Boarbius.png",
-            "description": "A boar whose sense of humor is exclusive to April and May of 2022. Thinks Morbius is the greatest movie of all time.",
-            "isSB": false,
-            "blacklisted": false
-        },
-        "god": {
-            "name": "God of All Boars",
-            "file": "GodofAllBoars.png",
-            "description": "Created all boars in the universe. While it may seem like a divine being, it's actually just an albino boar hellbent on artificially creating new boar species.",
-            "isSB": false,
-            "blacklisted": false
-        },
-        "imposter": {
-            "name": "Imposter Boar",
-            "file": "ImposterBoar.png",
-            "description": "Kills its crew mates on the International Boar Station and frames it as a spacewalking accident. Its kill count is said to be in the dozens.",
-            "isSB": false,
-            "blacklisted": false
-        },
-        "curious": {
-            "name": "Curious Boarge",
-            "file": "CuriousBoarge.png",
-            "description": "With the extinction of all apes, a new mascot for the classic children's book was needed to appeal to modern society.",
-            "isSB": false,
-            "blacklisted": false
-        },
-        "gamebreaker": {
-            "name": "Gameboarker",
-            "file": "Gameboarker.gif",
-            "staticFile": "GameboarkerSTATIC.png",
-            "description": "This boar takes explosion to a whole other level, fusing its cells with gunpowder to create bigger explosions. Awarded to those who find and report several bugs.",
-            "isSB": false,
-            "blacklisted": false
-        },
-        "racer": {
-            "name": "Racer Boar",
-            "file": "RacerBoar.png",
-            "description": "The fastest boar of all time. Races in a car to make it fair to others. Awarded to those who obtain the first edition of any non-special boar.",
-            "isSB": false,
-            "blacklisted": false
-        }
-    },
-    "badgeItemConfigs": {
-        "early_supporter": {
-            "name": "Early Subboarter",
-            "file": "EarlySupporter.png",
-            "description": "Anyone with this badge boosted in the server BoarBot originated in!"
-        },
-        "hunter": {
-            "name": "Boar Hunter",
-            "file": "Hunter.png",
-            "description": "Those that obtain ALL unique boars get this badge!"
-        },
-        "artist": {
-            "name": "Boartist",
-            "file": "Artist.png",
-            "description": "If you made your own boar and it made it into BoarBot, you get this badge!"
-        },
-        "athlete": {
-            "name": "Boarthlete",
-            "file": "Athlete.png",
-            "description": "Only those that are #1 on any leaderboard receive this badge!"
+        "powerups": {
+            "multiBoost": {
+                "name": "Multiplier Boost",
+                "pluralName": "Multiplier Boosts",
+                "description": "Boosts your multiplier by adding to its current value, making it more likely to get rarer boars when you do /boar daily.",
+                "tiers": [50, 25, 10]
+            },
+            "gift": {
+                "name": "Boar Gift",
+                "pluralName": "Boar Gifts",
+                "description": "A gift that you can be sent to and opened by other people. Contains boar bucks, boars, rare surprises, and more.",
+                "tiers": [3, 1, 0],
+                "outcomes": [
+                    {
+                        "weight": 1,
+                        "category": "Special Boar",
+                        "suboutcomes": []
+                    },
+                    {
+                        "weight": 400,
+                        "category": "Boar Bucks",
+                        "suboutcomes": [
+                            {
+                                "weight": 90,
+                                "name": "+%@ Boar Bucks"
+                            },
+                            {
+                                "weight": 9,
+                                "name": "+%@ Boar Bucks"
+                            },
+                            {
+                                "weight": 1,
+                                "name": "+%@ Boar Bucks"
+                            }
+                        ]
+                    },
+                    {
+                        "weight": 199,
+                        "category": "Powerups",
+                        "suboutcomes": [
+                            {
+                                "weight": 45,
+                                "name": "+15 Multiplier Boost"
+                            },
+                            {
+                                "weight": 45,
+                                "name": "+3% Extra Boar Chance"
+                            },
+                            {
+                                "weight": 10,
+                                "name": "+1 Enhancer"
+                            }
+                        ]
+                    },
+                    {
+                        "weight": 400,
+                        "category": "Random Boar",
+                        "suboutcomes": []
+                    }
+                ]
+            },
+            "extraChance": {
+                "name": "Extra Boar Chance",
+                "pluralName": "Extra Boar Chances",
+                "description": "Increases your chance of getting an extra boar when you do /boar daily. Capped at 300%. Multiplier boosts apply to all extra boars.",
+                "tiers": [10, 5, 1]
+            },
+            "enhancer": {
+                "name": "Boar Enhancer",
+                "pluralName": "Boar Enhancers",
+                "description": "Can be used to enhance a boar to a random boar of the next rarity. Capped at 16. Divine is the maximum rarity that can be enhanced.",
+                "tiers": [1, 1, 0]
+            }
         }
     },
     "rarityConfigs": [
@@ -1628,5 +1632,5 @@
     },
     "unlimitedBoars": true,
     "debugMode": true,
-    "maintenanceMode": false
+    "maintenanceMode": true
 }

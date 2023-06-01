@@ -3,10 +3,11 @@ import {ChatInputCommandInteraction, MessageComponentInteraction} from 'discord.
 import {BoarBotApp} from '../../BoarBotApp';
 import {LogDebug} from '../logging/LogDebug';
 import {Replies} from '../interactions/Replies';
-import {GuildData} from './GuildData';
+import {GuildData} from './global/GuildData';
 import {BotConfig} from '../../bot/config/BotConfig';
 import {StringConfig} from '../../bot/config/StringConfig';
 import {BoarUser} from '../boar/BoarUser';
+import {GlobalData} from './global/GlobalData';
 
 /**
  * {@link DataHandlers DataHandlers.ts}
@@ -24,7 +25,7 @@ export class DataHandlers {
      *
      * @return globalData - Global data parsed from JSON
      */
-    public static getGlobalData(): any {
+    public static getGlobalData(): GlobalData {
         const config: BotConfig = BoarBotApp.getBot().getConfig();
 
         const globalFile: string = config.pathConfig.globalDataFile;
@@ -36,29 +37,29 @@ export class DataHandlers {
         const globalData = DataHandlers.getGlobalData();
         const userID = boarUser.user.id;
 
-        globalData.leaderboardData.bucks[userID] = boarUser.boarScore > 0
-            ? boarUser.boarScore
+        globalData.leaderboardData.bucks[userID] = boarUser.stats.general.boarScore > 0
+            ? boarUser.stats.general.boarScore
             : undefined;
-        globalData.leaderboardData.total[userID] = boarUser.totalBoars > 0
-            ? boarUser.totalBoars
+        globalData.leaderboardData.total[userID] = boarUser.stats.general.totalBoars > 0
+            ? boarUser.stats.general.totalBoars
             : undefined;
-        globalData.leaderboardData.uniques[userID] = Object.keys(boarUser.boarCollection).length > 0
-            ? Object.keys(boarUser.boarCollection).length
+        globalData.leaderboardData.uniques[userID] = Object.keys(boarUser.itemCollection.boars).length > 0
+            ? Object.keys(boarUser.itemCollection.boars).length
             : undefined;
-        globalData.leaderboardData.streak[userID] = boarUser.boarStreak > 0
-            ? boarUser.boarStreak
+        globalData.leaderboardData.streak[userID] = boarUser.stats.general.boarStreak > 0
+            ? boarUser.stats.general.boarStreak
             : undefined;
-        globalData.leaderboardData.attempts[userID] = boarUser.powerups.powerupAttempts > 0
-            ? boarUser.powerups.powerupAttempts
+        globalData.leaderboardData.attempts[userID] = boarUser.stats.powerups.attempts > 0
+            ? boarUser.stats.powerups.attempts
             : undefined;
-        globalData.leaderboardData.topAttempts[userID] = boarUser.powerups.powerupAttempts1 > 0
-            ? boarUser.powerups.powerupAttempts1
+        globalData.leaderboardData.topAttempts[userID] = boarUser.stats.powerups.oneAttempts > 0
+            ? boarUser.stats.powerups.oneAttempts
             : undefined;
-        globalData.leaderboardData.giftsUsed[userID] = boarUser.powerups.giftsUsed > 0
-            ? boarUser.powerups.giftsUsed
+        globalData.leaderboardData.giftsUsed[userID] = boarUser.itemCollection.powerups.gift.numUsed > 0
+            ? boarUser.itemCollection.powerups.gift.numUsed
             : undefined;
-        globalData.leaderboardData.multiplier[userID] = boarUser.powerups.multiplier > 1
-            ? boarUser.powerups.multiplier
+        globalData.leaderboardData.multiplier[userID] = boarUser.stats.general.multiplier > 1
+            ? boarUser.stats.general.multiplier
             : undefined;
 
         fs.writeFileSync(BoarBotApp.getBot().getConfig().pathConfig.globalDataFile, JSON.stringify(globalData));

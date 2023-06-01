@@ -1,15 +1,15 @@
-import {PromptTypeConfig} from '../../bot/config/powerups/PromptTypeConfig';
-import {PromptConfig} from '../../bot/config/powerups/PromptConfig';
+import {PromptTypeConfig} from '../../bot/config/prompts/PromptTypeConfig';
+import {PromptConfig} from '../../bot/config/prompts/PromptConfig';
 import {BotConfig} from '../../bot/config/BotConfig';
 import Canvas from 'canvas';
 import {CanvasUtils} from './CanvasUtils';
 import {AttachmentBuilder} from 'discord.js';
-import {PowerupConfig} from '../../bot/config/powerups/PowerupConfig';
 import {StringConfig} from '../../bot/config/StringConfig';
 import {NumberConfig} from '../../bot/config/NumberConfig';
 import {PathConfig} from '../../bot/config/PathConfig';
 import {ColorConfig} from '../../bot/config/ColorConfig';
-import {PowerupConfigs} from '../../bot/config/powerups/PowerupConfigs';
+import {ItemConfig} from '../../bot/config/items/ItemConfig';
+import {ItemConfigs} from '../../bot/config/items/ItemConfigs';
 
 /**
  * {@link PowerupImageGenerator PowerupImageGenerator.ts}
@@ -30,7 +30,7 @@ export class PowerupImageGenerator {
      * @param config - Used for getting config info
      */
     public static async makePowerupSpawnImage(
-        powerupType: PowerupConfig,
+        powerupType: ItemConfig,
         promptType: PromptTypeConfig,
         prompt: PromptConfig,
         config: BotConfig
@@ -75,13 +75,14 @@ export class PowerupImageGenerator {
         topOne: number,
         topTen: number,
         topFifty: number,
-        powerupType: PowerupConfig,
+        powerupType: ItemConfig,
         config: BotConfig
     ) {
         const strConfig: StringConfig = config.stringConfig;
         const nums: NumberConfig = config.numberConfig;
         const pathConfig: PathConfig = config.pathConfig;
         const colorConfig: ColorConfig = config.colorConfig;
+        const powTiers: number[] = powerupType.tiers as number[];
 
         const font: string = `${nums.fontBig}px ${strConfig.fontName}`;
 
@@ -102,7 +103,7 @@ export class PowerupImageGenerator {
             CanvasUtils.drawText(
                 ctx, strConfig.powTopOne, nums.powTopOnePos, font, 'center', colorConfig.font,
                 nums.powSpawnDescriptionWidth, false,
-                PowerupImageGenerator.getPowerupString(powerupType, powerupType.tiers[0], config), colorConfig.powerup
+                PowerupImageGenerator.getPowerupString(powerupType, powTiers[0], config), colorConfig.powerup
             );
             CanvasUtils.drawText(
                 ctx, topOneStr, [nums.powTopOnePos[0], nums.powTopOnePos[1]+nums.powResultsYOffset], font, 'center',
@@ -112,7 +113,7 @@ export class PowerupImageGenerator {
             CanvasUtils.drawText(
                 ctx, strConfig.powTopTen, nums.powTopTenPos, font, 'center', colorConfig.font,
                 nums.powSpawnDescriptionWidth, false,
-                PowerupImageGenerator.getPowerupString(powerupType, powerupType.tiers[1], config), colorConfig.powerup
+                PowerupImageGenerator.getPowerupString(powerupType, powTiers[1], config), colorConfig.powerup
             );
             CanvasUtils.drawText(
                 ctx, topTenStr, [nums.powTopTenPos[0], nums.powTopTenPos[1]+nums.powResultsYOffset], font, 'center',
@@ -122,7 +123,7 @@ export class PowerupImageGenerator {
             CanvasUtils.drawText(
                 ctx, strConfig.powTopFifty, nums.powTopFiftyPos, font, 'center', colorConfig.font,
                 nums.powSpawnDescriptionWidth, false,
-                PowerupImageGenerator.getPowerupString(powerupType, powerupType.tiers[2], config), colorConfig.powerup
+                PowerupImageGenerator.getPowerupString(powerupType, powTiers[2], config), colorConfig.powerup
             );
             CanvasUtils.drawText(
                 ctx, topFiftyStr, [nums.powTopFiftyPos[0], nums.powTopFiftyPos[1]+nums.powResultsYOffset], font,
@@ -150,8 +151,8 @@ export class PowerupImageGenerator {
      * @param num - The number of the powerup gotten
      * @param config - Used to get config info
      */
-    public static getPowerupString(powerupType: PowerupConfig, num: number, config: BotConfig) {
-        const powConfig: PowerupConfigs = config.powerupConfig;
+    public static getPowerupString(powerupType: ItemConfig, num: number, config: BotConfig) {
+        const powConfig: ItemConfigs = config.itemConfigs.powerups;
 
         if (num === 0) {
             return config.stringConfig.emptySelect;

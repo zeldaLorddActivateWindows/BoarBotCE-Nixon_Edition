@@ -10,8 +10,8 @@ import {CollectorUtils} from '../discord/CollectorUtils';
 import {ComponentUtils} from '../discord/ComponentUtils';
 import {BotConfig} from '../../bot/config/BotConfig';
 import {CollectionImageGenerator} from '../generators/CollectionImageGenerator';
-import {OutcomeConfig} from '../../bot/config/powerups/OutcomeConfig';
-import {OutcomeSubConfig} from '../../bot/config/powerups/OutcomeSubConfig';
+import {OutcomeConfig} from '../../bot/config/items/OutcomeConfig';
+import {OutcomeSubConfig} from '../../bot/config/items/OutcomeSubConfig';
 import {Queue} from '../interactions/Queue';
 import {BoarUtils} from './BoarUtils';
 import {DataHandlers} from '../data/DataHandlers';
@@ -119,9 +119,7 @@ export class BoarGift {
     ): Promise<void> {
         try {
             if (collected.size === 0) {
-                await this.giftMessage.edit({
-                    components: []
-                });
+                await this.giftMessage.delete();
                 return;
             }
 
@@ -173,7 +171,7 @@ export class BoarGift {
 
         await Queue.addQueue(() => {
             this.giftedUser.refreshUserData();
-            this.giftedUser.powerups.giftsOpened++;
+            (this.giftedUser.itemCollection.powerups.gift.numOpened as number)++;
             this.giftedUser.updateUserData();
         }, inter.id + inter.user.id);
 
@@ -195,7 +193,7 @@ export class BoarGift {
      * @private
      */
     private getOutcome(outcomeVal?: number): number {
-        const outcomeConfig: OutcomeConfig[] = this.config.powerupConfig.gift.outcomes;
+        const outcomeConfig: OutcomeConfig[] = this.config.itemConfigs.powerups.gift.outcomes as OutcomeConfig[];
         const probabilities: number[] = [];
         const randVal: number = Math.random();
         let outcomes: OutcomeConfig[] | OutcomeSubConfig[] = outcomeConfig;
@@ -260,7 +258,7 @@ export class BoarGift {
      * @private
      */
     private async giveBucks(suboutcome: number, inter: ButtonInteraction): Promise<void> {
-        const outcomeConfig: OutcomeConfig = this.config.powerupConfig.gift.outcomes[1];
+        const outcomeConfig: OutcomeConfig = (this.config.itemConfigs.powerups.gift.outcomes as OutcomeConfig[])[1];
         let outcomeName: string = outcomeConfig.suboutcomes[suboutcome].name;
         let numBucks: number = 0;
 
@@ -276,7 +274,7 @@ export class BoarGift {
 
         await Queue.addQueue(() => {
             this.giftedUser.refreshUserData();
-            this.giftedUser.boarScore += numBucks;
+            this.giftedUser.stats.general.boarScore += numBucks;
             this.giftedUser.updateUserData();
         }, inter.id + inter.user.id);
 
@@ -310,24 +308,30 @@ export class BoarGift {
      * @private
      */
     private async givePowerup(suboutcome: number, inter: ButtonInteraction): Promise<void> {
-        const outcomeConfig: OutcomeConfig = this.config.powerupConfig.gift.outcomes[2];
+        const outcomeConfig: OutcomeConfig = (this.config.itemConfigs.powerups.gift.outcomes as OutcomeConfig[])[2];
         const outcomeName: string = outcomeConfig.suboutcomes[suboutcome].name;
 
         await Queue.addQueue(() => {
             this.giftedUser.refreshUserData();
 
             if (suboutcome === 0) {
-                this.giftedUser.powerups.multiBoostTotal += 15;
-                this.giftedUser.powerups.highestMultiBoost = Math.max(
-                    this.giftedUser.powerups.multiBoostTotal, this.giftedUser.powerups.highestMultiBoost
+                this.giftedUser.itemCollection.powerups.multiBoost.numTotal += 15;
+                this.giftedUser.itemCollection.powerups.multiBoost.highestTotal = Math.max(
+                    this.giftedUser.itemCollection.powerups.multiBoost.numTotal,
+                    this.giftedUser.itemCollection.powerups.multiBoost.highestTotal
                 )
             } else if (suboutcome === 1) {
-                this.giftedUser.powerups.extraChanceTotal += 3;
-                this.giftedUser.powerups.highestExtraChance = Math.max(
-                    this.giftedUser.powerups.extraChanceTotal, this.giftedUser.powerups.highestExtraChance
+                this.giftedUser.itemCollection.powerups.extraChance.numTotal += 3;
+                this.giftedUser.itemCollection.powerups.extraChance.highestTotal = Math.max(
+                    this.giftedUser.itemCollection.powerups.extraChance.numTotal,
+                    this.giftedUser.itemCollection.powerups.extraChance.highestTotal
                 )
             } else {
-                this.giftedUser.powerups.numEnhancers++;
+                this.giftedUser.itemCollection.powerups.enhancer.numTotal += 3;
+                this.giftedUser.itemCollection.powerups.enhancer.highestTotal = Math.max(
+                    this.giftedUser.itemCollection.powerups.enhancer.numTotal,
+                    this.giftedUser.itemCollection.powerups.enhancer.highestTotal
+                )
             }
 
             this.giftedUser.updateUserData();

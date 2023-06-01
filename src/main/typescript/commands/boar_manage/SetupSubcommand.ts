@@ -21,7 +21,7 @@ import {CollectorUtils} from '../../util/discord/CollectorUtils';
 import {SubcommandConfig} from '../../bot/config/commands/SubcommandConfig';
 import {ComponentUtils} from '../../util/discord/ComponentUtils';
 import {Replies} from '../../util/interactions/Replies';
-import {GuildData} from '../../util/data/GuildData';
+import {GuildData} from '../../util/data/global/GuildData';
 import {RowConfig} from '../../bot/config/components/RowConfig';
 import {StringConfig} from '../../bot/config/StringConfig';
 import {ModalConfig} from '../../bot/config/modals/ModalConfig';

@@ -1,9 +1,9 @@
 import {RarityConfig} from '../../bot/config/items/RarityConfig';
-import {BoarItemConfigs} from '../../bot/config/items/BoarItemConfigs';
 import {BotConfig} from '../../bot/config/BotConfig';
 import {ChatInputCommandInteraction, MessageComponentInteraction} from 'discord.js';
 import {LogDebug} from '../logging/LogDebug';
-import {GuildData} from '../data/GuildData';
+import {GuildData} from '../data/global/GuildData';
+import {ItemConfigs} from '../../bot/config/items/ItemConfigs';
 
 /**
  * {@link BoarUtils BoarUtils.ts}
@@ -47,7 +47,7 @@ export class BoarUtils {
      */
     public static findValid(rarityIndex: number, guildData: GuildData | undefined, config: BotConfig): string {
         const rarities: RarityConfig[] = config.rarityConfigs;
-        const boarIDs: BoarItemConfigs = config.boarItemConfigs;
+        const boarIDs: ItemConfigs = config.itemConfigs.boars;
         let randomBoar: number = Math.random();
 
         // Stores the IDs of the current rarity being checked

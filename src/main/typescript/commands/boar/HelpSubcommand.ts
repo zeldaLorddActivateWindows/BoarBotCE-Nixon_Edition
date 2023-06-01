@@ -3,7 +3,7 @@ import fs from 'fs';
 import {BoarBotApp} from '../../BoarBotApp';
 import {Subcommand} from '../../api/commands/Subcommand';
 import {InteractionUtils} from '../../util/interactions/InteractionUtils';
-import {GuildData} from '../../util/data/GuildData';
+import {GuildData} from '../../util/data/global/GuildData';
 
 /**
  * {@link HelpSubcommand HelpSubcommand.ts}

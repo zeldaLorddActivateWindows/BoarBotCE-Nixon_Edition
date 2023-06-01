@@ -14,7 +14,7 @@ import {
 import {BoarBotApp} from '../../BoarBotApp';
 import {Subcommand} from '../../api/commands/Subcommand';
 import {InteractionUtils} from '../../util/interactions/InteractionUtils';
-import {GuildData} from '../../util/data/GuildData';
+import {GuildData} from '../../util/data/global/GuildData';
 import {SubcommandConfig} from '../../bot/config/commands/SubcommandConfig';
 import {BotConfig} from '../../bot/config/BotConfig';
 import {DataHandlers} from '../../util/data/DataHandlers';

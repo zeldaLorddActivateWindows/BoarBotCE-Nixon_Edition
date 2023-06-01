@@ -11,10 +11,10 @@ import {SubcommandConfig} from '../../bot/config/commands/SubcommandConfig';
 import {Replies} from '../../util/interactions/Replies';
 import {BoarUtils} from '../../util/boar/BoarUtils';
 import {ItemImageGenerator} from '../../util/generators/ItemImageGenerator';
-import {GuildData} from '../../util/data/GuildData';
+import {GuildData} from '../../util/data/global/GuildData';
 import {StringConfig} from '../../bot/config/StringConfig';
 import {ColorConfig} from '../../bot/config/ColorConfig';
-import {PowerupConfigs} from '../../bot/config/powerups/PowerupConfigs';
+import {ItemConfigs} from '../../bot/config/items/ItemConfigs';
 
 /**
  * {@link DailySubcommand DailySubcommand.ts}
@@ -59,7 +59,7 @@ export default class DailySubcommand implements Subcommand {
 
         const strConfig: StringConfig = this.config.stringConfig;
         const colorConfig: ColorConfig = this.config.colorConfig;
-        const powConfig: PowerupConfigs = this.config.powerupConfig;
+        const powItemConfigs: ItemConfigs = this.config.itemConfigs.powerups;
 
         let boarUser: BoarUser = {} as BoarUser;
         let boarIDs: string[] = [''];
@@ -84,20 +84,20 @@ export default class DailySubcommand implements Subcommand {
 
             // Map of rarity index keys and weight values
             let rarityWeights: Map<number, number> = BoarUtils.getBaseRarityWeights(this.config);
-            let userMultiplier: number = boarUser.powerups.multiplier;
+            let userMultiplier: number = boarUser.stats.general.multiplier;
 
             if (boostInput) {
-                userMultiplier += boarUser.powerups.multiBoostTotal;
+                userMultiplier += boarUser.itemCollection.powerups.multiBoost.numTotal;
             }
 
-            usedBoost = boostInput && boarUser.powerups.multiBoostTotal > 0;
-            usedExtra = extraInput && boarUser.powerups.extraChanceTotal > 0;
+            usedBoost = boostInput && boarUser.itemCollection.powerups.multiBoost.numTotal > 0;
+            usedExtra = extraInput && boarUser.itemCollection.powerups.extraChance.numTotal > 0;
 
             rarityWeights = this.applyMultiplier(userMultiplier, rarityWeights);
 
             boarIDs = BoarUtils.getRandBoars(
                 this.guildData, this.interaction, rarityWeights,
-                extraInput, boarUser.powerups.extraChanceTotal, this.config
+                extraInput, boarUser.itemCollection.powerups.extraChance.numTotal, this.config
             );
 
             if (boarIDs.includes('')) {
@@ -105,26 +105,27 @@ export default class DailySubcommand implements Subcommand {
                 return;
             }
 
-            if (boostInput && boarUser.powerups.multiBoostTotal > 0) {
-                boarUser.powerups.multiBoostTotal = 0;
-                boarUser.powerups.multiBoostsUsed++;
+            if (boostInput && boarUser.itemCollection.powerups.multiBoost.numTotal > 0) {
+                boarUser.itemCollection.powerups.multiBoost.numTotal = 0;
+                boarUser.itemCollection.powerups.multiBoost.numUsed++;
             }
 
-            if (extraInput && boarUser.powerups.extraChanceTotal > 0) {
-                boarUser.powerups.extraChanceTotal = 0;
-                boarUser.powerups.extraChancesUsed++;
+            if (boarUser.itemCollection.powerups.extraChance.numTotal > 0) {
+                boarUser.itemCollection.powerups.extraChance.numTotal = 0;
+                boarUser.itemCollection.powerups.extraChance.numUsed++;
             }
 
-            boarUser.boarStreak++;
-            boarUser.powerups.multiplier++;
+            boarUser.stats.general.boarStreak++;
+            boarUser.stats.general.multiplier++;
 
-            boarUser.powerups.highestMulti = Math.max(boarUser.powerups.multiplier, boarUser.powerups.highestMulti);
+            boarUser.stats.general.highestMulti =
+                Math.max(boarUser.stats.general.multiplier, boarUser.stats.general.highestMulti);
 
-            boarUser.lastDaily = Date.now();
-            boarUser.numDailies++;
+            boarUser.stats.general.lastDaily = Date.now();
+            boarUser.stats.general.numDailies++;
 
-            if (boarUser.firstDaily === 0) {
-                boarUser.firstDaily = Date.now();
+            if (boarUser.stats.general.firstDaily === 0) {
+                boarUser.stats.general.firstDaily = Date.now();
             }
 
             boarUser.updateUserData();
@@ -180,13 +181,13 @@ export default class DailySubcommand implements Subcommand {
         let coloredText: string = '';
 
         if (usedBoost) {
-            coloredText += powConfig.multiBoost.name;
+            coloredText += powItemConfigs.multiBoost.name;
         }
 
         if (usedExtra) {
             coloredText += coloredText === ''
-                ? powConfig.extraChance.name
-                : ' and ' + powConfig.extraChance.name
+                ? powItemConfigs.extraChance.name
+                : ' and ' + powItemConfigs.extraChance.name
         }
 
         if (coloredText !== '') {
@@ -210,7 +211,7 @@ export default class DailySubcommand implements Subcommand {
         const nextBoarTime: number = Math.floor(new Date().setUTCHours(24,0,0,0));
 
         // Returns if user has already used their daily boar
-        if (boarUser.lastDaily >= nextBoarTime - (1000 * 60 * 60 * 24) && !this.config.unlimitedBoars) {
+        if (boarUser.stats.general.lastDaily >= nextBoarTime - (1000 * 60 * 60 * 24) && !this.config.unlimitedBoars) {
             await Replies.handleReply(
                 this.interaction,
                 this.config.stringConfig.dailyUsed + moment(nextBoarTime).fromNow()

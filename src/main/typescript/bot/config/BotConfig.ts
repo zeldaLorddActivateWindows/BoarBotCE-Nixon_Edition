@@ -6,11 +6,10 @@ import {PathConfig} from './PathConfig';
 import {StringConfig} from './StringConfig';
 import {NumberConfig} from './NumberConfig';
 import {CommandConfigs} from './commands/CommandConfigs';
-import {BoarItemConfigs} from './items/BoarItemConfigs';
-import {BadgeItemConfigs} from './items/BadgeItemConfigs';
 import {RarityConfig} from './items/RarityConfig';
 import {ColorConfig} from './ColorConfig';
-import {PowerupConfigs} from './powerups/PowerupConfigs';
+import {PromptConfigs} from './prompts/PromptConfigs';
+import {AllItemConfigs} from './items/AllItemConfigs';
 
 /**
  * {@link BotConfig BotConfig.ts}
@@ -54,7 +53,7 @@ export class BotConfig {
     /**
      * Collection of information about powerups
      */
-    public readonly powerupConfig: PowerupConfigs = new PowerupConfigs;
+    public readonly promptConfigs: PromptConfigs = new PromptConfigs;
 
     /**
      * Collection of {@link CommandConfig command configurations} the bot uses
@@ -62,14 +61,9 @@ export class BotConfig {
     public readonly commandConfigs: CommandConfigs = new CommandConfigs;
 
     /**
-     * Collection of {@link BoarItemConfig boar item configurations}
+     * Collection of {@link ItemConfigs sets of item configurations}
      */
-    public readonly boarItemConfigs: BoarItemConfigs = new BoarItemConfigs;
-
-    /**
-     * Collection of {@link BadgeItemConfig badge item configurations}
-     */
-    public readonly badgeItemConfigs: BadgeItemConfigs = new BadgeItemConfigs;
+    public readonly itemConfigs: AllItemConfigs = new AllItemConfigs;
 
     /**
      * Array of {@link RarityConfig rarity configurations}

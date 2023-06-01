@@ -7,7 +7,7 @@ import {
 import {BotConfig} from '../../bot/config/BotConfig';
 import {LogDebug} from '../logging/LogDebug';
 import {BoarBotApp} from '../../BoarBotApp';
-import {GuildData} from '../data/GuildData';
+import {GuildData} from '../data/global/GuildData';
 import {CustomEmbedGenerator} from '../generators/CustomEmbedGenerator';
 
 /**
