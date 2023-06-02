@@ -79,13 +79,13 @@ export class ItemImageGenerator {
             const badgeInfo: ItemConfig = this.config.itemConfigs.badges[this.id];
             this.itemName = badgeInfo.name;
             this.itemFile = badgeInfo.file;
-            folderPath = pathConfig.badgeImages;
+            folderPath = pathConfig.badges;
             this.colorKey = 'badge';
         } else if (manualInput === undefined) {
             const boarInfo: ItemConfig = this.config.itemConfigs.boars[this.id];
             this.itemName = boarInfo.name;
             this.itemFile = boarInfo.file;
-            folderPath = pathConfig.boarImages;
+            folderPath = pathConfig.boars;
             this.colorKey = 'rarity' + BoarUtils.findRarity(this.id, this.config)[0];
         } else {
             this.itemName = manualInput.name;

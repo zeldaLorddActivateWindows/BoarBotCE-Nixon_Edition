@@ -156,7 +156,7 @@ export class CollectionImageGenerator {
 
         // Asset path info
 
-        const boarsFolder: string = pathConfig.boarImages;
+        const boarsFolder: string = pathConfig.boars;
         const collectionOverlay: string = pathConfig.collAssets + pathConfig.collOverlay;
 
         const boarsPerPage: number = nums.collBoarsPerPage;
@@ -304,7 +304,7 @@ export class CollectionImageGenerator {
 
         // Asset path info
 
-        const boarsFolder: string = pathConfig.boarImages;
+        const boarsFolder: string = pathConfig.boars;
         const collectionOverlay: string = pathConfig.collAssets + pathConfig.collDetailOverlay;
 
         // Font info
@@ -417,7 +417,7 @@ export class CollectionImageGenerator {
         const promptConfig: PromptConfigs = this.config.promptConfigs;
 
         const collectionUnderlay: string = pathConfig.collAssets + pathConfig.collPowerUnderlay;
-        const enhancerActive: string = pathConfig.collAssets + pathConfig.enhancerOn;
+        const enhancerActive: string = pathConfig.powerups + powItemConfigs.enhancer.file;
         const enhancerInactive: string = pathConfig.collAssets + pathConfig.enhancerOff;
 
         const mediumFont: string = `${nums.fontMedium}px ${strConfig.fontName}`;
@@ -817,7 +817,7 @@ export class CollectionImageGenerator {
 
             if (!this.boarUser.itemCollection.badges[badgeID].possession) continue;
 
-            const badgesFolder: string = pathConfig.badgeImages;
+            const badgesFolder: string = pathConfig.badges;
             const badgeXY: [number, number] = [nums.collBadgeStart + i * nums.collBadgeSpacing, nums.collBadgeY];
             const badgeFile: string = badgesFolder + this.config.itemConfigs.badges[badgeID].file;
 

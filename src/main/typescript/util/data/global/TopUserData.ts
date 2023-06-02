@@ -1,5 +1,5 @@
 /**
- * {@link UserData UserData.ts}
+ * {@link TopUserData TopUserData.ts}
  *
  * Stores information about users and associated values
  *
@@ -7,6 +7,6 @@
  * @copyright WeslayCodes 2023
  */
 
-export class UserData {
+export class TopUserData {
     [userID: string]: number | undefined;
 }

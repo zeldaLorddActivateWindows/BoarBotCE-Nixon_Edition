@@ -1,4 +1,4 @@
-import {UserData} from './UserData';
+import {BuySellData} from './BuySellData';
 
 /**
  * {@link ItemData ItemData.ts}
@@ -11,6 +11,6 @@ import {UserData} from './UserData';
 
 export class ItemData {
     public curEdition?: number;
-    public buyers: UserData = new UserData;
-    public sellers: UserData = new UserData;
+    public buyers: BuySellData[] = [];
+    public sellers: BuySellData[] = [];
 }

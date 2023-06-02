@@ -1,5 +1,5 @@
 import {ItemsData} from './ItemsData';
-import {UserData} from './UserData';
+import {TopUserData} from './TopUserData';
 
 /**
  * {@link GlobalData GlobalData.ts}
@@ -12,6 +12,6 @@ import {UserData} from './UserData';
 
 export class GlobalData {
     public itemData: ItemsData = new ItemsData;
-    public leaderboardData: Record<string, UserData> = {};
+    public leaderboardData: Record<string, TopUserData> = {};
     public nextPowerup: number = 0;
 }

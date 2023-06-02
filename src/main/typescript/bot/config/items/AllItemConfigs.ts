@@ -10,6 +10,7 @@ import {ItemConfigs} from './ItemConfigs';
  */
 
 export class AllItemConfigs {
+    [itemType: string]: ItemConfigs;
     public boars: ItemConfigs = new ItemConfigs;
     public badges: ItemConfigs = new ItemConfigs;
     public powerups: ItemConfigs = new ItemConfigs;

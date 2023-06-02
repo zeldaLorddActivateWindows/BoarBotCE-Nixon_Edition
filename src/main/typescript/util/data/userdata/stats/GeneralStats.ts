@@ -16,6 +16,6 @@ export class GeneralStats {
     public lastBoar: string = '';
     public firstDaily: number = 0;
     public boarStreak: number = 0;
-    public multiplier: number = 0;
+    public multiplier: number = 1;
     public highestMulti: number = 0;
 }

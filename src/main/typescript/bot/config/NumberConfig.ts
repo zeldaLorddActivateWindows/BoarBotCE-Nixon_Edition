@@ -209,4 +209,5 @@ export class NumberConfig {
     public readonly leaderboardTopBotWidth: number = 0;
     public readonly leaderboardFooterPos: [number, number] = [0, 0];
     public readonly leaderboardEntryWidth: number = 0;
+    public readonly marketSize: [number, number] = [0, 0];
 }

@@ -95,7 +95,9 @@ export default class CollectionSubcommand implements Subcommand {
         const userInput: User = interaction.options.getUser(this.subcommandInfo.args[0].name)
             ? interaction.options.getUser(this.subcommandInfo.args[0].name) as User
             : interaction.user;
-        const viewInput: View = interaction.options.getInteger(this.subcommandInfo.args[1].name) as View;
+        const viewInput: View = interaction.options.getInteger(this.subcommandInfo.args[1].name)
+            ? interaction.options.getInteger(this.subcommandInfo.args[1].name) as View
+            : View.Normal;
         const pageInput: string = interaction.options.getString(this.subcommandInfo.args[2].name)
             ? (interaction.options.getString(this.subcommandInfo.args[2].name) as string)
                 .toLowerCase().replace(/\s+/g, '')
