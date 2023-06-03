@@ -108,7 +108,8 @@ export default class CollectionSubcommand implements Subcommand {
             this.config, this.firstInter
         );
 
-        await Queue.addQueue(() => this.getUserInfo(userInput), interaction.id + userInput.id);
+        this.boarUser = await new BoarUser(userInput);
+        await this.getUserInfo();
 
         this.maxPageNormal = Math.floor(Object.keys(this.allBoars).length / this.config.numberConfig.collBoarsPerPage);
 
@@ -313,7 +314,7 @@ export default class CollectionSubcommand implements Subcommand {
 
         const editions: number[] = await this.boarUser.addBoars([enhancedBoar], this.firstInter, this.config);
 
-        await Queue.addQueue(() => this.getUserInfo(this.boarUser.user), this.compInter.id + this.boarUser.user.id);
+        await this.getUserInfo();
 
         this.curPage = this.getPageFromName(
             this.config.itemConfigs.boars[enhancedBoar].name.toLowerCase().replace(/\s+/g, ''), this.allBoarsTree.root
@@ -450,13 +451,12 @@ export default class CollectionSubcommand implements Subcommand {
     /**
      * Gets information from the user's file
      *
-     * @param userInput - The {@link User} that was input from the command
      * @private
      */
-    private async getUserInfo(userInput: User) {
+    private async getUserInfo() {
         if (!this.firstInter.guild || !this.firstInter.channel) return;
 
-        this.boarUser = new BoarUser(userInput);
+        this.boarUser.refreshUserData();
         this.allBoars = [];
 
         // Adds information about each boar in user's boar collection to an array

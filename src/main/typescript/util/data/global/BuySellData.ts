@@ -11,5 +11,7 @@ export class BuySellData {
     public userID: string = '';
     public price: number = 0;
     public num: number = 0;
+    public editions: number[] = [];
+    public editionDates: number[] = [];
     public listTime: number = 0;
 }
