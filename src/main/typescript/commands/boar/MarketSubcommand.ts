@@ -26,6 +26,7 @@ import {MarketImageGenerator} from '../../util/generators/MarketImageGenerator';
 import {BoarUser} from '../../util/boar/BoarUser';
 import {ModalConfig} from '../../bot/config/modals/ModalConfig';
 import {BoarUtils} from '../../util/boar/BoarUtils';
+import {Queue} from '../../util/interactions/Queue';
 
 enum View {
     Overview,
@@ -139,12 +140,79 @@ export default class MarketSubcommand implements Subcommand {
                 overviewView: marketRowConfig[0][1].components[0],
                 buySellView: marketRowConfig[0][1].components[1],
                 ordersView: marketRowConfig[0][1].components[2],
+                instaBuy: marketRowConfig[1][0].components[0],
+                instaSell: marketRowConfig[1][0].components[1],
+                buyOrder: marketRowConfig[1][1].components[0],
+                sellOrder: marketRowConfig[1][1].components[1],
                 editionSelect: marketRowConfig[1][3].components[0]
             };
 
+            const isPageInput = inter.customId.startsWith(marketComponents.inputPage.customId);
+            const isInstaBuy = inter.customId.startsWith(marketComponents.instaBuy.customId);
+            const isInstaSell = inter.customId.startsWith(marketComponents.instaSell.customId);
+
             // User wants to input a page manually
-            if (inter.customId.startsWith(marketComponents.inputPage.customId)) {
+            if (isPageInput) {
                 await this.modalHandle(inter);
+
+                clearInterval(this.timerVars.updateTime);
+                return;
+            }
+
+            if (isInstaBuy || isInstaSell) {
+                let showModal: boolean = true;
+                await Queue.addQueue(async () => {
+                    try {
+                        this.boarUser.refreshUserData();
+                        const itemData = this.pricingData[this.curPage];
+
+                        let sellOrder: BuySellData | undefined;
+
+                        if (isInstaBuy && BoarUtils.findRarity(itemData.id, this.config)[1].name === 'Special') {
+                            for (const instaBuy of itemData.instaBuys) {
+                                if (instaBuy.editions[0] !== this.curEdition) continue;
+                                sellOrder = instaBuy;
+                                break;
+                            }
+                        }
+
+                        if (
+                            isInstaBuy && this.curEdition > 0 && sellOrder &&
+                            this.boarUser.stats.general.boarScore < sellOrder.price ||
+                            isInstaBuy && this.boarUser.stats.general.boarScore < itemData.instaBuys[0].price
+                        ) {
+                            showModal = false;
+                            await Replies.handleReply(
+                                inter, 'You don\'t have enough boar bucks for this!', this.config.colorConfig.error
+                            );
+                        } else if (
+                            isInstaSell && this.curEdition > 0 && this.boarUser.itemCollection.boars[itemData.id] &&
+                            !this.boarUser.itemCollection.boars[itemData.id].editions.includes(this.curEdition)
+                        ) {
+                            showModal = false;
+                            await Replies.handleReply(
+                                inter, 'You don\'t have this edition so you cannot sell it!',
+                                this.config.colorConfig.error
+                            );
+                        } else if (
+                            isInstaSell && itemData.type === 'boars' &&
+                            !this.boarUser.itemCollection.boars[itemData.id] ||
+                            isInstaSell && itemData.type === 'powerups' &&
+                            !this.boarUser.itemCollection.boars[itemData.id]
+                        ) {
+                            showModal = false;
+                            await Replies.handleReply(
+                                inter, 'You don\'t have any of this item!', this.config.colorConfig.error
+                            );
+                        }
+                    } catch (err: unknown) {
+                        await LogDebug.handleError(err, inter);
+                    }
+                }, inter.id + inter.user.id);
+
+                if (showModal) {
+                    await this.modalHandle(inter);
+                }
 
                 clearInterval(this.timerVars.updateTime);
                 return;
@@ -225,6 +293,9 @@ export default class MarketSubcommand implements Subcommand {
 
     private getPricingData(): void {
         const itemData = DataHandlers.getGlobalData().itemData;
+        const curItem = this.pricingData.length > 0
+            ? this.pricingData[this.curPage]
+            : undefined;
 
         this.pricingData = [];
 
@@ -262,6 +333,10 @@ export default class MarketSubcommand implements Subcommand {
                 });
             }
         }
+
+        while (this.curView === View.BuySell && curItem && this.pricingData[this.curPage].id !== curItem.id) {
+            this.curPage++;
+        }
     }
 
     /**
@@ -272,19 +347,68 @@ export default class MarketSubcommand implements Subcommand {
      */
     private async modalHandle(inter: MessageComponentInteraction): Promise<void> {
         const modals: ModalConfig[] = this.config.commandConfigs.boar.market.modals;
+        const marketRowConfig: RowConfig[][] = this.config.commandConfigs.boar.market.componentFields;
+        let modalNum = 0;
+        let modalTitle = modals[0].title;
 
-        this.modalShowing = new ModalBuilder(modals[0]);
-        this.modalShowing.setCustomId(modals[0].customId + '|' + inter.id);
+        const isInstaBuy = inter.customId.startsWith(marketRowConfig[1][0].components[0].customId);
+        const isInstaSell = inter.customId.startsWith(marketRowConfig[1][0].components[1].customId);
+
+        if ((isInstaBuy || isInstaSell) && this.curEdition === 0) {
+            modalNum = 1;
+            const itemPlural = this.config.itemConfigs
+                [this.pricingData[this.curPage].type]
+                [this.pricingData[this.curPage].id].pluralName;
+
+            modalTitle = (isInstaBuy
+                ? marketRowConfig[1][0].components[0].label
+                : marketRowConfig[1][0].components[1].label) + ': ' + itemPlural;
+        }
+
+        if ((isInstaBuy || isInstaSell) && this.curEdition > 0) {
+            modalNum = 2;
+            const itemName = this.config.itemConfigs
+                [this.pricingData[this.curPage].type]
+                [this.pricingData[this.curPage].id].name;
+
+            modalTitle = (isInstaBuy
+                ? marketRowConfig[1][0].components[0].label
+                : marketRowConfig[1][0].components[1].label) + ': ' + itemName + ' #' + this.curEdition;
+        }
+
+        this.modalShowing = new ModalBuilder(modals[modalNum]);
+        this.modalShowing.setCustomId(modals[modalNum].customId + '|' + inter.id);
+        this.modalShowing.setTitle(modalTitle);
         await inter.showModal(this.modalShowing);
 
-        inter.client.on(
-            Events.InteractionCreate,
-            this.modalListener
-        );
+        if (modalNum === 0) {
+            inter.client.on(
+                Events.InteractionCreate,
+                this.modalListenerPage
+            );
 
-        setTimeout(() => {
-            inter.client.removeListener(Events.InteractionCreate, this.modalListener);
-        }, 60000);
+            setTimeout(() => {
+                inter.client.removeListener(Events.InteractionCreate, this.modalListenerPage);
+            }, 60000);
+        } else if (modalNum === 1) {
+            inter.client.on(
+                Events.InteractionCreate,
+                this.modalListenerInsta
+            );
+
+            setTimeout(() => {
+                inter.client.removeListener(Events.InteractionCreate, this.modalListenerInsta);
+            }, 60000);
+        } else {
+            inter.client.on(
+                Events.InteractionCreate,
+                this.modalListenerInstaSpecial
+            );
+
+            setTimeout(() => {
+                inter.client.removeListener(Events.InteractionCreate, this.modalListenerInstaSpecial);
+            }, 60000);
+        }
     }
 
     /**
@@ -293,7 +417,7 @@ export default class MarketSubcommand implements Subcommand {
      * @param submittedModal - The interaction to respond to
      * @private
      */
-    private modalListener = async (submittedModal: Interaction): Promise<void> => {
+    private modalListenerPage = async (submittedModal: Interaction): Promise<void> => {
         try  {
             // If not a modal submission on current interaction, destroy the modal listener
             if (
@@ -302,7 +426,7 @@ export default class MarketSubcommand implements Subcommand {
                 BoarBotApp.getBot().getConfig().maintenanceMode && !this.config.devs.includes(this.compInter.user.id)
             ) {
                 clearInterval(this.timerVars.updateTime);
-                submittedModal.client.removeListener(Events.InteractionCreate, this.modalListener);
+                submittedModal.client.removeListener(Events.InteractionCreate, this.modalListenerPage);
 
                 return;
             }
@@ -344,8 +468,139 @@ export default class MarketSubcommand implements Subcommand {
         }
 
         clearInterval(this.timerVars.updateTime);
-        submittedModal.client.removeListener(Events.InteractionCreate, this.modalListener);
+        submittedModal.client.removeListener(Events.InteractionCreate, this.modalListenerPage);
     };
+
+    private modalListenerInsta = async (submittedModal: Interaction): Promise<void> => {
+        try  {
+            // If not a modal submission on current interaction, destroy the modal listener
+            if (
+                submittedModal.isMessageComponent() &&
+                submittedModal.customId.endsWith(this.firstInter.id + '|' + this.firstInter.user.id) ||
+                BoarBotApp.getBot().getConfig().maintenanceMode && !this.config.devs.includes(this.compInter.user.id)
+            ) {
+                clearInterval(this.timerVars.updateTime);
+                submittedModal.client.removeListener(Events.InteractionCreate, this.modalListenerInsta);
+
+                return;
+            }
+
+            // Updates the cooldown to interact again
+            CollectorUtils.canInteract(this.timerVars);
+
+            if (
+                !submittedModal.isModalSubmit() || this.collector.ended ||
+                !submittedModal.guild || submittedModal.customId !== this.modalShowing.data.custom_id
+            ) {
+                clearInterval(this.timerVars.updateTime);
+                return;
+            }
+
+            await submittedModal.deferUpdate();
+
+            const isInstaBuy = this.modalShowing.data.title?.startsWith(
+                this.config.commandConfigs.boar.market.componentFields[1][0].components[0].label
+            );
+            const responseStart = isInstaBuy
+                ? 'Buying '
+                : 'Selling ';
+
+            const submittedNum: string = submittedModal.fields.getTextInputValue(
+                this.modalShowing.components[0].components[0].data.custom_id as string
+            ).toLowerCase().replace(/\s+/g, '');
+
+            LogDebug.sendDebug(
+                `${submittedModal.customId.split('|')[0]} input value: ` + submittedNum, this.config, this.firstInter
+            );
+
+            let numVal: number = 0;
+            if (!Number.isNaN(parseInt(submittedNum))) {
+                numVal = parseInt(submittedNum);
+            }
+
+            if (numVal === 0) {
+                await Replies.handleReply(
+                    submittedModal, 'Invalid input! Try again.', this.config.colorConfig.error,
+                    undefined, undefined, true
+                );
+
+                clearInterval(this.timerVars.updateTime);
+                return;
+            }
+
+            this.boarUser.refreshUserData();
+
+            this.getPricingData();
+            this.imageGen.updateInfo(this.pricingData, this.config);
+
+            const itemData = this.pricingData[this.curPage];
+
+            if (
+                !isInstaBuy &&
+                (itemData.type === 'boars' && (!this.boarUser.itemCollection.boars[itemData.id] ||
+                    this.boarUser.itemCollection.boars[itemData.id].num < numVal) ||
+                itemData.type === 'powerups' && (!this.boarUser.itemCollection.powerups[itemData.id] ||
+                    this.boarUser.itemCollection.powerups[itemData.id].numTotal < numVal))
+            ) {
+                await Replies.handleReply(
+                    submittedModal, 'You don\'t have enough of this item!',
+                    this.config.colorConfig.error, undefined, undefined, true
+                );
+
+                clearInterval(this.timerVars.updateTime);
+                return;
+            }
+
+            let numGrabbed = 0;
+            let curPrice = 0;
+            let curIndex = 0;
+            while (numGrabbed < numVal) {
+                let numToAdd = 0;
+                if (isInstaBuy && curIndex < itemData.instaBuys.length) {
+                    numToAdd = Math.min(numVal - numGrabbed, itemData.instaBuys[curIndex].num);
+                    curPrice += itemData.instaBuys[curIndex].price * numToAdd;
+                } else if (curIndex < itemData.instaSells.length) {
+                    numToAdd = Math.min(numVal - numGrabbed, itemData.instaSells[curIndex].num);
+                    curPrice += itemData.instaSells[curIndex].price * numToAdd;
+                } else {
+                    break;
+                }
+
+                numGrabbed += numToAdd;
+                curIndex++;
+            }
+
+            if (numVal !== numGrabbed) {
+                await Replies.handleReply(
+                    submittedModal, 'Not enough orders of this item to complete this transaction!',
+                    this.config.colorConfig.error, undefined, undefined, true
+                );
+
+                clearInterval(this.timerVars.updateTime);
+                return;
+            }
+
+            const itemName = numVal > 1
+                ? this.config.itemConfigs[itemData.type][itemData.id].pluralName
+                : this.config.itemConfigs[itemData.type][itemData.id].name;
+
+            await Replies.handleReply(
+                submittedModal, responseStart + numVal + ' ' + itemName + ' for $' + curPrice +
+                '. Click \'Confirm\' to confirm!', undefined, undefined, undefined, true
+            );
+            await this.showMarket();
+        } catch (err: unknown) {
+            await LogDebug.handleError(err);
+            this.collector.stop(CollectorUtils.Reasons.Error);
+        }
+
+        clearInterval(this.timerVars.updateTime);
+        submittedModal.client.removeListener(Events.InteractionCreate, this.modalListenerPage);
+    };
+
+    // private modalListenerInstaSpecial = async (submittedModal: Interaction): Promise<void> => {
+    //
+    // };
 
     private async showMarket(firstRun: boolean = false) {
         if (firstRun) {
@@ -383,13 +638,13 @@ export default class MarketSubcommand implements Subcommand {
             rowsToAdd.push(this.optionalRows[0]);
             rowsToAdd.push(this.optionalRows[1]);
 
-            this.optionalRows[0].components[0].setDisabled(item.instaSells.length === 0);
-            this.optionalRows[0].components[1].setDisabled(item.instaBuys.length === 0);
+            this.optionalRows[0].components[0].setDisabled(item.instaBuys.length === 0);
+            this.optionalRows[0].components[1].setDisabled(item.instaSells.length === 0);
             this.optionalRows[1].components[0].setDisabled(false);
             this.optionalRows[1].components[1].setDisabled(false);
 
             if (isSpecial) {
-                const selectOptions: SelectMenuComponentOptionData[] = [];
+                let selectOptions: SelectMenuComponentOptionData[] = [];
                 const instaBuyEditions: number[] = [];
                 const instaSellEditions: number[] = [];
 
@@ -431,9 +686,11 @@ export default class MarketSubcommand implements Subcommand {
                     }
                 }
 
+                selectOptions = selectOptions.slice(0, 25);
+
                 (this.optionalRows[3].components[0] as StringSelectMenuBuilder).setOptions(selectOptions);
-                this.optionalRows[0].components[0].setDisabled(!instaSellEditions.includes(this.curEdition));
-                this.optionalRows[0].components[1].setDisabled(!instaBuyEditions.includes(this.curEdition));
+                this.optionalRows[0].components[0].setDisabled(!instaBuyEditions.includes(this.curEdition));
+                this.optionalRows[0].components[1].setDisabled(!instaSellEditions.includes(this.curEdition));
                 rowsToAdd.push(this.optionalRows[3]);
             }
         }

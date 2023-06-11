@@ -561,40 +561,40 @@ export class PowerupSpawner {
                             boarUser.itemCollection.powerups.multiBoost.numTotal +=
                                 (this.powerupType.tiers as number[])[userPowTier];
                             boarUser.itemCollection.powerups.multiBoost.numClaimed++;
-                            boarUser.itemCollection.powerups.multiBoost.highestTotal = Math.max(
+                            boarUser.itemCollection.powerups.multiBoost.highestTotal = Math.min(Math.max(
                                 boarUser.itemCollection.powerups.multiBoost.highestTotal,
                                 boarUser.itemCollection.powerups.multiBoost.numTotal
-                            );
+                            ), config.numberConfig.maxMultiBoost);
                         }
 
                         if (userPowTier !== -1 && this.powerupType.name === powItemConfigs.extraChance.name) {
                             boarUser.itemCollection.powerups.extraChance.numTotal +=
                                 (this.powerupType.tiers as number[])[userPowTier];
                             boarUser.itemCollection.powerups.extraChance.numClaimed++;
-                            boarUser.itemCollection.powerups.extraChance.highestTotal = Math.max(
+                            boarUser.itemCollection.powerups.extraChance.highestTotal = Math.min(Math.max(
                                 boarUser.itemCollection.powerups.extraChance.highestTotal,
                                 boarUser.itemCollection.powerups.extraChance.numTotal
-                            );
+                            ), config.numberConfig.maxExtraChance);
                         }
 
                         if (userPowTier !== -1 && this.powerupType.name === powItemConfigs.gift.name) {
                             boarUser.itemCollection.powerups.gift.numTotal +=
                                 (this.powerupType.tiers as number[])[userPowTier];
                             boarUser.itemCollection.powerups.gift.numClaimed++;
-                            boarUser.itemCollection.powerups.gift.highestTotal = Math.max(
+                            boarUser.itemCollection.powerups.gift.highestTotal = Math.min(Math.max(
                                 boarUser.itemCollection.powerups.gift.highestTotal,
                                 boarUser.itemCollection.powerups.gift.numTotal
-                            );
+                            ), config.numberConfig.maxPowBase);
                         }
 
                         if (userPowTier !== -1 && this.powerupType.name === powItemConfigs.enhancer.name) {
                             boarUser.itemCollection.powerups.enhancer.numTotal +=
                                 (this.powerupType.tiers as number[])[userPowTier];
                             boarUser.itemCollection.powerups.enhancer.numClaimed++;
-                            boarUser.itemCollection.powerups.enhancer.highestTotal = Math.max(
+                            boarUser.itemCollection.powerups.enhancer.highestTotal = Math.min(Math.max(
                                 boarUser.itemCollection.powerups.enhancer.highestTotal,
                                 boarUser.itemCollection.powerups.enhancer.numTotal
-                            );
+                            ), config.numberConfig.maxEnhancers);
                         }
 
                         boarUser.updateUserData();

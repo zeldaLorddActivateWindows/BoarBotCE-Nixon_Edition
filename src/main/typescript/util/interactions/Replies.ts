@@ -110,7 +110,7 @@ export class Replies {
                 files: [embedImage],
                 components: []
             });
-        } else if (forceFollowup || interaction.replied || !interaction.isChatInputCommand()) {
+        } else if (forceFollowup || interaction.replied) {
             await interaction.followUp({
                 content: '',
                 files: [embedImage],

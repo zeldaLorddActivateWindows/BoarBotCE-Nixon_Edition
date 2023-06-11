@@ -336,12 +336,12 @@
         "collFavLabelPos": [130, 1070],
         "collIndivBoarPos": [741, 210],
         "collIndivBoarSize": [1156, 1156],
-        "collEnhancerStartX": 1166,
-        "collEnhancerStartY": 965,
+        "collEnhancerStartX": 1157,
+        "collEnhancerStartY": 959,
         "collEnhancerSpacingX": 70,
         "collEnhancerSpacingY": 80,
         "collEnhancerCols": 8,
-        "collEnhancerSize": [55, 64],
+        "collEnhancerSize": [75, 75],
         "powSpawnSize": [1491, 1069],
         "powSpawnDescriptionPos": [745, 623],
         "powSpawnDescriptionWidth": 1100,
@@ -763,15 +763,15 @@
                             "components": [
                                 {
                                     "type": 2,
-                                    "customId": "MARKET_INSTA_SELL",
-                                    "label": "Sell Now",
+                                    "customId": "MARKET_INSTA_BUY",
+                                    "label": "Buy Now",
                                     "style": 3,
                                     "disabled": true
                                 },
                                 {
                                     "type": 2,
-                                    "customId": "MARKET_INSTA_BUY",
-                                    "label": "Buy Now",
+                                    "customId": "MARKET_INSTA_SELL",
+                                    "label": "Sell Now",
                                     "style": 3,
                                     "disabled": true
                                 },
@@ -788,15 +788,15 @@
                             "components": [
                                 {
                                     "type": 2,
-                                    "customId": "MARKET_SELL_ORDER",
-                                    "label": "Sell Order",
+                                    "customId": "MARKET_BUY_ORDER",
+                                    "label": "Buy Order",
                                     "style": 3,
                                     "disabled": true
                                 },
                                 {
                                     "type": 2,
-                                    "customId": "MARKET_BUY_ORDER",
-                                    "label": "Buy Order",
+                                    "customId": "MARKET_SELL_ORDER",
+                                    "label": "Sell Order",
                                     "style": 3,
                                     "disabled": true
                                 }
@@ -827,7 +827,7 @@
                 "modals": [
                     {
                         "title": "Input Page Number or Boar/Item Name",
-                        "customId": "MARKET_MODAL",
+                        "customId": "MARKET_PAGE_MODAL",
                         "components": [
                             {
                                 "type": 1,
@@ -836,6 +836,42 @@
                                         "type": 4,
                                         "customId": "MARKET_PAGE_INPUT",
                                         "label": "PAGE NUMBER/ITEM NAME",
+                                        "style": 1,
+                                        "required": true
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "title": "",
+                        "customId": "MARKET_INSTA_MODAL",
+                        "components": [
+                            {
+                                "type": 1,
+                                "components": [
+                                    {
+                                        "type": 4,
+                                        "customId": "MARKET_INSTA_NUM_INPUT",
+                                        "label": "NUMBER TO BUY/SELL",
+                                        "style": 1,
+                                        "required": true
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "title": "",
+                        "customId": "MARKET_INSTA_SPECIAL_MODAL",
+                        "components": [
+                            {
+                                "type": 1,
+                                "components": [
+                                    {
+                                        "type": 4,
+                                        "customId": "MARKET_INSTA_SPECIAL_INPUT",
+                                        "label": "INPUT EDITION NUMBER TO CONFIRM",
                                         "style": 1,
                                         "required": true
                                     }

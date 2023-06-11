@@ -826,7 +826,7 @@ export class CollectionImageGenerator {
             ctx.drawImage(await Canvas.loadImage(badgeFile), ...badgeXY, ...nums.collBadgeSize);
         }
 
-        if (hasBadges) {
+        if (!hasBadges) {
             CanvasUtils.drawText(
                 ctx, strConfig.collNoBadges, nums.collNoBadgePos, mediumFont, 'left', colorConfig.font
             );
