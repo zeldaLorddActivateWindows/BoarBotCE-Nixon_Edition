@@ -598,9 +598,9 @@ export default class MarketSubcommand implements Subcommand {
         submittedModal.client.removeListener(Events.InteractionCreate, this.modalListenerPage);
     };
 
-    // private modalListenerInstaSpecial = async (submittedModal: Interaction): Promise<void> => {
-    //
-    // };
+    private modalListenerInstaSpecial = async (submittedModal: Interaction): Promise<void> => {
+
+    };
 
     private async showMarket(firstRun: boolean = false) {
         if (firstRun) {
