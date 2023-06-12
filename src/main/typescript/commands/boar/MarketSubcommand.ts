@@ -1,9 +1,16 @@
 import {
-    ActionRowBuilder, AttachmentBuilder,
+    ActionRowBuilder,
+    AttachmentBuilder,
     ButtonBuilder,
-    ButtonInteraction,
-    ChatInputCommandInteraction, Events, Interaction,
-    InteractionCollector, MessageComponentInteraction, ModalBuilder, SelectMenuComponentOptionData,
+    ButtonInteraction, ButtonStyle,
+    ChatInputCommandInteraction,
+    Events,
+    Interaction,
+    InteractionCollector,
+    MessageComponentInteraction,
+    ModalBuilder,
+    ModalSubmitInteraction,
+    SelectMenuComponentOptionData,
     StringSelectMenuBuilder,
     StringSelectMenuInteraction,
     TextChannel
@@ -150,6 +157,8 @@ export default class MarketSubcommand implements Subcommand {
             const isPageInput = inter.customId.startsWith(marketComponents.inputPage.customId);
             const isInstaBuy = inter.customId.startsWith(marketComponents.instaBuy.customId);
             const isInstaSell = inter.customId.startsWith(marketComponents.instaSell.customId);
+            const isBuyOrder = inter.customId.startsWith(marketComponents.buyOrder.customId);
+            const isSellOrder = inter.customId.startsWith(marketComponents.sellOrder.customId);
 
             // User wants to input a page manually
             if (isPageInput) {
@@ -159,61 +168,30 @@ export default class MarketSubcommand implements Subcommand {
                 return;
             }
 
+            let showModal: boolean = true;
             if (isInstaBuy || isInstaSell) {
-                let showModal: boolean = true;
                 await Queue.addQueue(async () => {
-                    try {
-                        this.boarUser.refreshUserData();
-                        const itemData = this.pricingData[this.curPage];
-
-                        let sellOrder: BuySellData | undefined;
-
-                        if (isInstaBuy && BoarUtils.findRarity(itemData.id, this.config)[1].name === 'Special') {
-                            for (const instaBuy of itemData.instaBuys) {
-                                if (instaBuy.editions[0] !== this.curEdition) continue;
-                                sellOrder = instaBuy;
-                                break;
-                            }
-                        }
-
-                        if (
-                            isInstaBuy && this.curEdition > 0 && sellOrder &&
-                            this.boarUser.stats.general.boarScore < sellOrder.price ||
-                            isInstaBuy && this.boarUser.stats.general.boarScore < itemData.instaBuys[0].price
-                        ) {
-                            showModal = false;
-                            await Replies.handleReply(
-                                inter, 'You don\'t have enough boar bucks for this!', this.config.colorConfig.error
-                            );
-                        } else if (
-                            isInstaSell && this.curEdition > 0 && this.boarUser.itemCollection.boars[itemData.id] &&
-                            !this.boarUser.itemCollection.boars[itemData.id].editions.includes(this.curEdition)
-                        ) {
-                            showModal = false;
-                            await Replies.handleReply(
-                                inter, 'You don\'t have this edition so you cannot sell it!',
-                                this.config.colorConfig.error
-                            );
-                        } else if (
-                            isInstaSell && itemData.type === 'boars' &&
-                            !this.boarUser.itemCollection.boars[itemData.id] ||
-                            isInstaSell && itemData.type === 'powerups' &&
-                            !this.boarUser.itemCollection.boars[itemData.id]
-                        ) {
-                            showModal = false;
-                            await Replies.handleReply(
-                                inter, 'You don\'t have any of this item!', this.config.colorConfig.error
-                            );
-                        }
-                    } catch (err: unknown) {
-                        await LogDebug.handleError(err, inter);
-                    }
+                    showModal = await this.canInstaModal(inter, isInstaBuy, isInstaSell);
                 }, inter.id + inter.user.id);
 
                 if (showModal) {
                     await this.modalHandle(inter);
                 }
 
+                clearInterval(this.timerVars.updateTime);
+                return;
+            }
+
+            if (isBuyOrder || isSellOrder) {
+                await Queue.addQueue(async () => {
+                    showModal = await this.canOrderModal(inter, isBuyOrder, isSellOrder);
+                }, inter.id + inter.user.id);
+
+                if (showModal) {
+                    await this.modalHandle(inter);
+                }
+
+                await this.showMarket();
                 clearInterval(this.timerVars.updateTime);
                 return;
             }
@@ -270,6 +248,110 @@ export default class MarketSubcommand implements Subcommand {
         }
 
         clearInterval(this.timerVars.updateTime);
+    }
+
+    private async canInstaModal(
+        inter: MessageComponentInteraction,
+        isInstaBuy: boolean,
+        isInstaSell: boolean
+    ): Promise<boolean> {
+        try {
+            this.boarUser.refreshUserData();
+            const itemData = this.pricingData[this.curPage];
+            let showModal = true;
+
+            let sellOrder: BuySellData | undefined;
+
+            if (isInstaBuy && BoarUtils.findRarity(itemData.id, this.config)[1].name === 'Special') {
+                for (const instaBuy of itemData.instaBuys) {
+                    if (instaBuy.editions[0] !== this.curEdition) continue;
+                    sellOrder = instaBuy;
+                    break;
+                }
+            }
+
+            if (
+                isInstaBuy && this.curEdition > 0 && sellOrder &&
+                this.boarUser.stats.general.boarScore < sellOrder.price ||
+                isInstaBuy && this.boarUser.stats.general.boarScore < itemData.instaBuys[0].price
+            ) {
+                showModal = false;
+                await Replies.handleReply(
+                    inter, 'You don\'t have enough boar bucks for this!', this.config.colorConfig.error
+                );
+            } else if (
+                isInstaSell && this.curEdition > 0 && this.boarUser.itemCollection.boars[itemData.id] &&
+                !this.boarUser.itemCollection.boars[itemData.id].editions.includes(this.curEdition)
+            ) {
+                showModal = false;
+                await Replies.handleReply(
+                    inter, 'You don\'t have this edition so you cannot sell it!',
+                    this.config.colorConfig.error
+                );
+            } else if (
+                isInstaSell && itemData.type === 'boars' &&
+                !this.boarUser.itemCollection.boars[itemData.id] ||
+                isInstaSell && itemData.type === 'powerups' &&
+                !this.boarUser.itemCollection.boars[itemData.id]
+            ) {
+                showModal = false;
+                await Replies.handleReply(
+                    inter, 'You don\'t have any of this item!', this.config.colorConfig.error
+                );
+            }
+            return showModal;
+        } catch (err: unknown) {
+            await LogDebug.handleError(err, inter);
+            return false;
+        }
+    }
+
+    private async canOrderModal(
+        inter: MessageComponentInteraction,
+        isBuyOrder: boolean,
+        isSellOrder: boolean
+    ): Promise<boolean> {
+        try {
+            this.boarUser.refreshUserData();
+            const itemData = this.pricingData[this.curPage];
+            let showModal = true;
+
+            const strConfig = this.config.stringConfig;
+
+            if (
+                isSellOrder && itemData.type === 'boars' &&
+                (!this.boarUser.itemCollection.boars[itemData.id] ||
+                    this.boarUser.itemCollection.boars[itemData.id].num === 0) ||
+                isSellOrder && itemData.type === 'powerups' &&
+                (!this.boarUser.itemCollection.powerups[itemData.id] ||
+                    this.boarUser.itemCollection.powerups[itemData.id].numTotal === 0)
+            ) {
+                await inter.deferUpdate();
+                showModal = false;
+                await Replies.handleReply(
+                    inter, 'You don\'t have any of this item!', this.config.colorConfig.error,
+                    undefined, undefined, true
+                );
+            } else if (
+                isBuyOrder && (this.optionalRows[1].components[0] as ButtonBuilder).data.style === 4 ||
+                isSellOrder && (this.optionalRows[1].components[1] as ButtonBuilder).data.style === 4
+            ) {
+                await inter.deferUpdate();
+                showModal = false;
+                await Replies.handleReply(
+                    inter, strConfig.marketOrderComplete, this.config.colorConfig.green,
+                    undefined, undefined, true
+                );
+
+                (this.optionalRows[1].components[0] as ButtonBuilder).setStyle(3);
+                (this.optionalRows[1].components[1] as ButtonBuilder).setStyle(3);
+            }
+
+            return showModal;
+        } catch (err: unknown) {
+            await LogDebug.handleError(err, inter);
+            return false;
+        }
     }
 
     private async handleEndCollect(reason: string) {
@@ -353,27 +435,38 @@ export default class MarketSubcommand implements Subcommand {
 
         const isInstaBuy = inter.customId.startsWith(marketRowConfig[1][0].components[0].customId);
         const isInstaSell = inter.customId.startsWith(marketRowConfig[1][0].components[1].customId);
+        const isBuyOrder = inter.customId.startsWith(marketRowConfig[1][1].components[0].customId);
+        const isSellOrder = inter.customId.startsWith(marketRowConfig[1][1].components[1].customId);
+
+        const itemData = this.config.itemConfigs[this.pricingData[this.curPage].type]
+            [this.pricingData[this.curPage].id];
 
         if ((isInstaBuy || isInstaSell) && this.curEdition === 0) {
             modalNum = 1;
-            const itemPlural = this.config.itemConfigs
-                [this.pricingData[this.curPage].type]
-                [this.pricingData[this.curPage].id].pluralName;
-
             modalTitle = (isInstaBuy
                 ? marketRowConfig[1][0].components[0].label
-                : marketRowConfig[1][0].components[1].label) + ': ' + itemPlural;
+                : marketRowConfig[1][0].components[1].label) + ': ' + itemData.pluralName;
         }
 
         if ((isInstaBuy || isInstaSell) && this.curEdition > 0) {
             modalNum = 2;
-            const itemName = this.config.itemConfigs
-                [this.pricingData[this.curPage].type]
-                [this.pricingData[this.curPage].id].name;
-
             modalTitle = (isInstaBuy
                 ? marketRowConfig[1][0].components[0].label
-                : marketRowConfig[1][0].components[1].label) + ': ' + itemName + ' #' + this.curEdition;
+                : marketRowConfig[1][0].components[1].label) + ': ' + itemData.name + ' #' + this.curEdition;
+        }
+
+        if ((isBuyOrder || isSellOrder) && this.curEdition === 0) {
+            modalNum = 3;
+            modalTitle = (isBuyOrder
+                ? marketRowConfig[1][1].components[0].label
+                : marketRowConfig[1][1].components[1].label) + ': ' + itemData.pluralName;
+        }
+
+        if ((isBuyOrder || isSellOrder) && this.curEdition > 0) {
+            modalNum = 4;
+            modalTitle = (isBuyOrder
+                ? marketRowConfig[1][1].components[0].label
+                : marketRowConfig[1][1].components[1].label) + ': ' + itemData.name;
         }
 
         this.modalShowing = new ModalBuilder(modals[modalNum]);
@@ -381,34 +474,25 @@ export default class MarketSubcommand implements Subcommand {
         this.modalShowing.setTitle(modalTitle);
         await inter.showModal(this.modalShowing);
 
+        let listener: (submittedModal: Interaction) => Promise<void>;
+
         if (modalNum === 0) {
-            inter.client.on(
-                Events.InteractionCreate,
-                this.modalListenerPage
-            );
-
-            setTimeout(() => {
-                inter.client.removeListener(Events.InteractionCreate, this.modalListenerPage);
-            }, 60000);
+            listener = this.modalListenerPage;
         } else if (modalNum === 1) {
-            inter.client.on(
-                Events.InteractionCreate,
-                this.modalListenerInsta
-            );
-
-            setTimeout(() => {
-                inter.client.removeListener(Events.InteractionCreate, this.modalListenerInsta);
-            }, 60000);
+            listener = this.modalListenerInsta;
+        } else if (modalNum === 2) {
+            listener = this.modalListenerInstaSpecial;
+        } else if (modalNum === 3) {
+            listener = this.modalListenerOrder;
         } else {
-            inter.client.on(
-                Events.InteractionCreate,
-                this.modalListenerInstaSpecial
-            );
-
-            setTimeout(() => {
-                inter.client.removeListener(Events.InteractionCreate, this.modalListenerInstaSpecial);
-            }, 60000);
+            listener = this.modalListenerOrderSpecial;
         }
+
+        inter.client.on(Events.InteractionCreate, listener);
+
+        setTimeout(() => {
+            inter.client.removeListener(Events.InteractionCreate, listener);
+        }, 60000);
     }
 
     /**
@@ -419,30 +503,8 @@ export default class MarketSubcommand implements Subcommand {
      */
     private modalListenerPage = async (submittedModal: Interaction): Promise<void> => {
         try  {
-            // If not a modal submission on current interaction, destroy the modal listener
-            if (
-                submittedModal.isMessageComponent() &&
-                submittedModal.customId.endsWith(this.firstInter.id + '|' + this.firstInter.user.id) ||
-                BoarBotApp.getBot().getConfig().maintenanceMode && !this.config.devs.includes(this.compInter.user.id)
-            ) {
-                clearInterval(this.timerVars.updateTime);
-                submittedModal.client.removeListener(Events.InteractionCreate, this.modalListenerPage);
-
-                return;
-            }
-
-            // Updates the cooldown to interact again
-            CollectorUtils.canInteract(this.timerVars);
-
-            if (
-                !submittedModal.isModalSubmit() || this.collector.ended ||
-                !submittedModal.guild || submittedModal.customId !== this.modalShowing.data.custom_id
-            ) {
-                clearInterval(this.timerVars.updateTime);
-                return;
-            }
-
-            await submittedModal.deferUpdate();
+            if (!await this.beginModal(submittedModal, this.modalListenerPage)) return;
+            submittedModal = submittedModal as ModalSubmitInteraction;
 
             const submittedPage: string = submittedModal.fields.getTextInputValue(
                 this.modalShowing.components[0].components[0].data.custom_id as string
@@ -473,37 +535,15 @@ export default class MarketSubcommand implements Subcommand {
 
     private modalListenerInsta = async (submittedModal: Interaction): Promise<void> => {
         try  {
-            // If not a modal submission on current interaction, destroy the modal listener
-            if (
-                submittedModal.isMessageComponent() &&
-                submittedModal.customId.endsWith(this.firstInter.id + '|' + this.firstInter.user.id) ||
-                BoarBotApp.getBot().getConfig().maintenanceMode && !this.config.devs.includes(this.compInter.user.id)
-            ) {
-                clearInterval(this.timerVars.updateTime);
-                submittedModal.client.removeListener(Events.InteractionCreate, this.modalListenerInsta);
+            if (!await this.beginModal(submittedModal, this.modalListenerInsta)) return;
+            submittedModal = submittedModal as ModalSubmitInteraction;
 
-                return;
-            }
-
-            // Updates the cooldown to interact again
-            CollectorUtils.canInteract(this.timerVars);
-
-            if (
-                !submittedModal.isModalSubmit() || this.collector.ended ||
-                !submittedModal.guild || submittedModal.customId !== this.modalShowing.data.custom_id
-            ) {
-                clearInterval(this.timerVars.updateTime);
-                return;
-            }
-
-            await submittedModal.deferUpdate();
+            const strConfig = this.config.stringConfig;
 
             const isInstaBuy = this.modalShowing.data.title?.startsWith(
                 this.config.commandConfigs.boar.market.componentFields[1][0].components[0].label
             );
-            const responseStart = isInstaBuy
-                ? 'Buying '
-                : 'Selling ';
+            const responseStr = isInstaBuy ? strConfig.marketConfirmInstaBuy : strConfig.marketConfirmInstaSell;
 
             const submittedNum: string = submittedModal.fields.getTextInputValue(
                 this.modalShowing.components[0].components[0].data.custom_id as string
@@ -518,9 +558,9 @@ export default class MarketSubcommand implements Subcommand {
                 numVal = parseInt(submittedNum);
             }
 
-            if (numVal === 0) {
+            if (numVal <= 0) {
                 await Replies.handleReply(
-                    submittedModal, 'Invalid input! Try again.', this.config.colorConfig.error,
+                    submittedModal, 'Invalid input! Input(s) must be greater than zero.', this.config.colorConfig.error,
                     undefined, undefined, true
                 );
 
@@ -537,10 +577,8 @@ export default class MarketSubcommand implements Subcommand {
 
             if (
                 !isInstaBuy &&
-                (itemData.type === 'boars' && (!this.boarUser.itemCollection.boars[itemData.id] ||
-                    this.boarUser.itemCollection.boars[itemData.id].num < numVal) ||
-                itemData.type === 'powerups' && (!this.boarUser.itemCollection.powerups[itemData.id] ||
-                    this.boarUser.itemCollection.powerups[itemData.id].numTotal < numVal))
+                (itemData.type === 'boars' && this.boarUser.itemCollection.boars[itemData.id].num < numVal ||
+                itemData.type === 'powerups' && this.boarUser.itemCollection.powerups[itemData.id].numTotal < numVal)
             ) {
                 await Replies.handleReply(
                     submittedModal, 'You don\'t have enough of this item!',
@@ -580,14 +618,21 @@ export default class MarketSubcommand implements Subcommand {
                 return;
             }
 
-            const itemName = numVal > 1
+            const itemName = numVal + ' ' + (numVal > 1
                 ? this.config.itemConfigs[itemData.type][itemData.id].pluralName
-                : this.config.itemConfigs[itemData.type][itemData.id].name;
+                : this.config.itemConfigs[itemData.type][itemData.id].name);
 
             await Replies.handleReply(
-                submittedModal, responseStart + numVal + ' ' + itemName + ' for $' + curPrice +
-                '. Click \'Confirm\' to confirm!', undefined, undefined, undefined, true
+                submittedModal, responseStr.replace('%@', itemName).replace('%@', curPrice.toLocaleString),
+                this.config.colorConfig.font, undefined, undefined, true
             );
+
+            if (isInstaBuy) {
+                (this.optionalRows[0].components[0] as ButtonBuilder).setStyle(4);
+            } else {
+                (this.optionalRows[0].components[1] as ButtonBuilder).setStyle(4);
+            }
+
             await this.showMarket();
         } catch (err: unknown) {
             await LogDebug.handleError(err);
@@ -599,8 +644,382 @@ export default class MarketSubcommand implements Subcommand {
     };
 
     private modalListenerInstaSpecial = async (submittedModal: Interaction): Promise<void> => {
+        try  {
+            if (!await this.beginModal(submittedModal, this.modalListenerInstaSpecial)) return;
+            submittedModal = submittedModal as ModalSubmitInteraction;
 
+            const strConfig = this.config.stringConfig;
+
+            const isInstaBuy = this.modalShowing.data.title?.startsWith(
+                this.config.commandConfigs.boar.market.componentFields[1][0].components[0].label
+            );
+            const responseStr = isInstaBuy ? strConfig.marketConfirmInstaBuy : strConfig.marketConfirmInstaSell;
+
+            const submittedNum: string = submittedModal.fields.getTextInputValue(
+                this.modalShowing.components[0].components[0].data.custom_id as string
+            ).toLowerCase().replace(/\s+/g, '');
+
+            LogDebug.sendDebug(
+                `${submittedModal.customId.split('|')[0]} input value: ` + submittedNum, this.config, this.firstInter
+            );
+
+            let editionVal: number = 0;
+            if (!Number.isNaN(parseInt(submittedNum))) {
+                editionVal = parseInt(submittedNum);
+            }
+
+            if (editionVal <= 0) {
+                await Replies.handleReply(
+                    submittedModal, 'Invalid input! Input(s) must be greater than zero.',
+                    this.config.colorConfig.error, undefined, undefined, true
+                );
+
+                clearInterval(this.timerVars.updateTime);
+                return;
+            }
+
+            this.boarUser.refreshUserData();
+
+            this.getPricingData();
+            this.imageGen.updateInfo(this.pricingData, this.config);
+
+            const itemData = this.pricingData[this.curPage];
+
+            if (
+                !isInstaBuy && !this.boarUser.itemCollection.boars[itemData.id].editions.includes(this.curEdition)
+            ) {
+                await Replies.handleReply(
+                    submittedModal, 'You don\'t have edition #' + this.curEdition + ' of this item so you cannot sell it!',
+                    this.config.colorConfig.error, undefined, undefined, true
+                );
+
+                clearInterval(this.timerVars.updateTime);
+                return;
+            }
+
+            if (editionVal !== this.curEdition) {
+                await Replies.handleReply(
+                    submittedModal, 'The edition number you input didn\'t match the edition you were trying to buy/sell!',
+                    this.config.colorConfig.error, undefined, undefined, true
+                );
+
+                clearInterval(this.timerVars.updateTime);
+                return;
+            }
+
+            let curPrice = 0;
+
+            if (isInstaBuy) {
+                for (const instaBuy of itemData.instaBuys) {
+                    if (instaBuy.editions[0] !== this.curEdition) continue;
+                    curPrice = instaBuy.price;
+                    break;
+                }
+            } else {
+                for (const instaSell of itemData.instaSells) {
+                    if (instaSell.editions[0] !== this.curEdition) continue;
+                    curPrice = instaSell.price;
+                    break;
+                }
+            }
+
+            if (curPrice === 0) {
+                await Replies.handleReply(
+                    submittedModal, 'Not enough orders of this item edition to complete this transaction!',
+                    this.config.colorConfig.error, undefined, undefined, true
+                );
+
+                clearInterval(this.timerVars.updateTime);
+                return;
+            }
+
+            const itemName = this.config.itemConfigs[itemData.type][itemData.id].name + ' #' + this.curEdition;
+
+            await Replies.handleReply(
+                submittedModal, responseStr.replace('%@', itemName).replace('%@', curPrice.toLocaleString()),
+                this.config.colorConfig.font, undefined, undefined, true
+            );
+
+            if (isInstaBuy) {
+                (this.optionalRows[0].components[0] as ButtonBuilder).setStyle(4);
+            } else {
+                (this.optionalRows[0].components[1] as ButtonBuilder).setStyle(4);
+            }
+
+            await this.showMarket();
+        } catch (err: unknown) {
+            await LogDebug.handleError(err);
+            this.collector.stop(CollectorUtils.Reasons.Error);
+        }
+
+        clearInterval(this.timerVars.updateTime);
+        submittedModal.client.removeListener(Events.InteractionCreate, this.modalListenerPage);
     };
+
+    private modalListenerOrder = async (submittedModal: Interaction): Promise<void> => {
+        try  {
+            if (!await this.beginModal(submittedModal, this.modalListenerOrder)) return;
+            submittedModal = submittedModal as ModalSubmitInteraction;
+
+            const strConfig = this.config.stringConfig;
+
+            const isBuyOrder = this.modalShowing.data.title?.startsWith(
+                this.config.commandConfigs.boar.market.componentFields[1][1].components[0].label
+            );
+            const responseStr = isBuyOrder ? strConfig.marketConfirmBuyOrder : strConfig.marketConfirmSellOrder;
+
+            const submittedNum: string = submittedModal.fields.getTextInputValue(
+                this.modalShowing.components[0].components[0].data.custom_id as string
+            ).toLowerCase().replace(/\s+/g, '');
+            const submittedPrice: string = submittedModal.fields.getTextInputValue(
+                this.modalShowing.components[1].components[0].data.custom_id as string
+            ).toLowerCase().replace(/\s+/g, '');
+
+            LogDebug.sendDebug(
+                `${submittedModal.customId.split('|')[0]} input values: ${submittedNum}, ${submittedPrice}`,
+                this.config, this.firstInter
+            );
+
+            let numVal: number = 0;
+            let priceVal: number = 0;
+            if (!Number.isNaN(parseInt(submittedNum))) {
+                numVal = parseInt(submittedNum);
+            }
+            if (!Number.isNaN(parseInt(submittedPrice))) {
+                priceVal = parseInt(submittedPrice);
+            }
+
+            if (numVal <= 0 || priceVal <= 0) {
+                await Replies.handleReply(
+                    submittedModal, 'Invalid input! Input(s) must be greater than zero.',
+                    this.config.colorConfig.error, undefined, undefined, true
+                );
+
+                clearInterval(this.timerVars.updateTime);
+                return;
+            }
+
+            this.boarUser.refreshUserData();
+
+            this.getPricingData();
+            this.imageGen.updateInfo(this.pricingData, this.config);
+
+            const itemData = this.pricingData[this.curPage];
+
+            if (
+                !isBuyOrder &&
+                (itemData.type === 'boars' && this.boarUser.itemCollection.boars[itemData.id].num < numVal ||
+                itemData.type === 'powerups' && this.boarUser.itemCollection.powerups[itemData.id].numTotal < numVal)
+            ) {
+                await Replies.handleReply(
+                    submittedModal, 'You don\'t have enough of this item!',
+                    this.config.colorConfig.error, undefined, undefined, true
+                );
+
+                clearInterval(this.timerVars.updateTime);
+                return;
+            }
+
+            const price = priceVal * numVal;
+
+            const bucksBoardData = DataHandlers.getGlobalData().leaderboardData['bucks'];
+            let maxBucks = 1000000;
+            for (const userID of Object.keys(bucksBoardData)) {
+                maxBucks = Math.max(maxBucks, bucksBoardData[userID] as number * 10);
+            }
+
+            if (!isBuyOrder && priceVal > maxBucks) {
+                await Replies.handleReply(
+                    submittedModal, 'Order price must be $' + maxBucks.toLocaleString() + ' or lower.',
+                    this.config.colorConfig.error, undefined, undefined, true
+                );
+
+                clearInterval(this.timerVars.updateTime);
+                return;
+            }
+
+            if (isBuyOrder && price > this.boarUser.stats.general.boarScore) {
+                await Replies.handleReply(
+                    submittedModal, 'You don\'t have enough boar bucks to create this order!',
+                    this.config.colorConfig.error, undefined, undefined, true
+                );
+
+                clearInterval(this.timerVars.updateTime);
+                return;
+            }
+
+            const itemName = numVal + ' ' + (numVal > 1
+                ? this.config.itemConfigs[itemData.type][itemData.id].pluralName
+                : this.config.itemConfigs[itemData.type][itemData.id].name);
+
+            await Replies.handleReply(
+                submittedModal, responseStr.replace('%@', itemName).replace('%@', price.toLocaleString()),
+                this.config.colorConfig.font, undefined, undefined, true
+            );
+
+            if (isBuyOrder) {
+                (this.optionalRows[1].components[0] as ButtonBuilder).setStyle(4);
+            } else {
+                (this.optionalRows[1].components[1] as ButtonBuilder).setStyle(4);
+            }
+
+            await this.showMarket();
+        } catch (err: unknown) {
+            await LogDebug.handleError(err);
+            this.collector.stop(CollectorUtils.Reasons.Error);
+        }
+
+        clearInterval(this.timerVars.updateTime);
+        submittedModal.client.removeListener(Events.InteractionCreate, this.modalListenerPage);
+    };
+
+    private modalListenerOrderSpecial = async (submittedModal: Interaction): Promise<void> => {
+        try  {
+            if (!await this.beginModal(submittedModal, this.modalListenerOrderSpecial)) return;
+            submittedModal = submittedModal as ModalSubmitInteraction;
+
+            const strConfig = this.config.stringConfig;
+
+            const isBuyOrder = this.modalShowing.data.title?.startsWith(
+                this.config.commandConfigs.boar.market.componentFields[1][1].components[0].label
+            );
+            const responseStr = isBuyOrder ? strConfig.marketConfirmBuyOrder : strConfig.marketConfirmSellOrder;
+
+            const submittedEdition: string = submittedModal.fields.getTextInputValue(
+                this.modalShowing.components[0].components[0].data.custom_id as string
+            ).toLowerCase().replace(/\s+/g, '');
+            const submittedPrice: string = submittedModal.fields.getTextInputValue(
+                this.modalShowing.components[1].components[0].data.custom_id as string
+            ).toLowerCase().replace(/\s+/g, '');
+
+            LogDebug.sendDebug(
+                `${submittedModal.customId.split('|')[0]} input values: ${submittedEdition}, ${submittedPrice}`,
+                this.config, this.firstInter
+            );
+
+            let editionVal: number = 0;
+            let priceVal: number = 0;
+            if (!Number.isNaN(parseInt(submittedEdition))) {
+                editionVal = parseInt(submittedEdition);
+            }
+            if (!Number.isNaN(parseInt(submittedPrice))) {
+                priceVal = parseInt(submittedPrice);
+            }
+
+            if (editionVal <= 0 || priceVal <= 0) {
+                await Replies.handleReply(
+                    submittedModal, 'Invalid input! Input(s) must be greater than zero.',
+                    this.config.colorConfig.error, undefined, undefined, true
+                );
+
+                clearInterval(this.timerVars.updateTime);
+                return;
+            }
+
+            this.boarUser.refreshUserData();
+
+            this.getPricingData();
+            this.imageGen.updateInfo(this.pricingData, this.config);
+
+            const itemData = this.pricingData[this.curPage];
+
+            if (!isBuyOrder && !this.boarUser.itemCollection.boars[itemData.id].editions.includes(this.curEdition)) {
+                await Replies.handleReply(
+                    submittedModal, 'You don\'t have edition #' + editionVal + 'of this item so you cannot sell it!',
+                    this.config.colorConfig.error, undefined, undefined, true
+                );
+
+                clearInterval(this.timerVars.updateTime);
+                return;
+            }
+
+            if (isBuyOrder && this.boarUser.itemCollection.boars[itemData.id].editions.includes(editionVal)) {
+                await Replies.handleReply(
+                    submittedModal, 'You already have edition #' + editionVal + ' of this item!',
+                    this.config.colorConfig.error, undefined, undefined, true
+                );
+
+                clearInterval(this.timerVars.updateTime);
+                return;
+            }
+
+            const bucksBoardData = DataHandlers.getGlobalData().leaderboardData['bucks'];
+            let maxBucks = 1000000;
+            for (const userID of Object.keys(bucksBoardData)) {
+                maxBucks = Math.max(maxBucks, bucksBoardData[userID] as number * 10);
+            }
+
+            if (!isBuyOrder && priceVal > maxBucks) {
+                await Replies.handleReply(
+                    submittedModal, 'Order price must be $' + maxBucks.toLocaleString() + ' or lower.',
+                    this.config.colorConfig.error, undefined, undefined, true
+                );
+
+                clearInterval(this.timerVars.updateTime);
+                return;
+            }
+
+            if (isBuyOrder && priceVal > this.boarUser.stats.general.boarScore) {
+                await Replies.handleReply(
+                    submittedModal, 'You don\'t have enough boar bucks to create this order!',
+                    this.config.colorConfig.error, undefined, undefined, true
+                );
+
+                clearInterval(this.timerVars.updateTime);
+                return;
+            }
+
+            const itemName = this.config.itemConfigs[itemData.type][itemData.id].name + ' #' + editionVal;
+
+            await Replies.handleReply(
+                submittedModal, responseStr.replace('%@', itemName).replace('%@', priceVal.toLocaleString()),
+                this.config.colorConfig.font, undefined, undefined, true
+            );
+
+            if (isBuyOrder) {
+                (this.optionalRows[1].components[0] as ButtonBuilder).setStyle(4);
+            } else {
+                (this.optionalRows[1].components[1] as ButtonBuilder).setStyle(4);
+            }
+
+            await this.showMarket();
+        } catch (err: unknown) {
+            await LogDebug.handleError(err);
+            this.collector.stop(CollectorUtils.Reasons.Error);
+        }
+
+        clearInterval(this.timerVars.updateTime);
+        submittedModal.client.removeListener(Events.InteractionCreate, this.modalListenerPage);
+    };
+
+    private async beginModal(
+        submittedModal: Interaction, listener: (submittedModal: Interaction) => Promise<void>
+    ): Promise<boolean> {
+        if (
+            submittedModal.isMessageComponent() &&
+            submittedModal.customId.endsWith(this.firstInter.id + '|' + this.firstInter.user.id) ||
+            BoarBotApp.getBot().getConfig().maintenanceMode && !this.config.devs.includes(this.compInter.user.id)
+        ) {
+            clearInterval(this.timerVars.updateTime);
+            submittedModal.client.removeListener(Events.InteractionCreate, listener);
+
+            return false;
+        }
+
+        // Updates the cooldown to interact again
+        CollectorUtils.canInteract(this.timerVars);
+
+        if (
+            !submittedModal.isModalSubmit() || this.collector.ended ||
+            !submittedModal.guild || submittedModal.customId !== this.modalShowing.data.custom_id
+        ) {
+            clearInterval(this.timerVars.updateTime);
+            return false;
+        }
+
+        await submittedModal.deferUpdate();
+        return true;
+    }
 
     private async showMarket(firstRun: boolean = false) {
         if (firstRun) {
@@ -651,10 +1070,12 @@ export default class MarketSubcommand implements Subcommand {
                 for (let i=0; i<item.instaBuys.length; i++) {
                     const editionNum: number = item.instaBuys[i].editions[0];
 
-                    selectOptions.push({
-                        label: 'Edition #' + editionNum,
-                        value: editionNum.toString()
-                    });
+                    if (!instaBuyEditions.includes(editionNum)) {
+                        selectOptions.push({
+                            label: 'Edition #' + editionNum,
+                            value: editionNum.toString()
+                        });
+                    }
 
                     instaBuyEditions.push(editionNum);
                 }
@@ -662,12 +1083,12 @@ export default class MarketSubcommand implements Subcommand {
                 for (let i=0; i<item.instaSells.length; i++) {
                     const editionNum: number = item.instaSells[i].editions[0];
 
-                    if (instaBuyEditions.includes(editionNum)) return;
-
-                    selectOptions.push({
-                        label: 'Edition #' + editionNum,
-                        value: editionNum.toString()
-                    });
+                    if (!instaBuyEditions.includes(editionNum) && !instaSellEditions.includes(editionNum)) {
+                        selectOptions.push({
+                            label: 'Edition #' + editionNum,
+                            value: editionNum.toString()
+                        });
+                    }
 
                     instaSellEditions.push(editionNum);
                 }

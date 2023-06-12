@@ -133,6 +133,14 @@ export class StringConfig {
     public readonly boardHeader: string = ' ';
     public readonly boardFooter: string = ' ';
     public readonly deletedUsername: string = ' ';
+    public readonly marketConfirmInstaBuy: string = ' ';
+    public readonly marketUpdatedInstaBuy: string = ' ';
+    public readonly marketConfirmInstaSell: string = ' ';
+    public readonly marketUpdatedInstaSell: string = ' ';
+    public readonly marketInstaComplete: string = ' ';
+    public readonly marketConfirmBuyOrder: string = ' ';
+    public readonly marketConfirmSellOrder: string = ' ';
+    public readonly marketOrderComplete: string = ' ';
     public readonly noParentChannel: string = ' ';
     public readonly notValidChannel: string = ' ';
     public readonly defaultSelectPlaceholder: string = ' ';
