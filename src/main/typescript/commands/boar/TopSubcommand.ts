@@ -107,17 +107,26 @@ export default class TopSubcommand implements Subcommand {
             );
         }
 
-        this.collector = await CollectorUtils.createCollector(
+        if (CollectorUtils.topCollectors[interaction.user.id]) {
+            CollectorUtils.topCollectors[interaction.user.id].stop('idle');
+        }
+
+        CollectorUtils.topCollectors[interaction.user.id] = await CollectorUtils.createCollector(
             interaction.channel as TextChannel, interaction.id, this.config.numberConfig
         );
 
         this.imageGen = new LeaderboardImageGenerator(this.curBoardData, this.curBoard, this.config);
         await this.showLeaderboard();
 
-        this.collector.on('collect', async (inter: ButtonInteraction | StringSelectMenuInteraction) =>
-            await this.handleCollect(inter)
+        CollectorUtils.topCollectors[interaction.user.id].on(
+            'collect',
+            async (inter: ButtonInteraction | StringSelectMenuInteraction) => await this.handleCollect(inter)
         );
-        this.collector.once('end', async (collected, reason) => await this.handleEndCollect(reason));
+
+        CollectorUtils.topCollectors[interaction.user.id].once(
+            'end',
+            async (collected, reason) => await this.handleEndCollect(reason)
+        );
     }
 
     private async handleCollect(inter: ButtonInteraction | StringSelectMenuInteraction) {

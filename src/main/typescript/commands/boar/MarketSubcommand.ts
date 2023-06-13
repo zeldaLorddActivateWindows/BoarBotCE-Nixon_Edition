@@ -34,6 +34,7 @@ import {BoarUser} from '../../util/boar/BoarUser';
 import {ModalConfig} from '../../bot/config/modals/ModalConfig';
 import {BoarUtils} from '../../util/boar/BoarUtils';
 import {Queue} from '../../util/interactions/Queue';
+import fs from 'fs';
 
 enum View {
     Overview,
@@ -63,6 +64,7 @@ export default class MarketSubcommand implements Subcommand {
     private curView: View = View.Overview;
     private curPage: number = 0;
     private curEdition: number = 0;
+    private modalData: [number, number, number] = [0, 0, 0];
     private maxPageOverview: number = 0;
     private maxPageOrders: number = 0;
     private baseRows: ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>[] = [];
@@ -112,17 +114,26 @@ export default class MarketSubcommand implements Subcommand {
 
         this.setPage(pageVal);
 
-        this.collector = await CollectorUtils.createCollector(
+        if (CollectorUtils.marketCollectors[interaction.user.id]) {
+            CollectorUtils.marketCollectors[interaction.user.id].stop('idle');
+        }
+
+        CollectorUtils.marketCollectors[interaction.user.id] = await CollectorUtils.createCollector(
             interaction.channel as TextChannel, interaction.id, this.config.numberConfig
         );
 
         this.imageGen = new MarketImageGenerator(this.pricingData, this.config);
         await this.showMarket(true);
 
-        this.collector.on('collect', async (inter: ButtonInteraction | StringSelectMenuInteraction) =>
+        CollectorUtils.marketCollectors[interaction.user.id].on(
+            'collect', async (inter: ButtonInteraction | StringSelectMenuInteraction) =>
             await this.handleCollect(inter)
         );
-        this.collector.once('end', async (collected, reason) => await this.handleEndCollect(reason));
+
+        CollectorUtils.marketCollectors[interaction.user.id].once(
+            'end',
+            async (collected, reason) => await this.handleEndCollect(reason)
+        );
     }
 
     private async handleCollect(inter: ButtonInteraction | StringSelectMenuInteraction) {
@@ -164,6 +175,12 @@ export default class MarketSubcommand implements Subcommand {
             if (isPageInput) {
                 await this.modalHandle(inter);
 
+                (this.optionalRows[0].components[0] as ButtonBuilder).setStyle(3);
+                (this.optionalRows[0].components[1] as ButtonBuilder).setStyle(3);
+                (this.optionalRows[1].components[0] as ButtonBuilder).setStyle(3);
+                (this.optionalRows[1].components[1] as ButtonBuilder).setStyle(3);
+
+                await this.showMarket();
                 clearInterval(this.timerVars.updateTime);
                 return;
             }
@@ -178,6 +195,12 @@ export default class MarketSubcommand implements Subcommand {
                     await this.modalHandle(inter);
                 }
 
+                (this.optionalRows[0].components[0] as ButtonBuilder).setStyle(3);
+                (this.optionalRows[0].components[1] as ButtonBuilder).setStyle(3);
+                (this.optionalRows[1].components[0] as ButtonBuilder).setStyle(3);
+                (this.optionalRows[1].components[1] as ButtonBuilder).setStyle(3);
+
+                await this.showMarket();
                 clearInterval(this.timerVars.updateTime);
                 return;
             }
@@ -190,6 +213,11 @@ export default class MarketSubcommand implements Subcommand {
                 if (showModal) {
                     await this.modalHandle(inter);
                 }
+
+                (this.optionalRows[0].components[0] as ButtonBuilder).setStyle(3);
+                (this.optionalRows[0].components[1] as ButtonBuilder).setStyle(3);
+                (this.optionalRows[1].components[0] as ButtonBuilder).setStyle(3);
+                (this.optionalRows[1].components[1] as ButtonBuilder).setStyle(3);
 
                 await this.showMarket();
                 clearInterval(this.timerVars.updateTime);
@@ -241,6 +269,12 @@ export default class MarketSubcommand implements Subcommand {
                     break;
             }
 
+            (this.optionalRows[0].components[0] as ButtonBuilder).setStyle(3);
+            (this.optionalRows[0].components[1] as ButtonBuilder).setStyle(3);
+            (this.optionalRows[1].components[0] as ButtonBuilder).setStyle(3);
+            (this.optionalRows[1].components[1] as ButtonBuilder).setStyle(3);
+
+            this.modalData = [0, 0, 0];
             await this.showMarket();
         } catch (err: unknown) {
             await LogDebug.handleError(err);
@@ -251,20 +285,20 @@ export default class MarketSubcommand implements Subcommand {
     }
 
     private async canInstaModal(
-        inter: MessageComponentInteraction,
-        isInstaBuy: boolean,
-        isInstaSell: boolean
+        inter: MessageComponentInteraction, isInstaBuy: boolean, isInstaSell: boolean
     ): Promise<boolean> {
         try {
             this.boarUser.refreshUserData();
             const itemData = this.pricingData[this.curPage];
             let showModal = true;
 
+            const strConfig = this.config.stringConfig;
+
             let sellOrder: BuySellData | undefined;
 
             if (isInstaBuy && BoarUtils.findRarity(itemData.id, this.config)[1].name === 'Special') {
                 for (const instaBuy of itemData.instaBuys) {
-                    if (instaBuy.editions[0] !== this.curEdition) continue;
+                    if ((instaBuy.editions as number[])[0] !== this.curEdition) continue;
                     sellOrder = instaBuy;
                     break;
                 }
@@ -298,7 +332,18 @@ export default class MarketSubcommand implements Subcommand {
                 await Replies.handleReply(
                     inter, 'You don\'t have any of this item!', this.config.colorConfig.error
                 );
+            } else if (isInstaBuy && (this.optionalRows[0].components[0] as ButtonBuilder).data.style === 4) {
+                await inter.deferUpdate();
+                showModal = false;
+
+                await Replies.handleReply(
+                    inter, strConfig.marketInstaComplete, this.config.colorConfig.green,
+                    undefined, undefined, true
+                );
+            } else if (isInstaSell && (this.optionalRows[0].components[1] as ButtonBuilder).data.style === 4) {
+
             }
+
             return showModal;
         } catch (err: unknown) {
             await LogDebug.handleError(err, inter);
@@ -307,9 +352,7 @@ export default class MarketSubcommand implements Subcommand {
     }
 
     private async canOrderModal(
-        inter: MessageComponentInteraction,
-        isBuyOrder: boolean,
-        isSellOrder: boolean
+        inter: MessageComponentInteraction, isBuyOrder: boolean, isSellOrder: boolean
     ): Promise<boolean> {
         try {
             this.boarUser.refreshUserData();
@@ -332,19 +375,146 @@ export default class MarketSubcommand implements Subcommand {
                     inter, 'You don\'t have any of this item!', this.config.colorConfig.error,
                     undefined, undefined, true
                 );
-            } else if (
-                isBuyOrder && (this.optionalRows[1].components[0] as ButtonBuilder).data.style === 4 ||
-                isSellOrder && (this.optionalRows[1].components[1] as ButtonBuilder).data.style === 4
-            ) {
+            } else if (isBuyOrder && (this.optionalRows[1].components[0] as ButtonBuilder).data.style === 4) {
                 await inter.deferUpdate();
                 showModal = false;
-                await Replies.handleReply(
-                    inter, strConfig.marketOrderComplete, this.config.colorConfig.green,
-                    undefined, undefined, true
-                );
 
-                (this.optionalRows[1].components[0] as ButtonBuilder).setStyle(3);
-                (this.optionalRows[1].components[1] as ButtonBuilder).setStyle(3);
+                let isSellingEdition = false;
+                for (const instaBuy of itemData.instaBuys) {
+                    if (
+                        instaBuy.userID === this.compInter.user.id &&
+                        (instaBuy.editions as number[])[0] === this.modalData[2]
+                    ) {
+                        isSellingEdition = true;
+                        break;
+                    }
+                }
+
+                if (
+                    this.boarUser.stats.general.boarScore >= this.modalData[0] * this.modalData[1] &&
+                    !isSellingEdition &&
+                    !this.boarUser.itemCollection.boars[itemData.id].editions.includes(this.modalData[2])
+                ) {
+                    await Queue.addQueue(() => {
+                        const globalData = DataHandlers.getGlobalData();
+                        const order: BuySellData = {
+                            userID: inter.user.id,
+                            num: this.modalData[0],
+                            price: this.modalData[1],
+                            editions: this.modalData[2] > 0 ? [this.modalData[2]] : undefined,
+                            listTime: Date.now(),
+                            filledAmount: 0
+                        } as BuySellData;
+
+                        globalData.itemData[itemData.type][itemData.id].buyers.push(order);
+                        fs.writeFileSync(this.config.pathConfig.globalDataFile, JSON.stringify(globalData));
+                    }, inter.id + 'global');
+
+                    this.getPricingData();
+                    this.imageGen.updateInfo(this.pricingData, this.config);
+
+                    this.boarUser.stats.general.boarScore -= this.modalData[0] * this.modalData[1];
+                    this.boarUser.updateUserData();
+
+                    await Replies.handleReply(
+                        inter, strConfig.marketOrderComplete, this.config.colorConfig.green,
+                        undefined, undefined, true
+                    );
+                } else if (
+                    isSellingEdition ||
+                    this.boarUser.itemCollection.boars[itemData.id].editions.includes(this.modalData[2])
+                ) {
+                    await Replies.handleReply(
+                        inter, 'You already have or are currently selling edition #' +
+                        this.modalData[2] + ' of this item!', this.config.colorConfig.error, undefined, undefined, true
+                    );
+                } else {
+                    await Replies.handleReply(
+                        inter, 'You don\'t have enough boar bucks!', this.config.colorConfig.error,
+                        undefined, undefined, true
+                    );
+                }
+            } else if (isSellOrder && (this.optionalRows[1].components[1] as ButtonBuilder).data.style === 4) {
+                await inter.deferUpdate();
+                showModal = false;
+
+                if (
+                    this.modalData[2] > 0 && this.boarUser.itemCollection.boars[itemData.id].num >= this.modalData[0] &&
+                    this.boarUser.itemCollection.boars[itemData.id].editions.includes(this.modalData[2]) ||
+                    itemData.type === 'boars' &&
+                    this.boarUser.itemCollection.boars[itemData.id].num >= this.modalData[0]
+                ) {
+                    const editionIndex = this.modalData[2] > 0
+                        ? this.boarUser.itemCollection.boars[itemData.id].editions.indexOf(this.modalData[2])
+                        : this.boarUser.itemCollection.boars[itemData.id].num - this.modalData[0];
+
+                    await Queue.addQueue(() => {
+                        const globalData = DataHandlers.getGlobalData();
+                        const order: BuySellData = {
+                            userID: inter.user.id,
+                            num: this.modalData[0],
+                            price: this.modalData[1],
+                            editions: this.boarUser.itemCollection.boars[itemData.id]
+                                .editions.splice(editionIndex, this.modalData[2] > 0 ? 1 : 100),
+                            editionDates: this.boarUser.itemCollection.boars[itemData.id]
+                                .editionDates.splice(editionIndex, this.modalData[2] > 0 ? 1 : 100),
+                            listTime: Date.now(),
+                            filledAmount: 0
+                        } as BuySellData;
+
+                        globalData.itemData[itemData.type][itemData.id].sellers.push(order);
+                        fs.writeFileSync(this.config.pathConfig.globalDataFile, JSON.stringify(globalData));
+                    }, inter.id + 'global');
+
+                    this.getPricingData();
+                    this.imageGen.updateInfo(this.pricingData, this.config);
+
+                    this.boarUser.itemCollection.boars[itemData.id].num--;
+                    this.boarUser.updateUserData();
+
+                    await Replies.handleReply(
+                        inter, strConfig.marketOrderComplete, this.config.colorConfig.green,
+                        undefined, undefined, true
+                    );
+                } else if (
+                    itemData.type === 'powerups' &&
+                    this.boarUser.itemCollection.powerups[itemData.id].numTotal >= this.modalData[0]
+                ) {
+                    await Queue.addQueue(() => {
+                        const globalData = DataHandlers.getGlobalData();
+                        const order: BuySellData = {
+                            userID: inter.user.id,
+                            num: this.modalData[0],
+                            price: this.modalData[1],
+                            listTime: Date.now(),
+                            filledAmount: 0
+                        } as BuySellData;
+
+                        globalData.itemData[itemData.type][itemData.id].sellers.push(order);
+                        fs.writeFileSync(this.config.pathConfig.globalDataFile, JSON.stringify(globalData));
+                    }, inter.id + 'global');
+
+                    this.getPricingData();
+                    this.imageGen.updateInfo(this.pricingData, this.config);
+
+                    this.boarUser.itemCollection.powerups[itemData.id].numTotal--;
+                    this.boarUser.updateUserData();
+
+                    await Replies.handleReply(
+                        inter, strConfig.marketOrderComplete, this.config.colorConfig.green,
+                        undefined, undefined, true
+                    );
+                } else if (this.modalData[2] > 0) {
+                    await Replies.handleReply(
+                        inter, 'You don\'t have edition #' + this.modalData[2] + ' of this item so you cannot sell it!',
+                        this.config.colorConfig.error, undefined, undefined, true
+                    );
+                } else {
+                    await Replies.handleReply(
+                        inter, 'You don\'t have enough of this item!',
+                        this.config.colorConfig.error, undefined, undefined, true
+                    );
+                }
             }
 
             return showModal;
@@ -440,29 +610,31 @@ export default class MarketSubcommand implements Subcommand {
 
         const itemData = this.config.itemConfigs[this.pricingData[this.curPage].type]
             [this.pricingData[this.curPage].id];
+        const itemRarity = BoarUtils.findRarity(this.pricingData[this.curPage].id, this.config);
+        const isSpecial = itemRarity[1].name === 'Special' && itemRarity[0] !== 0;
 
-        if ((isInstaBuy || isInstaSell) && this.curEdition === 0) {
+        if ((isInstaBuy || isInstaSell) && !isSpecial) {
             modalNum = 1;
             modalTitle = (isInstaBuy
                 ? marketRowConfig[1][0].components[0].label
                 : marketRowConfig[1][0].components[1].label) + ': ' + itemData.pluralName;
         }
 
-        if ((isInstaBuy || isInstaSell) && this.curEdition > 0) {
+        if ((isInstaBuy || isInstaSell) && isSpecial) {
             modalNum = 2;
             modalTitle = (isInstaBuy
                 ? marketRowConfig[1][0].components[0].label
                 : marketRowConfig[1][0].components[1].label) + ': ' + itemData.name + ' #' + this.curEdition;
         }
 
-        if ((isBuyOrder || isSellOrder) && this.curEdition === 0) {
+        if ((isBuyOrder || isSellOrder) && !isSpecial) {
             modalNum = 3;
             modalTitle = (isBuyOrder
                 ? marketRowConfig[1][1].components[0].label
                 : marketRowConfig[1][1].components[1].label) + ': ' + itemData.pluralName;
         }
 
-        if ((isBuyOrder || isSellOrder) && this.curEdition > 0) {
+        if ((isBuyOrder || isSellOrder) && isSpecial) {
             modalNum = 4;
             modalTitle = (isBuyOrder
                 ? marketRowConfig[1][1].components[0].label
@@ -633,6 +805,8 @@ export default class MarketSubcommand implements Subcommand {
                 (this.optionalRows[0].components[1] as ButtonBuilder).setStyle(4);
             }
 
+            this.modalData = [numVal, curPrice, 0];
+
             await this.showMarket();
         } catch (err: unknown) {
             await LogDebug.handleError(err);
@@ -711,13 +885,13 @@ export default class MarketSubcommand implements Subcommand {
 
             if (isInstaBuy) {
                 for (const instaBuy of itemData.instaBuys) {
-                    if (instaBuy.editions[0] !== this.curEdition) continue;
+                    if ((instaBuy.editions as number[])[0] !== this.curEdition) continue;
                     curPrice = instaBuy.price;
                     break;
                 }
             } else {
                 for (const instaSell of itemData.instaSells) {
-                    if (instaSell.editions[0] !== this.curEdition) continue;
+                    if ((instaSell.editions as number[])[0] !== this.curEdition) continue;
                     curPrice = instaSell.price;
                     break;
                 }
@@ -745,6 +919,8 @@ export default class MarketSubcommand implements Subcommand {
             } else {
                 (this.optionalRows[0].components[1] as ButtonBuilder).setStyle(4);
             }
+
+            this.modalData = [1, curPrice, this.curEdition];
 
             await this.showMarket();
         } catch (err: unknown) {
@@ -792,6 +968,16 @@ export default class MarketSubcommand implements Subcommand {
             if (numVal <= 0 || priceVal <= 0) {
                 await Replies.handleReply(
                     submittedModal, 'Invalid input! Input(s) must be greater than zero.',
+                    this.config.colorConfig.error, undefined, undefined, true
+                );
+
+                clearInterval(this.timerVars.updateTime);
+                return;
+            }
+
+            if (isBuyOrder && numVal > 1000) {
+                await Replies.handleReply(
+                    submittedModal, 'You may only set up an order for 1000 items or less at a time!',
                     this.config.colorConfig.error, undefined, undefined, true
                 );
 
@@ -863,6 +1049,8 @@ export default class MarketSubcommand implements Subcommand {
                 (this.optionalRows[1].components[1] as ButtonBuilder).setStyle(4);
             }
 
+            this.modalData = [numVal, priceVal, 0];
+
             await this.showMarket();
         } catch (err: unknown) {
             await LogDebug.handleError(err);
@@ -923,9 +1111,11 @@ export default class MarketSubcommand implements Subcommand {
 
             const itemData = this.pricingData[this.curPage];
 
-            if (!isBuyOrder && !this.boarUser.itemCollection.boars[itemData.id].editions.includes(this.curEdition)) {
+            const curEdition = DataHandlers.getGlobalData().itemData[itemData.type][itemData.id].curEdition as number;
+
+            if (editionVal > curEdition) {
                 await Replies.handleReply(
-                    submittedModal, 'You don\'t have edition #' + editionVal + 'of this item so you cannot sell it!',
+                    submittedModal, 'Edition #' + editionVal + ' of this item doesn\'t exist!',
                     this.config.colorConfig.error, undefined, undefined, true
                 );
 
@@ -933,10 +1123,31 @@ export default class MarketSubcommand implements Subcommand {
                 return;
             }
 
-            if (isBuyOrder && this.boarUser.itemCollection.boars[itemData.id].editions.includes(editionVal)) {
+            if (!isBuyOrder && !this.boarUser.itemCollection.boars[itemData.id].editions.includes(editionVal)) {
                 await Replies.handleReply(
-                    submittedModal, 'You already have edition #' + editionVal + ' of this item!',
+                    submittedModal, 'You don\'t have edition #' + editionVal + ' of this item so you cannot sell it!',
                     this.config.colorConfig.error, undefined, undefined, true
+                );
+
+                clearInterval(this.timerVars.updateTime);
+                return;
+            }
+
+            let isSellingEdition = false;
+            for (const instaBuy of itemData.instaBuys) {
+                if (instaBuy.userID === this.compInter.user.id && (instaBuy.editions as number[])[0] === editionVal) {
+                    isSellingEdition = true;
+                    break;
+                }
+            }
+
+            if (
+                isBuyOrder &&
+                (this.boarUser.itemCollection.boars[itemData.id].editions.includes(editionVal) || isSellingEdition)
+            ) {
+                await Replies.handleReply(
+                    submittedModal, 'You already have or are currently selling edition #' +
+                    editionVal + ' of this item!', this.config.colorConfig.error, undefined, undefined, true
                 );
 
                 clearInterval(this.timerVars.updateTime);
@@ -982,12 +1193,16 @@ export default class MarketSubcommand implements Subcommand {
                 (this.optionalRows[1].components[1] as ButtonBuilder).setStyle(4);
             }
 
+            this.modalData = [1, priceVal, editionVal];
+
             await this.showMarket();
+            LogDebug.sendDebug('Showing market', this.config);
         } catch (err: unknown) {
             await LogDebug.handleError(err);
             this.collector.stop(CollectorUtils.Reasons.Error);
         }
 
+        LogDebug.sendDebug('Finishing modal', this.config);
         clearInterval(this.timerVars.updateTime);
         submittedModal.client.removeListener(Events.InteractionCreate, this.modalListenerPage);
     };
@@ -1068,7 +1283,7 @@ export default class MarketSubcommand implements Subcommand {
                 const instaSellEditions: number[] = [];
 
                 for (let i=0; i<item.instaBuys.length; i++) {
-                    const editionNum: number = item.instaBuys[i].editions[0];
+                    const editionNum: number = (item.instaBuys[i].editions as number[])[0];
 
                     if (!instaBuyEditions.includes(editionNum)) {
                         selectOptions.push({
@@ -1081,7 +1296,7 @@ export default class MarketSubcommand implements Subcommand {
                 }
 
                 for (let i=0; i<item.instaSells.length; i++) {
-                    const editionNum: number = item.instaSells[i].editions[0];
+                    const editionNum: number = (item.instaSells[i].editions as number[])[0];
 
                     if (!instaBuyEditions.includes(editionNum) && !instaSellEditions.includes(editionNum)) {
                         selectOptions.push({

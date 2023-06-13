@@ -126,15 +126,26 @@ export default class CollectionSubcommand implements Subcommand {
 
         this.setPage(pageVal);
 
-        this.collector = await CollectorUtils.createCollector(
+        if (CollectorUtils.collectionCollectors[interaction.user.id]) {
+            CollectorUtils.collectionCollectors[interaction.user.id].stop('idle');
+        }
+
+        CollectorUtils.collectionCollectors[interaction.user.id] = await CollectorUtils.createCollector(
             interaction.channel as TextChannel, interaction.id, this.config.numberConfig
         );
 
         this.collectionImage = new CollectionImageGenerator(this.boarUser, this.allBoars, this.config);
         await this.showCollection();
 
-        this.collector.on('collect', async (inter: ButtonInteraction) => await this.handleCollect(inter));
-        this.collector.once('end', async (collected, reason) => await this.handleEndCollect(reason));
+        CollectorUtils.collectionCollectors[interaction.user.id].on(
+            'collect',
+            async (inter: ButtonInteraction) => await this.handleCollect(inter)
+        );
+
+        CollectorUtils.collectionCollectors[interaction.user.id].once(
+            'end',
+            async (collected, reason) => await this.handleEndCollect(reason)
+        );
     }
 
     /**

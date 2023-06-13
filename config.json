@@ -164,8 +164,8 @@
         "marketUpdatedInstaSell": "The market prices have fluctuated! Your new total return is $%@. If you're fine with this, click 'Sell Now' to confirm your sale.",
         "marketInstaComplete": "Transaction complete! All boar bucks/items have been received.",
         "marketConfirmBuyOrder": "Are you sure? You're setting up a buy order for %@, bringing the total potential cost to $%@. Click 'Buy Order' again to confirm your order.",
-        "marketConfirmSellOrder": "Are you sure? You're setting up a sell order for %@, bringing the total potential return to $%@. Click 'Sell Order' again to confirm your purchase.",
-        "marketOrderComplete": "Order placed! To see the status of your order, click 'Orders'. If it's not filled within a week, it will expire and all unfilled boar bucks/items will be returned to you.",
+        "marketConfirmSellOrder": "Are you sure? You're setting up a sell offer for %@, bringing the total potential return to $%@. Click 'Sell Offer' again to confirm your offer.",
+        "marketOrderComplete": "Order/Offer placed! To see the status of your order, click 'Orders'. If it's not filled within a week, it will expire and all unfilled boar bucks/items will be returned to you.",
         "noParentChannel": "NO CATEGORY",
         "notValidChannel": "This channel isn't valid! Try a different one! The channel should be:\n- A text channel\n- Not already chosen\n- Exists in this server",
         "defaultSelectPlaceholder": "UNSELECTED",
@@ -804,7 +804,7 @@
                                 {
                                     "type": 2,
                                     "customId": "MARKET_SELL_ORDER",
-                                    "label": "Sell Order",
+                                    "label": "Sell Offer",
                                     "style": 3,
                                     "disabled": true
                                 }
@@ -816,7 +816,7 @@
                                 {
                                     "type": 3,
                                     "customId": "MARKET_ORDER_SELECT",
-                                    "placeholder": "Choose Order..."
+                                    "placeholder": "Choose Order/Offer..."
                                 }
                             ]
                         },
@@ -897,7 +897,7 @@
                                     {
                                         "type": 4,
                                         "customId": "MARKET_ORDER_NUM_INPUT",
-                                        "label": "AMOUNT TO ORDER",
+                                        "label": "AMOUNT TO ORDER/OFFER",
                                         "style": 1,
                                         "required": true
                                     }
@@ -927,7 +927,7 @@
                                     {
                                         "type": 4,
                                         "customId": "MARKET_ORDER_SPECIAL_EDITION_INPUT",
-                                        "label": "EDITION NUMBER TO ORDER",
+                                        "label": "EDITION NUMBER TO ORDER/OFFER",
                                         "style": 1,
                                         "required": true
                                     }

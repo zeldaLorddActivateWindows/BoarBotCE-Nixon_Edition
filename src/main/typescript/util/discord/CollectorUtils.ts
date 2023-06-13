@@ -23,6 +23,14 @@ enum Reasons {
  */
 export class CollectorUtils {
     public static readonly Reasons = Reasons;
+    public static marketCollectors:
+        Record<string, InteractionCollector<ButtonInteraction | StringSelectMenuInteraction>> = {};
+    public static collectionCollectors:
+        Record<string, InteractionCollector<ButtonInteraction | StringSelectMenuInteraction>> = {};
+    public static topCollectors:
+        Record<string, InteractionCollector<ButtonInteraction | StringSelectMenuInteraction>> = {};
+    public static setupCollectors:
+        Record<string, InteractionCollector<ButtonInteraction | StringSelectMenuInteraction>> = {};
 
     /**
      * Determines whether the interaction should be processed

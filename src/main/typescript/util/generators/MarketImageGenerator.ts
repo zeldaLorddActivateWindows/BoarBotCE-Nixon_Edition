@@ -152,7 +152,7 @@ export class MarketImageGenerator {
             let buyOrder: BuySellData | undefined;
 
             for (const instaBuy of item.instaBuys) {
-                if (instaBuy.editions[0] !== edition) continue;
+                if ((instaBuy.editions as number[])[0] !== edition) continue;
                 if (!sellOrder) {
                     sellOrder = instaBuy;
                 }
@@ -160,7 +160,7 @@ export class MarketImageGenerator {
             }
 
             for (const instaSell of item.instaSells) {
-                if (instaSell.editions[0] !== edition) continue;
+                if ((instaSell.editions as number[])[0] !== edition) continue;
                 if (!buyOrder) {
                     buyOrder = instaSell;
                 }
@@ -213,7 +213,7 @@ export class MarketImageGenerator {
             ctx, buyOrderVolume.toLocaleString(), [358, 1031], smallMediumFont, 'center', colorConfig.font
         );
 
-        CanvasUtils.drawText(ctx, 'Sell Order Volume', [358, 1156], mediumFont, 'center', colorConfig.font);
+        CanvasUtils.drawText(ctx, 'Sell Offer Volume', [358, 1156], mediumFont, 'center', colorConfig.font);
         CanvasUtils.drawText(
             ctx, sellOrderVolume.toLocaleString(), [358, 1227], smallMediumFont, 'center', colorConfig.font
         );

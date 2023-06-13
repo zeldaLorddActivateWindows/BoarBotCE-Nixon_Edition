@@ -84,8 +84,12 @@ export default class SetupSubcommand implements Subcommand {
 
         this.guildDataPath = this.config.pathConfig.guildDataFolder + interaction.guild.id + '.json';
         this.guildData = await DataHandlers.getGuildData(interaction.guild.id, interaction, true) as GuildData;
-        
-        this.collector = await CollectorUtils.createCollector(
+
+        if (CollectorUtils.setupCollectors[interaction.user.id]) {
+            CollectorUtils.setupCollectors[interaction.user.id].stop('idle');
+        }
+
+        CollectorUtils.setupCollectors[interaction.user.id] = await CollectorUtils.createCollector(
             interaction.channel as TextChannel, interaction.id, this.config.numberConfig
         ).catch(async (err: unknown) => {
             await DataHandlers.removeGuildFile(this.guildDataPath, this.guildData);
@@ -97,10 +101,15 @@ export default class SetupSubcommand implements Subcommand {
             throw err;
         });
 
-        this.collector.on('collect', async (inter: StringSelectMenuInteraction | ButtonInteraction) =>
-            await this.handleCollect(inter)
+        CollectorUtils.setupCollectors[interaction.user.id].on(
+            'collect',
+            async (inter: StringSelectMenuInteraction | ButtonInteraction) => await this.handleCollect(inter)
         );
-        this.collector.once('end', async (collected, reason) => await this.handleEndCollect(reason));
+
+        CollectorUtils.setupCollectors[interaction.user.id].once(
+            'end',
+            async (collected, reason) => await this.handleEndCollect(reason)
+        );
     }
 
     /**
