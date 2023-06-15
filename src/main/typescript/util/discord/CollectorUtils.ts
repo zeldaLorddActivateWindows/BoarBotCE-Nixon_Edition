@@ -45,6 +45,9 @@ export class CollectorUtils {
         // If the collection attempt was too quick, cancel it
         if (inter && Date.now() < timerVars.timeUntilNextCollect) {
             await inter.deferUpdate();
+        }
+
+        if (Date.now() < timerVars.timeUntilNextCollect) {
             return false;
         }
 

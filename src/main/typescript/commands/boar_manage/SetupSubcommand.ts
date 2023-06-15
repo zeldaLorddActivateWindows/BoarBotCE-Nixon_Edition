@@ -3,9 +3,9 @@ import {
     ButtonBuilder,
     ButtonInteraction,
     ButtonStyle,
-    ChannelType, ChatInputCommandInteraction, Collection,
+    ChannelType, ChatInputCommandInteraction, Client, Collection,
     ComponentType, Events, GuildBasedChannel, Interaction,
-    InteractionCollector, ModalBuilder, PermissionsBitField, SelectMenuComponentOptionData,
+    ModalBuilder, PermissionsBitField, SelectMenuComponentOptionData,
     StringSelectMenuBuilder, StringSelectMenuInteraction, TextChannel,
     TextInputStyle,
 } from 'discord.js';
@@ -37,13 +37,9 @@ import {ModalConfig} from '../../bot/config/modals/ModalConfig';
 export default class SetupSubcommand implements Subcommand {
     private config: BotConfig = BoarBotApp.getBot().getConfig();
     private subcommandInfo: SubcommandConfig = this.config.commandConfigs.boarManage.setup;
-
-    // The initiating interaction
     private firstInter: ChatInputCommandInteraction = {} as ChatInputCommandInteraction;
-    // The current component interaction
     private compInter: StringSelectMenuInteraction | ButtonInteraction =
         {} as StringSelectMenuInteraction | ButtonInteraction;
-
     private staticRows: ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>[] = [];
     private setupFields: FormField[] = [];
     private guildDataPath: string = '';
@@ -57,13 +53,9 @@ export default class SetupSubcommand implements Subcommand {
         timeUntilNextCollect: 0,
         updateTime: setTimeout(() => {}, 0)
     };
-    private collector: InteractionCollector<ButtonInteraction | StringSelectMenuInteraction> =
-        {} as InteractionCollector<ButtonInteraction | StringSelectMenuInteraction>;
     private curField: number = 1;
-
-    // The modal that's shown to a user if they opened one
     private modalShowing: ModalBuilder = {} as ModalBuilder;
-
+    private curModalListener: ((submittedModal: Interaction) => Promise<void>) | undefined;
     public readonly data = { name: this.subcommandInfo.name, path: __filename, cooldown: this.subcommandInfo.cooldown };
 
     /**
@@ -166,7 +158,7 @@ export default class SetupSubcommand implements Subcommand {
                 // User wants to finish or go to next field
                 case setupComponents.next.customId:
                     if (this.curField === 3) {
-                        this.collector.stop(CollectorUtils.Reasons.Finished);
+                        CollectorUtils.setupCollectors[inter.user.id].stop(CollectorUtils.Reasons.Finished);
                         break;
                     }
 
@@ -175,7 +167,7 @@ export default class SetupSubcommand implements Subcommand {
 
                 // User wants to cancel setup
                 case setupComponents.cancel.customId:
-                    this.collector.stop(CollectorUtils.Reasons.Cancelled);
+                    CollectorUtils.setupCollectors[inter.user.id].stop(CollectorUtils.Reasons.Cancelled);
                     break;
 
                 // User selects the trade channel
@@ -205,22 +197,28 @@ export default class SetupSubcommand implements Subcommand {
 
                 // User wants more information on trade channel
                 case setupComponents.tradeInfo.customId:
-                    await Replies.handleReply(inter, this.config.stringConfig.setupInfoResponse1);
+                    await Replies.handleReply(
+                        inter, this.config.stringConfig.setupInfoResponse1, undefined, undefined, undefined, true
+                    );
                     break;
 
                 // User wants more information on boar channels
                 case setupComponents.boarInfo.customId:
-                    await Replies.handleReply(inter, this.config.stringConfig.setupInfoResponse2);
+                    await Replies.handleReply(
+                        inter, this.config.stringConfig.setupInfoResponse2, undefined, undefined, undefined, true
+                    );
                     break;
 
                 // User wants more information on SB boars
                 case setupComponents.sbInfo.customId:
-                    await Replies.handleReply(inter, this.config.stringConfig.setupInfoResponse3);
+                    await Replies.handleReply(
+                        inter, this.config.stringConfig.setupInfoResponse3, undefined, undefined, undefined, true
+                    );
                     break;
             }
         } catch (err: unknown) {
             await LogDebug.handleError(err);
-            this.collector.stop(CollectorUtils.Reasons.Error);
+            CollectorUtils.setupCollectors[inter.user.id].stop(CollectorUtils.Reasons.Error);
         }
 
         clearInterval(this.timerVars.updateTime);
@@ -495,19 +493,18 @@ export default class SetupSubcommand implements Subcommand {
             if (submittedModal.isMessageComponent() && submittedModal.customId.endsWith(this.firstInter.id as string) ||
                 BoarBotApp.getBot().getConfig().maintenanceMode && !this.config.devs.includes(this.compInter.user.id)
             ) {
-                clearInterval(this.timerVars.updateTime);
-                submittedModal.client.removeListener(Events.InteractionCreate, this.modalListener);
-
+                this.endModalListener(submittedModal.client);
                 return;
             }
 
             // Updates the cooldown to interact again
-            CollectorUtils.canInteract(this.timerVars);
+            let canInteract = await CollectorUtils.canInteract(this.timerVars);
+            if (!canInteract) return;
 
-            if (!submittedModal.isModalSubmit() || this.collector.ended ||
+            if (!submittedModal.isModalSubmit() || CollectorUtils.setupCollectors[submittedModal.user.id].ended ||
                 !submittedModal.guild || submittedModal.customId !== this.modalShowing.data.custom_id
             ) {
-                clearInterval(this.timerVars.updateTime);
+                this.endModalListener(submittedModal.client);
                 return;
             }
 
@@ -541,10 +538,9 @@ export default class SetupSubcommand implements Subcommand {
                     submittedChannelParentName = submittedChannel.parent.name.toUpperCase();
                 }
             } else {
-                await Replies.handleReply(submittedModal,strConfig.notValidChannel);
+                await Replies.handleReply(submittedModal, strConfig.notValidChannel);
 
-                clearInterval(this.timerVars.updateTime);
-                submittedModal.client.removeListener(Events.InteractionCreate, this.modalListener);
+                this.endModalListener(submittedModal.client);
                 return;
             }
 
@@ -581,12 +577,19 @@ export default class SetupSubcommand implements Subcommand {
             );
         } catch (err: unknown) {
             await LogDebug.handleError(err);
-            this.collector.stop(CollectorUtils.Reasons.Error);
+            CollectorUtils.setupCollectors[submittedModal.user.id].stop(CollectorUtils.Reasons.Error);
         }
 
-        clearInterval(this.timerVars.updateTime);
-        submittedModal.client.removeListener(Events.InteractionCreate, this.modalListener);
+        this.endModalListener(submittedModal.client);
     };
+
+    private endModalListener(client: Client) {
+        clearInterval(this.timerVars.updateTime);
+        if (this.curModalListener) {
+            client.removeListener(Events.InteractionCreate, this.curModalListener);
+            this.curModalListener = undefined;
+        }
+    }
 
     /**
      * Updates fields with select menus

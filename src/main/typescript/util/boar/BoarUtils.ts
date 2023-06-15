@@ -4,6 +4,7 @@ import {ChatInputCommandInteraction, MessageComponentInteraction} from 'discord.
 import {LogDebug} from '../logging/LogDebug';
 import {GuildData} from '../data/global/GuildData';
 import {ItemConfigs} from '../../bot/config/items/ItemConfigs';
+import {Node} from 'functional-red-black-tree';
 
 /**
  * {@link BoarUtils BoarUtils.ts}
@@ -158,5 +159,15 @@ export class BoarUtils {
         }
 
         return rarityWeights;
+    }
+
+    public static getClosestName(input: string, root: Node<string, number>): number {
+        if (root.key.includes(input))
+            return root.value;
+        if (input > root.key && root.right !== null)
+            return this.getClosestName(input, root.right);
+        if (input < root.key && root.left !== null)
+            return this.getClosestName(input, root.left);
+        return root.value;
     }
 }

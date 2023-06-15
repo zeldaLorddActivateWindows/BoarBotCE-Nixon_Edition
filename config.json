@@ -167,7 +167,7 @@
         "marketConfirmSellOrder": "Are you sure? You're setting up a sell offer for %@, bringing the total potential return to $%@. Click 'Sell Offer' again to confirm your offer.",
         "marketOrderComplete": "Order/Offer placed! To see the status of your order, click 'Orders'. If it's not filled within a week, it will expire and all unfilled boar bucks/items will be returned to you.",
         "noParentChannel": "NO CATEGORY",
-        "notValidChannel": "This channel isn't valid! Try a different one! The channel should be:\n- A text channel\n- Not already chosen\n- Exists in this server",
+        "notValidChannel": "This channel isn't valid! Try a different one! The channel should be a text channel, be not already chosen, and exists in this server.",
         "defaultSelectPlaceholder": "UNSELECTED",
         "emptySelect": "None",
         "channelOptionLabel": "#%@ [%@]",

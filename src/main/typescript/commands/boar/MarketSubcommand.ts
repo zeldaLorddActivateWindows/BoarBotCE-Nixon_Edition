@@ -3,10 +3,9 @@ import {
     AttachmentBuilder,
     ButtonBuilder,
     ButtonInteraction, ButtonStyle,
-    ChatInputCommandInteraction,
+    ChatInputCommandInteraction, Client,
     Events,
     Interaction,
-    InteractionCollector,
     MessageComponentInteraction,
     ModalBuilder,
     ModalSubmitInteraction,
@@ -28,7 +27,7 @@ import {ComponentUtils} from '../../util/discord/ComponentUtils';
 import {LogDebug} from '../../util/logging/LogDebug';
 import {DataHandlers} from '../../util/data/DataHandlers';
 import {BuySellData} from '../../util/data/global/BuySellData';
-import createRBTree, {Node, Tree} from 'functional-red-black-tree';
+import createRBTree, {Tree} from 'functional-red-black-tree';
 import {MarketImageGenerator} from '../../util/generators/MarketImageGenerator';
 import {BoarUser} from '../../util/boar/BoarUser';
 import {ModalConfig} from '../../bot/config/modals/ModalConfig';
@@ -73,9 +72,8 @@ export default class MarketSubcommand implements Subcommand {
         timeUntilNextCollect: 0,
         updateTime: setTimeout(() => {})
     };
-    private collector: InteractionCollector<ButtonInteraction | StringSelectMenuInteraction> =
-        {} as InteractionCollector<ButtonInteraction | StringSelectMenuInteraction>;
     private modalShowing: ModalBuilder = {} as ModalBuilder;
+    private curModalListener: ((submittedModal: Interaction) => Promise<void>) | undefined;
     public readonly data = { name: this.subcommandInfo.name, path: __filename, cooldown: this.subcommandInfo.cooldown };
 
     /**
@@ -109,7 +107,7 @@ export default class MarketSubcommand implements Subcommand {
         if (!Number.isNaN(parseInt(pageInput))) {
             pageVal = parseInt(pageInput);
         } else if (this.curView === View.BuySell) {
-            pageVal = this.getPageFromName(pageInput, this.pricingDataTree.root);
+            pageVal = BoarUtils.getClosestName(pageInput, this.pricingDataTree.root);
         }
 
         this.setPage(pageVal);
@@ -142,7 +140,6 @@ export default class MarketSubcommand implements Subcommand {
             if (!canInteract) return;
 
             if (!inter.isMessageComponent()) return;
-
             this.compInter = inter;
 
             LogDebug.sendDebug(
@@ -175,12 +172,10 @@ export default class MarketSubcommand implements Subcommand {
             if (isPageInput) {
                 await this.modalHandle(inter);
 
-                (this.optionalRows[0].components[0] as ButtonBuilder).setStyle(3);
-                (this.optionalRows[0].components[1] as ButtonBuilder).setStyle(3);
-                (this.optionalRows[1].components[0] as ButtonBuilder).setStyle(3);
-                (this.optionalRows[1].components[1] as ButtonBuilder).setStyle(3);
+                if (this.undoRedButtons()) {
+                    this.showMarket();
+                }
 
-                await this.showMarket();
                 clearInterval(this.timerVars.updateTime);
                 return;
             }
@@ -195,12 +190,10 @@ export default class MarketSubcommand implements Subcommand {
                     await this.modalHandle(inter);
                 }
 
-                (this.optionalRows[0].components[0] as ButtonBuilder).setStyle(3);
-                (this.optionalRows[0].components[1] as ButtonBuilder).setStyle(3);
-                (this.optionalRows[1].components[0] as ButtonBuilder).setStyle(3);
-                (this.optionalRows[1].components[1] as ButtonBuilder).setStyle(3);
+                if (this.undoRedButtons()) {
+                    this.showMarket();
+                }
 
-                await this.showMarket();
                 clearInterval(this.timerVars.updateTime);
                 return;
             }
@@ -214,12 +207,10 @@ export default class MarketSubcommand implements Subcommand {
                     await this.modalHandle(inter);
                 }
 
-                (this.optionalRows[0].components[0] as ButtonBuilder).setStyle(3);
-                (this.optionalRows[0].components[1] as ButtonBuilder).setStyle(3);
-                (this.optionalRows[1].components[0] as ButtonBuilder).setStyle(3);
-                (this.optionalRows[1].components[1] as ButtonBuilder).setStyle(3);
+                if (this.undoRedButtons()) {
+                    this.showMarket();
+                }
 
-                await this.showMarket();
                 clearInterval(this.timerVars.updateTime);
                 return;
             }
@@ -269,16 +260,13 @@ export default class MarketSubcommand implements Subcommand {
                     break;
             }
 
-            (this.optionalRows[0].components[0] as ButtonBuilder).setStyle(3);
-            (this.optionalRows[0].components[1] as ButtonBuilder).setStyle(3);
-            (this.optionalRows[1].components[0] as ButtonBuilder).setStyle(3);
-            (this.optionalRows[1].components[1] as ButtonBuilder).setStyle(3);
+            this.undoRedButtons();
 
             this.modalData = [0, 0, 0];
             await this.showMarket();
         } catch (err: unknown) {
             await LogDebug.handleError(err);
-            this.collector.stop(CollectorUtils.Reasons.Error);
+            CollectorUtils.marketCollectors[inter.user.id].stop(CollectorUtils.Reasons.Error);
         }
 
         clearInterval(this.timerVars.updateTime);
@@ -323,10 +311,8 @@ export default class MarketSubcommand implements Subcommand {
                     this.config.colorConfig.error
                 );
             } else if (
-                isInstaSell && itemData.type === 'boars' &&
-                !this.boarUser.itemCollection.boars[itemData.id] ||
-                isInstaSell && itemData.type === 'powerups' &&
-                !this.boarUser.itemCollection.boars[itemData.id]
+                isInstaSell && (itemData.type === 'boars' && !this.boarUser.itemCollection.boars[itemData.id] ||
+                itemData.type === 'powerups' && !this.boarUser.itemCollection.boars[itemData.id])
             ) {
                 showModal = false;
                 await Replies.handleReply(
@@ -336,10 +322,72 @@ export default class MarketSubcommand implements Subcommand {
                 await inter.deferUpdate();
                 showModal = false;
 
-                await Replies.handleReply(
-                    inter, strConfig.marketInstaComplete, this.config.colorConfig.green,
-                    undefined, undefined, true
-                );
+                if (this.boarUser.stats.general.boarScore >= this.modalData[0] * this.modalData[1]) {
+                    let failedBuy = false;
+                    // CAN'T USE OUTDATED ITEMDATA
+                    await Queue.addQueue(async () => {
+                        const globalData = DataHandlers.getGlobalData();
+                        const newItemData = globalData.itemData[itemData.type][itemData.id];
+                        const ordersToModify = [];
+
+                        let numGrabbed = 0;
+                        let curPrice = 0;
+                        let curIndex = 0;
+                        while (numGrabbed < this.modalData[0]) {
+                            let numToAdd = 0;
+                            if (curIndex < newItemData.sellers.length) {
+                                numToAdd = Math.min(
+                                    this.modalData[0] - numGrabbed, newItemData.sellers[curIndex].num
+                                );
+                                curPrice += newItemData.sellers[curIndex].price * numToAdd;
+                            } else {
+                                break;
+                            }
+
+                            numGrabbed += numToAdd;
+                            ordersToModify.push(numToAdd);
+                            curIndex++;
+                        }
+
+                        if (this.modalData[0] !== numGrabbed) {
+                            await Replies.handleReply(
+                                inter, 'Not enough orders of this item to complete this transaction!',
+                                this.config.colorConfig.font, undefined, undefined, true
+                            );
+                            failedBuy = true;
+                            return;
+                        }
+
+                        if (this.modalData[1] < curPrice) {
+                            await Replies.handleReply(
+                                inter, strConfig.marketUpdatedInstaBuy.replace('%@', curPrice.toLocaleString()),
+                                this.config.colorConfig.error, undefined, undefined, true
+                            );
+                            (this.optionalRows[0].components[0] as ButtonBuilder).setStyle(4); // doesn't work
+                            failedBuy = true;
+                            return;
+                        }
+
+                        fs.writeFileSync(this.config.pathConfig.globalDataFile, JSON.stringify(globalData));
+                    }, inter.id + 'global');
+
+                    this.getPricingData();
+                    this.imageGen.updateInfo(this.pricingData, this.config);
+
+                    if (!failedBuy) {
+                        this.boarUser.updateUserData();
+
+                        await Replies.handleReply(
+                            inter, strConfig.marketInstaComplete, this.config.colorConfig.green,
+                            undefined, undefined, true
+                        );
+                    }
+                } else {
+                    await Replies.handleReply(
+                        inter, 'You don\'t have enough boar bucks!', this.config.colorConfig.error,
+                        undefined, undefined, true
+                    );
+                }
             } else if (isInstaSell && (this.optionalRows[0].components[1] as ButtonBuilder).data.style === 4) {
 
             }
@@ -379,22 +427,7 @@ export default class MarketSubcommand implements Subcommand {
                 await inter.deferUpdate();
                 showModal = false;
 
-                let isSellingEdition = false;
-                for (const instaBuy of itemData.instaBuys) {
-                    if (
-                        instaBuy.userID === this.compInter.user.id &&
-                        (instaBuy.editions as number[])[0] === this.modalData[2]
-                    ) {
-                        isSellingEdition = true;
-                        break;
-                    }
-                }
-
-                if (
-                    this.boarUser.stats.general.boarScore >= this.modalData[0] * this.modalData[1] &&
-                    !isSellingEdition &&
-                    !this.boarUser.itemCollection.boars[itemData.id].editions.includes(this.modalData[2])
-                ) {
+                if (this.boarUser.stats.general.boarScore >= this.modalData[0] * this.modalData[1]) {
                     await Queue.addQueue(() => {
                         const globalData = DataHandlers.getGlobalData();
                         const order: BuySellData = {
@@ -419,14 +452,6 @@ export default class MarketSubcommand implements Subcommand {
                     await Replies.handleReply(
                         inter, strConfig.marketOrderComplete, this.config.colorConfig.green,
                         undefined, undefined, true
-                    );
-                } else if (
-                    isSellingEdition ||
-                    this.boarUser.itemCollection.boars[itemData.id].editions.includes(this.modalData[2])
-                ) {
-                    await Replies.handleReply(
-                        inter, 'You already have or are currently selling edition #' +
-                        this.modalData[2] + ' of this item!', this.config.colorConfig.error, undefined, undefined, true
                     );
                 } else {
                     await Replies.handleReply(
@@ -469,7 +494,7 @@ export default class MarketSubcommand implements Subcommand {
                     this.getPricingData();
                     this.imageGen.updateInfo(this.pricingData, this.config);
 
-                    this.boarUser.itemCollection.boars[itemData.id].num--;
+                    this.boarUser.itemCollection.boars[itemData.id].num -= this.modalData[0];
                     this.boarUser.updateUserData();
 
                     await Replies.handleReply(
@@ -497,7 +522,7 @@ export default class MarketSubcommand implements Subcommand {
                     this.getPricingData();
                     this.imageGen.updateInfo(this.pricingData, this.config);
 
-                    this.boarUser.itemCollection.powerups[itemData.id].numTotal--;
+                    this.boarUser.itemCollection.powerups[itemData.id].numTotal -= this.modalData[0];
                     this.boarUser.updateUserData();
 
                     await Replies.handleReply(
@@ -535,6 +560,7 @@ export default class MarketSubcommand implements Subcommand {
                 );
             }
 
+            this.endModalListener(this.compInter.client);
             await this.firstInter.editReply({
                 components: []
             });
@@ -646,25 +672,19 @@ export default class MarketSubcommand implements Subcommand {
         this.modalShowing.setTitle(modalTitle);
         await inter.showModal(this.modalShowing);
 
-        let listener: (submittedModal: Interaction) => Promise<void>;
-
         if (modalNum === 0) {
-            listener = this.modalListenerPage;
+            this.curModalListener = this.modalListenerPage;
         } else if (modalNum === 1) {
-            listener = this.modalListenerInsta;
+            this.curModalListener = this.modalListenerInsta;
         } else if (modalNum === 2) {
-            listener = this.modalListenerInstaSpecial;
+            this.curModalListener = this.modalListenerInstaSpecial;
         } else if (modalNum === 3) {
-            listener = this.modalListenerOrder;
+            this.curModalListener = this.modalListenerOrder;
         } else {
-            listener = this.modalListenerOrderSpecial;
+            this.curModalListener = this.modalListenerOrderSpecial;
         }
 
-        inter.client.on(Events.InteractionCreate, listener);
-
-        setTimeout(() => {
-            inter.client.removeListener(Events.InteractionCreate, listener);
-        }, 60000);
+        inter.client.on(Events.InteractionCreate, this.curModalListener);
     }
 
     /**
@@ -675,7 +695,7 @@ export default class MarketSubcommand implements Subcommand {
      */
     private modalListenerPage = async (submittedModal: Interaction): Promise<void> => {
         try  {
-            if (!await this.beginModal(submittedModal, this.modalListenerPage)) return;
+            if (!await this.beginModal(submittedModal)) return;
             submittedModal = submittedModal as ModalSubmitInteraction;
 
             const submittedPage: string = submittedModal.fields.getTextInputValue(
@@ -690,7 +710,7 @@ export default class MarketSubcommand implements Subcommand {
             if (!Number.isNaN(parseInt(submittedPage))) {
                 pageVal = parseInt(submittedPage);
             } else if (this.curView === View.BuySell) {
-                pageVal = this.getPageFromName(submittedPage, this.pricingDataTree.root)
+                pageVal = BoarUtils.getClosestName(submittedPage, this.pricingDataTree.root)
             }
 
             this.setPage(pageVal);
@@ -698,16 +718,15 @@ export default class MarketSubcommand implements Subcommand {
             await this.showMarket();
         } catch (err: unknown) {
             await LogDebug.handleError(err);
-            this.collector.stop(CollectorUtils.Reasons.Error);
+            CollectorUtils.marketCollectors[submittedModal.user.id].stop(CollectorUtils.Reasons.Error);
         }
 
-        clearInterval(this.timerVars.updateTime);
-        submittedModal.client.removeListener(Events.InteractionCreate, this.modalListenerPage);
+        this.endModalListener(submittedModal.client);
     };
 
     private modalListenerInsta = async (submittedModal: Interaction): Promise<void> => {
         try  {
-            if (!await this.beginModal(submittedModal, this.modalListenerInsta)) return;
+            if (!await this.beginModal(submittedModal)) return;
             submittedModal = submittedModal as ModalSubmitInteraction;
 
             const strConfig = this.config.stringConfig;
@@ -736,7 +755,7 @@ export default class MarketSubcommand implements Subcommand {
                     undefined, undefined, true
                 );
 
-                clearInterval(this.timerVars.updateTime);
+                this.endModalListener(submittedModal.client);
                 return;
             }
 
@@ -757,7 +776,7 @@ export default class MarketSubcommand implements Subcommand {
                     this.config.colorConfig.error, undefined, undefined, true
                 );
 
-                clearInterval(this.timerVars.updateTime);
+                this.endModalListener(submittedModal.client);
                 return;
             }
 
@@ -786,7 +805,7 @@ export default class MarketSubcommand implements Subcommand {
                     this.config.colorConfig.error, undefined, undefined, true
                 );
 
-                clearInterval(this.timerVars.updateTime);
+                this.endModalListener(submittedModal.client);
                 return;
             }
 
@@ -795,7 +814,7 @@ export default class MarketSubcommand implements Subcommand {
                 : this.config.itemConfigs[itemData.type][itemData.id].name);
 
             await Replies.handleReply(
-                submittedModal, responseStr.replace('%@', itemName).replace('%@', curPrice.toLocaleString),
+                submittedModal, responseStr.replace('%@', itemName).replace('%@', curPrice.toLocaleString()),
                 this.config.colorConfig.font, undefined, undefined, true
             );
 
@@ -810,16 +829,15 @@ export default class MarketSubcommand implements Subcommand {
             await this.showMarket();
         } catch (err: unknown) {
             await LogDebug.handleError(err);
-            this.collector.stop(CollectorUtils.Reasons.Error);
+            CollectorUtils.marketCollectors[submittedModal.user.id].stop(CollectorUtils.Reasons.Error);
         }
 
-        clearInterval(this.timerVars.updateTime);
-        submittedModal.client.removeListener(Events.InteractionCreate, this.modalListenerPage);
+        this.endModalListener(submittedModal.client);
     };
 
     private modalListenerInstaSpecial = async (submittedModal: Interaction): Promise<void> => {
         try  {
-            if (!await this.beginModal(submittedModal, this.modalListenerInstaSpecial)) return;
+            if (!await this.beginModal(submittedModal)) return;
             submittedModal = submittedModal as ModalSubmitInteraction;
 
             const strConfig = this.config.stringConfig;
@@ -848,7 +866,7 @@ export default class MarketSubcommand implements Subcommand {
                     this.config.colorConfig.error, undefined, undefined, true
                 );
 
-                clearInterval(this.timerVars.updateTime);
+                this.endModalListener(submittedModal.client);
                 return;
             }
 
@@ -859,15 +877,13 @@ export default class MarketSubcommand implements Subcommand {
 
             const itemData = this.pricingData[this.curPage];
 
-            if (
-                !isInstaBuy && !this.boarUser.itemCollection.boars[itemData.id].editions.includes(this.curEdition)
-            ) {
+            if (!isInstaBuy && !this.boarUser.itemCollection.boars[itemData.id].editions.includes(this.curEdition)) {
                 await Replies.handleReply(
                     submittedModal, 'You don\'t have edition #' + this.curEdition + ' of this item so you cannot sell it!',
                     this.config.colorConfig.error, undefined, undefined, true
                 );
 
-                clearInterval(this.timerVars.updateTime);
+                this.endModalListener(submittedModal.client);
                 return;
             }
 
@@ -877,7 +893,7 @@ export default class MarketSubcommand implements Subcommand {
                     this.config.colorConfig.error, undefined, undefined, true
                 );
 
-                clearInterval(this.timerVars.updateTime);
+                this.endModalListener(submittedModal.client);
                 return;
             }
 
@@ -903,7 +919,7 @@ export default class MarketSubcommand implements Subcommand {
                     this.config.colorConfig.error, undefined, undefined, true
                 );
 
-                clearInterval(this.timerVars.updateTime);
+                this.endModalListener(submittedModal.client);
                 return;
             }
 
@@ -925,16 +941,15 @@ export default class MarketSubcommand implements Subcommand {
             await this.showMarket();
         } catch (err: unknown) {
             await LogDebug.handleError(err);
-            this.collector.stop(CollectorUtils.Reasons.Error);
+            CollectorUtils.marketCollectors[submittedModal.user.id].stop(CollectorUtils.Reasons.Error);
         }
 
-        clearInterval(this.timerVars.updateTime);
-        submittedModal.client.removeListener(Events.InteractionCreate, this.modalListenerPage);
+        this.endModalListener(submittedModal.client);
     };
 
     private modalListenerOrder = async (submittedModal: Interaction): Promise<void> => {
         try  {
-            if (!await this.beginModal(submittedModal, this.modalListenerOrder)) return;
+            if (!await this.beginModal(submittedModal)) return;
             submittedModal = submittedModal as ModalSubmitInteraction;
 
             const strConfig = this.config.stringConfig;
@@ -971,7 +986,7 @@ export default class MarketSubcommand implements Subcommand {
                     this.config.colorConfig.error, undefined, undefined, true
                 );
 
-                clearInterval(this.timerVars.updateTime);
+                this.endModalListener(submittedModal.client);
                 return;
             }
 
@@ -981,7 +996,7 @@ export default class MarketSubcommand implements Subcommand {
                     this.config.colorConfig.error, undefined, undefined, true
                 );
 
-                clearInterval(this.timerVars.updateTime);
+                this.endModalListener(submittedModal.client);
                 return;
             }
 
@@ -1002,7 +1017,7 @@ export default class MarketSubcommand implements Subcommand {
                     this.config.colorConfig.error, undefined, undefined, true
                 );
 
-                clearInterval(this.timerVars.updateTime);
+                this.endModalListener(submittedModal.client);
                 return;
             }
 
@@ -1020,7 +1035,7 @@ export default class MarketSubcommand implements Subcommand {
                     this.config.colorConfig.error, undefined, undefined, true
                 );
 
-                clearInterval(this.timerVars.updateTime);
+                this.endModalListener(submittedModal.client);
                 return;
             }
 
@@ -1030,7 +1045,7 @@ export default class MarketSubcommand implements Subcommand {
                     this.config.colorConfig.error, undefined, undefined, true
                 );
 
-                clearInterval(this.timerVars.updateTime);
+                this.endModalListener(submittedModal.client);
                 return;
             }
 
@@ -1054,16 +1069,15 @@ export default class MarketSubcommand implements Subcommand {
             await this.showMarket();
         } catch (err: unknown) {
             await LogDebug.handleError(err);
-            this.collector.stop(CollectorUtils.Reasons.Error);
+            CollectorUtils.marketCollectors[submittedModal.user.id].stop(CollectorUtils.Reasons.Error);
         }
 
-        clearInterval(this.timerVars.updateTime);
-        submittedModal.client.removeListener(Events.InteractionCreate, this.modalListenerPage);
+        this.endModalListener(submittedModal.client);
     };
 
     private modalListenerOrderSpecial = async (submittedModal: Interaction): Promise<void> => {
         try  {
-            if (!await this.beginModal(submittedModal, this.modalListenerOrderSpecial)) return;
+            if (!await this.beginModal(submittedModal)) return;
             submittedModal = submittedModal as ModalSubmitInteraction;
 
             const strConfig = this.config.stringConfig;
@@ -1100,7 +1114,7 @@ export default class MarketSubcommand implements Subcommand {
                     this.config.colorConfig.error, undefined, undefined, true
                 );
 
-                clearInterval(this.timerVars.updateTime);
+                this.endModalListener(submittedModal.client);
                 return;
             }
 
@@ -1119,7 +1133,7 @@ export default class MarketSubcommand implements Subcommand {
                     this.config.colorConfig.error, undefined, undefined, true
                 );
 
-                clearInterval(this.timerVars.updateTime);
+                this.endModalListener(submittedModal.client);
                 return;
             }
 
@@ -1129,7 +1143,7 @@ export default class MarketSubcommand implements Subcommand {
                     this.config.colorConfig.error, undefined, undefined, true
                 );
 
-                clearInterval(this.timerVars.updateTime);
+                this.endModalListener(submittedModal.client);
                 return;
             }
 
@@ -1150,7 +1164,7 @@ export default class MarketSubcommand implements Subcommand {
                     editionVal + ' of this item!', this.config.colorConfig.error, undefined, undefined, true
                 );
 
-                clearInterval(this.timerVars.updateTime);
+                this.endModalListener(submittedModal.client);
                 return;
             }
 
@@ -1166,7 +1180,7 @@ export default class MarketSubcommand implements Subcommand {
                     this.config.colorConfig.error, undefined, undefined, true
                 );
 
-                clearInterval(this.timerVars.updateTime);
+                this.endModalListener(submittedModal.client);
                 return;
             }
 
@@ -1176,7 +1190,7 @@ export default class MarketSubcommand implements Subcommand {
                     this.config.colorConfig.error, undefined, undefined, true
                 );
 
-                clearInterval(this.timerVars.updateTime);
+                this.endModalListener(submittedModal.client);
                 return;
             }
 
@@ -1199,41 +1213,44 @@ export default class MarketSubcommand implements Subcommand {
             LogDebug.sendDebug('Showing market', this.config);
         } catch (err: unknown) {
             await LogDebug.handleError(err);
-            this.collector.stop(CollectorUtils.Reasons.Error);
+            CollectorUtils.marketCollectors[submittedModal.user.id].stop(CollectorUtils.Reasons.Error);
         }
 
-        LogDebug.sendDebug('Finishing modal', this.config);
-        clearInterval(this.timerVars.updateTime);
-        submittedModal.client.removeListener(Events.InteractionCreate, this.modalListenerPage);
+        this.endModalListener(submittedModal.client);
     };
 
-    private async beginModal(
-        submittedModal: Interaction, listener: (submittedModal: Interaction) => Promise<void>
-    ): Promise<boolean> {
+    private async beginModal(submittedModal: Interaction): Promise<boolean> {
         if (
             submittedModal.isMessageComponent() &&
             submittedModal.customId.endsWith(this.firstInter.id + '|' + this.firstInter.user.id) ||
             BoarBotApp.getBot().getConfig().maintenanceMode && !this.config.devs.includes(this.compInter.user.id)
         ) {
-            clearInterval(this.timerVars.updateTime);
-            submittedModal.client.removeListener(Events.InteractionCreate, listener);
-
+            this.endModalListener(submittedModal.client);
             return false;
         }
 
         // Updates the cooldown to interact again
-        CollectorUtils.canInteract(this.timerVars);
+        let canInteract = await CollectorUtils.canInteract(this.timerVars);
+        if (!canInteract) return false;
 
         if (
-            !submittedModal.isModalSubmit() || this.collector.ended ||
+            !submittedModal.isModalSubmit() || CollectorUtils.marketCollectors[submittedModal.user.id].ended ||
             !submittedModal.guild || submittedModal.customId !== this.modalShowing.data.custom_id
         ) {
-            clearInterval(this.timerVars.updateTime);
+            this.endModalListener(submittedModal.client);
             return false;
         }
 
         await submittedModal.deferUpdate();
         return true;
+    }
+
+    private endModalListener(client: Client) {
+        clearInterval(this.timerVars.updateTime);
+        if (this.curModalListener) {
+            client.removeListener(Events.InteractionCreate, this.curModalListener);
+            this.curModalListener = undefined;
+        }
     }
 
     private async showMarket(firstRun: boolean = false) {
@@ -1353,6 +1370,26 @@ export default class MarketSubcommand implements Subcommand {
         }
     }
 
+    private undoRedButtons(): boolean {
+        let fixedRed = false;
+
+        if (
+            (this.optionalRows[0].components[0] as ButtonBuilder).data.style === 4 ||
+            (this.optionalRows[0].components[1] as ButtonBuilder).data.style === 4 ||
+            (this.optionalRows[1].components[0] as ButtonBuilder).data.style === 4 ||
+            (this.optionalRows[1].components[1] as ButtonBuilder).data.style === 4
+        ) {
+            fixedRed = true;
+        }
+
+        (this.optionalRows[0].components[0] as ButtonBuilder).setStyle(3);
+        (this.optionalRows[0].components[1] as ButtonBuilder).setStyle(3);
+        (this.optionalRows[1].components[0] as ButtonBuilder).setStyle(3);
+        (this.optionalRows[1].components[1] as ButtonBuilder).setStyle(3);
+
+        return fixedRed;
+    }
+
     private initButtons() {
         const marketFieldConfigs: RowConfig[][] = this.config.commandConfigs.boar.market.componentFields;
         // const selectOptions: SelectMenuComponentOptionData[] = [];
@@ -1397,16 +1434,6 @@ export default class MarketSubcommand implements Subcommand {
                 this.optionalRows = newRows;
             }
         }
-    }
-
-    private getPageFromName(pageInput: string, root: Node<string, number>): number {
-        if (root.key.includes(pageInput))
-            return root.value;
-        if (pageInput > root.key && root.right !== null)
-            return this.getPageFromName(pageInput, root.right);
-        if (pageInput < root.key && root.left !== null)
-            return this.getPageFromName(pageInput, root.left);
-        return root.value;
     }
 
     private setPage(pageVal: number): void {

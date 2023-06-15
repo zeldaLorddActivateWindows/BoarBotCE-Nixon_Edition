@@ -2,8 +2,7 @@ import {
     ActionRowBuilder,
     ButtonBuilder,
     ButtonInteraction,
-    ChatInputCommandInteraction, Events, Interaction,
-    InteractionCollector,
+    ChatInputCommandInteraction, Client, Events, Interaction,
     MessageComponentInteraction, ModalBuilder,
     SelectMenuComponentOptionData,
     StringSelectMenuBuilder,
@@ -61,9 +60,8 @@ export default class TopSubcommand implements Subcommand {
         timeUntilNextCollect: 0,
         updateTime: setTimeout(() => {})
     };
-    private collector: InteractionCollector<ButtonInteraction | StringSelectMenuInteraction> =
-        {} as InteractionCollector<ButtonInteraction | StringSelectMenuInteraction>;
     private modalShowing: ModalBuilder = {} as ModalBuilder;
+    private curModalListener: ((submittedModal: Interaction) => Promise<void>) | undefined;
     public readonly data = { name: this.subcommandInfo.name, path: __filename, cooldown: this.subcommandInfo.cooldown };
 
     /**
@@ -187,7 +185,7 @@ export default class TopSubcommand implements Subcommand {
             await this.showLeaderboard();
         } catch (err: unknown) {
             await LogDebug.handleError(err);
-            this.collector.stop(CollectorUtils.Reasons.Error);
+            CollectorUtils.topCollectors[inter.user.id].stop(CollectorUtils.Reasons.Error);
         }
 
         clearInterval(this.timerVars.updateTime);
@@ -234,20 +232,19 @@ export default class TopSubcommand implements Subcommand {
                 submittedModal.customId.endsWith(this.firstInter.id + '|' + this.firstInter.user.id) ||
                 BoarBotApp.getBot().getConfig().maintenanceMode && !this.config.devs.includes(this.compInter.user.id)
             ) {
-                clearInterval(this.timerVars.updateTime);
-                submittedModal.client.removeListener(Events.InteractionCreate, this.modalListener);
-
+                this.endModalListener(submittedModal.client);
                 return;
             }
 
             // Updates the cooldown to interact again
-            CollectorUtils.canInteract(this.timerVars);
+            let canInteract = await CollectorUtils.canInteract(this.timerVars);
+            if (!canInteract) return;
 
             if (
-                !submittedModal.isModalSubmit() || this.collector.ended ||
+                !submittedModal.isModalSubmit() || CollectorUtils.topCollectors[submittedModal.user.id].ended ||
                 !submittedModal.guild || submittedModal.customId !== this.modalShowing.data.custom_id
             ) {
-                clearInterval(this.timerVars.updateTime);
+                this.endModalListener(submittedModal.client);
                 return;
             }
 
@@ -271,12 +268,19 @@ export default class TopSubcommand implements Subcommand {
             await this.showLeaderboard();
         } catch (err: unknown) {
             await LogDebug.handleError(err);
-            this.collector.stop(CollectorUtils.Reasons.Error);
+            CollectorUtils.topCollectors[submittedModal.user.id].stop(CollectorUtils.Reasons.Error);
         }
 
-        clearInterval(this.timerVars.updateTime);
-        submittedModal.client.removeListener(Events.InteractionCreate, this.modalListener);
+        this.endModalListener(submittedModal.client);
     };
+
+    private endModalListener(client: Client) {
+        clearInterval(this.timerVars.updateTime);
+        if (this.curModalListener) {
+            client.removeListener(Events.InteractionCreate, this.curModalListener);
+            this.curModalListener = undefined;
+        }
+    }
 
     private async showLeaderboard() {
         if (!this.imageGen.hasMadeImage()) {

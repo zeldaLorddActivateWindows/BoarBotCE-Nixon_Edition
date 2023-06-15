@@ -132,7 +132,7 @@ export class BoarBot implements Bot {
 
 		setInterval(() => {
 			LogDebug.sendDebug('Interaction Listeners: ' + this.client.listenerCount(Events.InteractionCreate), this.getConfig())
-		}, 600000);
+		}, 30000);
 
 		let timeUntilPow: number = 0;
 

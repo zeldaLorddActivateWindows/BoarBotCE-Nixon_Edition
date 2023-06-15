@@ -104,7 +104,7 @@ export class Replies {
             content, color, BoarBotApp.getBot().getConfig(), coloredContent, color2
         );
 
-        if (!forceFollowup && interaction.deferred && interaction.isChatInputCommand()) {
+        if (!forceFollowup && interaction.deferred) {
             await interaction.editReply({
                 content: '',
                 files: [embedImage],

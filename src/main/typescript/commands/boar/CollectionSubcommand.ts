@@ -2,14 +2,13 @@ import {
     ActionRowBuilder, AttachmentBuilder,
     ButtonBuilder,
     ButtonInteraction,
-    ChatInputCommandInteraction, ColorResolvable, EmbedBuilder,
+    ChatInputCommandInteraction, Client, ColorResolvable, EmbedBuilder,
     Events,
     Interaction,
-    InteractionCollector,
     MessageComponentInteraction,
     ModalBuilder,
     StringSelectMenuBuilder,
-    StringSelectMenuInteraction, TextChannel,
+    TextChannel,
     User
 } from 'discord.js';
 import {BoarUser} from '../../util/boar/BoarUser';
@@ -25,7 +24,7 @@ import {CollectionImageGenerator} from '../../util/generators/CollectionImageGen
 import {Replies} from '../../util/interactions/Replies';
 import {FormatStrings} from '../../util/discord/FormatStrings';
 import {RarityConfig} from '../../bot/config/items/RarityConfig';
-import createRBTree, {Node, Tree} from 'functional-red-black-tree';
+import createRBTree, {Tree} from 'functional-red-black-tree';
 import {BoarGift} from '../../util/boar/BoarGift';
 import {GuildData} from '../../util/data/global/GuildData';
 import {RowConfig} from '../../bot/config/components/RowConfig';
@@ -71,12 +70,8 @@ export default class CollectionSubcommand implements Subcommand {
         timeUntilNextCollect: 0,
         updateTime: setTimeout(() => {})
     };
-
-    // The modal that's shown to a user if they opened one
+    private curModalListener: ((submittedModal: Interaction) => Promise<void>) | undefined;
     private modalShowing: ModalBuilder = {} as ModalBuilder;
-
-    private collector: InteractionCollector<ButtonInteraction | StringSelectMenuInteraction> =
-        {} as InteractionCollector<ButtonInteraction | StringSelectMenuInteraction>;
     public readonly data = { name: this.subcommandInfo.name, path: __filename, cooldown: this.subcommandInfo.cooldown };
 
     /**
@@ -121,7 +116,7 @@ export default class CollectionSubcommand implements Subcommand {
         if (!Number.isNaN(parseInt(pageInput))) {
             pageVal = parseInt(pageInput);
         } else if (this.curView === View.Detailed) {
-            pageVal = this.getPageFromName(pageInput, this.allBoarsTree.root);
+            pageVal = BoarUtils.getClosestName(pageInput, this.allBoarsTree.root);
         }
 
         this.setPage(pageVal);
@@ -258,7 +253,7 @@ export default class CollectionSubcommand implements Subcommand {
             await this.showCollection();
         } catch (err: unknown) {
             await LogDebug.handleError(err);
-            this.collector.stop(CollectorUtils.Reasons.Error);
+            CollectorUtils.collectionCollectors[inter.user.id].stop(CollectorUtils.Reasons.Error);
         }
 
         clearInterval(this.timerVars.updateTime);
@@ -327,7 +322,7 @@ export default class CollectionSubcommand implements Subcommand {
 
         await this.getUserInfo();
 
-        this.curPage = this.getPageFromName(
+        this.curPage = BoarUtils.getClosestName(
             this.config.itemConfigs.boars[enhancedBoar].name.toLowerCase().replace(/\s+/g, ''), this.allBoarsTree.root
         ) - 1;
 
@@ -366,12 +361,8 @@ export default class CollectionSubcommand implements Subcommand {
 
         inter.client.on(
             Events.InteractionCreate,
-            this.modalListener
+            this.curModalListener = this.modalListener
         );
-
-        setTimeout(() => {
-            inter.client.removeListener(Events.InteractionCreate, this.modalListener);
-        }, 60000);
     }
 
     /**
@@ -388,20 +379,19 @@ export default class CollectionSubcommand implements Subcommand {
                 submittedModal.customId.endsWith(this.firstInter.id + '|' + this.firstInter.user.id) ||
                 BoarBotApp.getBot().getConfig().maintenanceMode && !this.config.devs.includes(this.compInter.user.id)
             ) {
-                clearInterval(this.timerVars.updateTime);
-                submittedModal.client.removeListener(Events.InteractionCreate, this.modalListener);
-
+                this.endModalListener(submittedModal.client);
                 return;
             }
 
             // Updates the cooldown to interact again
-            CollectorUtils.canInteract(this.timerVars);
+            let canInteract = await CollectorUtils.canInteract(this.timerVars);
+            if (!canInteract) return;
 
             if (
-                !submittedModal.isModalSubmit() || this.collector.ended ||
+                !submittedModal.isModalSubmit() || CollectorUtils.collectionCollectors[submittedModal.user.id].ended ||
                 !submittedModal.guild || submittedModal.customId !== this.modalShowing.data.custom_id
             ) {
-                clearInterval(this.timerVars.updateTime);
+                this.endModalListener(submittedModal.client);
                 return;
             }
 
@@ -419,7 +409,7 @@ export default class CollectionSubcommand implements Subcommand {
             if (!Number.isNaN(parseInt(submittedPage))) {
                 pageVal = parseInt(submittedPage);
             } else if (this.curView === View.Detailed) {
-                pageVal = this.getPageFromName(submittedPage, this.allBoarsTree.root)
+                pageVal = BoarUtils.getClosestName(submittedPage, this.allBoarsTree.root)
             }
 
             this.setPage(pageVal);
@@ -427,12 +417,19 @@ export default class CollectionSubcommand implements Subcommand {
             await this.showCollection();
         } catch (err: unknown) {
             await LogDebug.handleError(err);
-            this.collector.stop(CollectorUtils.Reasons.Error);
+            CollectorUtils.collectionCollectors[submittedModal.user.id].stop(CollectorUtils.Reasons.Error);
         }
 
-        clearInterval(this.timerVars.updateTime);
-        submittedModal.client.removeListener(Events.InteractionCreate, this.modalListener);
+        this.endModalListener(submittedModal.client);
     };
+
+    private endModalListener(client: Client) {
+        clearInterval(this.timerVars.updateTime);
+        if (this.curModalListener) {
+            client.removeListener(Events.InteractionCreate, this.curModalListener);
+            this.curModalListener = undefined;
+        }
+    }
 
     /**
      * Handles when the collection for navigating through collection is finished
@@ -659,23 +656,6 @@ export default class CollectionSubcommand implements Subcommand {
         for (const component of this.optionalButtons.components) {
             component.setDisabled(true);
         }
-    }
-
-    /**
-     * Uses a BST to get a page from boar name input (closest match)
-     *
-     * @param pageInput - The boar name input to look for
-     * @param root - The root of the tree
-     * @private
-     */
-    private getPageFromName(pageInput: string, root: Node<string, number>): number {
-        if (root.key.includes(pageInput))
-            return root.value;
-        if (pageInput > root.key && root.right !== null)
-            return this.getPageFromName(pageInput, root.right);
-        if (pageInput < root.key && root.left !== null)
-            return this.getPageFromName(pageInput, root.left);
-        return root.value;
     }
 
     /**

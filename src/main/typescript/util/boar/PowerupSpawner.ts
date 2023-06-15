@@ -190,16 +190,18 @@ export class PowerupSpawner {
                 correctString = correctString.replace(/%@/g, match => ++occur === 2 ? timeToClaim.toString() : match);
 
                 await Replies.handleReply(inter, correctString, config.colorConfig.font,
-                    config.stringConfig.powRight, config.colorConfig.green
+                    config.stringConfig.powRight, config.colorConfig.green, true
                 );
                 LogDebug.sendDebug('Collected: ' + inter.user.username + ' (' + inter.user.id + ')', config);
             } else if (!this.claimers.has(inter.user.id)) {
                 await Replies.handleReply(inter, config.stringConfig.powWrongFull, config.colorConfig.font,
-                    config.stringConfig.powWrong, config.colorConfig.error
+                    config.stringConfig.powWrong, config.colorConfig.error, true
                 );
                 LogDebug.sendDebug('Failed attempt: ' + inter.user.username + ' (' + inter.user.id + ')', config);
             } else {
-                await Replies.handleReply(inter, config.stringConfig.powAttempted, config.colorConfig.error);
+                await Replies.handleReply(
+                    inter, config.stringConfig.powAttempted, config.colorConfig.error, undefined, undefined, true
+                );
                 LogDebug.sendDebug('Already collected: ' + inter.user.username + ' (' + inter.user.id + ')', config);
             }
         } catch (err: unknown) {
@@ -530,7 +532,8 @@ export class PowerupSpawner {
                     PowerupImageGenerator.getPowerupString(
                         this.powerupType, (this.powerupType.tiers as number[])[userPowTier], config
                     ),
-                    config.colorConfig.powerup
+                    config.colorConfig.powerup,
+                    true
                 );
 
                 Queue.addQueue(async () => {
