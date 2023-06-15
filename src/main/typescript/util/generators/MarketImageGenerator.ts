@@ -132,12 +132,8 @@ export class MarketImageGenerator {
         let rarityName = 'Powerup';
         let rarityColor = colorConfig.powerup;
         let itemName = this.config.itemConfigs[item.type][item.id].name;
-        let lowBuy: string = item.instaBuys.length > 0
-            ? '%@' + item.instaBuys[0].price.toLocaleString()
-            : 'N/A';
-        let highSell: string = item.instaSells.length > 0
-            ? '%@' + item.instaSells[0].price.toLocaleString()
-            : 'N/A';
+        let lowBuy: string = 'N/A';
+        let highSell: string = 'N/A';
         let buyOrderVolume: number = 0;
         let sellOrderVolume: number = 0;
 
@@ -148,35 +144,36 @@ export class MarketImageGenerator {
         }
 
         if (edition > 0) {
-            let sellOrder: BuySellData | undefined;
-            let buyOrder: BuySellData | undefined;
-
             for (const instaBuy of item.instaBuys) {
                 if ((instaBuy.editions as number[])[0] !== edition) continue;
-                if (!sellOrder) {
-                    sellOrder = instaBuy;
+                if (instaBuy.num - instaBuy.filledAmount > 0 && lowBuy === 'N/A') {
+                    lowBuy = '%@' + instaBuy.price.toLocaleString();
                 }
                 sellOrderVolume++;
             }
 
             for (const instaSell of item.instaSells) {
                 if ((instaSell.editions as number[])[0] !== edition) continue;
-                if (!buyOrder) {
-                    buyOrder = instaSell;
+                if (instaSell.num - instaSell.filledAmount > 0 && highSell === 'N/A') {
+                    highSell = '%@' + instaSell.price.toLocaleString();
                 }
                 buyOrderVolume++;
             }
 
             itemName += ' #' + edition;
-            lowBuy = sellOrder ? '%@' + sellOrder.price.toLocaleString() : 'N/A';
-            highSell = buyOrder ? '%@' + buyOrder.price.toLocaleString() : 'N/A';
         } else {
             for (const instaBuy of item.instaBuys) {
-                sellOrderVolume += instaBuy.num;
+                sellOrderVolume += instaBuy.num - instaBuy.filledAmount;
+                if (instaBuy.num - instaBuy.filledAmount > 0 && lowBuy === 'N/A') {
+                    lowBuy = '%@' + instaBuy.price.toLocaleString();
+                }
             }
 
             for (const instaSell of item.instaSells) {
-                buyOrderVolume += instaSell.num;
+                buyOrderVolume += instaSell.num - instaSell.filledAmount;
+                if (instaSell.num - instaSell.filledAmount > 0 && highSell === 'N/A') {
+                    highSell = '%@' + instaSell.price.toLocaleString();
+                }
             }
         }
 

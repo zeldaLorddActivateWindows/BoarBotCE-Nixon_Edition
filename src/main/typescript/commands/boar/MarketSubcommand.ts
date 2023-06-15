@@ -34,6 +34,7 @@ import {ModalConfig} from '../../bot/config/modals/ModalConfig';
 import {BoarUtils} from '../../util/boar/BoarUtils';
 import {Queue} from '../../util/interactions/Queue';
 import fs from 'fs';
+import {CollectedBoar} from '../../util/data/userdata/collectibles/CollectedBoar';
 
 enum View {
     Overview,
@@ -190,10 +191,6 @@ export default class MarketSubcommand implements Subcommand {
                     await this.modalHandle(inter);
                 }
 
-                if (this.undoRedButtons()) {
-                    this.showMarket();
-                }
-
                 clearInterval(this.timerVars.updateTime);
                 return;
             }
@@ -205,10 +202,6 @@ export default class MarketSubcommand implements Subcommand {
 
                 if (showModal) {
                     await this.modalHandle(inter);
-                }
-
-                if (this.undoRedButtons()) {
-                    this.showMarket();
                 }
 
                 clearInterval(this.timerVars.updateTime);
@@ -277,14 +270,17 @@ export default class MarketSubcommand implements Subcommand {
     ): Promise<boolean> {
         try {
             this.boarUser.refreshUserData();
-            const itemData = this.pricingData[this.curPage];
+            let itemData = this.pricingData[this.curPage];
             let showModal = true;
+            let undoRed = true;
 
             const strConfig = this.config.stringConfig;
 
             let sellOrder: BuySellData | undefined;
+            const itemRarity = BoarUtils.findRarity(itemData.id, this.config);
+            const isSpecial = itemRarity[1].name === 'Special' && itemRarity[0] !== 0;
 
-            if (isInstaBuy && BoarUtils.findRarity(itemData.id, this.config)[1].name === 'Special') {
+            if (isInstaBuy && isSpecial) {
                 for (const instaBuy of itemData.instaBuys) {
                     if ((instaBuy.editions as number[])[0] !== this.curEdition) continue;
                     sellOrder = instaBuy;
@@ -322,13 +318,12 @@ export default class MarketSubcommand implements Subcommand {
                 await inter.deferUpdate();
                 showModal = false;
 
-                if (this.boarUser.stats.general.boarScore >= this.modalData[0] * this.modalData[1]) {
+                if (this.boarUser.stats.general.boarScore >= this.modalData[1]) {
                     let failedBuy = false;
-                    // CAN'T USE OUTDATED ITEMDATA
+                    const orderFillAmounts: number[] = [];
                     await Queue.addQueue(async () => {
                         const globalData = DataHandlers.getGlobalData();
                         const newItemData = globalData.itemData[itemData.type][itemData.id];
-                        const ordersToModify = [];
 
                         let numGrabbed = 0;
                         let curPrice = 0;
@@ -337,7 +332,8 @@ export default class MarketSubcommand implements Subcommand {
                             let numToAdd = 0;
                             if (curIndex < newItemData.sellers.length) {
                                 numToAdd = Math.min(
-                                    this.modalData[0] - numGrabbed, newItemData.sellers[curIndex].num
+                                    this.modalData[0] - numGrabbed, newItemData.sellers[curIndex].num -
+                                    newItemData.sellers[curIndex].filledAmount
                                 );
                                 curPrice += newItemData.sellers[curIndex].price * numToAdd;
                             } else {
@@ -345,7 +341,7 @@ export default class MarketSubcommand implements Subcommand {
                             }
 
                             numGrabbed += numToAdd;
-                            ordersToModify.push(numToAdd);
+                            orderFillAmounts.push(numToAdd);
                             curIndex++;
                         }
 
@@ -363,18 +359,50 @@ export default class MarketSubcommand implements Subcommand {
                                 inter, strConfig.marketUpdatedInstaBuy.replace('%@', curPrice.toLocaleString()),
                                 this.config.colorConfig.error, undefined, undefined, true
                             );
-                            (this.optionalRows[0].components[0] as ButtonBuilder).setStyle(4); // doesn't work
+                            this.modalData[1] = curPrice;
+                            undoRed = false;
                             failedBuy = true;
                             return;
                         }
 
+                        for (let i=0; i<orderFillAmounts.length; i++) {
+                            newItemData.sellers[i].filledAmount += orderFillAmounts[i];
+                        }
+
                         fs.writeFileSync(this.config.pathConfig.globalDataFile, JSON.stringify(globalData));
+                        this.getPricingData();
+                        this.imageGen.updateInfo(this.pricingData, this.config);
                     }, inter.id + 'global');
 
-                    this.getPricingData();
-                    this.imageGen.updateInfo(this.pricingData, this.config);
-
                     if (!failedBuy) {
+                        this.boarUser.stats.general.boarScore -= this.modalData[1];
+
+                        if (itemData.type === 'boars') {
+                            itemData = this.pricingData[this.curPage];
+
+                            if (!this.boarUser.itemCollection.boars[itemData.id]) {
+                                this.boarUser.itemCollection.boars[itemData.id] = new CollectedBoar;
+                            }
+
+                            this.boarUser.itemCollection.boars[itemData.id].num += this.modalData[0];
+
+                            for (let i=0; i<orderFillAmounts.length; i++) {
+                                if (!itemData.instaBuys[i].editions || !itemData.instaBuys[i].editionDates) continue;
+
+                                this.boarUser.itemCollection.boars[itemData.id].editions =
+                                    this.boarUser.itemCollection.boars[itemData.id].editions.concat(
+                                        (itemData.instaBuys[i].editions as number[]).slice(0, orderFillAmounts[i])
+                                    ).sort((a,b) => a - b);
+
+                                this.boarUser.itemCollection.boars[itemData.id].editionDates =
+                                    this.boarUser.itemCollection.boars[itemData.id].editionDates.concat(
+                                        (itemData.instaBuys[i].editionDates as number[]).slice(0, orderFillAmounts[i])
+                                    ).sort((a,b) => a - b);
+                            }
+                        } else {
+                            this.boarUser.itemCollection.powerups[itemData.id].numTotal += this.modalData[0];
+                        }
+
                         this.boarUser.updateUserData();
 
                         await Replies.handleReply(
@@ -389,7 +417,16 @@ export default class MarketSubcommand implements Subcommand {
                     );
                 }
             } else if (isInstaSell && (this.optionalRows[0].components[1] as ButtonBuilder).data.style === 4) {
+                await inter.deferUpdate();
+                showModal = false;
+            }
 
+            if (undoRed) {
+                this.undoRedButtons();
+            }
+
+            if (!showModal) {
+                this.showMarket();
             }
 
             return showModal;
@@ -540,6 +577,12 @@ export default class MarketSubcommand implements Subcommand {
                         this.config.colorConfig.error, undefined, undefined, true
                     );
                 }
+            }
+
+            this.undoRedButtons();
+
+            if (!showModal) {
+                this.showMarket();
             }
 
             return showModal;
@@ -786,10 +829,16 @@ export default class MarketSubcommand implements Subcommand {
             while (numGrabbed < numVal) {
                 let numToAdd = 0;
                 if (isInstaBuy && curIndex < itemData.instaBuys.length) {
-                    numToAdd = Math.min(numVal - numGrabbed, itemData.instaBuys[curIndex].num);
+                    numToAdd = Math.min(
+                        numVal - numGrabbed,
+                        itemData.instaBuys[curIndex].num - itemData.instaBuys[curIndex].filledAmount
+                    );
                     curPrice += itemData.instaBuys[curIndex].price * numToAdd;
                 } else if (curIndex < itemData.instaSells.length) {
-                    numToAdd = Math.min(numVal - numGrabbed, itemData.instaSells[curIndex].num);
+                    numToAdd = Math.min(
+                        numVal - numGrabbed,
+                        itemData.instaSells[curIndex].num - itemData.instaSells[curIndex].filledAmount
+                    );
                     curPrice += itemData.instaSells[curIndex].price * numToAdd;
                 } else {
                     break;
