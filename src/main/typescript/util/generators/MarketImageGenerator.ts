@@ -145,18 +145,26 @@ export class MarketImageGenerator {
 
         if (edition > 0) {
             for (const instaBuy of item.instaBuys) {
-                if ((instaBuy.editions as number[])[0] !== edition) continue;
-                if (instaBuy.num - instaBuy.filledAmount > 0 && lowBuy === 'N/A') {
+                const noEditionExists = instaBuy.num === instaBuy.filledAmount || instaBuy.editions[0] !== edition;
+
+                if (noEditionExists) continue;
+
+                if (lowBuy === 'N/A') {
                     lowBuy = '%@' + instaBuy.price.toLocaleString();
                 }
+
                 sellOrderVolume++;
             }
 
             for (const instaSell of item.instaSells) {
-                if ((instaSell.editions as number[])[0] !== edition) continue;
-                if (instaSell.num - instaSell.filledAmount > 0 && highSell === 'N/A') {
+                const noEditionExists = instaSell.num === instaSell.filledAmount || instaSell.editions[0] !== edition;
+
+                if (noEditionExists) continue;
+
+                if (highSell === 'N/A') {
                     highSell = '%@' + instaSell.price.toLocaleString();
                 }
+
                 buyOrderVolume++;
             }
 

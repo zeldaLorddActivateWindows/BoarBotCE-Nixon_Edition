@@ -86,7 +86,7 @@ export default class MarketSubcommand implements Subcommand {
         const guildData: GuildData | undefined = await InteractionUtils.handleStart(interaction, this.config);
         if (!guildData) return;
 
-        await interaction.deferReply();
+        await interaction.deferReply({ ephemeral: true });
 
         this.firstInter = interaction;
 
@@ -282,76 +282,111 @@ export default class MarketSubcommand implements Subcommand {
 
             if (isInstaBuy && isSpecial) {
                 for (const instaBuy of itemData.instaBuys) {
-                    if ((instaBuy.editions as number[])[0] !== this.curEdition) continue;
+                    const noEditionExists = instaBuy.num === instaBuy.filledAmount ||
+                        instaBuy.editions[0] !== this.curEdition;
+
+                    if (noEditionExists) continue;
+
                     sellOrder = instaBuy;
                     break;
                 }
             }
 
-            if (
-                isInstaBuy && this.curEdition > 0 && sellOrder &&
-                this.boarUser.stats.general.boarScore < sellOrder.price ||
-                isInstaBuy && this.boarUser.stats.general.boarScore < itemData.instaBuys[0].price
-            ) {
+            const noEditionBucks = isInstaBuy && this.curEdition > 0 && sellOrder &&
+                this.boarUser.stats.general.boarScore < sellOrder.price;
+            const noItemBucks = isInstaBuy && this.boarUser.stats.general.boarScore < itemData.instaBuys[0].price;
+
+            const noHaveEdition = isInstaSell && this.curEdition > 0 &&
+                this.boarUser.itemCollection.boars[itemData.id] &&
+                !this.boarUser.itemCollection.boars[itemData.id].editions.includes(this.curEdition);
+
+            const noHaveItems = isInstaSell && (itemData.type === 'boars' &&
+                !this.boarUser.itemCollection.boars[itemData.id] ||
+                itemData.type === 'powerups' && !this.boarUser.itemCollection.boars[itemData.id]);
+
+            const completeBuy = isInstaBuy && (this.optionalRows[0].components[0] as ButtonBuilder).data.style === 4;
+            const completeSell = isInstaSell && (this.optionalRows[0].components[1] as ButtonBuilder).data.style === 4;
+
+            if (noEditionBucks || noItemBucks) {
                 showModal = false;
                 await Replies.handleReply(
                     inter, 'You don\'t have enough boar bucks for this!', this.config.colorConfig.error
                 );
-            } else if (
-                isInstaSell && this.curEdition > 0 && this.boarUser.itemCollection.boars[itemData.id] &&
-                !this.boarUser.itemCollection.boars[itemData.id].editions.includes(this.curEdition)
-            ) {
+            } else if (noHaveEdition) {
                 showModal = false;
                 await Replies.handleReply(
                     inter, 'You don\'t have this edition so you cannot sell it!',
                     this.config.colorConfig.error
                 );
-            } else if (
-                isInstaSell && (itemData.type === 'boars' && !this.boarUser.itemCollection.boars[itemData.id] ||
-                itemData.type === 'powerups' && !this.boarUser.itemCollection.boars[itemData.id])
-            ) {
+            } else if (noHaveItems) {
                 showModal = false;
                 await Replies.handleReply(
                     inter, 'You don\'t have any of this item!', this.config.colorConfig.error
                 );
-            } else if (isInstaBuy && (this.optionalRows[0].components[0] as ButtonBuilder).data.style === 4) {
+            } else if (completeBuy) {
                 await inter.deferUpdate();
                 showModal = false;
 
                 if (this.boarUser.stats.general.boarScore >= this.modalData[1]) {
                     let failedBuy = false;
                     const orderFillAmounts: number[] = [];
+                    let editionOrderIndex: number = -1;
+
                     await Queue.addQueue(async () => {
                         const globalData = DataHandlers.getGlobalData();
                         const newItemData = globalData.itemData[itemData.type][itemData.id];
 
-                        let numGrabbed = 0;
                         let curPrice = 0;
-                        let curIndex = 0;
-                        while (numGrabbed < this.modalData[0]) {
-                            let numToAdd = 0;
-                            if (curIndex < newItemData.sellers.length) {
+
+                        if (this.curEdition === 0) {
+                            let numGrabbed = 0;
+                            let curIndex = 0;
+                            while (numGrabbed < this.modalData[0]) {
+                                if (curIndex >= newItemData.sellers.length) break;
+
+                                let numToAdd = 0;
                                 numToAdd = Math.min(
-                                    this.modalData[0] - numGrabbed, newItemData.sellers[curIndex].num -
-                                    newItemData.sellers[curIndex].filledAmount
+                                    this.modalData[0] - numGrabbed,
+                                    newItemData.sellers[curIndex].num - newItemData.sellers[curIndex].filledAmount
                                 );
                                 curPrice += newItemData.sellers[curIndex].price * numToAdd;
-                            } else {
+
+                                numGrabbed += numToAdd;
+                                orderFillAmounts.push(numToAdd);
+                                curIndex++;
+                            }
+
+                            if (this.modalData[0] !== numGrabbed) {
+                                await Replies.handleReply(
+                                    inter, 'Not enough orders of this item to complete this transaction!',
+                                    this.config.colorConfig.font, undefined, undefined, true
+                                );
+
+                                failedBuy = true;
+                                return;
+                            }
+                        } else {
+                            for (const instaBuy of newItemData.sellers) {
+                                const noEditionExists = instaBuy.num === instaBuy.filledAmount ||
+                                    instaBuy.editions[0] !== this.curEdition;
+
+                                editionOrderIndex++;
+
+                                if (noEditionExists) continue;
+
+                                curPrice = instaBuy.price;
                                 break;
                             }
 
-                            numGrabbed += numToAdd;
-                            orderFillAmounts.push(numToAdd);
-                            curIndex++;
-                        }
+                            if (curPrice === 0) {
+                                await Replies.handleReply(
+                                    inter, 'Not enough orders of this item edition to complete this transaction!',
+                                    this.config.colorConfig.error, undefined, undefined, true
+                                );
 
-                        if (this.modalData[0] !== numGrabbed) {
-                            await Replies.handleReply(
-                                inter, 'Not enough orders of this item to complete this transaction!',
-                                this.config.colorConfig.font, undefined, undefined, true
-                            );
-                            failedBuy = true;
-                            return;
+                                failedBuy = true;
+                                return;
+                            }
                         }
 
                         if (this.modalData[1] < curPrice) {
@@ -359,6 +394,7 @@ export default class MarketSubcommand implements Subcommand {
                                 inter, strConfig.marketUpdatedInstaBuy.replace('%@', curPrice.toLocaleString()),
                                 this.config.colorConfig.error, undefined, undefined, true
                             );
+
                             this.modalData[1] = curPrice;
                             undoRed = false;
                             failedBuy = true;
@@ -369,40 +405,68 @@ export default class MarketSubcommand implements Subcommand {
                             newItemData.sellers[i].filledAmount += orderFillAmounts[i];
                         }
 
+                        if (editionOrderIndex >= 0) {
+                            newItemData.sellers[editionOrderIndex].filledAmount = 1;
+                        }
+
                         fs.writeFileSync(this.config.pathConfig.globalDataFile, JSON.stringify(globalData));
                         this.getPricingData();
                         this.imageGen.updateInfo(this.pricingData, this.config);
                     }, inter.id + 'global');
 
-                    if (!failedBuy) {
-                        this.boarUser.stats.general.boarScore -= this.modalData[1];
+                    if (!failedBuy && itemData.type === 'boars') {
+                        itemData = this.pricingData[this.curPage];
 
-                        if (itemData.type === 'boars') {
-                            itemData = this.pricingData[this.curPage];
+                        if (!this.boarUser.itemCollection.boars[itemData.id]) {
+                            this.boarUser.itemCollection.boars[itemData.id] = new CollectedBoar;
+                        }
 
-                            if (!this.boarUser.itemCollection.boars[itemData.id]) {
-                                this.boarUser.itemCollection.boars[itemData.id] = new CollectedBoar;
-                            }
+                        this.boarUser.itemCollection.boars[itemData.id].num += this.modalData[0];
+                        this.boarUser.itemCollection.boars[itemData.id].lastObtained = Date.now();
+                        this.boarUser.stats.general.lastBoar = itemData.id;
 
-                            this.boarUser.itemCollection.boars[itemData.id].num += this.modalData[0];
-
+                        if (this.curEdition === 0) {
                             for (let i=0; i<orderFillAmounts.length; i++) {
-                                if (!itemData.instaBuys[i].editions || !itemData.instaBuys[i].editionDates) continue;
+                                if (!itemData.instaBuys[i].editions || !itemData.instaBuys[i].editionDates)
+                                    continue;
 
                                 this.boarUser.itemCollection.boars[itemData.id].editions =
                                     this.boarUser.itemCollection.boars[itemData.id].editions.concat(
-                                        (itemData.instaBuys[i].editions as number[]).slice(0, orderFillAmounts[i])
+                                        itemData.instaBuys[i].editions.slice(0, orderFillAmounts[i])
                                     ).sort((a,b) => a - b);
 
                                 this.boarUser.itemCollection.boars[itemData.id].editionDates =
                                     this.boarUser.itemCollection.boars[itemData.id].editionDates.concat(
-                                        (itemData.instaBuys[i].editionDates as number[]).slice(0, orderFillAmounts[i])
+                                        itemData.instaBuys[i].editionDates.slice(0, orderFillAmounts[i])
                                     ).sort((a,b) => a - b);
                             }
                         } else {
-                            this.boarUser.itemCollection.powerups[itemData.id].numTotal += this.modalData[0];
-                        }
+                            let sellOrder: BuySellData | undefined;
 
+                            for (const instaBuy of itemData.instaBuys) {
+                                if (instaBuy.editions[0] !== this.curEdition) continue;
+                                sellOrder = instaBuy;
+                            }
+
+                            this.boarUser.itemCollection.boars[itemData.id].editions =
+                                this.boarUser.itemCollection.boars[itemData.id].editions.concat([this.curEdition])
+                                    .sort((a,b) => a - b);
+
+                            if (sellOrder) {
+                                this.boarUser.itemCollection.boars[itemData.id].editionDates =
+                                    this.boarUser.itemCollection.boars[itemData.id].editionDates.concat(
+                                        sellOrder.editionDates
+                                    ).sort((a,b) => a - b);
+                            }
+
+                            this.curEdition = 0;
+                        }
+                    } else if (!failedBuy && itemData.type === 'powerups') {
+                        this.boarUser.itemCollection.powerups[itemData.id].numTotal += this.modalData[0];
+                    }
+
+                    if (!failedBuy) {
+                        this.boarUser.stats.general.boarScore -= this.modalData[1];
                         this.boarUser.updateUserData();
 
                         await Replies.handleReply(
@@ -416,9 +480,156 @@ export default class MarketSubcommand implements Subcommand {
                         undefined, undefined, true
                     );
                 }
-            } else if (isInstaSell && (this.optionalRows[0].components[1] as ButtonBuilder).data.style === 4) {
+            } else if (completeSell) {
                 await inter.deferUpdate();
                 showModal = false;
+
+                if (
+                    this.curEdition > 0 && this.boarUser.itemCollection.boars[itemData.id].num >= this.modalData[0] &&
+                    this.boarUser.itemCollection.boars[itemData.id].editions.includes(this.curEdition) ||
+                    itemData.type === 'boars' &&
+                    this.boarUser.itemCollection.boars[itemData.id].num >= this.modalData[0] ||
+                    itemData.type === 'powerups' &&
+                    this.boarUser.itemCollection.powerups[itemData.id].numTotal >= this.modalData[0]
+                ) {
+                    let failedSale = false;
+                    const orderFillAmounts: number[] = [];
+                    let editionOrderIndex: number = -1;
+
+                    await Queue.addQueue(async () => {
+                        const globalData = DataHandlers.getGlobalData();
+                        const newItemData = globalData.itemData[itemData.type][itemData.id];
+
+                        let curPrice = 0;
+
+                        if (this.curEdition === 0) {
+                            let numGrabbed = 0;
+                            let curIndex = 0;
+                            while (numGrabbed < this.modalData[0]) {
+                                if (curIndex >= newItemData.buyers.length) break;
+
+                                let numToAdd = 0;
+                                numToAdd = Math.min(
+                                    this.modalData[0] - numGrabbed,
+                                    newItemData.buyers[curIndex].num - newItemData.buyers[curIndex].filledAmount
+                                );
+                                curPrice += newItemData.buyers[curIndex].price * numToAdd;
+
+                                numGrabbed += numToAdd;
+                                orderFillAmounts.push(numToAdd);
+                                curIndex++;
+                            }
+
+                            if (this.modalData[0] !== numGrabbed) {
+                                await Replies.handleReply(
+                                    inter, 'Not enough orders of this item to complete this transaction!',
+                                    this.config.colorConfig.font, undefined, undefined, true
+                                );
+
+                                failedSale = true;
+                                return;
+                            }
+                        } else {
+                            for (const instaSell of newItemData.buyers) {
+                                const noEditionExists = instaSell.num === instaSell.filledAmount ||
+                                    instaSell.editions[0] !== this.curEdition;
+
+                                editionOrderIndex++;
+
+                                if (noEditionExists) continue;
+
+                                curPrice = instaSell.price;
+                                break;
+                            }
+
+                            if (curPrice === 0) {
+                                await Replies.handleReply(
+                                    inter, 'Not enough orders of this item edition to complete this transaction!',
+                                    this.config.colorConfig.error, undefined, undefined, true
+                                );
+
+                                failedSale = true;
+                                return;
+                            }
+                        }
+
+                        if (this.modalData[1] > curPrice) {
+                            await Replies.handleReply(
+                                inter, strConfig.marketUpdatedInstaSell.replace('%@', curPrice.toLocaleString()),
+                                this.config.colorConfig.error, undefined, undefined, true
+                            );
+
+                            this.modalData[1] = curPrice;
+                            undoRed = false;
+                            failedSale = true;
+                            return;
+                        }
+
+                        for (let i=0; i<orderFillAmounts.length; i++) {
+                            const editionIndex = this.boarUser.itemCollection.boars[itemData.id].editions.length -
+                                orderFillAmounts[i];
+                            const editionLength = this.boarUser.itemCollection.boars[itemData.id].editions.length;
+
+                            newItemData.buyers[i].editions = newItemData.buyers[i].editions.concat(
+                                this.boarUser.itemCollection.boars[itemData.id].editions.splice(
+                                    editionIndex, editionLength
+                                )
+                            ).sort((a,b) => a - b);
+
+                            newItemData.buyers[i].editionDates = newItemData.buyers[i].editionDates.concat(
+                                this.boarUser.itemCollection.boars[itemData.id].editionDates.splice(
+                                    editionIndex, editionLength
+                                )
+                            ).sort((a,b) => a - b);
+
+                            newItemData.buyers[i].filledAmount += orderFillAmounts[i];
+                        }
+
+                        if (editionOrderIndex >= 0) {
+                            const editionIndex = this.boarUser.itemCollection.boars[itemData.id].editions
+                                .indexOf(this.curEdition);
+
+                            this.boarUser.itemCollection.boars[itemData.id].editions.splice(editionIndex, 1);
+
+                            newItemData.buyers[editionOrderIndex].editionDates =
+                                newItemData.buyers[editionOrderIndex].editionDates.concat(
+                                    this.boarUser.itemCollection.boars[itemData.id].editionDates.splice(editionIndex, 1)
+                                ).sort((a,b) => a - b);
+
+                            newItemData.buyers[editionOrderIndex].filledAmount = 1;
+
+                            this.curEdition = 0;
+                        }
+
+                        fs.writeFileSync(this.config.pathConfig.globalDataFile, JSON.stringify(globalData));
+                        this.getPricingData();
+                        this.imageGen.updateInfo(this.pricingData, this.config);
+                    }, inter.id + 'global');
+
+                    if (itemData.type === 'boars') {
+                        this.boarUser.itemCollection.boars[itemData.id].num -= this.modalData[0];
+                    } else {
+                        this.boarUser.itemCollection.powerups[itemData.id].numTotal -= this.modalData[0];
+                    }
+
+                    this.boarUser.stats.general.boarScore += this.modalData[1];
+                    this.boarUser.updateUserData();
+
+                    await Replies.handleReply(
+                        inter, strConfig.marketInstaComplete, this.config.colorConfig.green,
+                        undefined, undefined, true
+                    );
+                } else if (this.curEdition > 0) {
+                    await Replies.handleReply(
+                        inter, 'You don\'t have edition #' + this.modalData[2] + ' of this item so you cannot sell it!',
+                        this.config.colorConfig.error, undefined, undefined, true
+                    );
+                } else {
+                    await Replies.handleReply(
+                        inter, 'You don\'t have enough of this item!',
+                        this.config.colorConfig.error, undefined, undefined, true
+                    );
+                }
             }
 
             if (undoRed) {
@@ -471,17 +682,17 @@ export default class MarketSubcommand implements Subcommand {
                             userID: inter.user.id,
                             num: this.modalData[0],
                             price: this.modalData[1],
-                            editions: this.modalData[2] > 0 ? [this.modalData[2]] : undefined,
+                            editions: this.modalData[2] > 0 ? [this.modalData[2]] : [],
+                            editionDates: [],
                             listTime: Date.now(),
                             filledAmount: 0
-                        } as BuySellData;
+                        };
 
                         globalData.itemData[itemData.type][itemData.id].buyers.push(order);
                         fs.writeFileSync(this.config.pathConfig.globalDataFile, JSON.stringify(globalData));
+                        this.getPricingData();
+                        this.imageGen.updateInfo(this.pricingData, this.config);
                     }, inter.id + 'global');
-
-                    this.getPricingData();
-                    this.imageGen.updateInfo(this.pricingData, this.config);
 
                     this.boarUser.stats.general.boarScore -= this.modalData[0] * this.modalData[1];
                     this.boarUser.updateUserData();
@@ -504,62 +715,52 @@ export default class MarketSubcommand implements Subcommand {
                     this.modalData[2] > 0 && this.boarUser.itemCollection.boars[itemData.id].num >= this.modalData[0] &&
                     this.boarUser.itemCollection.boars[itemData.id].editions.includes(this.modalData[2]) ||
                     itemData.type === 'boars' &&
-                    this.boarUser.itemCollection.boars[itemData.id].num >= this.modalData[0]
-                ) {
-                    const editionIndex = this.modalData[2] > 0
-                        ? this.boarUser.itemCollection.boars[itemData.id].editions.indexOf(this.modalData[2])
-                        : this.boarUser.itemCollection.boars[itemData.id].num - this.modalData[0];
-
-                    await Queue.addQueue(() => {
-                        const globalData = DataHandlers.getGlobalData();
-                        const order: BuySellData = {
-                            userID: inter.user.id,
-                            num: this.modalData[0],
-                            price: this.modalData[1],
-                            editions: this.boarUser.itemCollection.boars[itemData.id]
-                                .editions.splice(editionIndex, this.modalData[2] > 0 ? 1 : 100),
-                            editionDates: this.boarUser.itemCollection.boars[itemData.id]
-                                .editionDates.splice(editionIndex, this.modalData[2] > 0 ? 1 : 100),
-                            listTime: Date.now(),
-                            filledAmount: 0
-                        } as BuySellData;
-
-                        globalData.itemData[itemData.type][itemData.id].sellers.push(order);
-                        fs.writeFileSync(this.config.pathConfig.globalDataFile, JSON.stringify(globalData));
-                    }, inter.id + 'global');
-
-                    this.getPricingData();
-                    this.imageGen.updateInfo(this.pricingData, this.config);
-
-                    this.boarUser.itemCollection.boars[itemData.id].num -= this.modalData[0];
-                    this.boarUser.updateUserData();
-
-                    await Replies.handleReply(
-                        inter, strConfig.marketOrderComplete, this.config.colorConfig.green,
-                        undefined, undefined, true
-                    );
-                } else if (
+                    this.boarUser.itemCollection.boars[itemData.id].num >= this.modalData[0] ||
                     itemData.type === 'powerups' &&
                     this.boarUser.itemCollection.powerups[itemData.id].numTotal >= this.modalData[0]
                 ) {
+                    let editionIndex = 100;
+
+                    if (itemData.type === 'boars') {
+                        editionIndex = this.modalData[2] > 0
+                            ? this.boarUser.itemCollection.boars[itemData.id].editions.indexOf(this.modalData[2])
+                            : this.boarUser.itemCollection.boars[itemData.id].num - this.modalData[0];
+                    }
+
                     await Queue.addQueue(() => {
                         const globalData = DataHandlers.getGlobalData();
+
+                        const editions = itemData.type === 'boars'
+                            ? this.boarUser.itemCollection.boars[itemData.id]
+                                .editions.splice(editionIndex, this.modalData[2] > 0 ? 1 : 100)
+                            : [];
+                        const editionDates = itemData.type === 'boars'
+                            ? this.boarUser.itemCollection.boars[itemData.id]
+                                .editionDates.splice(editionIndex, this.modalData[2] > 0 ? 1 : 100)
+                            : [];
+
                         const order: BuySellData = {
                             userID: inter.user.id,
                             num: this.modalData[0],
                             price: this.modalData[1],
+                            editions: editions,
+                            editionDates: editionDates,
                             listTime: Date.now(),
                             filledAmount: 0
-                        } as BuySellData;
+                        };
 
                         globalData.itemData[itemData.type][itemData.id].sellers.push(order);
                         fs.writeFileSync(this.config.pathConfig.globalDataFile, JSON.stringify(globalData));
+                        this.getPricingData();
+                        this.imageGen.updateInfo(this.pricingData, this.config);
                     }, inter.id + 'global');
 
-                    this.getPricingData();
-                    this.imageGen.updateInfo(this.pricingData, this.config);
+                    if (itemData.type === 'boars') {
+                        this.boarUser.itemCollection.boars[itemData.id].num -= this.modalData[0];
+                    } else {
+                        this.boarUser.itemCollection.powerups[itemData.id].numTotal -= this.modalData[0];
+                    }
 
-                    this.boarUser.itemCollection.powerups[itemData.id].numTotal -= this.modalData[0];
                     this.boarUser.updateUserData();
 
                     await Replies.handleReply(
@@ -950,13 +1151,17 @@ export default class MarketSubcommand implements Subcommand {
 
             if (isInstaBuy) {
                 for (const instaBuy of itemData.instaBuys) {
-                    if ((instaBuy.editions as number[])[0] !== this.curEdition) continue;
+                    if (instaBuy.num === instaBuy.filledAmount || instaBuy.editions[0] !== this.curEdition)
+                        continue;
+
                     curPrice = instaBuy.price;
                     break;
                 }
             } else {
                 for (const instaSell of itemData.instaSells) {
-                    if ((instaSell.editions as number[])[0] !== this.curEdition) continue;
+                    if (instaSell.num === instaSell.filledAmount || instaSell.editions[0] !== this.curEdition)
+                        continue;
+
                     curPrice = instaSell.price;
                     break;
                 }
@@ -1198,7 +1403,7 @@ export default class MarketSubcommand implements Subcommand {
 
             let isSellingEdition = false;
             for (const instaBuy of itemData.instaBuys) {
-                if (instaBuy.userID === this.compInter.user.id && (instaBuy.editions as number[])[0] === editionVal) {
+                if (instaBuy.userID === this.compInter.user.id && instaBuy.editions[0] === editionVal) {
                     isSellingEdition = true;
                     break;
                 }
@@ -1209,7 +1414,7 @@ export default class MarketSubcommand implements Subcommand {
                 (this.boarUser.itemCollection.boars[itemData.id].editions.includes(editionVal) || isSellingEdition)
             ) {
                 await Replies.handleReply(
-                    submittedModal, 'You already have or are currently selling edition #' +
+                    submittedModal, 'You already have or currently have a sell offer for #' +
                     editionVal + ' of this item!', this.config.colorConfig.error, undefined, undefined, true
                 );
 
@@ -1338,8 +1543,23 @@ export default class MarketSubcommand implements Subcommand {
             rowsToAdd.push(this.optionalRows[0]);
             rowsToAdd.push(this.optionalRows[1]);
 
-            this.optionalRows[0].components[0].setDisabled(item.instaBuys.length === 0);
-            this.optionalRows[0].components[1].setDisabled(item.instaSells.length === 0);
+            let nonFilledBuys = 0;
+            let nonFilledSells = 0;
+
+            for (const instaBuy of item.instaBuys) {
+                if (instaBuy.num !== instaBuy.filledAmount) {
+                    nonFilledBuys++;
+                }
+            }
+
+            for (const instaSell of item.instaSells) {
+                if (instaSell.num !== instaSell.filledAmount) {
+                    nonFilledSells++;
+                }
+            }
+
+            this.optionalRows[0].components[0].setDisabled(nonFilledBuys === 0);
+            this.optionalRows[0].components[1].setDisabled(nonFilledSells === 0);
             this.optionalRows[1].components[0].setDisabled(false);
             this.optionalRows[1].components[1].setDisabled(false);
 
@@ -1348,8 +1568,10 @@ export default class MarketSubcommand implements Subcommand {
                 const instaBuyEditions: number[] = [];
                 const instaSellEditions: number[] = [];
 
-                for (let i=0; i<item.instaBuys.length; i++) {
-                    const editionNum: number = (item.instaBuys[i].editions as number[])[0];
+                for (const instaBuy of item.instaBuys) {
+                    if (instaBuy.num === instaBuy.filledAmount) continue;
+
+                    const editionNum: number = instaBuy.editions[0];
 
                     if (!instaBuyEditions.includes(editionNum)) {
                         selectOptions.push({
@@ -1361,8 +1583,10 @@ export default class MarketSubcommand implements Subcommand {
                     instaBuyEditions.push(editionNum);
                 }
 
-                for (let i=0; i<item.instaSells.length; i++) {
-                    const editionNum: number = (item.instaSells[i].editions as number[])[0];
+                for (const instaSell of item.instaSells) {
+                    if (instaSell.num === instaSell.filledAmount) continue;
+
+                    const editionNum: number = instaSell.editions[0];
 
                     if (!instaBuyEditions.includes(editionNum) && !instaSellEditions.includes(editionNum)) {
                         selectOptions.push({
