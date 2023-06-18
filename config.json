@@ -166,7 +166,7 @@
         "marketInstaComplete": "Transaction complete! All boar bucks/items have been received.",
         "marketConfirmBuyOrder": "Are you sure? You're setting up a buy order for %@, bringing the total potential cost to $%@. Click 'Buy Order' again to confirm your order.",
         "marketConfirmSellOrder": "Are you sure? You're setting up a sell offer for %@, bringing the total potential return to $%@. Click 'Sell Offer' again to confirm your offer.",
-        "marketOrderComplete": "Order/Offer placed! To see the status of your order, click 'Orders'. If it's not filled within a week, it will expire and all unfilled boar bucks/items will be returned to you.",
+        "marketOrderComplete": "Order/Offer placed! To see the status of your order, click 'Orders'. If it's not filled within a week, it will expire and you'll have to .",
         "noParentChannel": "NO CATEGORY",
         "notValidChannel": "This channel isn't valid! Try a different one! The channel should be a text channel, be not already chosen, and exists in this server.",
         "defaultSelectPlaceholder": "UNSELECTED",
@@ -380,7 +380,8 @@
         "leaderboardTopBotWidth": 1550,
         "leaderboardFooterPos": [960, 1330],
         "leaderboardEntryWidth": 875,
-        "marketSize": [1894, 1388]
+        "marketSize": [1894, 1388],
+        "orderExpire": 604800000
     },
     "commandConfigs": {
         "boar": {
@@ -816,8 +817,33 @@
                             "components": [
                                 {
                                     "type": 3,
-                                    "customId": "MARKET_ORDER_SELECT",
-                                    "placeholder": "Choose Order/Offer..."
+                                    "customId": "MARKET_EDITION_SELECT",
+                                    "placeholder": "Select Edition..."
+                                }
+                            ]
+                        },
+                        {
+                            "type": 1,
+                            "components": [
+                                {
+                                    "type": 2,
+                                    "customId": "MARKET_ORDER_CLAIM",
+                                    "label": "Claim",
+                                    "style": 3,
+                                    "disabled": true
+                                },
+                                {
+                                    "type": 2,
+                                    "customId": "MARKET_ORDER_UPDATE",
+                                    "label": "Update",
+                                    "style": 3,
+                                    "disabled": true
+                                },
+                                {
+                                    "type": 2,
+                                    "customId": "MARKET_ORDER_CANCEL",
+                                    "label": "Cancel",
+                                    "style": 3
                                 }
                             ]
                         },
@@ -826,8 +852,8 @@
                             "components": [
                                 {
                                     "type": 3,
-                                    "customId": "MARKET_EDITION_SELECT",
-                                    "placeholder": "Select Edition..."
+                                    "customId": "MARKET_ORDER_SELECT",
+                                    "placeholder": "Choose Order/Offer..."
                                 }
                             ]
                         }

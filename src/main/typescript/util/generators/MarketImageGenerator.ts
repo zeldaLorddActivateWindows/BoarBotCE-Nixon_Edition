@@ -145,7 +145,9 @@ export class MarketImageGenerator {
 
         if (edition > 0) {
             for (const instaBuy of item.instaBuys) {
-                const noEditionExists = instaBuy.num === instaBuy.filledAmount || instaBuy.editions[0] !== edition;
+                const noEditionExists = instaBuy.num === instaBuy.filledAmount ||
+                    instaBuy.listTime + nums.orderExpire < Date.now() ||
+                    instaBuy.editions[0] !== edition;
 
                 if (noEditionExists) continue;
 
@@ -157,7 +159,9 @@ export class MarketImageGenerator {
             }
 
             for (const instaSell of item.instaSells) {
-                const noEditionExists = instaSell.num === instaSell.filledAmount || instaSell.editions[0] !== edition;
+                const noEditionExists = instaSell.num === instaSell.filledAmount ||
+                    instaSell.listTime + nums.orderExpire < Date.now() ||
+                    instaSell.editions[0] !== edition;
 
                 if (noEditionExists) continue;
 
@@ -171,15 +175,29 @@ export class MarketImageGenerator {
             itemName += ' #' + edition;
         } else {
             for (const instaBuy of item.instaBuys) {
+                const lowBuyUnset = lowBuy === 'N/A';
+                const validOrder = instaBuy.num !== instaBuy.filledAmount &&
+                    instaBuy.listTime + nums.orderExpire >= Date.now();
+
+                if (!validOrder) continue;
+
                 sellOrderVolume += instaBuy.num - instaBuy.filledAmount;
-                if (instaBuy.num - instaBuy.filledAmount > 0 && lowBuy === 'N/A') {
+
+                if (lowBuyUnset) {
                     lowBuy = '%@' + instaBuy.price.toLocaleString();
                 }
             }
 
             for (const instaSell of item.instaSells) {
+                const highSellUnset = highSell === 'N/A';
+                const validOrder = instaSell.num !== instaSell.filledAmount &&
+                    instaSell.listTime + nums.orderExpire >= Date.now();
+
+                if (!validOrder) continue;
+
                 buyOrderVolume += instaSell.num - instaSell.filledAmount;
-                if (instaSell.num - instaSell.filledAmount > 0 && highSell === 'N/A') {
+
+                if (highSellUnset) {
                     highSell = '%@' + instaSell.price.toLocaleString();
                 }
             }
@@ -224,6 +242,23 @@ export class MarketImageGenerator {
         );
 
         ctx.drawImage(await Canvas.loadImage(overlay), ...nums.originPos);
+
+        return new AttachmentBuilder(canvas.toBuffer(), { name: `${strConfig.imageName}.png` });
+    }
+
+    public async makeOrdersImage(page: number, userID: string) {
+        const strConfig = this.config.stringConfig;
+        const pathConfig = this.config.pathConfig;
+        const nums = this.config.numberConfig;
+        const colorConfig = this.config.colorConfig;
+
+        const underlay = pathConfig.otherAssets + pathConfig.marketOrdersUnderlay;
+        const files = [];
+
+        const canvas = Canvas.createCanvas(...nums.marketSize);
+        const ctx = canvas.getContext('2d');
+
+        ctx.drawImage(await Canvas.loadImage(underlay), ...nums.originPos);
 
         return new AttachmentBuilder(canvas.toBuffer(), { name: `${strConfig.imageName}.png` });
     }

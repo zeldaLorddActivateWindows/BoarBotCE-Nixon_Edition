@@ -275,6 +275,7 @@ export default class MarketSubcommand implements Subcommand {
             let undoRed = true;
 
             const strConfig = this.config.stringConfig;
+            const nums = this.config.numberConfig;
 
             let sellOrder: BuySellData | undefined;
             const itemRarity = BoarUtils.findRarity(itemData.id, this.config);
@@ -283,6 +284,7 @@ export default class MarketSubcommand implements Subcommand {
             if (isInstaBuy && isSpecial) {
                 for (const instaBuy of itemData.instaBuys) {
                     const noEditionExists = instaBuy.num === instaBuy.filledAmount ||
+                        instaBuy.listTime + nums.orderExpire < Date.now() ||
                         instaBuy.editions[0] !== this.curEdition;
 
                     if (noEditionExists) continue;
@@ -368,6 +370,7 @@ export default class MarketSubcommand implements Subcommand {
                         } else {
                             for (const instaBuy of newItemData.sellers) {
                                 const noEditionExists = instaBuy.num === instaBuy.filledAmount ||
+                                    instaBuy.listTime + nums.orderExpire < Date.now() ||
                                     instaBuy.editions[0] !== this.curEdition;
 
                                 editionOrderIndex++;
@@ -427,8 +430,7 @@ export default class MarketSubcommand implements Subcommand {
 
                         if (this.curEdition === 0) {
                             for (let i=0; i<orderFillAmounts.length; i++) {
-                                if (!itemData.instaBuys[i].editions || !itemData.instaBuys[i].editionDates)
-                                    continue;
+                                if (itemData.instaBuys[i].editions.length === 0) continue;
 
                                 this.boarUser.itemCollection.boars[itemData.id].editions =
                                     this.boarUser.itemCollection.boars[itemData.id].editions.concat(
@@ -532,6 +534,7 @@ export default class MarketSubcommand implements Subcommand {
                         } else {
                             for (const instaSell of newItemData.buyers) {
                                 const noEditionExists = instaSell.num === instaSell.filledAmount ||
+                                    instaSell.listTime + nums.orderExpire < Date.now() ||
                                     instaSell.editions[0] !== this.curEdition;
 
                                 editionOrderIndex++;
@@ -1091,6 +1094,7 @@ export default class MarketSubcommand implements Subcommand {
             submittedModal = submittedModal as ModalSubmitInteraction;
 
             const strConfig = this.config.stringConfig;
+            const nums = this.config.numberConfig;
 
             const isInstaBuy = this.modalShowing.data.title?.startsWith(
                 this.config.commandConfigs.boar.market.componentFields[1][0].components[0].label
@@ -1151,16 +1155,22 @@ export default class MarketSubcommand implements Subcommand {
 
             if (isInstaBuy) {
                 for (const instaBuy of itemData.instaBuys) {
-                    if (instaBuy.num === instaBuy.filledAmount || instaBuy.editions[0] !== this.curEdition)
-                        continue;
+                    const noEditionExists = instaBuy.num === instaBuy.filledAmount ||
+                        instaBuy.listTime + nums.orderExpire < Date.now() ||
+                        instaBuy.editions[0] !== this.curEdition;
+
+                    if (noEditionExists) continue;
 
                     curPrice = instaBuy.price;
                     break;
                 }
             } else {
                 for (const instaSell of itemData.instaSells) {
-                    if (instaSell.num === instaSell.filledAmount || instaSell.editions[0] !== this.curEdition)
-                        continue;
+                    const noEditionExists = instaSell.num === instaSell.filledAmount ||
+                        instaSell.listTime + nums.orderExpire < Date.now() ||
+                        instaSell.editions[0] !== this.curEdition;
+
+                    if (noEditionExists) continue;
 
                     curPrice = instaSell.price;
                     break;
@@ -1514,6 +1524,8 @@ export default class MarketSubcommand implements Subcommand {
 
         this.disableButtons();
 
+        const nums = this.config.numberConfig;
+
         let rowsToAdd: ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>[] = [];
 
         this.baseRows[0].components[0].setDisabled(this.curPage === 0);
@@ -1547,13 +1559,13 @@ export default class MarketSubcommand implements Subcommand {
             let nonFilledSells = 0;
 
             for (const instaBuy of item.instaBuys) {
-                if (instaBuy.num !== instaBuy.filledAmount) {
+                if (instaBuy.num !== instaBuy.filledAmount && instaBuy.listTime + nums.orderExpire >= Date.now()) {
                     nonFilledBuys++;
                 }
             }
 
             for (const instaSell of item.instaSells) {
-                if (instaSell.num !== instaSell.filledAmount) {
+                if (instaSell.num !== instaSell.filledAmount && instaSell.listTime + nums.orderExpire >= Date.now()) {
                     nonFilledSells++;
                 }
             }
@@ -1569,7 +1581,8 @@ export default class MarketSubcommand implements Subcommand {
                 const instaSellEditions: number[] = [];
 
                 for (const instaBuy of item.instaBuys) {
-                    if (instaBuy.num === instaBuy.filledAmount) continue;
+                    if (instaBuy.num === instaBuy.filledAmount || instaBuy.listTime + nums.orderExpire < Date.now())
+                        continue;
 
                     const editionNum: number = instaBuy.editions[0];
 
@@ -1584,7 +1597,8 @@ export default class MarketSubcommand implements Subcommand {
                 }
 
                 for (const instaSell of item.instaSells) {
-                    if (instaSell.num === instaSell.filledAmount) continue;
+                    if (instaSell.num === instaSell.filledAmount || instaSell.listTime + nums.orderExpire < Date.now())
+                        continue;
 
                     const editionNum: number = instaSell.editions[0];
 
@@ -1614,19 +1628,26 @@ export default class MarketSubcommand implements Subcommand {
 
                 selectOptions = selectOptions.slice(0, 25);
 
-                (this.optionalRows[3].components[0] as StringSelectMenuBuilder).setOptions(selectOptions);
+                (this.optionalRows[2].components[0] as StringSelectMenuBuilder).setOptions(selectOptions);
                 this.optionalRows[0].components[0].setDisabled(!instaBuyEditions.includes(this.curEdition));
                 this.optionalRows[0].components[1].setDisabled(!instaSellEditions.includes(this.curEdition));
-                rowsToAdd.push(this.optionalRows[3]);
+                rowsToAdd.push(this.optionalRows[2]);
             }
+        }
+
+        if (this.curView === View.UserOrders) {
+            rowsToAdd.push(this.optionalRows[3]);
+            rowsToAdd.push(this.optionalRows[4]);
         }
 
         let imageToSend: AttachmentBuilder;
 
         if (this.curView === View.Overview) {
             imageToSend = await this.imageGen.makeOverviewImage(this.curPage);
-        } else {
+        } else if (this.curView === View.BuySell) {
             imageToSend = await this.imageGen.makeBuySellImage(this.curPage ,this.curEdition);
+        } else {
+            imageToSend = await this.imageGen.makeOrdersImage(this.curPage, this.firstInter.user.id);
         }
 
         await this.firstInter.editReply({
