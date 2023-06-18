@@ -90,12 +90,14 @@ export default class TopSubcommand implements Subcommand {
         this.curBoardData = (Object.entries(this.leaderboardData[this.curBoard]) as [string, number][])
             .sort((a, b) => b[1] - a[1]);
 
-        this.maxPage = Math.floor(this.curBoardData.length / this.config.numberConfig.leaderboardNumPlayers);
+        this.maxPage = Math.ceil(this.curBoardData.length / this.config.numberConfig.leaderboardNumPlayers) - 1;
 
         if (!userInput || this.getUserIndex(userInput.id) === -1) {
             this.curPage = Math.max(Math.min(pageInput-1, this.maxPage), 0);
         } else {
-            this.curPage = Math.floor(this.getUserIndex(userInput.id) / this.config.numberConfig.leaderboardNumPlayers);
+            this.curPage = Math.ceil(
+                this.getUserIndex(userInput.id) / this.config.numberConfig.leaderboardNumPlayers
+            ) - 1;
         }
 
         if (userInput && this.getUserIndex(userInput.id) === -1) {
@@ -174,9 +176,9 @@ export default class TopSubcommand implements Subcommand {
                     this.curBoard = (this.compInter as StringSelectMenuInteraction).values[0] as Board;
                     this.curBoardData = (Object.entries(this.leaderboardData[this.curBoard]) as [string, number][])
                         .sort((a, b) => b[1] - a[1]);
-                    this.maxPage = Math.floor(
+                    this.maxPage = Math.ceil(
                         this.curBoardData.length / this.config.numberConfig.leaderboardNumPlayers
-                    );
+                    ) - 1;
                     this.imageGen.updateInfo(this.curBoardData, this.curBoard, this.config);
                     this.curPage = 0;
                     break;

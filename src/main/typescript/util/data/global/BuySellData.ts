@@ -15,4 +15,5 @@ export class BuySellData {
     public editionDates: number[] = [];
     public listTime: number = 0;
     public filledAmount: number = 0;
+    public claimedAmount: number = 0;
 }

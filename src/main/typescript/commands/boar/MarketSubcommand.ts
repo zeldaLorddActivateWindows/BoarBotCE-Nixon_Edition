@@ -59,14 +59,13 @@ export default class MarketSubcommand implements Subcommand {
     private pricingData: {id: string, type: string, instaSells: BuySellData[], instaBuys: BuySellData[]}[] = [];
     private pricingDataTree: Tree<string, number> = createRBTree();
     private boarUser: BoarUser = {} as BoarUser;
-    private userBuyOrders: {list: BuySellData, id: string, type: string}[] = [];
-    private userSellOrders: {list: BuySellData, id: string, type: string}[] = [];
+    private userBuyOrders: {data: BuySellData, id: string, type: string}[] = [];
+    private userSellOrders: {data: BuySellData, id: string, type: string}[] = [];
     private curView: View = View.Overview;
     private curPage: number = 0;
     private curEdition: number = 0;
     private modalData: [number, number, number] = [0, 0, 0];
     private maxPageOverview: number = 0;
-    private maxPageOrders: number = 0;
     private baseRows: ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>[] = [];
     private optionalRows: ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>[] = [];
     private timerVars = {
@@ -101,8 +100,11 @@ export default class MarketSubcommand implements Subcommand {
         this.getPricingData();
         this.boarUser = new BoarUser(interaction.user);
 
-        this.maxPageOverview = Math.floor(this.pricingData.length / 8);
-        this.maxPageOrders = Math.floor(this.userBuyOrders.concat(this.userSellOrders).length / 4);
+        if (this.curView === View.UserOrders && this.userBuyOrders.concat(this.userSellOrders).length === 0) {
+            this.curView = View.Overview;
+        }
+
+        this.maxPageOverview = Math.ceil(this.pricingData.length / 8) - 1;
 
         let pageVal: number = 1;
         if (!Number.isNaN(parseInt(pageInput))) {
@@ -121,7 +123,9 @@ export default class MarketSubcommand implements Subcommand {
             interaction.channel as TextChannel, interaction.id, this.config.numberConfig
         );
 
-        this.imageGen = new MarketImageGenerator(this.pricingData, this.config);
+        this.imageGen = new MarketImageGenerator(
+            this.pricingData, this.userBuyOrders, this.userSellOrders, this.config
+        );
         await this.showMarket(true);
 
         CollectorUtils.marketCollectors[interaction.user.id].on(
@@ -225,7 +229,7 @@ export default class MarketSubcommand implements Subcommand {
 
                 case marketComponents.refresh.customId:
                     this.getPricingData();
-                    this.imageGen.updateInfo(this.pricingData, this.config);
+                    this.imageGen.updateInfo(this.pricingData, this.userBuyOrders, this.userSellOrders, this.config);
                     this.boarUser.refreshUserData();
                     this.curEdition = 0;
                     break;
@@ -414,7 +418,9 @@ export default class MarketSubcommand implements Subcommand {
 
                         fs.writeFileSync(this.config.pathConfig.globalDataFile, JSON.stringify(globalData));
                         this.getPricingData();
-                        this.imageGen.updateInfo(this.pricingData, this.config);
+                        this.imageGen.updateInfo(
+                            this.pricingData, this.userBuyOrders, this.userSellOrders, this.config
+                        );
                     }, inter.id + 'global');
 
                     if (!failedBuy && itemData.type === 'boars') {
@@ -606,7 +612,9 @@ export default class MarketSubcommand implements Subcommand {
 
                         fs.writeFileSync(this.config.pathConfig.globalDataFile, JSON.stringify(globalData));
                         this.getPricingData();
-                        this.imageGen.updateInfo(this.pricingData, this.config);
+                        this.imageGen.updateInfo(
+                            this.pricingData, this.userBuyOrders, this.userSellOrders, this.config
+                        );
                     }, inter.id + 'global');
 
                     if (itemData.type === 'boars') {
@@ -674,6 +682,16 @@ export default class MarketSubcommand implements Subcommand {
                     inter, 'You don\'t have any of this item!', this.config.colorConfig.error,
                     undefined, undefined, true
                 );
+            } else if (this.userBuyOrders.length + this.userSellOrders.length >= 8) {
+                await inter.deferUpdate();
+                showModal = false;
+
+                await Replies.handleReply(
+                    inter,
+                    'You reached the maximum number of orders you can place! Cancel or claim one of your orders to ' +
+                    ' create another order!',
+                    this.config.colorConfig.error, undefined, undefined, true
+                );
             } else if (isBuyOrder && (this.optionalRows[1].components[0] as ButtonBuilder).data.style === 4) {
                 await inter.deferUpdate();
                 showModal = false;
@@ -688,13 +706,16 @@ export default class MarketSubcommand implements Subcommand {
                             editions: this.modalData[2] > 0 ? [this.modalData[2]] : [],
                             editionDates: [],
                             listTime: Date.now(),
-                            filledAmount: 0
+                            filledAmount: 0,
+                            claimedAmount: 0
                         };
 
                         globalData.itemData[itemData.type][itemData.id].buyers.push(order);
                         fs.writeFileSync(this.config.pathConfig.globalDataFile, JSON.stringify(globalData));
                         this.getPricingData();
-                        this.imageGen.updateInfo(this.pricingData, this.config);
+                        this.imageGen.updateInfo(
+                            this.pricingData, this.userBuyOrders, this.userSellOrders, this.config
+                        );
                     }, inter.id + 'global');
 
                     this.boarUser.stats.general.boarScore -= this.modalData[0] * this.modalData[1];
@@ -749,13 +770,16 @@ export default class MarketSubcommand implements Subcommand {
                             editions: editions,
                             editionDates: editionDates,
                             listTime: Date.now(),
-                            filledAmount: 0
+                            filledAmount: 0,
+                            claimedAmount: 0
                         };
 
                         globalData.itemData[itemData.type][itemData.id].sellers.push(order);
                         fs.writeFileSync(this.config.pathConfig.globalDataFile, JSON.stringify(globalData));
                         this.getPricingData();
-                        this.imageGen.updateInfo(this.pricingData, this.config);
+                        this.imageGen.updateInfo(
+                            this.pricingData, this.userBuyOrders, this.userSellOrders, this.config
+                        );
                     }, inter.id + 'global');
 
                     if (itemData.type === 'boars') {
@@ -823,6 +847,8 @@ export default class MarketSubcommand implements Subcommand {
             : undefined;
 
         this.pricingData = [];
+        this.userBuyOrders = [];
+        this.userSellOrders = [];
 
         for (const itemType of Object.keys(itemData)) {
             for (const itemID of Object.keys(itemData[itemType])) {
@@ -844,7 +870,7 @@ export default class MarketSubcommand implements Subcommand {
             for (const buyData of priceData.instaBuys) {
                 if (buyData.userID !== this.firstInter.user.id) continue;
                 this.userSellOrders.push({
-                    list: buyData,
+                    data: buyData,
                     id: priceData.id,
                     type: priceData.type
                 });
@@ -852,7 +878,7 @@ export default class MarketSubcommand implements Subcommand {
             for (const sellData of priceData.instaSells) {
                 if (sellData.userID !== this.firstInter.user.id) continue;
                 this.userBuyOrders.push({
-                    list: sellData,
+                    data: sellData,
                     id: priceData.id,
                     type: priceData.type
                 });
@@ -1009,7 +1035,7 @@ export default class MarketSubcommand implements Subcommand {
             this.boarUser.refreshUserData();
 
             this.getPricingData();
-            this.imageGen.updateInfo(this.pricingData, this.config);
+            this.imageGen.updateInfo(this.pricingData, this.userBuyOrders, this.userSellOrders, this.config);
 
             const itemData = this.pricingData[this.curPage];
 
@@ -1127,7 +1153,7 @@ export default class MarketSubcommand implements Subcommand {
             this.boarUser.refreshUserData();
 
             this.getPricingData();
-            this.imageGen.updateInfo(this.pricingData, this.config);
+            this.imageGen.updateInfo(this.pricingData, this.userBuyOrders, this.userSellOrders, this.config);
 
             const itemData = this.pricingData[this.curPage];
 
@@ -1266,8 +1292,20 @@ export default class MarketSubcommand implements Subcommand {
 
             this.boarUser.refreshUserData();
 
+            if (this.userBuyOrders.length + this.userSellOrders.length >= 8) {
+                await Replies.handleReply(
+                    submittedModal,
+                    'You reached the maximum number of orders you can place! Cancel or claim one of your orders to ' +
+                    ' create another order!',
+                    this.config.colorConfig.error, undefined, undefined, true
+                );
+
+                this.endModalListener(submittedModal.client);
+                return;
+            }
+
             this.getPricingData();
-            this.imageGen.updateInfo(this.pricingData, this.config);
+            this.imageGen.updateInfo(this.pricingData, this.userBuyOrders, this.userSellOrders, this.config);
 
             const itemData = this.pricingData[this.curPage];
 
@@ -1384,8 +1422,20 @@ export default class MarketSubcommand implements Subcommand {
 
             this.boarUser.refreshUserData();
 
+            if (this.userBuyOrders.length + this.userSellOrders.length >= 8) {
+                await Replies.handleReply(
+                    submittedModal,
+                    'You reached the maximum number of orders you can place! Cancel or claim one of your orders to ' +
+                    ' create another order!',
+                    this.config.colorConfig.error, undefined, undefined, true
+                );
+
+                this.endModalListener(submittedModal.client);
+                return;
+            }
+
             this.getPricingData();
-            this.imageGen.updateInfo(this.pricingData, this.config);
+            this.imageGen.updateInfo(this.pricingData, this.userBuyOrders, this.userSellOrders, this.config);
 
             const itemData = this.pricingData[this.curPage];
 
@@ -1532,18 +1582,20 @@ export default class MarketSubcommand implements Subcommand {
         this.baseRows[0].components[1].setDisabled(
             this.curView === View.Overview && this.maxPageOverview === 0 ||
             this.curView === View.BuySell && this.pricingData.length-1 === 0 ||
-            this.curView === View.UserOrders && this.maxPageOrders === 0
+            this.curView === View.UserOrders && this.userBuyOrders.concat(this.userSellOrders).length-1 === 0
         );
         this.baseRows[0].components[2].setDisabled(
             this.curView === View.Overview && this.curPage === this.maxPageOverview ||
             this.curView === View.BuySell && this.curPage === this.pricingData.length-1 ||
-            this.curView === View.UserOrders && this.curPage === this.maxPageOrders
+            this.curView === View.UserOrders && this.curPage === this.userBuyOrders.concat(this.userSellOrders).length-1
         );
         this.baseRows[0].components[3].setDisabled(false);
 
         this.baseRows[1].components[0].setDisabled(this.curView === View.Overview);
         this.baseRows[1].components[1].setDisabled(this.curView === View.BuySell);
-        this.baseRows[1].components[2].setDisabled(this.curView === View.UserOrders);
+        this.baseRows[1].components[2].setDisabled(
+            this.curView === View.UserOrders || this.userBuyOrders.concat(this.userSellOrders).length === 0
+        );
 
         if (this.curView === View.BuySell) {
             const item = this.pricingData[this.curPage];
@@ -1618,7 +1670,7 @@ export default class MarketSubcommand implements Subcommand {
                         value: this.config.stringConfig.emptySelect
                     });
                 } else {
-                    this.optionalRows[3].components[0].setDisabled(false);
+                    this.optionalRows[2].components[0].setDisabled(false);
                     if (this.curEdition === 0 && instaBuyEditions.length > 0) {
                         this.curEdition = instaBuyEditions[0];
                     } else if (this.curEdition === 0) {
@@ -1636,6 +1688,69 @@ export default class MarketSubcommand implements Subcommand {
         }
 
         if (this.curView === View.UserOrders) {
+            const selectOptions: SelectMenuComponentOptionData[] = [];
+
+            for (let i=0; i<this.userBuyOrders.length; i++) {
+                const buyOrder = this.userBuyOrders[i];
+                const rarity = BoarUtils.findRarity(buyOrder.id, this.config);
+                const isSpecial = rarity[1].name === 'Special' && rarity[0] !== 0;
+
+                const itemName = this.config.itemConfigs[buyOrder.type][buyOrder.id].name + (isSpecial
+                    ? ' #' + buyOrder.data.editions[0]
+                    : '');
+
+                selectOptions.push({
+                    label: 'BUY: ' + itemName + ' [$' + buyOrder.data.price.toLocaleString() + ']',
+                    value: i.toString()
+                });
+            }
+
+            for (let i=0; i<this.userSellOrders.length; i++) {
+                const sellOrder = this.userBuyOrders[i];
+                const rarity = BoarUtils.findRarity(sellOrder.id, this.config);
+                const isSpecial = rarity[1].name === 'Special' && rarity[0] !== 0;
+
+                const itemName = this.config.itemConfigs[sellOrder.type][sellOrder.id].name + (isSpecial
+                    ? ' #' + sellOrder.data.editions[0]
+                    : '');
+
+                selectOptions.push({
+                    label: 'SELL: ' + itemName + ' [$' + sellOrder.data.price.toLocaleString() + ']',
+                    value: i.toString()
+                });
+            }
+
+            if (selectOptions.length === 0) {
+                selectOptions.push({
+                    label: this.config.stringConfig.emptySelect,
+                    value: this.config.stringConfig.emptySelect
+                });
+            } else {
+                this.optionalRows[4].components[0].setDisabled(false);
+            }
+
+            (this.optionalRows[4].components[0] as StringSelectMenuBuilder).setOptions(selectOptions);
+
+            let orderInfo: {data: BuySellData, id: string, type: string};
+
+            if (this.curPage < this.userBuyOrders.length) {
+                orderInfo = this.userBuyOrders[this.curPage];
+            } else {
+                orderInfo = this.userSellOrders[this.curPage - this.userBuyOrders.length];
+            }
+
+            this.optionalRows[3].components[0].setDisabled(
+                orderInfo.data.claimedAmount === orderInfo.data.filledAmount
+            );
+            this.optionalRows[3].components[1].setDisabled(
+                orderInfo.data.filledAmount === orderInfo.data.num ||
+                orderInfo.data.claimedAmount !== orderInfo.data.filledAmount
+            );
+            this.optionalRows[3].components[2].setDisabled(
+                orderInfo.data.filledAmount === orderInfo.data.num ||
+                orderInfo.data.claimedAmount !== orderInfo.data.filledAmount
+            );
+
             rowsToAdd.push(this.optionalRows[3]);
             rowsToAdd.push(this.optionalRows[4]);
         }
@@ -1647,7 +1762,7 @@ export default class MarketSubcommand implements Subcommand {
         } else if (this.curView === View.BuySell) {
             imageToSend = await this.imageGen.makeBuySellImage(this.curPage ,this.curEdition);
         } else {
-            imageToSend = await this.imageGen.makeOrdersImage(this.curPage, this.firstInter.user.id);
+            imageToSend = await this.imageGen.makeOrdersImage(this.curPage);
         }
 
         await this.firstInter.editReply({
@@ -1686,32 +1801,6 @@ export default class MarketSubcommand implements Subcommand {
 
     private initButtons() {
         const marketFieldConfigs: RowConfig[][] = this.config.commandConfigs.boar.market.componentFields;
-        // const selectOptions: SelectMenuComponentOptionData[] = [];
-        //
-        // for (let i=0; i<this.userBuyOrders.length; i++) {
-        //     const buyOrder = this.userBuyOrders[i];
-        //     selectOptions.push({
-        //         label: 'BUY: ' + this.config.itemConfigs[buyOrder.type][buyOrder.id].name +
-        //             '(' + buyOrder.list.price + ')',
-        //         value: i.toString()
-        //     });
-        // }
-        //
-        // for (let i=0; i<this.userSellOrders.length; i++) {
-        //     const sellOrder = this.userSellOrders[i];
-        //     selectOptions.push({
-        //         label: 'BUY: ' + this.config.itemConfigs[sellOrder.type][sellOrder.id].name +
-        //             '(' + sellOrder.list.price + ')',
-        //         value: i.toString()
-        //     });
-        // }
-        //
-        // if (selectOptions.length === 0) {
-        //     selectOptions.push({
-        //         label: this.config.stringConfig.emptySelect,
-        //         value: this.config.stringConfig.emptySelect
-        //     });
-        // }
 
         for (let i=0; i<marketFieldConfigs.length; i++) {
             const newRows: ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>[] =
@@ -1736,7 +1825,7 @@ export default class MarketSubcommand implements Subcommand {
         } else if (this.curView === View.BuySell) {
             this.curPage = Math.max(Math.min(pageVal-1, this.pricingData.length-1), 0);
         } else {
-            this.curPage = Math.max(Math.min(pageVal-1, this.maxPageOrders), 0);
+            this.curPage = Math.max(Math.min(pageVal-1, this.userBuyOrders.concat(this.userSellOrders).length-1), 0);
         }
     }
 }

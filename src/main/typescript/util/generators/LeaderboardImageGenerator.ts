@@ -98,7 +98,7 @@ export class LeaderboardImageGenerator {
         }
 
         const numUsers = this.boardData.length;
-        const maxPages = Math.floor(this.boardData.length / nums.leaderboardNumPlayers);
+        const maxPages = Math.ceil(this.boardData.length / nums.leaderboardNumPlayers) - 1;
 
         const bigFont = `${nums.fontBig}px ${strConfig.fontName}`;
         const mediumFont = `${nums.fontMedium}px ${strConfig.fontName}`;

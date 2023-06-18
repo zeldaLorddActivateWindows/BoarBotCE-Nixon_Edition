@@ -4,6 +4,7 @@ import {AttachmentBuilder} from 'discord.js';
 import {BuySellData} from '../data/global/BuySellData';
 import {CanvasUtils} from './CanvasUtils';
 import {BoarUtils} from '../boar/BoarUtils';
+import moment from 'moment';
 
 /**
  * {@link MarketImageGenerator MarketImageGenerator.ts}
@@ -16,18 +17,26 @@ import {BoarUtils} from '../boar/BoarUtils';
 export class MarketImageGenerator {
     private config: BotConfig = {} as BotConfig;
     private itemPricing: {id: string, type: string, instaSells: BuySellData[], instaBuys: BuySellData[]}[] = [];
+    private userBuyOrders: {data: BuySellData, id: string, type: string}[] = [];
+    private userSellOrders: {data: BuySellData, id: string, type: string}[] = [];
 
     /**
      * Creates a new leaderboard image generator
      *
      * @param itemPricing
+     * @param userBuyOrders
+     * @param userSellOrders
      * @param config - Used to get strings, paths, and other information
      */
     constructor(
         itemPricing: {id: string, type: string, instaSells: BuySellData[], instaBuys: BuySellData[]}[],
+        userBuyOrders: {data: BuySellData, id: string, type: string}[],
+        userSellOrders: {data: BuySellData, id: string, type: string}[],
         config: BotConfig
     ) {
         this.itemPricing = itemPricing;
+        this.userBuyOrders = userBuyOrders;
+        this.userSellOrders = userSellOrders;
         this.config = config;
     }
 
@@ -35,13 +44,19 @@ export class MarketImageGenerator {
      * Used when leaderboard boar type has changed
      *
      * @param itemPricing
+     * @param userBuyOrders
+     * @param userSellOrders
      * @param config - Used to get strings, paths, and other information
      */
     public updateInfo(
         itemPricing: {id: string, type: string, instaSells: BuySellData[], instaBuys: BuySellData[]}[],
+        userBuyOrders: {data: BuySellData, id: string, type: string}[],
+        userSellOrders: {data: BuySellData, id: string, type: string}[],
         config: BotConfig
     ): void {
         this.itemPricing = itemPricing;
+        this.userBuyOrders = userBuyOrders;
+        this.userSellOrders = userSellOrders;
         this.config = config;
     }
 
@@ -246,19 +261,79 @@ export class MarketImageGenerator {
         return new AttachmentBuilder(canvas.toBuffer(), { name: `${strConfig.imageName}.png` });
     }
 
-    public async makeOrdersImage(page: number, userID: string) {
+    public async makeOrdersImage(page: number) {
         const strConfig = this.config.stringConfig;
         const pathConfig = this.config.pathConfig;
         const nums = this.config.numberConfig;
         const colorConfig = this.config.colorConfig;
 
+        let orderInfo: {data: BuySellData, id: string, type: string};
+        let claimStr: string;
+
+        if (page < this.userBuyOrders.length) {
+            orderInfo = this.userBuyOrders[page];
+            claimStr = orderInfo.data.claimedAmount < orderInfo.data.filledAmount
+                ? orderInfo.data.filledAmount - orderInfo.data.claimedAmount + ' ' +
+                this.config.itemConfigs[orderInfo.type][orderInfo.id].pluralName
+                : 'None';
+        } else {
+            orderInfo = this.userSellOrders[page - this.userBuyOrders.length];
+            claimStr = orderInfo.data.claimedAmount < orderInfo.data.filledAmount
+                ? '$' + (orderInfo.data.filledAmount - orderInfo.data.claimedAmount) * orderInfo.data.price
+                : 'None';
+        }
+
+        let rarityColor = colorConfig.powerup;
+        let isSpecial = false;
+
+        if (orderInfo.type === 'boars') {
+            const rarity = BoarUtils.findRarity(orderInfo.id, this.config);
+            rarityColor = colorConfig['rarity' + rarity[0]];
+            isSpecial = rarity[1].name === 'Special' && rarity[0] !== 0;
+        }
+
         const underlay = pathConfig.otherAssets + pathConfig.marketOrdersUnderlay;
-        const files = [];
+        const file = pathConfig[orderInfo.type] + (this.config.itemConfigs[orderInfo.type][orderInfo.id].staticFile
+            ? this.config.itemConfigs[orderInfo.type][orderInfo.id].staticFile
+            : this.config.itemConfigs[orderInfo.type][orderInfo.id].file);
+
+        const mediumFont = `${nums.fontMedium}px ${strConfig.fontName}`;
+        const smallMediumFont = `${nums.fontSmallMedium}px ${strConfig.fontName}`;
 
         const canvas = Canvas.createCanvas(...nums.marketSize);
         const ctx = canvas.getContext('2d');
 
         ctx.drawImage(await Canvas.loadImage(underlay), ...nums.originPos);
+
+        ctx.drawImage(await Canvas.loadImage(file), 25, 395, 780, 780);
+
+        CanvasUtils.drawText(
+            ctx, 'Buying: %@', [415, 308], mediumFont, 'center', colorConfig.font, 740, true,
+            this.config.itemConfigs[orderInfo.type][orderInfo.id].name + (isSpecial
+                ? ' #' + orderInfo.data.editions[0]
+                : ''),
+            rarityColor
+        );
+
+        CanvasUtils.drawText(
+            ctx, 'Listed ' + moment(orderInfo.data.listTime).fromNow(), [415, 1302], mediumFont, 'center',
+            colorConfig.font, 740, true
+        );
+
+        CanvasUtils.drawText(ctx, 'Price per Unit', [1348, 559], mediumFont, 'center', colorConfig.font);
+        CanvasUtils.drawText(
+            ctx, '%@' + orderInfo.data.price.toLocaleString(), [1348, 630], smallMediumFont, 'center',
+            colorConfig.font, undefined, false, '$', colorConfig.bucks
+        );
+
+        CanvasUtils.drawText(ctx, 'Amount Filled', [1348, 765], mediumFont, 'center', colorConfig.font);
+        CanvasUtils.drawText(
+            ctx, orderInfo.data.filledAmount.toLocaleString() + '/' + orderInfo.data.num.toLocaleString(),
+            [1348, 836], smallMediumFont, 'center', colorConfig.font
+        );
+
+        CanvasUtils.drawText(ctx, 'Items/Bucks to Claim', [1348, 971], mediumFont, 'center', colorConfig.font);
+        CanvasUtils.drawText(ctx, claimStr, [1348, 1042], smallMediumFont, 'center', colorConfig.font);
 
         return new AttachmentBuilder(canvas.toBuffer(), { name: `${strConfig.imageName}.png` });
     }

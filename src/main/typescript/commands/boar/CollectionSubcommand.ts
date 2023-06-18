@@ -106,9 +106,14 @@ export default class CollectionSubcommand implements Subcommand {
         this.boarUser = await new BoarUser(userInput);
         await this.getUserInfo();
 
-        this.maxPageNormal = Math.floor(Object.keys(this.allBoars).length / this.config.numberConfig.collBoarsPerPage);
+        this.maxPageNormal = Math.ceil(
+            Object.keys(this.allBoars).length / this.config.numberConfig.collBoarsPerPage
+        ) - 1;
 
-        if (viewInput === View.Detailed && this.allBoars.length > 0 || viewInput === View.Powerups) {
+        if (
+            viewInput === View.Detailed && this.allBoars.length > 0 ||
+            viewInput === View.Powerups && Object.keys(this.boarUser.itemCollection.powerups).length > 0
+        ) {
             this.curView = viewInput;
         }
 
@@ -577,7 +582,7 @@ export default class CollectionSubcommand implements Subcommand {
         }
 
         // Allows pressing Powerup view if not currently on it
-        if (this.curView !== View.Powerups) {
+        if (this.curView !== View.Powerups && Object.keys(this.boarUser.itemCollection.powerups).length > 0) {
             this.baseRows[1].components[2].setDisabled(false);
         }
 
