@@ -109,6 +109,7 @@ export class StringConfig {
     public readonly collGiftDetails: string = ' ';
     public readonly collEditionTitle: string = ' ';
     public readonly collEditionLine: string = ' ';
+    public readonly collDescriptionSB: string = ' ';
 
     // Miscellaneous strings
 
@@ -129,6 +130,21 @@ export class StringConfig {
     public readonly powNoRewardResponse: string = ' ';
     public readonly powNoClaim: string = ' ';
     public readonly powReward: string = ' ';
+    public readonly notInBoard: string = ' ';
+    public readonly boardHeader: string = ' ';
+    public readonly boardFooter: string = ' ';
+    public readonly deletedUsername: string = ' ';
+    public readonly marketConfirmInstaBuy: string = ' ';
+    public readonly marketUpdatedInstaBuy: string = ' ';
+    public readonly marketConfirmInstaSell: string = ' ';
+    public readonly marketUpdatedInstaSell: string = ' ';
+    public readonly marketInstaComplete: string = ' ';
+    public readonly marketConfirmBuyOrder: string = ' ';
+    public readonly marketConfirmSellOrder: string = ' ';
+    public readonly marketOrderComplete: string = ' ';
+    public readonly marketConfirmUpdateIncrease: string = ' ';
+    public readonly marketConfirmUpdateDecrease: string = ' ';
+    public readonly marketUpdateComplete: string = ' ';
     public readonly noParentChannel: string = ' ';
     public readonly notValidChannel: string = ' ';
     public readonly defaultSelectPlaceholder: string = ' ';

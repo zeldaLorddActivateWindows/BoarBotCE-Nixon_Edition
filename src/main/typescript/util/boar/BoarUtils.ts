@@ -1,9 +1,10 @@
 import {RarityConfig} from '../../bot/config/items/RarityConfig';
-import {BoarItemConfigs} from '../../bot/config/items/BoarItemConfigs';
 import {BotConfig} from '../../bot/config/BotConfig';
 import {ChatInputCommandInteraction, MessageComponentInteraction} from 'discord.js';
 import {LogDebug} from '../logging/LogDebug';
-import {GuildData} from '../data/GuildData';
+import {GuildData} from '../data/global/GuildData';
+import {ItemConfigs} from '../../bot/config/items/ItemConfigs';
+import {Node} from 'functional-red-black-tree';
 
 /**
  * {@link BoarUtils BoarUtils.ts}
@@ -47,7 +48,7 @@ export class BoarUtils {
      */
     public static findValid(rarityIndex: number, guildData: GuildData | undefined, config: BotConfig): string {
         const rarities: RarityConfig[] = config.rarityConfigs;
-        const boarIDs: BoarItemConfigs = config.boarItemConfigs;
+        const boarIDs: ItemConfigs = config.itemConfigs.boars;
         let randomBoar: number = Math.random();
 
         // Stores the IDs of the current rarity being checked
@@ -158,5 +159,15 @@ export class BoarUtils {
         }
 
         return rarityWeights;
+    }
+
+    public static getClosestName(input: string, root: Node<string, number>): number {
+        if (root.key.includes(input))
+            return root.value;
+        if (input > root.key && root.right !== null)
+            return this.getClosestName(input, root.right);
+        if (input < root.key && root.left !== null)
+            return this.getClosestName(input, root.left);
+        return root.value;
     }
 }

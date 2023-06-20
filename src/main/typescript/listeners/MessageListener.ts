@@ -23,7 +23,7 @@ export default class MessageListener implements Listener {
 	 */
 	public async execute(message: Message): Promise<void> {
 		const config: BotConfig = BoarBotApp.getBot().getConfig();
-		if (!message.channel.isDMBased() || message.author.id === message.client.user.id) return;
+		if (config.maintenanceMode || !message.channel.isDMBased() || message.author.id === message.client.user.id) return;
 		await LogDebug.sendReport(message, config);
 	}
 }

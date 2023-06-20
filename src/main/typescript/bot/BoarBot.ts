@@ -21,7 +21,7 @@ import {InteractionUtils} from '../util/interactions/InteractionUtils';
 import {PowerupSpawner} from '../util/boar/PowerupSpawner';
 import {Queue} from '../util/interactions/Queue';
 import {DataHandlers} from '../util/data/DataHandlers';
-import {GuildData} from '../util/data/GuildData';
+import {GuildData} from '../util/data/global/GuildData';
 
 dotenv.config();
 
@@ -66,11 +66,6 @@ export class BoarBot implements Bot {
 			],
 			intents: [
 				GatewayIntentBits.Guilds,
-				GatewayIntentBits.GuildMessages,
-				GatewayIntentBits.GuildMessageReactions,
-				GatewayIntentBits.GuildEmojisAndStickers,
-				GatewayIntentBits.GuildMembers,
-				GatewayIntentBits.MessageContent,
 				GatewayIntentBits.DirectMessages
 			]
 		});
@@ -137,13 +132,17 @@ export class BoarBot implements Bot {
 
 		setInterval(() => {
 			LogDebug.sendDebug('Interaction Listeners: ' + this.client.listenerCount(Events.InteractionCreate), this.getConfig())
-		}, 600000);
+		}, 30000);
 
 		let timeUntilPow: number = 0;
 
-		await Queue.addQueue(() => {
-			const globalData = DataHandlers.getGlobalData();
-			timeUntilPow = globalData.nextPowerup;
+		await Queue.addQueue(async () => {
+			try {
+				const globalData = DataHandlers.getGlobalData();
+				timeUntilPow = globalData.nextPowerup;
+			} catch (err: unknown) {
+				await LogDebug.handleError(err);
+			}
 		}, 'start' + 'global');
 
 		new PowerupSpawner(timeUntilPow).startSpawning();

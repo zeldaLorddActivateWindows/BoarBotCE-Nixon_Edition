@@ -7,7 +7,7 @@ import {
 import {BotConfig} from '../../bot/config/BotConfig';
 import {LogDebug} from '../logging/LogDebug';
 import {BoarBotApp} from '../../BoarBotApp';
-import {GuildData} from '../data/GuildData';
+import {GuildData} from '../data/global/GuildData';
 import {CustomEmbedGenerator} from '../generators/CustomEmbedGenerator';
 
 /**
@@ -40,13 +40,11 @@ export class Replies {
      * @param config - Used to get the string to reply with
      * @param interaction - Interaction to reply to
      * @param guildData - Used to get the channels that can be used
-     * @param includeTrade - Whether to include trade channel in usable channels
      */
     public static async wrongChannelReply(
         interaction: ChatInputCommandInteraction,
         guildData: GuildData | undefined,
-        config: BotConfig,
-        includeTrade: boolean = false
+        config: BotConfig
     ): Promise<void> {
         LogDebug.sendDebug('Used in the wrong channel', config, interaction);
         await Replies.handleReply(interaction, config.stringConfig.wrongChannel, config.colorConfig.error);
@@ -89,6 +87,7 @@ export class Replies {
      * @param coloredContent - Secondary text to color
      * @param color2 - Secondary color
      * @param forceFollowup - Forces interaction reply to be a followup
+     * @param ephemeral
      */
     public static async handleReply(
         interaction: ChatInputCommandInteraction | MessageComponentInteraction | ModalSubmitInteraction,
@@ -96,31 +95,32 @@ export class Replies {
         color: string = BoarBotApp.getBot().getConfig().colorConfig.font,
         coloredContent?: string,
         color2?: string,
-        forceFollowup: boolean = false
+        forceFollowup: boolean = false,
+        ephemeral: boolean = true
     ): Promise<void> {
         const embedImage: AttachmentBuilder = CustomEmbedGenerator.makeEmbed(
             content, color, BoarBotApp.getBot().getConfig(), coloredContent, color2
         );
 
-        if (!forceFollowup && interaction.deferred && interaction.isChatInputCommand()) {
+        if (!forceFollowup && interaction.deferred) {
             await interaction.editReply({
                 content: '',
                 files: [embedImage],
                 components: []
             });
-        } else if (forceFollowup || interaction.replied || !interaction.isChatInputCommand()) {
+        } else if (forceFollowup || interaction.replied) {
             await interaction.followUp({
                 content: '',
                 files: [embedImage],
                 components: [],
-                ephemeral: true
+                ephemeral: ephemeral
             });
         } else {
             await interaction.reply({
                 content: '',
                 files: [embedImage],
                 components: [],
-                ephemeral: true
+                ephemeral: ephemeral
             });
         }
     }

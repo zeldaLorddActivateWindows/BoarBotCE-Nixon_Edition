@@ -65,7 +65,11 @@ export class LogDebug {
 
         const completeString = prefix + time + debugMessage;
 
-        this.sendLogMessage(completeString, config);
+        try {
+            this.sendLogMessage(completeString, config);
+        } catch {
+            console.log(completeString);
+        }
     }
 
     /**
@@ -73,13 +77,11 @@ export class LogDebug {
      *
      * @param err - Error message
      * @param interaction - Interaction to reply to
-     * @param logToChannel - Whether to log the message to log channel
      */
     public static async handleError(
         err: unknown | string,
         interaction?: ChatInputCommandInteraction | ModalSubmitInteraction |
-            AutocompleteInteraction | MessageComponentInteraction,
-        logToChannel: boolean = true
+            AutocompleteInteraction | MessageComponentInteraction
     ): Promise<void> {
         try {
             let errString: string | undefined = typeof err === 'string' ? err : (err as Error).stack;
@@ -98,8 +100,10 @@ export class LogDebug {
                 completeString += errString;
             }
 
-            if (logToChannel) {
+            try {
                 await this.sendLogMessage(completeString, config);
+            } catch {
+                console.log(completeString);
             }
 
             if (!interaction || interaction.isAutocomplete()) return;

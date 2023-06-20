@@ -200,4 +200,15 @@ export class NumberConfig {
     public readonly triviaRows: number = 0;
     public readonly triviaCols: number = 0;
     public readonly fastCols: number = 0;
+    public readonly leaderboardNumPlayers: number = 0;
+    public readonly leaderboardRows: number = 0;
+    public readonly leaderboardStart: [number, number] = [0, 0];
+    public readonly leaderboardIncX: number = 0;
+    public readonly leaderboardIncY: number = 0;
+    public readonly leaderboardHeaderPos: [number, number] = [0, 0];
+    public readonly leaderboardTopBotWidth: number = 0;
+    public readonly leaderboardFooterPos: [number, number] = [0, 0];
+    public readonly leaderboardEntryWidth: number = 0;
+    public readonly marketSize: [number, number] = [0, 0];
+    public readonly orderExpire: number = 0;
 }

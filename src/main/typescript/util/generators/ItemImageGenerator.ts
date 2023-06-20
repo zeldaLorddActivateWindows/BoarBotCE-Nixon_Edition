@@ -8,10 +8,9 @@ import {AttachmentBuilder, User} from 'discord.js';
 import fs from 'fs';
 import {StringConfig} from '../../bot/config/StringConfig';
 import {PathConfig} from '../../bot/config/PathConfig';
-import {BadgeItemConfig} from '../../bot/config/items/BadgeItemConfig';
-import {BoarItemConfig} from '../../bot/config/items/BoarItemConfig';
 import {NumberConfig} from '../../bot/config/NumberConfig';
 import {ColorConfig} from '../../bot/config/ColorConfig';
+import {ItemConfig} from '../../bot/config/items/ItemConfig';
 
 /**
  * {@link ItemImageGenerator ItemImageGenerator.ts}
@@ -77,16 +76,16 @@ export class ItemImageGenerator {
         let folderPath: string;
 
         if (isBadge && manualInput === undefined) {
-            const badgeInfo: BadgeItemConfig = this.config.badgeItemConfigs[this.id];
+            const badgeInfo: ItemConfig = this.config.itemConfigs.badges[this.id];
             this.itemName = badgeInfo.name;
             this.itemFile = badgeInfo.file;
-            folderPath = pathConfig.badgeImages;
+            folderPath = pathConfig.badges;
             this.colorKey = 'badge';
         } else if (manualInput === undefined) {
-            const boarInfo: BoarItemConfig = this.config.boarItemConfigs[this.id];
+            const boarInfo: ItemConfig = this.config.itemConfigs.boars[this.id];
             this.itemName = boarInfo.name;
             this.itemFile = boarInfo.file;
-            folderPath = pathConfig.boarImages;
+            folderPath = pathConfig.boars;
             this.colorKey = 'rarity' + BoarUtils.findRarity(this.id, this.config)[0];
         } else {
             this.itemName = manualInput.name;

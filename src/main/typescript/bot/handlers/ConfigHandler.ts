@@ -4,9 +4,8 @@ import {registerFont} from 'canvas';
 import moment from 'moment/moment';
 import {LogDebug} from '../../util/logging/LogDebug';
 import {RarityConfig} from '../config/items/RarityConfig';
-import {BoarItemConfigs} from '../config/items/BoarItemConfigs';
-import {BadgeItemConfigs} from '../config/items/BadgeItemConfigs';
 import {PathConfig} from '../config/PathConfig';
+import {ItemConfigs} from '../config/items/ItemConfigs';
 
 /**
  * {@link ConfigHandler ConfigHandler.ts}
@@ -58,15 +57,18 @@ export class ConfigHandler {
      */
     private async validateConfig(parsedConfig: BotConfig): Promise<boolean> {
         const rarities: RarityConfig[] = parsedConfig.rarityConfigs;
-        const boars: BoarItemConfigs = parsedConfig.boarItemConfigs;
+        const boars: ItemConfigs = parsedConfig.itemConfigs.boars;
         const boarIDs: string[] = Object.keys(boars);
-        const badges: BadgeItemConfigs = parsedConfig.badgeItemConfigs;
+        const badges: ItemConfigs = parsedConfig.itemConfigs.badges;
         const badgeIDs: string[] = Object.keys(badges);
+        const powerups: ItemConfigs = parsedConfig.itemConfigs.powerups;
+        const powerupIDs: string[] = Object.keys(powerups);
         const foundBoars: string[] = [];
 
         const pathConfig: PathConfig = parsedConfig.pathConfig;
-        const boarImages: string = pathConfig.boarImages;
-        const badgeImages: string = pathConfig.badgeImages;
+        const boarImages: string = pathConfig.boars;
+        const badgeImages: string = pathConfig.badges;
+        const powerupImages: string = pathConfig.powerups;
         const itemAssets: string = pathConfig.itemAssets;
         const collAssets: string = pathConfig.collAssets;
         const otherAssets: string = pathConfig.otherAssets;
@@ -83,7 +85,6 @@ export class ConfigHandler {
             collAssets + pathConfig.collOverlay,
             collAssets + pathConfig.collUnderlay,
             collAssets + pathConfig.clanNone,
-            collAssets + pathConfig.enhancerOn,
             collAssets + pathConfig.enhancerOff,
             otherAssets + pathConfig.thankYouImage,
             otherAssets + pathConfig.mainFont,
@@ -127,6 +128,10 @@ export class ConfigHandler {
 
         for (const badge of badgeIDs) {
             allPaths.push(badgeImages + badges[badge].file);
+        }
+
+        for (const powerup of powerupIDs) {
+            allPaths.push(powerupImages + powerups[powerup].file);
         }
 
         for (const path of allPaths) {

@@ -1,5 +1,4 @@
 import Canvas from 'canvas';
-
 /**
  * {@link CanvasUtils CanvasUtils.ts}
  *
@@ -42,6 +41,10 @@ export class CanvasUtils {
         ctx.fillStyle = color;
 
         let replaceIndex: number = text.indexOf('%@');
+        if (replaceIndex === -1) {
+            coloredText = '';
+        }
+
         text = text.replace('%@', coloredText);
 
         let heightDiff: number = 0;

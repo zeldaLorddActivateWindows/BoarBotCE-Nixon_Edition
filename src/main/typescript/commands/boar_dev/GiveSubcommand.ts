@@ -2,13 +2,12 @@ import {AttachmentBuilder, AutocompleteInteraction, ChatInputCommandInteraction,
 import {BoarUser} from '../../util/boar/BoarUser';
 import {BoarBotApp} from '../../BoarBotApp';
 import {Subcommand} from '../../api/commands/Subcommand';
-import {Queue} from '../../util/interactions/Queue';
 import {InteractionUtils} from '../../util/interactions/InteractionUtils';
 import {Replies} from '../../util/interactions/Replies';
 import {LogDebug} from '../../util/logging/LogDebug';
 import {ItemImageGenerator} from '../../util/generators/ItemImageGenerator';
 import {BoarUtils} from '../../util/boar/BoarUtils';
-import {GuildData} from '../../util/data/GuildData';
+import {GuildData} from '../../util/data/global/GuildData';
 import {StringConfig} from '../../bot/config/StringConfig';
 
 /**
@@ -72,9 +71,9 @@ export default class GiveSubcommand implements Subcommand {
         const strConfig: StringConfig = this.config.stringConfig;
 
         const focusedValue: string = interaction.options.getFocused().toLowerCase();
-        const boarChoices: string[] = Object.keys(this.config.boarItemConfigs)
+        const boarChoices: string[] = Object.keys(this.config.itemConfigs.boars)
             .map(val => (val + ' | ' + strConfig.giveBoarChoiceTag));
-        const badgeChoices: string[] = Object.keys(this.config.badgeItemConfigs)
+        const badgeChoices: string[] = Object.keys(this.config.itemConfigs.badges)
             .map(val => (val + ' | ' + strConfig.giveBadgeChoiceTag));
         const choices: string[] = boarChoices.concat(badgeChoices);
         const possibleChoices: string[] = choices.filter(choice => choice.toLowerCase().includes(focusedValue));
@@ -96,11 +95,7 @@ export default class GiveSubcommand implements Subcommand {
 
         const strConfig: StringConfig = this.config.stringConfig;
 
-        let boarUser: BoarUser = {} as BoarUser;
-
-        await Queue.addQueue(() => {
-            boarUser = new BoarUser(this.userInput, true);
-        }, this.interaction.id + this.interaction.user.id);
+        const boarUser: BoarUser =  new BoarUser(this.userInput, true);
 
         LogDebug.sendDebug(
             'Gave \'' + this.idInput + '\' to ' + this.userInput.username + '(' + this.userInput.id + ')',
@@ -114,7 +109,7 @@ export default class GiveSubcommand implements Subcommand {
 
         if (
             tag === strConfig.giveBoarChoiceTag && !BoarUtils.findRarity(inputID, this.config) ||
-            tag === strConfig.giveBadgeChoiceTag && !this.config.badgeItemConfigs[inputID]
+            tag === strConfig.giveBadgeChoiceTag && !this.config.itemConfigs.badges[inputID]
         ) {
             await Replies.handleReply(this.interaction, strConfig.giveBadID);
             return;

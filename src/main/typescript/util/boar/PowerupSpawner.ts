@@ -17,27 +17,28 @@ import {
     ChannelType, Client, InteractionCollector, Message, StringSelectMenuInteraction,
     TextChannel,
 } from 'discord.js';
-import {GuildData} from '../data/GuildData';
+import {GuildData} from '../data/global/GuildData';
 import {CollectorUtils} from '../discord/CollectorUtils';
 import {BotConfig} from '../../bot/config/BotConfig';
 import {Replies} from '../interactions/Replies';
-import {PromptConfig} from '../../bot/config/powerups/PromptConfig';
+import {PromptConfig} from '../../bot/config/prompts/PromptConfig';
 import {NumberConfig} from '../../bot/config/NumberConfig';
 import {RowConfig} from '../../bot/config/components/RowConfig';
-import {PowerupConfig} from '../../bot/config/powerups/PowerupConfig';
 import {PowerupImageGenerator} from '../generators/PowerupImageGenerator';
 import {BoarUser} from './BoarUser';
-import {PromptData} from './PromptData';
-import {PowerupConfigs} from '../../bot/config/powerups/PowerupConfigs';
-import {PromptTypeConfigs} from '../../bot/config/powerups/PromptTypeConfigs';
+import {PromptData} from '../data/userdata/stats/PromptData';
+import {PromptTypeConfigs} from '../../bot/config/prompts/PromptTypeConfigs';
 import {StringConfig} from '../../bot/config/StringConfig';
+import {ItemConfig} from '../../bot/config/items/ItemConfig';
+import {ItemConfigs} from '../../bot/config/items/ItemConfigs';
+import {PromptConfigs} from '../../bot/config/prompts/PromptConfigs';
 
 export class PowerupSpawner {
     private readonly intervalVal: number =
         Math.round(BoarBotApp.getBot().getConfig().numberConfig.powInterval * (Math.random() * (1.25 - .75) + .75));
     private readonly initIntervalVal: number = 0;
     private claimers: Map<string, number> = new Map<string, number>();
-    private powerupType: PowerupConfig = {} as PowerupConfig;
+    private powerupType: ItemConfig = {} as ItemConfig;
     private promptTypeID: string = '';
     private promptID: string = '';
     private topOnePercent: number = -1;
@@ -77,10 +78,14 @@ export class PowerupSpawner {
                 Math.round(config.numberConfig.powInterval * (Math.random() * (1.25 - .75) + .75))
             );
 
-            await Queue.addQueue(() => {
-                const globalData = DataHandlers.getGlobalData();
-                globalData.nextPowerup = Date.now() + this.intervalVal;
-                fs.writeFileSync(config.pathConfig.globalDataFile, JSON.stringify(globalData));
+            await Queue.addQueue(async () => {
+                try {
+                    const globalData = DataHandlers.getGlobalData();
+                    globalData.nextPowerup = Date.now() + this.intervalVal;
+                    fs.writeFileSync(config.pathConfig.globalDataFile, JSON.stringify(globalData));
+                } catch (err: unknown) {
+                    await LogDebug.handleError(err);
+                }
             }, 'pow' + 'global');
 
             // Get all channels to send powerups in
@@ -106,20 +111,20 @@ export class PowerupSpawner {
 
             const curTime: number = Date.now();
 
-            const powConfig: PowerupConfigs = config.powerupConfig;
-            const promptTypes: PromptTypeConfigs = powConfig.promptTypes;
+            const promptConfig: PromptConfigs = config.promptConfigs;
+            const promptTypes: PromptTypeConfigs = promptConfig.types;
             this.promptTypeID = Object.keys(promptTypes)[Math.floor(
                 Math.random() * Object.keys(promptTypes).length
             )];
             this.promptID = this.getRandPromptID(this.promptTypeID, config);
-            const chosenPrompt: PromptConfig = powConfig.promptTypes[this.promptTypeID][this.promptID] as PromptConfig;
+            const chosenPrompt: PromptConfig = promptTypes[this.promptTypeID][this.promptID] as PromptConfig;
 
             this.powerupType = this.getRandPowerup(config);
 
             const rightStyle: number = promptTypes[this.promptTypeID].rightStyle;
             const wrongStyle: number = promptTypes[this.promptTypeID].wrongStyle;
 
-            const rowsConfig: RowConfig[] = config.powerupConfig.rows;
+            const rowsConfig: RowConfig[] = promptConfig.rows;
             let rows: ActionRowBuilder<ButtonBuilder>[] = [];
 
             switch (this.promptTypeID) {
@@ -141,6 +146,8 @@ export class PowerupSpawner {
             // Sends powerup message to all boar channels
             for (const channel of allBoarChannels) {
                 try {
+                    // if (config.maintenanceMode && channel.guild.id !== '1042593392921677975') continue;
+
                     const collector: InteractionCollector<ButtonInteraction | StringSelectMenuInteraction> =
                         await CollectorUtils.createCollector(channel, curTime.toString(),
                             nums, false, nums.powDuration
@@ -187,16 +194,18 @@ export class PowerupSpawner {
                 correctString = correctString.replace(/%@/g, match => ++occur === 2 ? timeToClaim.toString() : match);
 
                 await Replies.handleReply(inter, correctString, config.colorConfig.font,
-                    config.stringConfig.powRight, config.colorConfig.green
+                    config.stringConfig.powRight, config.colorConfig.green, true
                 );
                 LogDebug.sendDebug('Collected: ' + inter.user.username + ' (' + inter.user.id + ')', config);
             } else if (!this.claimers.has(inter.user.id)) {
                 await Replies.handleReply(inter, config.stringConfig.powWrongFull, config.colorConfig.font,
-                    config.stringConfig.powWrong, config.colorConfig.error
+                    config.stringConfig.powWrong, config.colorConfig.error, true
                 );
                 LogDebug.sendDebug('Failed attempt: ' + inter.user.username + ' (' + inter.user.id + ')', config);
             } else {
-                await Replies.handleReply(inter, config.stringConfig.powAttempted, config.colorConfig.error);
+                await Replies.handleReply(
+                    inter, config.stringConfig.powAttempted, config.colorConfig.error, undefined, undefined, true
+                );
                 LogDebug.sendDebug('Already collected: ' + inter.user.username + ' (' + inter.user.id + ')', config);
             }
         } catch (err: unknown) {
@@ -220,10 +229,10 @@ export class PowerupSpawner {
             this.numNotFinished++;
 
             await powMsg.edit({
-                components: [new ActionRowBuilder<ButtonBuilder>(config.powerupConfig.rows[1])]
+                components: [new ActionRowBuilder<ButtonBuilder>(config.promptConfigs.rows[1])]
             }).catch((err) => { throw err; });
 
-            // Gets percentages once all powerup messages are tabulating
+            // Gets percentages once all powerup messages are waiting for tabulation
             if (--this.numMsgs === 0) {
                 this.claimers = new Map([...this.claimers.entries()].sort((a, b) => a[1] - b[1]));
 
@@ -260,7 +269,7 @@ export class PowerupSpawner {
                 return;
             }
 
-            // Waits until percentages have been calculated (after last message has tabulated)
+            // Waits until percentages have been calculated to finish (after last message has tabulated)
             const finishInterval = setInterval(async () => {
                 if (this.readyToEnd) {
                     await this.finishPow(powMsg, config);
@@ -279,8 +288,8 @@ export class PowerupSpawner {
      * @param config - Used for config info
      * @private
      */
-    private getRandPromptID(promptType: string, config: BotConfig) {
-        const promptTypes: PromptTypeConfigs = config.powerupConfig.promptTypes;
+    private getRandPromptID(promptType: string, config: BotConfig): string {
+        const promptTypes: PromptTypeConfigs = config.promptConfigs.types;
         const prompts: string[] = [];
 
         for (const promptTypeProperty of Object.keys(promptTypes[promptType])) {
@@ -303,19 +312,11 @@ export class PowerupSpawner {
      * @param config - Used to get all powerup types
      * @private
      */
-    private getRandPowerup(config: BotConfig) {
-        const powerupTypes = config.powerupConfig;
-        const powerups: PowerupConfig[] = [];
+    private getRandPowerup(config: BotConfig): ItemConfig {
+        const powerups = config.itemConfigs.powerups;
+        const powerupIDs = Object.keys(powerups);
 
-        for (const powerupTypeProperty of Object.keys(powerupTypes)) {
-            if (!powerupTypes[powerupTypeProperty].hasOwnProperty('tiers')) {
-                continue;
-            }
-
-            powerups.push(powerupTypes[powerupTypeProperty] as PowerupConfig);
-        }
-
-        return powerups[Math.floor(Math.random() * powerups.length)] as PowerupConfig;
+        return powerups[powerupIDs[Math.floor(Math.random() * powerupIDs.length)]] as ItemConfig;
     }
 
     /**
@@ -487,7 +488,7 @@ export class PowerupSpawner {
      * @private
      */
     private async finishPow(powMsg: Message, config: BotConfig) {
-        const powConfig: PowerupConfigs = config.powerupConfig;
+        const powItemConfigs: ItemConfigs = config.itemConfigs.powerups;
         const strConfig: StringConfig = config.stringConfig;
 
         try {
@@ -525,7 +526,7 @@ export class PowerupSpawner {
 
                 }
 
-                if (this.powerupType.tiers[userPowTier] === 0) {
+                if ((this.powerupType.tiers as number[])[userPowTier] === 0) {
                     responseString = strConfig.powNoRewardResponse;
                 }
 
@@ -533,64 +534,81 @@ export class PowerupSpawner {
                     interaction,
                     responseString.replace('%@', userTime.toString()), config.colorConfig.font,
                     PowerupImageGenerator.getPowerupString(
-                        this.powerupType, this.powerupType.tiers[userPowTier], config
+                        this.powerupType, (this.powerupType.tiers as number[])[userPowTier], config
                     ),
-                    config.colorConfig.powerup
+                    config.colorConfig.powerup,
+                    true
                 );
 
-                Queue.addQueue(() => {
+                Queue.addQueue(async () => {
                     try {
                         const boarUser: BoarUser = new BoarUser(interaction.user, true);
 
-                        if (!boarUser.powerups.promptData[this.promptTypeID][this.promptID]) {
-                            boarUser.powerups.promptData[this.promptTypeID][this.promptID] = new PromptData();
+                        if (!boarUser.stats.powerups.prompts[this.promptTypeID][this.promptID]) {
+                            boarUser.stats.powerups.prompts[this.promptTypeID][this.promptID] = new PromptData();
                         }
 
-                        boarUser.powerups.promptData[this.promptTypeID][this.promptID].avg =
-                            (boarUser.powerups.promptData[this.promptTypeID][this.promptID].avg *
-                                boarUser.powerups.promptData[this.promptTypeID][this.promptID].attempts++ +
-                                userPercent) / boarUser.powerups.promptData[this.promptTypeID][this.promptID].attempts;
+                        boarUser.stats.powerups.prompts[this.promptTypeID][this.promptID].avg =
+                            (boarUser.stats.powerups.prompts[this.promptTypeID][this.promptID].avg *
+                                boarUser.stats.powerups.prompts[this.promptTypeID][this.promptID].attempts++ +
+                                userPercent
+                            ) / boarUser.stats.powerups.prompts[this.promptTypeID][this.promptID].attempts;
 
-                        boarUser.powerups.powerupAttempts++;
+                        boarUser.stats.powerups.attempts++;
 
                         if (userPowTier === 0) {
-                            boarUser.powerups.powerupAttempts1++;
+                            boarUser.stats.powerups.oneAttempts++;
                         } else if (userPowTier === 1) {
-                            boarUser.powerups.powerupAttempts10++;
+                            boarUser.stats.powerups.tenAttempts++;
                         } else if (userPowTier === 2) {
-                            boarUser.powerups.powerupAttempts50++;
+                            boarUser.stats.powerups.fiftyAttempts++;
                         }
 
-                        if (userPowTier !== -1 && this.powerupType.name === powConfig.multiBoost.name) {
-                            boarUser.powerups.multiBoostTotal += this.powerupType.tiers[userPowTier];
-                            boarUser.powerups.multiBoostsClaimed++;
-                            boarUser.powerups.highestMultiBoost = Math.max(
-                                boarUser.powerups.highestMultiBoost, boarUser.powerups.multiBoostTotal
-                            );
+                        if (userPowTier !== -1 && this.powerupType.name === powItemConfigs.multiBoost.name) {
+                            boarUser.itemCollection.powerups.multiBoost.numTotal +=
+                                (this.powerupType.tiers as number[])[userPowTier];
+                            boarUser.itemCollection.powerups.multiBoost.numClaimed++;
+                            boarUser.itemCollection.powerups.multiBoost.highestTotal = Math.min(Math.max(
+                                boarUser.itemCollection.powerups.multiBoost.highestTotal,
+                                boarUser.itemCollection.powerups.multiBoost.numTotal
+                            ), config.numberConfig.maxMultiBoost);
                         }
 
-                        if (userPowTier !== -1 && this.powerupType.name === powConfig.extraChance.name) {
-                            boarUser.powerups.extraChanceTotal += this.powerupType.tiers[userPowTier];
-                            boarUser.powerups.extraChancesClaimed++;
-                            boarUser.powerups.highestExtraChance = Math.max(
-                                boarUser.powerups.highestExtraChance, boarUser.powerups.extraChanceTotal
-                            );
+                        if (userPowTier !== -1 && this.powerupType.name === powItemConfigs.extraChance.name) {
+                            boarUser.itemCollection.powerups.extraChance.numTotal +=
+                                (this.powerupType.tiers as number[])[userPowTier];
+                            boarUser.itemCollection.powerups.extraChance.numClaimed++;
+                            boarUser.itemCollection.powerups.extraChance.highestTotal = Math.min(Math.max(
+                                boarUser.itemCollection.powerups.extraChance.highestTotal,
+                                boarUser.itemCollection.powerups.extraChance.numTotal
+                            ), config.numberConfig.maxExtraChance);
                         }
 
-                        if (userPowTier !== -1 && this.powerupType.name === powConfig.gift.name) {
-                            boarUser.powerups.numGifts += this.powerupType.tiers[userPowTier];
-                            boarUser.powerups.giftsClaimed++;
-                            boarUser.powerups.mostGifts = Math.max(
-                                boarUser.powerups.mostGifts, boarUser.powerups.numGifts
-                            )
+                        if (userPowTier !== -1 && this.powerupType.name === powItemConfigs.gift.name) {
+                            boarUser.itemCollection.powerups.gift.numTotal +=
+                                (this.powerupType.tiers as number[])[userPowTier];
+                            boarUser.itemCollection.powerups.gift.numClaimed++;
+                            boarUser.itemCollection.powerups.gift.highestTotal = Math.min(Math.max(
+                                boarUser.itemCollection.powerups.gift.highestTotal,
+                                boarUser.itemCollection.powerups.gift.numTotal
+                            ), config.numberConfig.maxPowBase);
                         }
 
-                        if (userPowTier !== -1 && this.powerupType.name === powConfig.enhancer.name) {
-                            boarUser.powerups.numEnhancers += this.powerupType.tiers[userPowTier];
-                            boarUser.powerups.enhancersClaimed++;
+                        if (userPowTier !== -1 && this.powerupType.name === powItemConfigs.enhancer.name) {
+                            boarUser.itemCollection.powerups.enhancer.numTotal +=
+                                (this.powerupType.tiers as number[])[userPowTier];
+                            boarUser.itemCollection.powerups.enhancer.numClaimed++;
+                            boarUser.itemCollection.powerups.enhancer.highestTotal = Math.min(Math.max(
+                                boarUser.itemCollection.powerups.enhancer.highestTotal,
+                                boarUser.itemCollection.powerups.enhancer.numTotal
+                            ), config.numberConfig.maxEnhancers);
                         }
 
                         boarUser.updateUserData();
+                        await Queue.addQueue(async () =>
+                            await DataHandlers.updateLeaderboardData(boarUser, interaction, config),
+                            interaction.id + 'global'
+                        );
                     } catch (err: unknown) {
                         LogDebug.handleError(err, interaction);
                     }
@@ -602,7 +620,7 @@ export class PowerupSpawner {
             this.topOnePercent = -1;
             this.topTenPercent = -1;
             this.topFiftyPercent = -1;
-            this.powerupType = {} as PowerupConfig;
+            this.powerupType = {} as ItemConfig;
             this.readyToEnd = false;
 
             LogDebug.sendDebug('Finished', config);

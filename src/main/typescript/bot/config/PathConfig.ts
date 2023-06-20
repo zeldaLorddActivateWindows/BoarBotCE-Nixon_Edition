@@ -7,6 +7,8 @@
  * @copyright WeslayCodes 2023
  */
 export class PathConfig {
+    [pathKey: string]: string;
+
     // Path of folder storing all {@link Listener listeners}
     public readonly listeners: string = '';
     // Path of folder storing all {@link Command commands}
@@ -20,8 +22,9 @@ export class PathConfig {
 
     // Base paths for images/assets
 
-    public readonly boarImages: string = '';
-    public readonly badgeImages: string = '';
+    public readonly boars: string = '';
+    public readonly badges: string = '';
+    public readonly powerups: string = '';
     public readonly itemAssets: string = '';
     public readonly tempItemAssets: string = '';
     public readonly collAssets: string = '';
@@ -47,7 +50,6 @@ export class PathConfig {
     public readonly collGiftConfirm: string = '';
     public readonly collGiftUnderlay: string = '';
     public readonly clanNone: string = '';
-    public readonly enhancerOn: string = '';
     public readonly enhancerOff: string = '';
     public readonly favorite: string = '';
 
@@ -55,6 +57,12 @@ export class PathConfig {
 
     public readonly powerupSpawn: string = '';
     public readonly powerupEnd: string = '';
+    public readonly leaderboardUnderlay: string = '';
+    public readonly marketOverviewUnderlay: string = '';
+    public readonly marketOverviewOverlay: string = '';
+    public readonly marketBuySellUnderlay: string = '';
+    public readonly marketBuySellOverlay: string = '';
+    public readonly marketOrdersUnderlay: string = '';
     public readonly thankYouImage: string = '';
     public readonly mainFont: string = '';
     public readonly helpBackground: string = '';

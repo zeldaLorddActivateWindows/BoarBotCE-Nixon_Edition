@@ -50,7 +50,14 @@ export default class InteractionListener implements Listener {
         if (command) {
             LogDebug.sendDebug('Started interaction', this.config, interaction);
 
-            const onCooldown: boolean = await Cooldown.handleCooldown(interaction as ChatInputCommandInteraction, this.config);
+            let onCooldown: boolean;
+            try {
+                onCooldown = await Cooldown.handleCooldown(interaction as ChatInputCommandInteraction, this.config);
+            } catch (err: unknown) {
+                await LogDebug.handleError(err, interaction);
+                return;
+            }
+
             if (onCooldown) return;
 
             try {

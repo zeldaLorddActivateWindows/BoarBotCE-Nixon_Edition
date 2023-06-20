@@ -1,6 +1,7 @@
 {
     "devs": [
-        "184439280980983808"
+        "184439280980983808",
+        "525050052390027269"
     ],
     "botStatusChannel": "1042624481044209735",
     "logChannel": "1084972329970442310",
@@ -10,8 +11,9 @@
         "guildDataFolder": "database/guilds/",
         "userDataFolder": "database/users/",
         "globalDataFile": "database/GlobalData.json",
-        "boarImages": "src/main/resources/boars/",
-        "badgeImages": "src/main/resources/badges/",
+        "boars": "src/main/resources/items/boars/",
+        "badges": "src/main/resources/items/badges/",
+        "powerups": "src/main/resources/items/powerups/",
         "itemAssets": "src/main/resources/items/",
         "tempItemAssets": "src/main/resources/temp_items/",
         "collAssets": "src/main/resources/collection/",
@@ -31,10 +33,15 @@
         "collGiftConfirm": "BoarGiftConfirm.png",
         "collGiftUnderlay": "BoarGiftUnderlay.png",
         "clanNone": "BoarClanNone.png",
-        "enhancerOn": "EnhancerActive.png",
         "enhancerOff": "EnhancerInactive.png",
         "powerupSpawn": "BoarPowerupSpawn.png",
         "powerupEnd": "BoarPowerupEnd.png",
+        "leaderboardUnderlay": "LeaderboardUnderlay.png",
+        "marketOverviewUnderlay": "BoarMarketOverviewUnderlay.png",
+        "marketOverviewOverlay": "BoarMarketOverviewOverlay.png",
+        "marketBuySellUnderlay": "BoarMarketBuySellUnderlay.png",
+        "marketBuySellOverlay": "BoarMarketBuySellOverlay.png",
+        "marketOrdersUnderlay": "BoarMarketYourOrdersUnderlay.png",
         "favorite": "favorite.png",
         "thankYouImage": "BoarBotThanks.png",
         "mainFont": "MinecraftFont.ttf",
@@ -131,6 +138,7 @@
         "collGiftDetails": " has sent out a %@! These gifts include boars, boar bucks, other powerups, and exclusive items. Be the first to click \"Claim\" to claim it!",
         "collEditionTitle": "__Your editions for %@__",
         "collEditionLine": "**Edition #%@:** %@\n",
+        "collDescriptionSB": " (Skyblock Boar)",
         "giftFail": "BoarBot is missing permissions needed to send gifts!",
         "enhanceGotten": "You received %@ from your enhancement!",
         "powRightFull": "%@ It took you %@ms to guess correctly! Wait for the powerup to end to see your placement.",
@@ -148,8 +156,23 @@
         "powNoRewardResponse": "You had a time of %@ms, putting you outside any bracket that gives rewards. Better luck next time!",
         "powNoClaim": "Nobody claimed the powerup!",
         "powReward": "Reward: %@",
+        "notInBoard": "The user you entered isn't on this leaderboard! Defaulting to first page.",
+        "boardHeader": "LEADERBOARD - %@",
+        "boardFooter": "Users: %@ | Page: %@/%@ | Viewing %@-%@",
+        "deletedUsername": "Deleted User",
+        "marketConfirmInstaBuy": "Are you sure? You're buying %@, bringing the total cost to $%@. Click 'Buy Now' to confirm your purchase.",
+        "marketUpdatedInstaBuy": "The market prices have fluctuated! Your new total cost is $%@. If you're fine with this, click 'Buy Now' to confirm your purchase.",
+        "marketConfirmInstaSell": "Are you sure? You're selling %@, bringing the total return to $%@. Click 'Sell Now' to confirm your sale.",
+        "marketUpdatedInstaSell": "The market prices have fluctuated! Your new total return is $%@. If you're fine with this, click 'Sell Now' to confirm your sale.",
+        "marketInstaComplete": "Transaction complete! All boar bucks/items have been received.",
+        "marketConfirmBuyOrder": "Are you sure? You're setting up a buy order for %@, bringing the total potential cost to $%@. Click 'Buy Order' again to confirm your order.",
+        "marketConfirmSellOrder": "Are you sure? You're setting up a sell offer for %@, bringing the total potential return to $%@. Click 'Sell Offer' again to confirm your offer.",
+        "marketOrderComplete": "Order/Offer placed! To see the status of your order, click 'Orders'.",
+        "marketConfirmUpdateIncrease": "Are you sure? Your order/offer for %@ will increase in price from $%@ to $%@.",
+        "marketConfirmUpdateDecrease": "Are you sure? Your order/offer for %@ will decrease in price from $%@ to $%@.",
+        "marketUpdateComplete": "Successfully updated your order/offer!",
         "noParentChannel": "NO CATEGORY",
-        "notValidChannel": "This channel isn't valid! Try a different one! The channel should be:\n- A text channel\n- Not already chosen\n- Exists in this server",
+        "notValidChannel": "This channel isn't valid! Try a different one! The channel should be a text channel, be not already chosen, and exists in this server.",
         "defaultSelectPlaceholder": "UNSELECTED",
         "emptySelect": "None",
         "channelOptionLabel": "#%@ [%@]",
@@ -166,12 +189,12 @@
         "fontSmallest": 35,
         "maxUsernameLength": 16,
         "maxTrackedEditions": 100,
-        "maxScore": 99999999999999999,
+        "maxScore": 100000000000000000,
         "maxBoars": 99999999,
         "maxStreak": 99999999,
         "maxDailies": 99999999,
-        "maxIndivBoars": 999999999999999999,
-        "maxPowBase": 99999999999999999,
+        "maxIndivBoars": 100000000000000000,
+        "maxPowBase": 100000000000000000,
         "maxMulti": 9999999,
         "maxMultiBoost": 999999,
         "maxExtraChance": 300,
@@ -326,12 +349,12 @@
         "collFavLabelPos": [130, 1070],
         "collIndivBoarPos": [741, 210],
         "collIndivBoarSize": [1156, 1156],
-        "collEnhancerStartX": 1166,
-        "collEnhancerStartY": 965,
+        "collEnhancerStartX": 1157,
+        "collEnhancerStartY": 959,
         "collEnhancerSpacingX": 70,
         "collEnhancerSpacingY": 80,
         "collEnhancerCols": 8,
-        "collEnhancerSize": [55, 64],
+        "collEnhancerSize": [75, 75],
         "powSpawnSize": [1491, 1069],
         "powSpawnDescriptionPos": [745, 623],
         "powSpawnDescriptionWidth": 1100,
@@ -344,14 +367,25 @@
         "embedMaxWidth": 1500,
         "embedMinHeight": 204,
         "embedTextPadding": 50,
-        "powInterval": 7200000,
+        "powInterval": 1800000,
         "powDuration": 30000,
         "collectorIdle": 120000,
         "emojiRows": 4,
         "emojiCols": 4,
         "triviaRows": 2,
         "triviaCols": 2,
-        "fastCols": 3
+        "fastCols": 3,
+        "leaderboardNumPlayers": 28,
+        "leaderboardRows": 14,
+        "leaderboardStart": [486, 300],
+        "leaderboardIncX": 950,
+        "leaderboardIncY": 70,
+        "leaderboardHeaderPos": [300, 125],
+        "leaderboardTopBotWidth": 1550,
+        "leaderboardFooterPos": [960, 1330],
+        "leaderboardEntryWidth": 875,
+        "marketSize": [1894, 1388],
+        "orderExpire": 604800000
     },
     "commandConfigs": {
         "boar": {
@@ -515,16 +549,450 @@
                 ],
                 "modals": [
                     {
-                        "title": "Input Page Number",
-                        "customId": "FIELD_ONE_MODAL",
+                        "title": "Input Page Number or Boar Name",
+                        "customId": "COLLECTION_MODAL",
                         "components": [
                             {
                                 "type": 1,
                                 "components": [
                                     {
                                         "type": 4,
-                                        "customId": "PAGE_INPUT",
+                                        "customId": "COLL_PAGE_INPUT",
                                         "label": "PAGE NUMBER/BOAR NAME",
+                                        "style": 1,
+                                        "required": true
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
+            "top": {
+                "name": "top",
+                "description": "View leaderboards showcasing a ranking of player stats",
+                "args": [
+                    {
+                        "name": "leaderboard",
+                        "description": "The leaderboard to view",
+                        "choices": [
+                            {
+                                "name": "Boar Bucks",
+                                "value": "bucks"
+                            },
+                            {
+                                "name": "Total Boars",
+                                "value": "total"
+                            },
+                            {
+                                "name": "Unique Boars",
+                                "value": "uniques"
+                            },
+                            {
+                                "name": "Unique Boars (SB included)",
+                                "value": "uniquesSB"
+                            },
+                            {
+                                "name": "Boar Streak",
+                                "value": "streak"
+                            },
+                            {
+                                "name": "Powerup Attempts",
+                                "value": "attempts"
+                            },
+                            {
+                                "name": "Top 1% Powerup Attempts",
+                                "value": "topAttempts"
+                            },
+                            {
+                                "name": "Gifts Used",
+                                "value": "giftsUsed"
+                            },
+                            {
+                                "name": "Multiplier",
+                                "value": "multiplier"
+                            }
+                        ]
+                    },
+                    {
+                        "name": "user",
+                        "description": "The user to find on the leaderboard"
+                    },
+                    {
+                        "name": "page",
+                        "description": "The page to start out on"
+                    }
+                ],
+                "cooldown": true,
+                "componentFields": [
+                    [
+                        {
+                            "type": 1,
+                            "components": [
+                                {
+                                    "type": 2,
+                                    "customId": "LEADER_BACK",
+                                    "emoji": "<:back:1073072529507369072>",
+                                    "style": 2,
+                                    "disabled": true
+                                },
+                                {
+                                    "type": 2,
+                                    "customId": "LEADER_PAGE",
+                                    "emoji": "\uD83D\uDCDD",
+                                    "style": 2,
+                                    "disabled": true
+                                },
+                                {
+                                    "type": 2,
+                                    "customId": "LEADER_FORWARD",
+                                    "emoji": "<:forward:1073071982096175184>",
+                                    "style": 2,
+                                    "disabled": true
+                                }
+                            ]
+                        },
+                        {
+                            "type": 1,
+                            "components": [
+                                {
+                                    "type": 3,
+                                    "customId": "LEADER_BOARD_SELECT",
+                                    "placeholder": "Choose Leaderboard..."
+                                }
+                            ]
+                        }
+                    ]
+                ],
+                "modals": [
+                    {
+                        "title": "Input Page Number",
+                        "customId": "LEADER_MODAL",
+                        "components": [
+                            {
+                                "type": 1,
+                                "components": [
+                                    {
+                                        "type": 4,
+                                        "customId": "LEADER_PAGE_INPUT",
+                                        "label": "PAGE NUMBER",
+                                        "style": 1,
+                                        "required": true
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
+            "market": {
+                "name": "market",
+                "description": "Buy and sell boars/items",
+                "args": [
+                    {
+                        "name": "view",
+                        "description": "What view to start off in (Overview, Buy/Sell, Your Orders)",
+                        "choices": [
+                            {
+                                "name": "Overview",
+                                "value": 0
+                            },
+                            {
+                                "name": "Buy/Sell",
+                                "value": 1
+                            },
+                            {
+                                "name": "Your Orders",
+                                "value": 2
+                            }
+                        ]
+                    },
+                    {
+                        "name": "page",
+                        "description": "The page to start out on"
+                    }
+                ],
+                "cooldown": true,
+                "componentFields": [
+                    [
+                        {
+                            "type": 1,
+                            "components": [
+                                {
+                                    "type": 2,
+                                    "customId": "MARKET_BACK",
+                                    "emoji": "<:back:1073072529507369072>",
+                                    "style": 2,
+                                    "disabled": true
+                                },
+                                {
+                                    "type": 2,
+                                    "customId": "MARKET_PAGE",
+                                    "emoji": "\uD83D\uDCDD",
+                                    "style": 2,
+                                    "disabled": true
+                                },
+                                {
+                                    "type": 2,
+                                    "customId": "MARKET_FORWARD",
+                                    "emoji": "<:forward:1073071982096175184>",
+                                    "style": 2,
+                                    "disabled": true
+                                },
+                                {
+                                    "type": 2,
+                                    "customId": "MARKET_REFRESH",
+                                    "label": "Refresh",
+                                    "style": 2,
+                                    "disabled": true
+                                }
+                            ]
+                        },
+                        {
+                            "type": 1,
+                            "components": [
+                                {
+                                    "type": 2,
+                                    "customId": "MARKET_OVERVIEW",
+                                    "label": "Overview",
+                                    "style": 1,
+                                    "disabled": true
+                                },
+                                {
+                                    "type": 2,
+                                    "customId": "MARKET_BUY_SELL",
+                                    "label": "Buy/Sell",
+                                    "style": 1,
+                                    "disabled": true
+                                },
+                                {
+                                    "type": 2,
+                                    "customId": "MARKET_ORDERS",
+                                    "label": "Orders",
+                                    "style": 1,
+                                    "disabled": true
+                                }
+                            ]
+                        }
+                    ],
+                    [
+                        {
+                            "type": 1,
+                            "components": [
+                                {
+                                    "type": 2,
+                                    "customId": "MARKET_INSTA_BUY",
+                                    "label": "Buy Now",
+                                    "style": 3,
+                                    "disabled": true
+                                },
+                                {
+                                    "type": 2,
+                                    "customId": "MARKET_INSTA_SELL",
+                                    "label": "Sell Now",
+                                    "style": 3,
+                                    "disabled": true
+                                },
+                                {
+                                    "type": 2,
+                                    "customId": "MARKET_BUY_SELL_INFO",
+                                    "emoji": "\u2754",
+                                    "style": 2
+                                }
+                            ]
+                        },
+                        {
+                            "type": 1,
+                            "components": [
+                                {
+                                    "type": 2,
+                                    "customId": "MARKET_BUY_ORDER",
+                                    "label": "Buy Order",
+                                    "style": 3,
+                                    "disabled": true
+                                },
+                                {
+                                    "type": 2,
+                                    "customId": "MARKET_SELL_ORDER",
+                                    "label": "Sell Offer",
+                                    "style": 3,
+                                    "disabled": true
+                                }
+                            ]
+                        },
+                        {
+                            "type": 1,
+                            "components": [
+                                {
+                                    "type": 3,
+                                    "customId": "MARKET_EDITION_SELECT",
+                                    "placeholder": "Select Edition..."
+                                }
+                            ]
+                        },
+                        {
+                            "type": 1,
+                            "components": [
+                                {
+                                    "type": 2,
+                                    "customId": "MARKET_ORDER_CLAIM",
+                                    "label": "Claim",
+                                    "style": 3,
+                                    "disabled": true
+                                },
+                                {
+                                    "type": 2,
+                                    "customId": "MARKET_ORDER_UPDATE",
+                                    "label": "Update",
+                                    "style": 3,
+                                    "disabled": true
+                                },
+                                {
+                                    "type": 2,
+                                    "customId": "MARKET_ORDER_CANCEL",
+                                    "label": "Cancel",
+                                    "style": 3
+                                }
+                            ]
+                        },
+                        {
+                            "type": 1,
+                            "components": [
+                                {
+                                    "type": 3,
+                                    "customId": "MARKET_ORDER_SELECT",
+                                    "placeholder": "Choose Order/Offer..."
+                                }
+                            ]
+                        }
+                    ]
+                ],
+                "modals": [
+                    {
+                        "title": "Input Page Number or Boar/Item Name",
+                        "customId": "MARKET_PAGE_MODAL",
+                        "components": [
+                            {
+                                "type": 1,
+                                "components": [
+                                    {
+                                        "type": 4,
+                                        "customId": "MARKET_PAGE_INPUT",
+                                        "label": "PAGE NUMBER/ITEM NAME",
+                                        "style": 1,
+                                        "required": true
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "title": "",
+                        "customId": "MARKET_INSTA_MODAL",
+                        "components": [
+                            {
+                                "type": 1,
+                                "components": [
+                                    {
+                                        "type": 4,
+                                        "customId": "MARKET_INSTA_NUM_INPUT",
+                                        "label": "AMOUNT TO BUY/SELL",
+                                        "style": 1,
+                                        "required": true
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "title": "",
+                        "customId": "MARKET_INSTA_SPECIAL_MODAL",
+                        "components": [
+                            {
+                                "type": 1,
+                                "components": [
+                                    {
+                                        "type": 4,
+                                        "customId": "MARKET_INSTA_SPECIAL_INPUT",
+                                        "label": "INPUT EDITION NUMBER TO CONFIRM",
+                                        "style": 1,
+                                        "required": true
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "title": "",
+                        "customId": "MARKET_ORDER_MODAL",
+                        "components": [
+                            {
+                                "type": 1,
+                                "components": [
+                                    {
+                                        "type": 4,
+                                        "customId": "MARKET_ORDER_NUM_INPUT",
+                                        "label": "AMOUNT TO ORDER/OFFER",
+                                        "style": 1,
+                                        "required": true
+                                    }
+                                ]
+                            },
+                            {
+                                "type": 1,
+                                "components": [
+                                    {
+                                        "type": 4,
+                                        "customId": "MARKET_ORDER_PRICE_INPUT",
+                                        "label": "PRICE PER UNIT",
+                                        "style": 1,
+                                        "required": true
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "title": "",
+                        "customId": "MARKET_ORDER_SPECIAL_MODAL",
+                        "components": [
+                            {
+                                "type": 1,
+                                "components": [
+                                    {
+                                        "type": 4,
+                                        "customId": "MARKET_ORDER_SPECIAL_EDITION_INPUT",
+                                        "label": "EDITION NUMBER TO ORDER/OFFER",
+                                        "style": 1,
+                                        "required": true
+                                    }
+                                ]
+                            },
+                            {
+                                "type": 1,
+                                "components": [
+                                    {
+                                        "type": 4,
+                                        "customId": "MARKET_ORDER_SPECIAL_PRICE_INPUT",
+                                        "label": "PRICE",
+                                        "style": 1,
+                                        "required": true
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "title": "Updating Price: ",
+                        "customId": "MARKET_UPDATE_MODAL",
+                        "components": [
+                            {
+                                "type": 1,
+                                "components": [
+                                    {
+                                        "type": 4,
+                                        "customId": "MARKET_UPDATE_PRICE_INPUT",
+                                        "label": "NEW PRICE PER UNIT",
                                         "style": 1,
                                         "required": true
                                     }
@@ -544,41 +1012,6 @@
                 "description": "Set BoarBot up to your liking",
                 "cooldown": true,
                 "componentFields": [
-                    [
-                        {
-                            "type": 1,
-                            "components": [
-                                {
-                                    "type": 3,
-                                    "customId": "SETUP_TRADE_CHANNEL_SELECT",
-                                    "placeholder": "UNSELECTED"
-                                }
-                            ]
-                        },
-                        {
-                            "type": 1,
-                            "components": [
-                                {
-                                    "type": 2,
-                                    "customId": "SETUP_REFRESH_TRADE_CHANNEL",
-                                    "label": "Refresh",
-                                    "style": 2
-                                },
-                                {
-                                    "type": 2,
-                                    "customId": "SETUP_FIND",
-                                    "emoji": "\uD83D\uDCDD",
-                                    "style": 2
-                                },
-                                {
-                                    "type": 2,
-                                    "customId": "SETUP_INFO_TRADE_CHANNEL",
-                                    "emoji": "\u2754",
-                                    "style": 2
-                                }
-                            ]
-                        }
-                    ],
                     [
                         {
                             "type": 1,
@@ -755,80 +1188,8 @@
             }
         }
     },
-    "powerupConfig": {
-        "multiBoost": {
-            "name": "Multiplier Boost",
-            "pluralName": "Multiplier Boosts",
-            "description": "Boosts your multiplier by adding to its current value, making it more likely to get rarer boars when you do /boar daily.",
-            "tiers": [50, 25, 10]
-        },
-        "gift": {
-            "name": "Boar Gift",
-            "pluralName": "Boar Gifts",
-            "description": "A gift that you can be sent to and opened by other people. Contains boar bucks, boars, rare surprises, and more.",
-            "tiers": [3, 1, 0],
-            "outcomes": [
-                {
-                    "weight": 1,
-                    "category": "Special Boar",
-                    "suboutcomes": []
-                },
-                {
-                    "weight": 400,
-                    "category": "Boar Bucks",
-                    "suboutcomes": [
-                        {
-                            "weight": 90,
-                            "name": "+%@ Boar Bucks"
-                        },
-                        {
-                            "weight": 9,
-                            "name": "+%@ Boar Bucks"
-                        },
-                        {
-                            "weight": 1,
-                            "name": "+%@ Boar Bucks"
-                        }
-                    ]
-                },
-                {
-                    "weight": 199,
-                    "category": "Powerups",
-                    "suboutcomes": [
-                        {
-                            "weight": 45,
-                            "name": "+15 Multiplier Boost"
-                        },
-                        {
-                            "weight": 45,
-                            "name": "+3% Extra Boar Chance"
-                        },
-                        {
-                            "weight": 10,
-                            "name": "+1 Enhancer"
-                        }
-                    ]
-                },
-                {
-                    "weight": 400,
-                    "category": "Random Boar",
-                    "suboutcomes": []
-                }
-            ]
-        },
-        "extraChance": {
-            "name": "Extra Boar Chance",
-            "pluralName": "Extra Boar Chances",
-            "description": "Increases your chance of getting an extra boar when you do /boar daily. Capped at 300%. Multiplier boosts apply to all extra boars.",
-            "tiers": [10, 5, 1]
-        },
-        "enhancer": {
-            "name": "Boar Enhancer",
-            "pluralName": "Boar Enhancers",
-            "description": "Can be used to enhance a boar to a random boar of the next rarity. Capped at 16. Divine is the maximum rarity that can be enhanced.",
-            "tiers": [1, 1, 0]
-        },
-        "promptTypes": {
+    "promptConfigs": {
+        "types": {
             "emojiFind": {
                 "name": "Emoji Find",
                 "description": "Click the emoji that's different from the others!",
@@ -975,277 +1336,419 @@
             }
         ]
     },
-    "boarItemConfigs": {
-        "normal": {
-            "name": "Normal Boar",
-            "file": "NormalBoar.png",
-            "description": "The origin of all boars. Quite unremarkable.",
-            "isSB": false,
-            "blacklisted": false
+    "itemConfigs": {
+        "boars": {
+            "normal": {
+                "name": "Normal Boar",
+                "pluralName": "Normal Boars",
+                "file": "NormalBoar.png",
+                "description": "The origin of all boars. Quite unremarkable.",
+                "isSB": false,
+                "blacklisted": false
+            },
+            "explosionless": {
+                "name": "Explosionless Boar",
+                "pluralName": "Explosionless Boars",
+                "file": "ExplosionlessBoar.png",
+                "description": "Its mind was blown so hard that it refuses to ignite anymore. If it ever does, though, it's assumed its explosion would be... cataclysmic.",
+                "isSB": false,
+                "blacklisted": false
+            },
+            "tiny": {
+                "name": "Tiny Boar",
+                "pluralName": "Tiny Boars",
+                "file": "TinyBoar.png",
+                "description": "The result of an experiment gone wrong with the Wizard Boar. Has come to terms with its condition by living with ants.",
+                "isSB": false,
+                "blacklisted": false
+            },
+            "carrot": {
+                "name": "Carrot Boar",
+                "pluralName": "Carrot Boars",
+                "file": "CarrotBoar.png",
+                "description": "On the surface, it's indistinguishable from the grass around it. The only one capable of spotting them is Farmer Boar.",
+                "isSB": false,
+                "blacklisted": false
+            },
+            "buff": {
+                "name": "Buff Boar",
+                "pluralName": "Buff Boars",
+                "file": "BuffBoar.png",
+                "description": "It's said this boar can crush rocks with its bare hands. Stuck in a toxic relationship with Coffee Girl Boar simply for appearances.",
+                "isSB": false,
+                "blacklisted": false
+            },
+            "chocolate": {
+                "name": "Chocolate Boar",
+                "pluralName": "Chocolate Boars",
+                "file": "ChocolateBoar.png",
+                "description": "A discontinued chocolate bar from 1999. It was pulled off shelves after traces of boar meat were discovered inside it.",
+                "isSB": false,
+                "blacklisted": false
+            },
+            "emo": {
+                "name": "Emo Boar",
+                "pluralName": "Emo Boars",
+                "file": "EmoBoar.png",
+                "description": "Is said to be so emotional and sensitive that it can feel the emotions of those around them. Its parents say it's a phase, but it most definitely is not.",
+                "isSB": false,
+                "blacklisted": false
+            },
+            "matrix": {
+                "name": "Matrix Boar",
+                "pluralName": "Matrix Boars",
+                "file": "MatrixBoar.png",
+                "description": "Keeps taking Acetaminophen because of its red color. Believes it's its destiny to save humanity from its AI overlords.",
+                "isSB": false,
+                "blacklisted": false
+            },
+            "soda": {
+                "name": "Soda Boar",
+                "pluralName": "Soda Boars",
+                "file": "SodaBoar.png",
+                "description": "After much engineering and toil, scientists created this boar, which replaces the signature explosion with a constant stream of soda.",
+                "isSB": false,
+                "blacklisted": false
+            },
+            "clown": {
+                "name": "Clown Boar",
+                "pluralName": "Clown Boars",
+                "file": "ClownBoar.png",
+                "description": "It is said that this boar was directly modeled after someone that posted cringe on the internet.",
+                "isSB": false,
+                "blacklisted": false
+            },
+            "sphere": {
+                "name": "Sphere Boar",
+                "pluralName": "Sphere Boars",
+                "file": "SphereBoar.gif",
+                "staticFile": "SphereBoarSTATIC.png",
+                "description": "After many millennia of the concretion process, this boar took the form of a perfect sphere. What's at its core? Nobody knows.",
+                "isSB": false,
+                "blacklisted": false
+            },
+            "killer": {
+                "name": "Killer Boar",
+                "pluralName": "Killer Boars",
+                "file": "KillerBoar.png",
+                "description": "Has a thirst for killing that must be sated every night. If it isn't, chaos is bound to ensue.",
+                "isSB": false,
+                "blacklisted": false
+            },
+            "fish": {
+                "name": "Boarfish",
+                "pluralName": "Boarfish",
+                "file": "FishBoar.png",
+                "description": "A highly invasive fish species. It has a friendly personality around humans but vicious predatory instincts for other fish in its environment.",
+                "isSB": false,
+                "blacklisted": false
+            },
+            "fruit": {
+                "name": "Fruit Boar",
+                "pluralName": "Fruit Boars",
+                "file": "FruitBoar.png",
+                "description": "This boar is part of a cult with shape-shifting abilities. Instead of doing anything cool, though, they only shape shift into various fruits.",
+                "isSB": false,
+                "blacklisted": false
+            },
+            "rainy": {
+                "name": "Rainy Boar",
+                "pluralName": "Rainy Boars",
+                "file": "RainyBoar.png",
+                "description": "Cursed by the God of All Boars for something unspeakable, this boar constantly has a rain cloud pouring down around it. Lightning smites it at random intervals.",
+                "isSB": false,
+                "blacklisted": false
+            },
+            "golden": {
+                "name": "Golden Boar",
+                "file": "GoldenBoar.png",
+                "description": "This boar is rumored to be buried deep in the treasures of the Mines of Divan. Since it's 100% pure gold, jewelers use it as a standard for gold quality.",
+                "isSB": true,
+                "blacklisted": false
+            },
+            "creepy": {
+                "name": "Creepy Boar",
+                "pluralName": "Creepy Boars",
+                "file": "CreepyBoar.png",
+                "description": "Looks strikingly similar to a normal boar at first glance, but is actually a paranormal being that lives in the skin of recently perished boars.",
+                "isSB": false,
+                "blacklisted": false
+            },
+            "robot": {
+                "name": "RoboBoar-9000",
+                "pluralName": "RoboBoar-9000s",
+                "file": "RobotBoar.png",
+                "description": "A sentient robot capable of overthrowing the human race but simply decides not to. Matrix Boar is convinced they're up to something nefarious but can't prove it.",
+                "isSB": false,
+                "blacklisted": false
+            },
+            "coffee": {
+                "name": "Coffee Girl Boar",
+                "pluralName": "Coffee Girl Boars",
+                "file": "CoffeeGirlBoar.png",
+                "description": "Rarely seen not drinking coffee. When she's not, she's typically getting her nails done or posting a selfie of herself on social media.",
+                "isSB": false,
+                "blacklisted": false
+            },
+            "moon": {
+                "name": "Moon Boar",
+                "pluralName": "Moon Boars",
+                "file": "MoonBoar.png",
+                "description": "Moon Boar is actually just the other side of the Moon that we can't see. NASA spends billions a year to keep the secret from getting out.",
+                "isSB": false,
+                "blacklisted": false
+            },
+            "necron": {
+                "name": "Necron Boar",
+                "pluralName": "Necron Boars",
+                "file": "NecronBoar.png",
+                "description": "One of the five Wither Boars residing on the fifth floor of the Catacombs. Releases nuclear energy inside its body to prevent invaders from seeing its King.",
+                "isSB": true,
+                "blacklisted": false
+            },
+            "wizard": {
+                "name": "Wizard Boar",
+                "pluralName": "Wizard Boars",
+                "file": "WizardBoar.png",
+                "description": "Cheated its way to an Honors Boarwarts diploma. It now performs street magic to pay its bills as it never learned how to actually cast spells.",
+                "isSB": false,
+                "blacklisted": false
+            },
+            "aurora": {
+                "name": "Aurora Boarealis",
+                "pluralName": "Aurora Boarealis",
+                "file": "AuroraBoar.png",
+                "description": "People travel across the world to see its beauty. It only appears when Moon Boar is eclipsing the sun.",
+                "isSB": false,
+                "blacklisted": false
+            },
+            "minimumwage": {
+                "name": "Minimum Wage Boar",
+                "pluralName": "Minimum Wage Boars",
+                "file": "MinimumWageBoar.png",
+                "description": "One of the smartest boars in the universe. Nobody's quite sure why it works at a fast food restaurant, but there must be a reason.",
+                "isSB": false,
+                "blacklisted": false
+            },
+            "backrooms": {
+                "name": "Backrooms Boar",
+                "pluralName": "Backrooms Boars",
+                "file": "BackroomsBoar.png",
+                "description": "This boar fell into the backrooms while recording a skateboarding montage with its friends. Neither it nor the walls around it seem to age.",
+                "isSB": false,
+                "blacklisted": false
+            },
+            "jumpscare": {
+                "name": "Jumpscare Boar",
+                "pluralName": "Jumpscare Boars",
+                "file": "JumpscareBoar.gif",
+                "staticFile": "JumpscareBoarSTATIC.png",
+                "description": "Shoves its face into peoples' doorbell cameras to make them think it's a Creepy Boar. Creepy Boars abuse this to find new victims.",
+                "isSB": false,
+                "blacklisted": false
+            },
+            "cowboy": {
+                "name": "Cowboar",
+                "pluralName": "Cowboars",
+                "file": "CowboyBoar.png",
+                "description": "Unparalleled skills when it comes to the lasso and piloting horses. Refuses to touch any modern technology.",
+                "isSB": false,
+                "blacklisted": false
+            },
+            "realistic": {
+                "name": "Realistic Boar",
+                "pluralName": "Realistic Boars",
+                "file": "RealisticBoar.png",
+                "description": "A taxidermy of a boar that came before the current generation of boars. To have it appeal to modern society, they had to make its head explode.",
+                "isSB": false,
+                "blacklisted": false
+            },
+            "farmer": {
+                "name": "Farmer Boar",
+                "pluralName": "Farmer Boars",
+                "file": "FarmerBoar.png",
+                "description": "Harvests Carrot Boars to sell to Cowboar. Lives a mundane, yet comforting life with a wife and kids.",
+                "isSB": true,
+                "blacklisted": false
+            },
+            "rickroll": {
+                "name": "Rickroll Boar",
+                "pluralName": "Rickroll Boars",
+                "file": "RickrollBoar.gif",
+                "staticFile": "RickrollBoarSTATIC.png",
+                "description": "Spreads the word of the God of All Boars. He'll never give you up, nor will he let you down. He'll never run around and... desert you.",
+                "isSB": false,
+                "blacklisted": false
+            },
+            "morbius": {
+                "name": "Boarbius",
+                "pluralName": "Boarbiuses",
+                "file": "Boarbius.png",
+                "description": "A boar whose sense of humor is exclusive to April and May of 2022. Thinks Morbius is the greatest movie of all time.",
+                "isSB": false,
+                "blacklisted": false
+            },
+            "god": {
+                "name": "God of All Boars",
+                "pluralName": "Gods of All Boars",
+                "file": "GodofAllBoars.png",
+                "description": "Created all boars in the universe. While it may seem like a divine being, it's actually just an albino boar hellbent on artificially creating new boar species.",
+                "isSB": false,
+                "blacklisted": false
+            },
+            "imposter": {
+                "name": "Imposter Boar",
+                "pluralName": "Imposter Boars",
+                "file": "ImposterBoar.png",
+                "description": "Kills its crew mates on the International Boar Station and frames it as a spacewalking accident. Its kill count is said to be in the dozens.",
+                "isSB": false,
+                "blacklisted": false
+            },
+            "curious": {
+                "name": "Curious Boarge",
+                "pluralName": "Curious Boarges",
+                "file": "CuriousBoarge.png",
+                "description": "With the extinction of all apes, a new mascot for the classic children's book was needed to appeal to modern society.",
+                "isSB": false,
+                "blacklisted": false
+            },
+            "gamebreaker": {
+                "name": "Gameboarker",
+                "pluralName": "Gameboarkers",
+                "file": "Gameboarker.gif",
+                "staticFile": "GameboarkerSTATIC.png",
+                "description": "This boar takes explosion to a whole other level, fusing its cells with gunpowder to create bigger explosions. Awarded to those who find and report several bugs.",
+                "isSB": false,
+                "blacklisted": false
+            },
+            "racer": {
+                "name": "Racer Boar",
+                "pluralName": "Racer Boars",
+                "file": "RacerBoar.png",
+                "description": "The fastest boar of all time. Races in a car to make it fair to others. Awarded to those who obtain the first edition of any non-special boar.",
+                "isSB": false,
+                "blacklisted": false
+            }
         },
-        "explosionless": {
-            "name": "Explosionless Boar",
-            "file": "ExplosionlessBoar.png",
-            "description": "Its mind was blown so hard that it refuses to ignite anymore. If it ever does, though, it's assumed its explosion would be... cataclysmic.",
-            "isSB": false,
-            "blacklisted": false
+        "badges": {
+            "early_supporter": {
+                "name": "Early Subboarter",
+                "pluralName": "Early Subboarters",
+                "file": "EarlySupporter.png",
+                "description": "Anyone with this badge boosted in the server BoarBot originated in!",
+                "isSB": false,
+                "blacklisted": false
+            },
+            "hunter": {
+                "name": "Boar Hunter",
+                "pluralName": "Boar Hunters",
+                "file": "Hunter.png",
+                "description": "Those that obtain ALL unique boars get this badge!",
+                "isSB": false,
+                "blacklisted": false
+            },
+            "artist": {
+                "name": "Boartist",
+                "pluralName": "Boartists",
+                "file": "Artist.png",
+                "description": "If you made your own boar and it made it into BoarBot, you get this badge!",
+                "isSB": false,
+                "blacklisted": false
+            },
+            "athlete": {
+                "name": "Boarthlete",
+                "pluralName": "Boarthletes",
+                "file": "Athlete.png",
+                "description": "Only those that are #1 on any leaderboard receive this badge!",
+                "isSB": false,
+                "blacklisted": false
+            }
         },
-        "tiny": {
-            "name": "Tiny Boar",
-            "file": "TinyBoar.png",
-            "description": "The result of an experiment gone wrong with the Wizard Boar. Has come to terms with its condition by living with ants.",
-            "isSB": false,
-            "blacklisted": false
-        },
-        "carrot": {
-            "name": "Carrot Boar",
-            "file": "CarrotBoar.png",
-            "description": "On the surface, it's indistinguishable from the grass around it. The only one capable of spotting them is Farmer Boar.",
-            "isSB": false,
-            "blacklisted": false
-        },
-        "buff": {
-            "name": "Buff Boar",
-            "file": "BuffBoar.png",
-            "description": "It's said this boar can crush rocks with its bare hands. Stuck in a toxic relationship with Coffee Girl Boar simply for appearances.",
-            "isSB": false,
-            "blacklisted": false
-        },
-        "chocolate": {
-            "name": "Chocolate Boar",
-            "file": "ChocolateBoar.png",
-            "description": "A discontinued chocolate bar from 1999. It was pulled off shelves after traces of boar meat were discovered inside it.",
-            "isSB": false,
-            "blacklisted": false
-        },
-        "emo": {
-            "name": "Emo Boar",
-            "file": "EmoBoar.png",
-            "description": "Is said to be so emotional and sensitive that it can feel the emotions of those around them. Its parents say it's a phase, but it most definitely is not.",
-            "isSB": false,
-            "blacklisted": false
-        },
-        "matrix": {
-            "name": "Matrix Boar",
-            "file": "MatrixBoar.png",
-            "description": "Keeps taking Acetaminophen because of its red color. Believes it's its destiny to save humanity from its AI overlords.",
-            "isSB": false,
-            "blacklisted": false
-        },
-        "soda": {
-            "name": "Soda Boar",
-            "file": "SodaBoar.png",
-            "description": "After much engineering and toil, scientists created this boar, which replaces the signature explosion with a constant stream of soda.",
-            "isSB": false,
-            "blacklisted": false
-        },
-        "clown": {
-            "name": "Clown Boar",
-            "file": "ClownBoar.png",
-            "description": "It is said that this boar was directly modeled after someone that posted cringe on the internet.",
-            "isSB": false,
-            "blacklisted": false
-        },
-        "sphere": {
-            "name": "Sphere Boar",
-            "file": "SphereBoar.gif",
-            "staticFile": "SphereBoarSTATIC.png",
-            "description": "After many millennia of the concretion process, this boar took the form of a perfect sphere. What's at its core? Nobody knows.",
-            "isSB": false,
-            "blacklisted": false
-        },
-        "killer": {
-            "name": "Killer Boar",
-            "file": "KillerBoar.png",
-            "description": "Has a thirst for killing that must be sated every night. If it isn't, chaos is bound to ensue.",
-            "isSB": false,
-            "blacklisted": false
-        },
-        "fish": {
-            "name": "Boarfish",
-            "file": "FishBoar.png",
-            "description": "A highly invasive fish species. It has a friendly personality around humans but vicious predatory instincts for other fish in its environment.",
-            "isSB": false,
-            "blacklisted": false
-        },
-        "fruit": {
-            "name": "Fruit Boar",
-            "file": "FruitBoar.png",
-            "description": "This boar is part of a cult with shape-shifting abilities. Instead of doing anything cool, though, they only shape shift into various fruits.",
-            "isSB": false,
-            "blacklisted": false
-        },
-        "rainy": {
-            "name": "Rainy Boar",
-            "file": "RainyBoar.png",
-            "description": "Cursed by the God of All Boars for something unspeakable, this boar constantly has a rain cloud pouring down around it. Lightning smites it at random intervals.",
-            "isSB": false,
-            "blacklisted": false
-        },
-        "golden": {
-            "name": "Golden Boar",
-            "file": "GoldenBoar.png",
-            "description": "This boar is rumored to be buried deep in the treasures of the Mines of Divan. Since it's 100% pure gold, jewelers use it as a standard for gold quality.",
-            "isSB": true,
-            "blacklisted": false
-        },
-        "creepy": {
-            "name": "Creepy Boar",
-            "file": "CreepyBoar.png",
-            "description": "Looks strikingly similar to a normal boar at first glance, but is actually a paranormal being that lives in the skin of recently perished boars.",
-            "isSB": false,
-            "blacklisted": false
-        },
-        "robot": {
-            "name": "RoboBoar-9000",
-            "file": "RobotBoar.png",
-            "description": "A sentient robot capable of overthrowing the human race but simply decides not to. Matrix Boar is convinced they're up to something nefarious but can't prove it.",
-            "isSB": false,
-            "blacklisted": false
-        },
-        "coffee": {
-            "name": "Coffee Girl Boar",
-            "file": "CoffeeGirlBoar.png",
-            "description": "Rarely seen not drinking coffee. When she's not, she's typically getting her nails done or posting a selfie of herself on social media.",
-            "isSB": false,
-            "blacklisted": false
-        },
-        "moon": {
-            "name": "Moon Boar",
-            "file": "MoonBoar.png",
-            "description": "Moon Boar is actually just the other side of the Moon that we can't see. NASA spends billions a year to keep the secret from getting out.",
-            "isSB": false,
-            "blacklisted": false
-        },
-        "necron": {
-            "name": "Necron Boar",
-            "file": "NecronBoar.png",
-            "description": "One of the five Wither Boars residing on the fifth floor of the Catacombs. Releases nuclear energy inside its body to prevent invaders from seeing its King.",
-            "isSB": true,
-            "blacklisted": false
-        },
-        "wizard": {
-            "name": "Wizard Boar",
-            "file": "WizardBoar.png",
-            "description": "Cheated its way to an Honors Boarwarts diploma. It now performs street magic to pay its bills as it never learned how to actually cast spells.",
-            "isSB": false,
-            "blacklisted": false
-        },
-        "aurora": {
-            "name": "Aurora Boarealis",
-            "file": "AuroraBoar.png",
-            "description": "People travel across the world to see its beauty. It only appears when Moon Boar is eclipsing the sun.",
-            "isSB": false,
-            "blacklisted": false
-        },
-        "minimumwage": {
-            "name": "Minimum Wage Boar",
-            "file": "MinimumWageBoar.png",
-            "description": "One of the smartest boars in the universe. Nobody's quite sure why it works at a fast food restaurant, but there must be a reason.",
-            "isSB": false,
-            "blacklisted": false
-        },
-        "backrooms": {
-            "name": "Backrooms Boar",
-            "file": "BackroomsBoar.png",
-            "description": "This boar fell into the backrooms while recording a skateboarding montage with its friends. Neither it nor the walls around it seem to age.",
-            "isSB": false,
-            "blacklisted": false
-        },
-        "jumpscare": {
-            "name": "Jumpscare Boar",
-            "file": "JumpscareBoar.gif",
-            "staticFile": "JumpscareBoarSTATIC.png",
-            "description": "Shoves its face into peoples' doorbell cameras to make them think it's a Creepy Boar. Creepy Boars abuse this to find new victims.",
-            "isSB": false,
-            "blacklisted": false
-        },
-        "cowboy": {
-            "name": "Cowboar",
-            "file": "CowboyBoar.png",
-            "description": "Unparalleled skills when it comes to the lasso and piloting horses. Refuses to touch any modern technology.",
-            "isSB": false,
-            "blacklisted": false
-        },
-        "realistic": {
-            "name": "Realistic Boar",
-            "file": "RealisticBoar.png",
-            "description": "A taxidermy of a boar that came before the current generation of boars. To have it appeal to modern society, they had to make its head explode.",
-            "isSB": false,
-            "blacklisted": false
-        },
-        "farmer": {
-            "name": "Farmer Boar",
-            "file": "FarmerBoar.png",
-            "description": "Harvests Carrot Boars to sell to Cowboar. Lives a mundane, yet comforting life with a wife and kids.",
-            "isSB": true,
-            "blacklisted": false
-        },
-        "rickroll": {
-            "name": "Rickroll Boar",
-            "file": "RickrollBoar.gif",
-            "staticFile": "RickrollBoarSTATIC.png",
-            "description": "Spreads the word of the God of All Boars. He'll never give you up, nor will he let you down. He'll never run around and... desert you.",
-            "isSB": false,
-            "blacklisted": false
-        },
-        "morbius": {
-            "name": "Boarbius",
-            "file": "Boarbius.png",
-            "description": "A boar whose sense of humor is exclusive to April and May of 2022. Thinks Morbius is the greatest movie of all time.",
-            "isSB": false,
-            "blacklisted": false
-        },
-        "god": {
-            "name": "God of All Boars",
-            "file": "GodofAllBoars.png",
-            "description": "Created all boars in the universe. While it may seem like a divine being, it's actually just an albino boar hellbent on artificially creating new boar species.",
-            "isSB": false,
-            "blacklisted": false
-        },
-        "imposter": {
-            "name": "Imposter Boar",
-            "file": "ImposterBoar.png",
-            "description": "Kills its crew mates on the International Boar Station and frames it as a spacewalking accident. Its kill count is said to be in the dozens.",
-            "isSB": false,
-            "blacklisted": false
-        },
-        "curious": {
-            "name": "Curious Boarge",
-            "file": "CuriousBoarge.png",
-            "description": "With the extinction of all apes, a new mascot for the classic children's book was needed to appeal to modern society.",
-            "isSB": false,
-            "blacklisted": false
-        },
-        "gamebreaker": {
-            "name": "Gameboarker",
-            "file": "Gameboarker.gif",
-            "staticFile": "GameboarkerSTATIC.png",
-            "description": "This boar takes explosion to a whole other level, fusing its cells with gunpowder to create bigger explosions. Awarded to those who find and report several bugs.",
-            "isSB": false,
-            "blacklisted": false
-        }
-    },
-    "badgeItemConfigs": {
-        "early_supporter": {
-            "name": "Early Subboarter",
-            "file": "EarlySupporter.png",
-            "description": "Anyone with this badge boosted in the server BoarBot originated in!"
-        },
-        "hunter": {
-            "name": "Boar Hunter",
-            "file": "Hunter.png",
-            "description": "Those that obtain ALL unique boars get this badge!"
-        },
-        "artist": {
-            "name": "Boartist",
-            "file": "Artist.png",
-            "description": "If you made your own boar and it made it into BoarBot, you get this badge!"
-        },
-        "athlete": {
-            "name": "Boarthlete",
-            "file": "Athlete.png",
-            "description": "Only those that are #1 on any leaderboard receive this badge!"
+        "powerups": {
+            "multiBoost": {
+                "name": "Multiplier Boost",
+                "pluralName": "Multiplier Boosts",
+                "file": "MultiBoost.png",
+                "description": "Boosts your multiplier by adding to its current value, making it more likely to get rarer boars when you do /boar daily.",
+                "isSB": false,
+                "blacklisted": false,
+                "tiers": [50, 25, 10]
+            },
+            "gift": {
+                "name": "Boar Gift",
+                "pluralName": "Boar Gifts",
+                "file": "BoarGift.png",
+                "description": "A gift that you can be sent to and opened by other people. Contains boar bucks, boars, rare surprises, and more.",
+                "isSB": false,
+                "blacklisted": false,
+                "tiers": [3, 1, 0],
+                "outcomes": [
+                    {
+                        "weight": 1,
+                        "category": "Special Boar",
+                        "suboutcomes": []
+                    },
+                    {
+                        "weight": 400,
+                        "category": "Boar Bucks",
+                        "suboutcomes": [
+                            {
+                                "weight": 90,
+                                "name": "+%@ Boar Bucks"
+                            },
+                            {
+                                "weight": 9,
+                                "name": "+%@ Boar Bucks"
+                            },
+                            {
+                                "weight": 1,
+                                "name": "+%@ Boar Bucks"
+                            }
+                        ]
+                    },
+                    {
+                        "weight": 199,
+                        "category": "Powerups",
+                        "suboutcomes": [
+                            {
+                                "weight": 45,
+                                "name": "+15 Multiplier Boost"
+                            },
+                            {
+                                "weight": 45,
+                                "name": "+3% Extra Boar Chance"
+                            },
+                            {
+                                "weight": 10,
+                                "name": "+1 Enhancer"
+                            }
+                        ]
+                    },
+                    {
+                        "weight": 400,
+                        "category": "Random Boar",
+                        "suboutcomes": []
+                    }
+                ]
+            },
+            "extraChance": {
+                "name": "Extra Boar Chance",
+                "pluralName": "Extra Boar Chances",
+                "file": "ExtraChance.png",
+                "description": "Increases your chance of getting an extra boar when you do /boar daily. Capped at 300%. Multiplier boosts apply to all extra boars.",
+                "isSB": false,
+                "blacklisted": false,
+                "tiers": [10, 5, 1]
+            },
+            "enhancer": {
+                "name": "Boar Enhancer",
+                "pluralName": "Boar Enhancers",
+                "file": "Enhancer.png",
+                "description": "Can be used to enhance a boar to a random boar of the next rarity. Capped at 16. Divine is the maximum rarity that can be enhanced.",
+                "isSB": false,
+                "blacklisted": false,
+                "tiers": [1, 1, 0]
+            }
         }
     },
     "rarityConfigs": [
@@ -1369,7 +1872,8 @@
             "fromDaily": false,
             "enhancersNeeded": 0,
             "boars": [
-                "gamebreaker"
+                "gamebreaker",
+                "racer"
             ]
         }
     ],
@@ -1381,6 +1885,9 @@
         "badge": "#4D4278",
         "powerup": "#40DEA9",
         "bucks": "#00AA00",
+        "gold": "#FCBA03",
+        "silver": "#BABABA",
+        "bronze": "#96460C",
         "green": "#55FF55",
         "maintenance": "#FFFF00",
         "error": "#FF5555",
@@ -1396,5 +1903,5 @@
     },
     "unlimitedBoars": true,
     "debugMode": true,
-    "maintenanceMode": false
+    "maintenanceMode": true
 }
