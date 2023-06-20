@@ -10,6 +10,5 @@
 export class GuildData {
     public fullySetup: boolean = false;
     public isSBServer: boolean = false;
-    public tradeChannel: string = '';
     public channels: string[] = [];
 }

@@ -109,6 +109,7 @@ export class StringConfig {
     public readonly collGiftDetails: string = ' ';
     public readonly collEditionTitle: string = ' ';
     public readonly collEditionLine: string = ' ';
+    public readonly collDescriptionSB: string = ' ';
 
     // Miscellaneous strings
 
@@ -141,6 +142,9 @@ export class StringConfig {
     public readonly marketConfirmBuyOrder: string = ' ';
     public readonly marketConfirmSellOrder: string = ' ';
     public readonly marketOrderComplete: string = ' ';
+    public readonly marketConfirmUpdateIncrease: string = ' ';
+    public readonly marketConfirmUpdateDecrease: string = ' ';
+    public readonly marketUpdateComplete: string = ' ';
     public readonly noParentChannel: string = ' ';
     public readonly notValidChannel: string = ' ';
     public readonly defaultSelectPlaceholder: string = ' ';

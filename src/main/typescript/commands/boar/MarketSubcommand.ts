@@ -164,7 +164,11 @@ export default class MarketSubcommand implements Subcommand {
                 instaSell: marketRowConfig[1][0].components[1],
                 buyOrder: marketRowConfig[1][1].components[0],
                 sellOrder: marketRowConfig[1][1].components[1],
-                editionSelect: marketRowConfig[1][3].components[0]
+                editionSelect: marketRowConfig[1][2].components[0],
+                claimOrder: marketRowConfig[1][3].components[0],
+                updateOrder: marketRowConfig[1][3].components[1],
+                cancelOrder: marketRowConfig[1][3].components[2],
+                selectOrder: marketRowConfig[1][4].components[0]
             };
 
             const isPageInput = inter.customId.startsWith(marketComponents.inputPage.customId);
@@ -172,6 +176,7 @@ export default class MarketSubcommand implements Subcommand {
             const isInstaSell = inter.customId.startsWith(marketComponents.instaSell.customId);
             const isBuyOrder = inter.customId.startsWith(marketComponents.buyOrder.customId);
             const isSellOrder = inter.customId.startsWith(marketComponents.sellOrder.customId);
+            const isUpdate = inter.customId.startsWith(marketComponents.updateOrder.customId);
 
             // User wants to input a page manually
             if (isPageInput) {
@@ -202,6 +207,19 @@ export default class MarketSubcommand implements Subcommand {
             if (isBuyOrder || isSellOrder) {
                 await Queue.addQueue(async () => {
                     showModal = await this.canOrderModal(inter, isBuyOrder, isSellOrder);
+                }, inter.id + inter.user.id);
+
+                if (showModal) {
+                    await this.modalHandle(inter);
+                }
+
+                clearInterval(this.timerVars.updateTime);
+                return;
+            }
+
+            if (isUpdate) {
+                await Queue.addQueue(async () => {
+                    showModal = await this.canUpdateModal(inter);
                 }, inter.id + inter.user.id);
 
                 if (showModal) {
@@ -255,6 +273,18 @@ export default class MarketSubcommand implements Subcommand {
                 case marketComponents.editionSelect.customId:
                     this.curEdition = Number.parseInt((inter as StringSelectMenuInteraction).values[0]);
                     break;
+
+                case marketComponents.claimOrder.customId:
+                    await this.doClaim();
+                    break;
+
+                case marketComponents.cancelOrder.customId:
+                    await this.doCancel();
+                    break;
+
+                case marketComponents.selectOrder.customId:
+                    this.curPage = Number.parseInt((inter as StringSelectMenuInteraction).values[0]);
+                    break;
             }
 
             this.undoRedButtons();
@@ -267,6 +297,270 @@ export default class MarketSubcommand implements Subcommand {
         }
 
         clearInterval(this.timerVars.updateTime);
+    }
+
+    private async doClaim() {
+        let orderInfo: {data: BuySellData, id: string, type: string};
+        let isSell = false;
+        let numToClaim = 0;
+
+        if (this.curPage < this.userBuyOrders.length) {
+            orderInfo = this.userBuyOrders[this.curPage];
+        } else {
+            isSell = true;
+            orderInfo = this.userSellOrders[this.curPage - this.userBuyOrders.length];
+        }
+
+        numToClaim = await this.returnOrderToUser(orderInfo, isSell, true);
+
+        await Queue.addQueue(async () => {
+            try {
+                const globalData = DataHandlers.getGlobalData();
+
+                const buyOrders = globalData.itemData[orderInfo.type][orderInfo.id].buyers;
+                const sellOrders = globalData.itemData[orderInfo.type][orderInfo.id].sellers;
+
+                for (let i = 0; i < buyOrders.length && !isSell; i++) {
+                    const buyOrder = buyOrders[i];
+                    const isSameOrder = buyOrder.userID === orderInfo.data.userID &&
+                        buyOrder.listTime === orderInfo.data.listTime;
+                    const canRemoveOrder = orderInfo.data.num === orderInfo.data.filledAmount &&
+                        orderInfo.data.filledAmount === orderInfo.data.claimedAmount + numToClaim;
+
+                    if (isSameOrder && canRemoveOrder) {
+                        globalData.itemData[orderInfo.type][orderInfo.id].buyers.splice(i, 1);
+                        break;
+                    } else if (isSameOrder) {
+                        globalData.itemData[orderInfo.type][orderInfo.id].buyers[i].editions.splice(
+                            0, numToClaim
+                        );
+                        globalData.itemData[orderInfo.type][orderInfo.id].buyers[i].editionDates.splice(
+                            0, numToClaim
+                        );
+                        globalData.itemData[orderInfo.type][orderInfo.id].buyers[i].claimedAmount += numToClaim;
+                        break;
+                    }
+                }
+
+                for (let i = 0; i < sellOrders.length && isSell; i++) {
+                    const sellOrder = sellOrders[i];
+                    const isSameOrder = sellOrder.userID === orderInfo.data.userID &&
+                        sellOrder.listTime === orderInfo.data.listTime;
+                    const canRemoveOrder = orderInfo.data.num === orderInfo.data.filledAmount &&
+                        orderInfo.data.filledAmount === orderInfo.data.claimedAmount + numToClaim;
+
+                    if (isSameOrder && canRemoveOrder) {
+                        globalData.itemData[orderInfo.type][orderInfo.id].sellers.splice(i, 1);
+                        break;
+                    } else if (isSameOrder) {
+                        globalData.itemData[orderInfo.type][orderInfo.id].sellers[i].claimedAmount +=
+                            numToClaim;
+                        break;
+                    }
+                }
+
+                fs.writeFileSync(this.config.pathConfig.globalDataFile, JSON.stringify(globalData));
+                this.getPricingData();
+                this.imageGen.updateInfo(
+                    this.pricingData, this.userBuyOrders, this.userSellOrders, this.config
+                );
+            } catch (err: unknown) {
+                await LogDebug.handleError(err, this.compInter);
+            }
+        }, this.compInter.id + 'global');
+
+        if (numToClaim > 0) {
+            await Replies.handleReply(
+                this.compInter, 'Successfully claimed your items/bucks!', this.config.colorConfig.green, undefined,
+                undefined, true
+            );
+            this.curPage = 0;
+        } else {
+            await Replies.handleReply(
+                this.compInter, 'You\'ve reached the maximum amount of this item in your collection!',
+                this.config.colorConfig.error, undefined, undefined, true
+            );
+        }
+    }
+
+    private async doCancel() {
+        let orderInfo: {data: BuySellData, id: string, type: string};
+        let isSell = false;
+        let canCancel = true;
+
+        if (this.curPage < this.userBuyOrders.length) {
+            orderInfo = this.userBuyOrders[this.curPage];
+        } else {
+            isSell = true;
+            orderInfo = this.userSellOrders[this.curPage - this.userBuyOrders.length];
+        }
+
+        await Queue.addQueue(async () => {
+            try {
+                const globalData = DataHandlers.getGlobalData();
+
+                const buyOrders = globalData.itemData[orderInfo.type][orderInfo.id].buyers;
+                const sellOrders = globalData.itemData[orderInfo.type][orderInfo.id].sellers;
+
+                for (let i = 0; i < buyOrders.length && !isSell; i++) {
+                    const buyOrder = buyOrders[i];
+                    const isSameOrder = buyOrder.userID === orderInfo.data.userID &&
+                        buyOrder.listTime === orderInfo.data.listTime;
+                    canCancel = orderInfo.data.filledAmount === buyOrder.filledAmount;
+
+                    if (isSameOrder && canCancel) {
+                        const hasEnoughRoom = (await this.returnOrderToUser(orderInfo, isSell, false)) > 0;
+
+                        if (hasEnoughRoom) {
+                            await Replies.handleReply(
+                                this.compInter, 'Successfully cancelled your order!',
+                                this.config.colorConfig.green, undefined, undefined, true
+                            );
+                            globalData.itemData[orderInfo.type][orderInfo.id].buyers.splice(i, 1);
+                            this.curPage = 0;
+                        } else {
+                            await Replies.handleReply(
+                                this.compInter, 'Your collection can\'t fit the items that would be returned!',
+                                this.config.colorConfig.error, undefined, undefined, true
+                            );
+                        }
+
+                        break;
+                    } else if (isSameOrder) {
+                        await Replies.handleReply(
+                            this.compInter, 'You have items/bucks to claim! Claim them if you want to cancel!',
+                            this.config.colorConfig.green, undefined, undefined, true
+                        );
+                        break;
+                    }
+                }
+
+                for (let i = 0; i < sellOrders.length && isSell; i++) {
+                    const sellOrder = sellOrders[i];
+                    const isSameOrder = sellOrder.userID === orderInfo.data.userID &&
+                        sellOrder.listTime === orderInfo.data.listTime;
+                    canCancel = orderInfo.data.filledAmount === sellOrder.filledAmount;
+
+                    if (isSameOrder && canCancel) {
+                        const hasEnoughRoom = (await this.returnOrderToUser(orderInfo, isSell, false)) > 0;
+
+                        if (hasEnoughRoom) {
+                            await Replies.handleReply(
+                                this.compInter, 'Successfully cancelled your order!',
+                                this.config.colorConfig.green, undefined, undefined, true
+                            );
+                            globalData.itemData[orderInfo.type][orderInfo.id].sellers.splice(i, 1);
+                            this.curPage = 0;
+                        } else {
+                            await Replies.handleReply(
+                                this.compInter, 'Your collection can\'t fit the items that would be returned!',
+                                this.config.colorConfig.error, undefined, undefined, true
+                            );
+                        }
+
+                        break;
+                    } else if (isSameOrder) {
+                        await Replies.handleReply(
+                            this.compInter, 'You have items/bucks to claim! Claim them if you want to cancel!',
+                            this.config.colorConfig.green, undefined, undefined, true
+                        );
+                        break;
+                    }
+                }
+
+                fs.writeFileSync(this.config.pathConfig.globalDataFile, JSON.stringify(globalData));
+                this.getPricingData();
+                this.imageGen.updateInfo(
+                    this.pricingData, this.userBuyOrders, this.userSellOrders, this.config
+                );
+            } catch (err: unknown) {
+                await LogDebug.handleError(err, this.compInter);
+            }
+        }, this.compInter.id + 'global');
+    }
+
+    private async returnOrderToUser(
+        orderInfo: {data: BuySellData, id: string, type: string}, isSell: boolean, isClaim: boolean
+    ) {
+        let numToReturn = 0;
+        let hasEnoughRoom = true;
+
+        if (!isClaim) {
+            isSell = !isSell;
+        }
+
+        await Queue.addQueue(async () => {
+            try {
+                this.boarUser.refreshUserData();
+
+                if (isClaim) {
+                    numToReturn = orderInfo.data.filledAmount - orderInfo.data.claimedAmount;
+                } else {
+                    numToReturn = orderInfo.data.num - orderInfo.data.filledAmount;
+                }
+
+
+                if (!isSell && orderInfo.type === 'boars') {
+                    if (!this.boarUser.itemCollection.boars[orderInfo.id]) {
+                        this.boarUser.itemCollection.boars[orderInfo.id] = new CollectedBoar;
+                        this.boarUser.itemCollection.boars[orderInfo.id].firstObtained = Date.now();
+                    }
+
+                    this.boarUser.itemCollection.boars[orderInfo.id].lastObtained = Date.now();
+                    this.boarUser.itemCollection.boars[orderInfo.id].editions =
+                        this.boarUser.itemCollection.boars[orderInfo.id].editions.concat(
+                            orderInfo.data.editions.slice(0, numToReturn)
+                        ).sort((a, b) => a - b);
+                    this.boarUser.itemCollection.boars[orderInfo.id].editionDates =
+                        this.boarUser.itemCollection.boars[orderInfo.id].editionDates.concat(
+                            orderInfo.data.editionDates.slice(0, numToReturn)
+                        ).sort((a, b) => a - b);
+                    this.boarUser.stats.general.lastBoar = orderInfo.id;
+                    this.boarUser.stats.general.totalBoars += numToReturn;
+                    this.boarUser.itemCollection.boars[orderInfo.id].num += numToReturn;
+                } else if (!isSell && orderInfo.type === 'powerups') {
+                    if (orderInfo.id === 'extraChance') {
+                        hasEnoughRoom = this.boarUser.itemCollection.powerups[orderInfo.id].numTotal + numToReturn <=
+                            this.config.numberConfig.maxExtraChance;
+
+                        if (isClaim) {
+                            numToReturn = Math.min(
+                                numToReturn,
+                                this.config.numberConfig.maxExtraChance -
+                                this.boarUser.itemCollection.powerups[orderInfo.id].numTotal
+                            );
+                        }
+                    } else if (orderInfo.id === 'enhancer') {
+                        hasEnoughRoom = this.boarUser.itemCollection.powerups[orderInfo.id].numTotal + numToReturn <=
+                            this.config.numberConfig.maxEnhancers;
+
+                        if (isClaim) {
+                            numToReturn = Math.min(
+                                numToReturn,
+                                this.config.numberConfig.maxEnhancers -
+                                this.boarUser.itemCollection.powerups[orderInfo.id].numTotal
+                            );
+                        }
+                    }
+
+                    if (hasEnoughRoom || isClaim) {
+                        this.boarUser.itemCollection.powerups[orderInfo.id].numTotal += numToReturn;
+                        this.boarUser.itemCollection.powerups[orderInfo.id].highestTotal = Math.max(
+                            this.boarUser.itemCollection.powerups[orderInfo.id].numTotal,
+                            this.boarUser.itemCollection.powerups[orderInfo.id].highestTotal
+                        );
+                    }
+                } else {
+                    this.boarUser.stats.general.boarScore += numToReturn * orderInfo.data.price;
+                }
+
+                this.boarUser.updateUserData();
+            } catch (err: unknown) {
+                await LogDebug.handleError(err, this.compInter);
+            }
+        }, this.compInter.id + this.compInter.user.id);
+
+        return !hasEnoughRoom && !isClaim ? 0 : numToReturn;
     }
 
     private async canInstaModal(
@@ -339,88 +633,92 @@ export default class MarketSubcommand implements Subcommand {
                     let editionOrderIndex: number = -1;
 
                     await Queue.addQueue(async () => {
-                        const globalData = DataHandlers.getGlobalData();
-                        const newItemData = globalData.itemData[itemData.type][itemData.id];
+                        try {
+                            const globalData = DataHandlers.getGlobalData();
+                            const newItemData = globalData.itemData[itemData.type][itemData.id];
 
-                        let curPrice = 0;
+                            let curPrice = 0;
 
-                        if (this.curEdition === 0) {
-                            let numGrabbed = 0;
-                            let curIndex = 0;
-                            while (numGrabbed < this.modalData[0]) {
-                                if (curIndex >= newItemData.sellers.length) break;
+                            if (this.curEdition === 0) {
+                                let numGrabbed = 0;
+                                let curIndex = 0;
+                                while (numGrabbed < this.modalData[0]) {
+                                    if (curIndex >= newItemData.sellers.length) break;
 
-                                let numToAdd = 0;
-                                numToAdd = Math.min(
-                                    this.modalData[0] - numGrabbed,
-                                    newItemData.sellers[curIndex].num - newItemData.sellers[curIndex].filledAmount
-                                );
-                                curPrice += newItemData.sellers[curIndex].price * numToAdd;
+                                    let numToAdd = 0;
+                                    numToAdd = Math.min(
+                                        this.modalData[0] - numGrabbed,
+                                        newItemData.sellers[curIndex].num - newItemData.sellers[curIndex].filledAmount
+                                    );
+                                    curPrice += newItemData.sellers[curIndex].price * numToAdd;
 
-                                numGrabbed += numToAdd;
-                                orderFillAmounts.push(numToAdd);
-                                curIndex++;
+                                    numGrabbed += numToAdd;
+                                    orderFillAmounts.push(numToAdd);
+                                    curIndex++;
+                                }
+
+                                if (this.modalData[0] !== numGrabbed) {
+                                    await Replies.handleReply(
+                                        inter, 'Not enough orders of this item to complete this transaction!',
+                                        this.config.colorConfig.font, undefined, undefined, true
+                                    );
+
+                                    failedBuy = true;
+                                    return;
+                                }
+                            } else {
+                                for (const instaBuy of newItemData.sellers) {
+                                    const noEditionExists = instaBuy.num === instaBuy.filledAmount ||
+                                        instaBuy.listTime + nums.orderExpire < Date.now() ||
+                                        instaBuy.editions[0] !== this.curEdition;
+
+                                    editionOrderIndex++;
+
+                                    if (noEditionExists) continue;
+
+                                    curPrice = instaBuy.price;
+                                    break;
+                                }
+
+                                if (curPrice === 0) {
+                                    await Replies.handleReply(
+                                        inter, 'Not enough orders of this item edition to complete this transaction!',
+                                        this.config.colorConfig.error, undefined, undefined, true
+                                    );
+
+                                    failedBuy = true;
+                                    return;
+                                }
                             }
 
-                            if (this.modalData[0] !== numGrabbed) {
+                            if (this.modalData[1] < curPrice) {
                                 await Replies.handleReply(
-                                    inter, 'Not enough orders of this item to complete this transaction!',
-                                    this.config.colorConfig.font, undefined, undefined, true
-                                );
-
-                                failedBuy = true;
-                                return;
-                            }
-                        } else {
-                            for (const instaBuy of newItemData.sellers) {
-                                const noEditionExists = instaBuy.num === instaBuy.filledAmount ||
-                                    instaBuy.listTime + nums.orderExpire < Date.now() ||
-                                    instaBuy.editions[0] !== this.curEdition;
-
-                                editionOrderIndex++;
-
-                                if (noEditionExists) continue;
-
-                                curPrice = instaBuy.price;
-                                break;
-                            }
-
-                            if (curPrice === 0) {
-                                await Replies.handleReply(
-                                    inter, 'Not enough orders of this item edition to complete this transaction!',
+                                    inter, strConfig.marketUpdatedInstaBuy.replace('%@', curPrice.toLocaleString()),
                                     this.config.colorConfig.error, undefined, undefined, true
                                 );
 
+                                this.modalData[1] = curPrice;
+                                undoRed = false;
                                 failedBuy = true;
                                 return;
                             }
-                        }
 
-                        if (this.modalData[1] < curPrice) {
-                            await Replies.handleReply(
-                                inter, strConfig.marketUpdatedInstaBuy.replace('%@', curPrice.toLocaleString()),
-                                this.config.colorConfig.error, undefined, undefined, true
+                            for (let i = 0; i < orderFillAmounts.length; i++) {
+                                newItemData.sellers[i].filledAmount += orderFillAmounts[i];
+                            }
+
+                            if (editionOrderIndex >= 0) {
+                                newItemData.sellers[editionOrderIndex].filledAmount = 1;
+                            }
+
+                            fs.writeFileSync(this.config.pathConfig.globalDataFile, JSON.stringify(globalData));
+                            this.getPricingData();
+                            this.imageGen.updateInfo(
+                                this.pricingData, this.userBuyOrders, this.userSellOrders, this.config
                             );
-
-                            this.modalData[1] = curPrice;
-                            undoRed = false;
-                            failedBuy = true;
-                            return;
+                        } catch (err: unknown) {
+                            await LogDebug.handleError(err, inter);
                         }
-
-                        for (let i=0; i<orderFillAmounts.length; i++) {
-                            newItemData.sellers[i].filledAmount += orderFillAmounts[i];
-                        }
-
-                        if (editionOrderIndex >= 0) {
-                            newItemData.sellers[editionOrderIndex].filledAmount = 1;
-                        }
-
-                        fs.writeFileSync(this.config.pathConfig.globalDataFile, JSON.stringify(globalData));
-                        this.getPricingData();
-                        this.imageGen.updateInfo(
-                            this.pricingData, this.userBuyOrders, this.userSellOrders, this.config
-                        );
                     }, inter.id + 'global');
 
                     if (!failedBuy && itemData.type === 'boars') {
@@ -428,10 +726,12 @@ export default class MarketSubcommand implements Subcommand {
 
                         if (!this.boarUser.itemCollection.boars[itemData.id]) {
                             this.boarUser.itemCollection.boars[itemData.id] = new CollectedBoar;
+                            this.boarUser.itemCollection.boars[itemData.id].firstObtained = Date.now();
                         }
 
                         this.boarUser.itemCollection.boars[itemData.id].num += this.modalData[0];
                         this.boarUser.itemCollection.boars[itemData.id].lastObtained = Date.now();
+                        this.boarUser.stats.general.totalBoars += this.modalData[0];
                         this.boarUser.stats.general.lastBoar = itemData.id;
 
                         if (this.curEdition === 0) {
@@ -471,6 +771,10 @@ export default class MarketSubcommand implements Subcommand {
                         }
                     } else if (!failedBuy && itemData.type === 'powerups') {
                         this.boarUser.itemCollection.powerups[itemData.id].numTotal += this.modalData[0];
+                        this.boarUser.itemCollection.powerups[itemData.id].highestTotal = Math.max(
+                            this.boarUser.itemCollection.powerups[itemData.id].numTotal,
+                            this.boarUser.itemCollection.powerups[itemData.id].highestTotal
+                        );
                     }
 
                     if (!failedBuy) {
@@ -505,120 +809,125 @@ export default class MarketSubcommand implements Subcommand {
                     let editionOrderIndex: number = -1;
 
                     await Queue.addQueue(async () => {
-                        const globalData = DataHandlers.getGlobalData();
-                        const newItemData = globalData.itemData[itemData.type][itemData.id];
+                        try {
+                            const globalData = DataHandlers.getGlobalData();
+                            const newItemData = globalData.itemData[itemData.type][itemData.id];
 
-                        let curPrice = 0;
+                            let curPrice = 0;
 
-                        if (this.curEdition === 0) {
-                            let numGrabbed = 0;
-                            let curIndex = 0;
-                            while (numGrabbed < this.modalData[0]) {
-                                if (curIndex >= newItemData.buyers.length) break;
+                            if (this.curEdition === 0) {
+                                let numGrabbed = 0;
+                                let curIndex = 0;
+                                while (numGrabbed < this.modalData[0]) {
+                                    if (curIndex >= newItemData.buyers.length) break;
 
-                                let numToAdd = 0;
-                                numToAdd = Math.min(
-                                    this.modalData[0] - numGrabbed,
-                                    newItemData.buyers[curIndex].num - newItemData.buyers[curIndex].filledAmount
-                                );
-                                curPrice += newItemData.buyers[curIndex].price * numToAdd;
+                                    let numToAdd = 0;
+                                    numToAdd = Math.min(
+                                        this.modalData[0] - numGrabbed,
+                                        newItemData.buyers[curIndex].num - newItemData.buyers[curIndex].filledAmount
+                                    );
+                                    curPrice += newItemData.buyers[curIndex].price * numToAdd;
 
-                                numGrabbed += numToAdd;
-                                orderFillAmounts.push(numToAdd);
-                                curIndex++;
+                                    numGrabbed += numToAdd;
+                                    orderFillAmounts.push(numToAdd);
+                                    curIndex++;
+                                }
+
+                                if (this.modalData[0] !== numGrabbed) {
+                                    await Replies.handleReply(
+                                        inter, 'Not enough orders of this item to complete this transaction!',
+                                        this.config.colorConfig.font, undefined, undefined, true
+                                    );
+
+                                    failedSale = true;
+                                    return;
+                                }
+                            } else {
+                                for (const instaSell of newItemData.buyers) {
+                                    const noEditionExists = instaSell.num === instaSell.filledAmount ||
+                                        instaSell.listTime + nums.orderExpire < Date.now() ||
+                                        instaSell.editions[0] !== this.curEdition;
+
+                                    editionOrderIndex++;
+
+                                    if (noEditionExists) continue;
+
+                                    curPrice = instaSell.price;
+                                    break;
+                                }
+
+                                if (curPrice === 0) {
+                                    await Replies.handleReply(
+                                        inter, 'Not enough orders of this item edition to complete this transaction!',
+                                        this.config.colorConfig.error, undefined, undefined, true
+                                    );
+
+                                    failedSale = true;
+                                    return;
+                                }
                             }
 
-                            if (this.modalData[0] !== numGrabbed) {
+                            if (this.modalData[1] > curPrice) {
                                 await Replies.handleReply(
-                                    inter, 'Not enough orders of this item to complete this transaction!',
-                                    this.config.colorConfig.font, undefined, undefined, true
-                                );
-
-                                failedSale = true;
-                                return;
-                            }
-                        } else {
-                            for (const instaSell of newItemData.buyers) {
-                                const noEditionExists = instaSell.num === instaSell.filledAmount ||
-                                    instaSell.listTime + nums.orderExpire < Date.now() ||
-                                    instaSell.editions[0] !== this.curEdition;
-
-                                editionOrderIndex++;
-
-                                if (noEditionExists) continue;
-
-                                curPrice = instaSell.price;
-                                break;
-                            }
-
-                            if (curPrice === 0) {
-                                await Replies.handleReply(
-                                    inter, 'Not enough orders of this item edition to complete this transaction!',
+                                    inter, strConfig.marketUpdatedInstaSell.replace('%@', curPrice.toLocaleString()),
                                     this.config.colorConfig.error, undefined, undefined, true
                                 );
 
+                                this.modalData[1] = curPrice;
+                                undoRed = false;
                                 failedSale = true;
                                 return;
                             }
-                        }
 
-                        if (this.modalData[1] > curPrice) {
-                            await Replies.handleReply(
-                                inter, strConfig.marketUpdatedInstaSell.replace('%@', curPrice.toLocaleString()),
-                                this.config.colorConfig.error, undefined, undefined, true
+                            for (let i = 0; i < orderFillAmounts.length; i++) {
+                                const editionIndex = this.boarUser.itemCollection.boars[itemData.id].editions.length -
+                                    orderFillAmounts[i];
+                                const editionLength = this.boarUser.itemCollection.boars[itemData.id].editions.length;
+
+                                newItemData.buyers[i].editions = newItemData.buyers[i].editions.concat(
+                                    this.boarUser.itemCollection.boars[itemData.id].editions.splice(
+                                        editionIndex, editionLength
+                                    )
+                                ).sort((a, b) => a - b);
+
+                                newItemData.buyers[i].editionDates = newItemData.buyers[i].editionDates.concat(
+                                    this.boarUser.itemCollection.boars[itemData.id].editionDates.splice(
+                                        editionIndex, editionLength
+                                    )
+                                ).sort((a, b) => a - b);
+
+                                newItemData.buyers[i].filledAmount += orderFillAmounts[i];
+                            }
+
+                            if (editionOrderIndex >= 0) {
+                                const editionIndex = this.boarUser.itemCollection.boars[itemData.id].editions
+                                    .indexOf(this.curEdition);
+
+                                this.boarUser.itemCollection.boars[itemData.id].editions.splice(editionIndex, 1);
+
+                                newItemData.buyers[editionOrderIndex].editionDates =
+                                    newItemData.buyers[editionOrderIndex].editionDates.concat(
+                                        this.boarUser.itemCollection.boars[itemData.id].editionDates.splice(editionIndex, 1)
+                                    ).sort((a, b) => a - b);
+
+                                newItemData.buyers[editionOrderIndex].filledAmount = 1;
+
+                                this.curEdition = 0;
+                            }
+
+                            fs.writeFileSync(this.config.pathConfig.globalDataFile, JSON.stringify(globalData));
+                            this.getPricingData();
+                            this.imageGen.updateInfo(
+                                this.pricingData, this.userBuyOrders, this.userSellOrders, this.config
                             );
-
-                            this.modalData[1] = curPrice;
-                            undoRed = false;
-                            failedSale = true;
-                            return;
+                        } catch (err: unknown) {
+                            await LogDebug.handleError(err, inter);
                         }
-
-                        for (let i=0; i<orderFillAmounts.length; i++) {
-                            const editionIndex = this.boarUser.itemCollection.boars[itemData.id].editions.length -
-                                orderFillAmounts[i];
-                            const editionLength = this.boarUser.itemCollection.boars[itemData.id].editions.length;
-
-                            newItemData.buyers[i].editions = newItemData.buyers[i].editions.concat(
-                                this.boarUser.itemCollection.boars[itemData.id].editions.splice(
-                                    editionIndex, editionLength
-                                )
-                            ).sort((a,b) => a - b);
-
-                            newItemData.buyers[i].editionDates = newItemData.buyers[i].editionDates.concat(
-                                this.boarUser.itemCollection.boars[itemData.id].editionDates.splice(
-                                    editionIndex, editionLength
-                                )
-                            ).sort((a,b) => a - b);
-
-                            newItemData.buyers[i].filledAmount += orderFillAmounts[i];
-                        }
-
-                        if (editionOrderIndex >= 0) {
-                            const editionIndex = this.boarUser.itemCollection.boars[itemData.id].editions
-                                .indexOf(this.curEdition);
-
-                            this.boarUser.itemCollection.boars[itemData.id].editions.splice(editionIndex, 1);
-
-                            newItemData.buyers[editionOrderIndex].editionDates =
-                                newItemData.buyers[editionOrderIndex].editionDates.concat(
-                                    this.boarUser.itemCollection.boars[itemData.id].editionDates.splice(editionIndex, 1)
-                                ).sort((a,b) => a - b);
-
-                            newItemData.buyers[editionOrderIndex].filledAmount = 1;
-
-                            this.curEdition = 0;
-                        }
-
-                        fs.writeFileSync(this.config.pathConfig.globalDataFile, JSON.stringify(globalData));
-                        this.getPricingData();
-                        this.imageGen.updateInfo(
-                            this.pricingData, this.userBuyOrders, this.userSellOrders, this.config
-                        );
                     }, inter.id + 'global');
 
                     if (itemData.type === 'boars') {
                         this.boarUser.itemCollection.boars[itemData.id].num -= this.modalData[0];
+                        this.boarUser.stats.general.totalBoars -= this.modalData[0];
                     } else {
                         this.boarUser.itemCollection.powerups[itemData.id].numTotal -= this.modalData[0];
                     }
@@ -697,25 +1006,29 @@ export default class MarketSubcommand implements Subcommand {
                 showModal = false;
 
                 if (this.boarUser.stats.general.boarScore >= this.modalData[0] * this.modalData[1]) {
-                    await Queue.addQueue(() => {
-                        const globalData = DataHandlers.getGlobalData();
-                        const order: BuySellData = {
-                            userID: inter.user.id,
-                            num: this.modalData[0],
-                            price: this.modalData[1],
-                            editions: this.modalData[2] > 0 ? [this.modalData[2]] : [],
-                            editionDates: [],
-                            listTime: Date.now(),
-                            filledAmount: 0,
-                            claimedAmount: 0
-                        };
+                    await Queue.addQueue(async () => {
+                        try {
+                            const globalData = DataHandlers.getGlobalData();
+                            const order: BuySellData = {
+                                userID: inter.user.id,
+                                num: this.modalData[0],
+                                price: this.modalData[1],
+                                editions: this.modalData[2] > 0 ? [this.modalData[2]] : [],
+                                editionDates: [],
+                                listTime: Date.now(),
+                                filledAmount: 0,
+                                claimedAmount: 0
+                            };
 
-                        globalData.itemData[itemData.type][itemData.id].buyers.push(order);
-                        fs.writeFileSync(this.config.pathConfig.globalDataFile, JSON.stringify(globalData));
-                        this.getPricingData();
-                        this.imageGen.updateInfo(
-                            this.pricingData, this.userBuyOrders, this.userSellOrders, this.config
-                        );
+                            globalData.itemData[itemData.type][itemData.id].buyers.push(order);
+                            fs.writeFileSync(this.config.pathConfig.globalDataFile, JSON.stringify(globalData));
+                            this.getPricingData();
+                            this.imageGen.updateInfo(
+                                this.pricingData, this.userBuyOrders, this.userSellOrders, this.config
+                            );
+                        } catch (err: unknown) {
+                            await LogDebug.handleError(err, inter);
+                        }
                     }, inter.id + 'global');
 
                     this.boarUser.stats.general.boarScore -= this.modalData[0] * this.modalData[1];
@@ -751,39 +1064,44 @@ export default class MarketSubcommand implements Subcommand {
                             : this.boarUser.itemCollection.boars[itemData.id].num - this.modalData[0];
                     }
 
-                    await Queue.addQueue(() => {
-                        const globalData = DataHandlers.getGlobalData();
+                    await Queue.addQueue(async () => {
+                        try {
+                            const globalData = DataHandlers.getGlobalData();
 
-                        const editions = itemData.type === 'boars'
-                            ? this.boarUser.itemCollection.boars[itemData.id]
-                                .editions.splice(editionIndex, this.modalData[2] > 0 ? 1 : 100)
-                            : [];
-                        const editionDates = itemData.type === 'boars'
-                            ? this.boarUser.itemCollection.boars[itemData.id]
-                                .editionDates.splice(editionIndex, this.modalData[2] > 0 ? 1 : 100)
-                            : [];
+                            const editions = itemData.type === 'boars'
+                                ? this.boarUser.itemCollection.boars[itemData.id]
+                                    .editions.splice(editionIndex, this.modalData[2] > 0 ? 1 : 100)
+                                : [];
+                            const editionDates = itemData.type === 'boars'
+                                ? this.boarUser.itemCollection.boars[itemData.id]
+                                    .editionDates.splice(editionIndex, this.modalData[2] > 0 ? 1 : 100)
+                                : [];
 
-                        const order: BuySellData = {
-                            userID: inter.user.id,
-                            num: this.modalData[0],
-                            price: this.modalData[1],
-                            editions: editions,
-                            editionDates: editionDates,
-                            listTime: Date.now(),
-                            filledAmount: 0,
-                            claimedAmount: 0
-                        };
+                            const order: BuySellData = {
+                                userID: inter.user.id,
+                                num: this.modalData[0],
+                                price: this.modalData[1],
+                                editions: editions,
+                                editionDates: editionDates,
+                                listTime: Date.now(),
+                                filledAmount: 0,
+                                claimedAmount: 0
+                            };
 
-                        globalData.itemData[itemData.type][itemData.id].sellers.push(order);
-                        fs.writeFileSync(this.config.pathConfig.globalDataFile, JSON.stringify(globalData));
-                        this.getPricingData();
-                        this.imageGen.updateInfo(
-                            this.pricingData, this.userBuyOrders, this.userSellOrders, this.config
-                        );
+                            globalData.itemData[itemData.type][itemData.id].sellers.push(order);
+                            fs.writeFileSync(this.config.pathConfig.globalDataFile, JSON.stringify(globalData));
+                            this.getPricingData();
+                            this.imageGen.updateInfo(
+                                this.pricingData, this.userBuyOrders, this.userSellOrders, this.config
+                            );
+                        } catch (err: unknown) {
+                            await LogDebug.handleError(err, inter);
+                        }
                     }, inter.id + 'global');
 
                     if (itemData.type === 'boars') {
                         this.boarUser.itemCollection.boars[itemData.id].num -= this.modalData[0];
+                        this.boarUser.stats.general.totalBoars -= this.modalData[0];
                     } else {
                         this.boarUser.itemCollection.powerups[itemData.id].numTotal -= this.modalData[0];
                     }
@@ -818,6 +1136,119 @@ export default class MarketSubcommand implements Subcommand {
             await LogDebug.handleError(err, inter);
             return false;
         }
+    }
+
+    private async canUpdateModal(inter: MessageComponentInteraction): Promise<boolean> {
+        this.boarUser.refreshUserData();
+
+        let showModal = true;
+        let orderInfo: {data: BuySellData, id: string, type: string};
+        let isSell = false;
+
+        if (this.curPage < this.userBuyOrders.length) {
+            orderInfo = this.userBuyOrders[this.curPage];
+        } else {
+            isSell = true;
+            orderInfo = this.userSellOrders[this.curPage - this.userBuyOrders.length];
+        }
+
+        await Queue.addQueue(async () => {
+            try {
+                const globalData = DataHandlers.getGlobalData();
+
+                const buyOrders = globalData.itemData[orderInfo.type][orderInfo.id].buyers;
+                const sellOrders = globalData.itemData[orderInfo.type][orderInfo.id].sellers;
+
+                for (let i = 0; i < buyOrders.length && !isSell; i++) {
+                    const buyOrder = buyOrders[i];
+                    const isSameOrder = buyOrder.userID === orderInfo.data.userID &&
+                        buyOrder.listTime === orderInfo.data.listTime;
+                    const canUpdate = orderInfo.data.filledAmount === buyOrder.filledAmount;
+
+                    if (isSameOrder && canUpdate) {
+                        if ((this.optionalRows[3].components[1] as ButtonBuilder).data.style === 4) {
+                            await inter.deferUpdate();
+                            showModal = false;
+
+                            if (this.modalData[1] - buyOrder.price > this.boarUser.stats.general.boarScore) {
+                                await Replies.handleReply(
+                                    inter, 'You don\'t have enough boar bucks for this!',
+                                    this.config.colorConfig.error, undefined, undefined, true
+                                );
+                            } else {
+                                globalData.itemData[orderInfo.type][orderInfo.id].buyers[i].price = this.modalData[1];
+
+                                await Replies.handleReply(
+                                    inter, this.config.stringConfig.marketUpdateComplete,
+                                    this.config.colorConfig.green, undefined, undefined, true
+                                );
+                            }
+                        }
+
+                        break;
+                    } else if (isSameOrder) {
+                        await inter.deferUpdate();
+                        showModal = false;
+
+                        await Replies.handleReply(
+                            inter, 'You have items/bucks to claim! Claim them if you want to update the price!',
+                            this.config.colorConfig.error, undefined, undefined, true
+                        );
+
+                        break;
+                    }
+                }
+
+                for (let i = 0; i < sellOrders.length && isSell; i++) {
+                    const sellOrder = sellOrders[i];
+                    const isSameOrder = sellOrder.userID === orderInfo.data.userID &&
+                        sellOrder.listTime === orderInfo.data.listTime;
+                    const canUpdate = orderInfo.data.filledAmount === sellOrder.filledAmount;
+
+                    if (isSameOrder && canUpdate) {
+                        if ((this.optionalRows[3].components[1] as ButtonBuilder).data.style === 4) {
+                            await inter.deferUpdate();
+                            showModal = false;
+
+                            globalData.itemData[orderInfo.type][orderInfo.id].sellers[i].price = this.modalData[1];
+
+                            await Replies.handleReply(
+                                inter, this.config.stringConfig.marketUpdateComplete,
+                                this.config.colorConfig.green, undefined, undefined, true
+                            );
+                        }
+
+                        break;
+                    } else if (isSameOrder) {
+                        await inter.deferUpdate();
+                        showModal = false;
+
+                        await Replies.handleReply(
+                            inter, 'You have items/bucks to claim! Claim them if you want to update the price!',
+                            this.config.colorConfig.error, undefined, undefined, true
+                        );
+
+                        break;
+                    }
+                }
+
+                fs.writeFileSync(this.config.pathConfig.globalDataFile, JSON.stringify(globalData));
+                this.getPricingData();
+                this.imageGen.updateInfo(
+                    this.pricingData, this.userBuyOrders, this.userSellOrders, this.config
+                );
+            } catch (err: unknown) {
+                await LogDebug.handleError(err, this.compInter);
+            }
+        }, this.compInter.id + 'global');
+
+        this.undoRedButtons();
+
+        if (!showModal) {
+            this.showMarket();
+        }
+
+        return showModal;
     }
 
     private async handleEndCollect(reason: string) {
@@ -906,11 +1337,23 @@ export default class MarketSubcommand implements Subcommand {
         const isInstaSell = inter.customId.startsWith(marketRowConfig[1][0].components[1].customId);
         const isBuyOrder = inter.customId.startsWith(marketRowConfig[1][1].components[0].customId);
         const isSellOrder = inter.customId.startsWith(marketRowConfig[1][1].components[1].customId);
+        const isUpdate = inter.customId.startsWith(marketRowConfig[1][3].components[1].customId);
 
-        const itemData = this.config.itemConfigs[this.pricingData[this.curPage].type]
-            [this.pricingData[this.curPage].id];
-        const itemRarity = BoarUtils.findRarity(this.pricingData[this.curPage].id, this.config);
+        const itemType = !isUpdate
+            ? this.pricingData[this.curPage].type
+            : this.userBuyOrders.concat(this.userSellOrders)[this.curPage].type;
+        const itemID = !isUpdate
+            ? this.pricingData[this.curPage].id
+            : this.userBuyOrders.concat(this.userSellOrders)[this.curPage].id;
+        const itemData = this.config.itemConfigs[itemType][itemID];
+        const itemRarity = BoarUtils.findRarity(itemID, this.config);
         const isSpecial = itemRarity[1].name === 'Special' && itemRarity[0] !== 0;
+
+        let updateEdition = 0;
+
+        if (isUpdate && isSpecial) {
+            updateEdition = this.userBuyOrders.concat(this.userSellOrders)[this.curPage].data.editions[0];
+        }
 
         if ((isInstaBuy || isInstaSell) && !isSpecial) {
             modalNum = 1;
@@ -940,6 +1383,13 @@ export default class MarketSubcommand implements Subcommand {
                 : marketRowConfig[1][1].components[1].label) + ': ' + itemData.name;
         }
 
+        if (isUpdate) {
+            modalNum = 5;
+            modalTitle = modals[modalNum].title + itemData.name + (isSpecial
+                ? ' #' + updateEdition
+                : '')
+        }
+
         this.modalShowing = new ModalBuilder(modals[modalNum]);
         this.modalShowing.setCustomId(modals[modalNum].customId + '|' + inter.id);
         this.modalShowing.setTitle(modalTitle);
@@ -953,8 +1403,10 @@ export default class MarketSubcommand implements Subcommand {
             this.curModalListener = this.modalListenerInstaSpecial;
         } else if (modalNum === 3) {
             this.curModalListener = this.modalListenerOrder;
-        } else {
+        } else if (modalNum === 4) {
             this.curModalListener = this.modalListenerOrderSpecial;
+        } else {
+            this.curModalListener = this.modalListenerUpdate;
         }
 
         inter.client.on(Events.InteractionCreate, this.curModalListener);
@@ -1533,6 +1985,84 @@ export default class MarketSubcommand implements Subcommand {
         this.endModalListener(submittedModal.client);
     };
 
+    private modalListenerUpdate = async (submittedModal: Interaction): Promise<void> => {
+        try  {
+            if (!await this.beginModal(submittedModal)) return;
+            submittedModal = submittedModal as ModalSubmitInteraction;
+
+            const strConfig = this.config.stringConfig;
+
+            const submittedPrice: string = submittedModal.fields.getTextInputValue(
+                this.modalShowing.components[0].components[0].data.custom_id as string
+            ).toLowerCase().replace(/\s+/g, '');
+
+            LogDebug.sendDebug(
+                `${submittedModal.customId.split('|')[0]} input value: ` + submittedPrice, this.config, this.firstInter
+            );
+
+            let priceVal: number = 0;
+            if (!Number.isNaN(parseInt(submittedPrice))) {
+                priceVal = parseInt(submittedPrice);
+            }
+
+            if (priceVal <= 0) {
+                await Replies.handleReply(
+                    submittedModal, 'Invalid input! Input(s) must be greater than zero.',
+                    this.config.colorConfig.error, undefined, undefined, true
+                );
+
+                this.endModalListener(submittedModal.client);
+                return;
+            }
+
+            this.boarUser.refreshUserData();
+
+            this.getPricingData();
+            this.imageGen.updateInfo(this.pricingData, this.userBuyOrders, this.userSellOrders, this.config);
+
+            const itemData = this.userBuyOrders.concat(this.userSellOrders)[this.curPage];
+            const itemRarity = BoarUtils.findRarity(itemData.id, this.config);
+            const isSpecial = itemRarity[1].name === 'Special' && itemRarity[0] !== 0;
+            const oldPrice = itemData.data.price * (itemData.data.num - itemData.data.filledAmount);
+            const newPrice = priceVal * (itemData.data.num - itemData.data.filledAmount);
+            const isBuyOrder = this.curPage < this.userBuyOrders.length;
+            const responseStr = newPrice > oldPrice
+                ? strConfig.marketConfirmUpdateIncrease
+                : strConfig.marketConfirmUpdateDecrease;
+
+            if (isBuyOrder && newPrice - oldPrice > this.boarUser.stats.general.boarScore) {
+                await Replies.handleReply(
+                    submittedModal, 'You don\'t have enough boar bucks for this!',
+                    this.config.colorConfig.error, undefined, undefined, true
+                );
+
+                this.endModalListener(submittedModal.client);
+                return;
+            }
+
+            const itemName = this.config.itemConfigs[itemData.type][itemData.id].name + (isSpecial
+                ? ' #' + itemData.data.editions[0]
+                : '');
+
+            await Replies.handleReply(
+                submittedModal, responseStr.replace('%@', itemName).replace('%@', oldPrice.toLocaleString())
+                    .replace('%@', newPrice.toLocaleString()),
+                this.config.colorConfig.font, undefined, undefined, true
+            );
+
+            (this.optionalRows[3].components[1] as ButtonBuilder).setStyle(4);
+
+            this.modalData = [0, priceVal, 0];
+
+            await this.showMarket();
+        } catch (err: unknown) {
+            await LogDebug.handleError(err);
+            CollectorUtils.marketCollectors[submittedModal.user.id].stop(CollectorUtils.Reasons.Error);
+        }
+
+        this.endModalListener(submittedModal.client);
+    };
+
     private async beginModal(submittedModal: Interaction): Promise<boolean> {
         if (
             submittedModal.isMessageComponent() &&
@@ -1577,6 +2107,10 @@ export default class MarketSubcommand implements Subcommand {
         const nums = this.config.numberConfig;
 
         let rowsToAdd: ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>[] = [];
+
+        if (this.userBuyOrders.concat(this.userSellOrders).length === 0 && this.curView === View.UserOrders) {
+            this.curView = View.Overview;
+        }
 
         this.baseRows[0].components[0].setDisabled(this.curPage === 0);
         this.baseRows[0].components[1].setDisabled(
@@ -1705,8 +2239,8 @@ export default class MarketSubcommand implements Subcommand {
                 });
             }
 
-            for (let i=0; i<this.userSellOrders.length; i++) {
-                const sellOrder = this.userBuyOrders[i];
+            for (let i=this.userBuyOrders.length; i<this.userBuyOrders.length + this.userSellOrders.length; i++) {
+                const sellOrder = this.userSellOrders[i-this.userBuyOrders.length];
                 const rarity = BoarUtils.findRarity(sellOrder.id, this.config);
                 const isSpecial = rarity[1].name === 'Special' && rarity[0] !== 0;
 
@@ -1786,7 +2320,8 @@ export default class MarketSubcommand implements Subcommand {
             (this.optionalRows[0].components[0] as ButtonBuilder).data.style === 4 ||
             (this.optionalRows[0].components[1] as ButtonBuilder).data.style === 4 ||
             (this.optionalRows[1].components[0] as ButtonBuilder).data.style === 4 ||
-            (this.optionalRows[1].components[1] as ButtonBuilder).data.style === 4
+            (this.optionalRows[1].components[1] as ButtonBuilder).data.style === 4 ||
+            (this.optionalRows[3].components[1] as ButtonBuilder).data.style === 4
         ) {
             fixedRed = true;
         }
@@ -1795,6 +2330,7 @@ export default class MarketSubcommand implements Subcommand {
         (this.optionalRows[0].components[1] as ButtonBuilder).setStyle(3);
         (this.optionalRows[1].components[0] as ButtonBuilder).setStyle(3);
         (this.optionalRows[1].components[1] as ButtonBuilder).setStyle(3);
+        (this.optionalRows[3].components[1] as ButtonBuilder).setStyle(3);
 
         return fixedRed;
     }

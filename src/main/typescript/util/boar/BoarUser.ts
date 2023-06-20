@@ -258,68 +258,76 @@ export class BoarUser {
         const racerEditions: number[] = [];
 
         // Updates global edition data
-        await Queue.addQueue(() => {
-            LogDebug.sendDebug('Updating global edition info...', config, interaction);
-            const globalData: GlobalData = DataHandlers.getGlobalData();
+        await Queue.addQueue(async () => {
+            try {
+                LogDebug.sendDebug('Updating global edition info...', config, interaction);
+                const globalData: GlobalData = DataHandlers.getGlobalData();
 
-            // Sets edition numbers
-            for (const boarID of boarIDs) {
-                if (!globalData.itemData.boars[boarID]) {
-                    globalData.itemData.boars[boarID] = new ItemData;
-                    globalData.itemData.boars[boarID].curEdition = 0;
-                    let specialEdition: number = 0;
+                // Sets edition numbers
+                for (const boarID of boarIDs) {
+                    if (!globalData.itemData.boars[boarID]) {
+                        globalData.itemData.boars[boarID] = new ItemData;
+                        globalData.itemData.boars[boarID].curEdition = 0;
+                        let specialEdition: number = 0;
 
-                    if (!globalData.itemData.boars['racer']) {
-                        globalData.itemData.boars['racer'] = new ItemData;
-                        globalData.itemData.boars['racer'].curEdition = 0;
+                        if (!globalData.itemData.boars['racer']) {
+                            globalData.itemData.boars['racer'] = new ItemData;
+                            globalData.itemData.boars['racer'].curEdition = 0;
+                        }
+
+                        specialEdition = ++(globalData.itemData.boars['racer'].curEdition as number);
+
+                        racerEditions.push(specialEdition);
                     }
-
-                    specialEdition = ++(globalData.itemData.boars['racer'].curEdition as number);
-
-                    racerEditions.push(specialEdition);
+                    boarEditions.push(++(globalData.itemData.boars[boarID].curEdition as number));
                 }
-                boarEditions.push(++(globalData.itemData.boars[boarID].curEdition as number));
-            }
 
-            this.orderGlobalBoars(globalData, config);
-            fs.writeFileSync(pathConfig.globalDataFile, JSON.stringify(globalData));
-            LogDebug.sendDebug('Finished updating global edition info.', config, interaction);
+                this.orderGlobalBoars(globalData, config);
+                fs.writeFileSync(pathConfig.globalDataFile, JSON.stringify(globalData));
+                LogDebug.sendDebug('Finished updating global edition info.', config, interaction);
+            } catch (err: unknown) {
+                await LogDebug.handleError(err, interaction);
+            }
         }, interaction.id + 'global');
 
         await Queue.addQueue(async () => {
-            LogDebug.sendDebug('Updating user info...', config, interaction);
-            this.refreshUserData();
+            try {
+                LogDebug.sendDebug('Updating user info...', config, interaction);
+                this.refreshUserData();
 
-            for (let i=0; i<boarIDs.length; i++) {
-                const boarID: string = boarIDs[i];
+                for (let i=0; i<boarIDs.length; i++) {
+                    const boarID: string = boarIDs[i];
 
-                if (!this.itemCollection.boars[boarID]) {
-                    this.itemCollection.boars[boarID] = new CollectedBoar;
-                    this.itemCollection.boars[boarID].firstObtained = Date.now();
-                    this.stats.general.multiplier += rarityInfos[i].name === 'Special' ? 0 : 1;
-                    this.stats.general.highestMulti =
-                        Math.max(this.stats.general.multiplier, this.stats.general.highestMulti);
+                    if (!this.itemCollection.boars[boarID]) {
+                        this.itemCollection.boars[boarID] = new CollectedBoar;
+                        this.itemCollection.boars[boarID].firstObtained = Date.now();
+                        this.stats.general.multiplier += rarityInfos[i].name === 'Special' ? 0 : 1;
+                        this.stats.general.highestMulti =
+                            Math.max(this.stats.general.multiplier, this.stats.general.highestMulti);
+                    }
+
+                    this.itemCollection.boars[boarID].num++;
+                    this.itemCollection.boars[boarID].lastObtained = Date.now();
+
+                    if (boarEditions[i] <= numConfig.maxTrackedEditions || rarityInfos[i].name === 'Special') {
+                        this.itemCollection.boars[boarID].editions.push(boarEditions[i]);
+                        this.itemCollection.boars[boarID].editions.sort((a, b) => a-b);
+                        this.itemCollection.boars[boarID].editionDates.push(Date.now());
+                        this.itemCollection.boars[boarID].editionDates.sort((a, b) => a-b);
+                    }
+
+                    this.stats.general.lastBoar = boarID;
+                    this.stats.general.boarScore += scores[i] ? scores[i] : 0;
                 }
 
-                this.itemCollection.boars[boarID].num++;
-                this.itemCollection.boars[boarID].lastObtained = Date.now();
+                this.stats.general.totalBoars += boarIDs.length;
 
-                if (boarEditions[i] <= numConfig.maxTrackedEditions || rarityInfos[i].name === 'Special') {
-                    this.itemCollection.boars[boarID].editions.push(boarEditions[i]);
-                    this.itemCollection.boars[boarID].editions.sort((a, b) => a-b);
-                    this.itemCollection.boars[boarID].editionDates.push(Date.now());
-                    this.itemCollection.boars[boarID].editionDates.sort((a, b) => a-b);
-                }
-
-                this.stats.general.lastBoar = boarID;
-                this.stats.general.boarScore += scores[i] ? scores[i] : 0;
+                this.updateUserData();
+                await this.orderBoars(interaction, config);
+                LogDebug.sendDebug('Finished updating user info.', config, interaction);
+            } catch (err: unknown) {
+                await LogDebug.handleError(err, interaction);
             }
-
-            this.stats.general.totalBoars += boarIDs.length;
-
-            this.updateUserData();
-            await this.orderBoars(interaction, config);
-            LogDebug.sendDebug('Finished updating user info.', config, interaction);
         }, interaction.id + interaction.user.id);
 
         if (racerEditions.length > 0) {
@@ -348,7 +356,9 @@ export class BoarUser {
             }, interaction.id + interaction.user.id);
         }
 
-        await Queue.addQueue(() => DataHandlers.updateLeaderboardData(this), interaction.id + 'global');
+        await Queue.addQueue(async () => await DataHandlers.updateLeaderboardData(this, interaction, config),
+            interaction.id + 'global'
+        );
 
         return boarEditions;
     }

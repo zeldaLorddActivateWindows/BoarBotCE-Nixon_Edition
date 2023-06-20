@@ -14,7 +14,6 @@ import {GlobalData} from './global/GlobalData';
  *
  * Handles getting/removing/creating data to/from
  * data files.
- * MOVE USER DATA HANDLING HERE MAYBE [FIXFIXFIX]
  *
  * @license {@link http://www.apache.org/licenses/ Apache-2.0}
  * @copyright WeslayCodes 2023
@@ -33,51 +32,76 @@ export class DataHandlers {
         return JSON.parse(fs.readFileSync(globalFile, 'utf-8'));
     }
 
-    public static updateLeaderboardData(boarUser: BoarUser): void {
-        const globalData = DataHandlers.getGlobalData();
-        const userID = boarUser.user.id;
+    public static async updateLeaderboardData(
+        boarUser: BoarUser, inter: MessageComponentInteraction | ChatInputCommandInteraction, config: BotConfig
+    ): Promise<void> {
+        try {
+            const globalData = DataHandlers.getGlobalData();
+            const userID = boarUser.user.id;
 
-        globalData.leaderboardData.bucks[userID] = boarUser.stats.general.boarScore > 0
-            ? boarUser.stats.general.boarScore
-            : undefined;
-        globalData.leaderboardData.total[userID] = boarUser.stats.general.totalBoars > 0
-            ? boarUser.stats.general.totalBoars
-            : undefined;
-        globalData.leaderboardData.uniques[userID] = Object.keys(boarUser.itemCollection.boars).length > 0
-            ? Object.keys(boarUser.itemCollection.boars).length
-            : undefined;
-        globalData.leaderboardData.streak[userID] = boarUser.stats.general.boarStreak > 0
-            ? boarUser.stats.general.boarStreak
-            : undefined;
-        globalData.leaderboardData.attempts[userID] = boarUser.stats.powerups.attempts > 0
-            ? boarUser.stats.powerups.attempts
-            : undefined;
-        globalData.leaderboardData.topAttempts[userID] = boarUser.stats.powerups.oneAttempts > 0
-            ? boarUser.stats.powerups.oneAttempts
-            : undefined;
-        globalData.leaderboardData.giftsUsed[userID] = boarUser.itemCollection.powerups.gift.numUsed > 0
-            ? boarUser.itemCollection.powerups.gift.numUsed
-            : undefined;
-        globalData.leaderboardData.multiplier[userID] = boarUser.stats.general.multiplier > 1
-            ? boarUser.stats.general.multiplier
-            : undefined;
+            globalData.leaderboardData.bucks[userID] = boarUser.stats.general.boarScore > 0
+                ? boarUser.stats.general.boarScore
+                : undefined;
+            globalData.leaderboardData.total[userID] = boarUser.stats.general.totalBoars > 0
+                ? boarUser.stats.general.totalBoars
+                : undefined;
 
-        fs.writeFileSync(BoarBotApp.getBot().getConfig().pathConfig.globalDataFile, JSON.stringify(globalData));
+            let uniques: number = 0;
+
+            for (let i=0; i<Object.keys(boarUser.itemCollection.boars).length; i++) {
+                const boarInfo = config.itemConfigs.boars[Object.keys(boarUser.itemCollection.boars)[i]];
+
+                if (boarInfo.isSB) continue;
+
+                uniques++;
+            }
+
+            globalData.leaderboardData.uniques[userID] = uniques > 0
+                ? uniques
+                : undefined;
+
+            globalData.leaderboardData.uniquesSB[userID] = Object.keys(boarUser.itemCollection.boars).length > 0
+                ? Object.keys(boarUser.itemCollection.boars).length
+                : undefined;
+            globalData.leaderboardData.streak[userID] = boarUser.stats.general.boarStreak > 0
+                ? boarUser.stats.general.boarStreak
+                : undefined;
+            globalData.leaderboardData.attempts[userID] = boarUser.stats.powerups.attempts > 0
+                ? boarUser.stats.powerups.attempts
+                : undefined;
+            globalData.leaderboardData.topAttempts[userID] = boarUser.stats.powerups.oneAttempts > 0
+                ? boarUser.stats.powerups.oneAttempts
+                : undefined;
+            globalData.leaderboardData.giftsUsed[userID] = boarUser.itemCollection.powerups.gift.numUsed > 0
+                ? boarUser.itemCollection.powerups.gift.numUsed
+                : undefined;
+            globalData.leaderboardData.multiplier[userID] = boarUser.stats.general.multiplier > 1
+                ? boarUser.stats.general.multiplier
+                : undefined;
+
+            fs.writeFileSync(BoarBotApp.getBot().getConfig().pathConfig.globalDataFile, JSON.stringify(globalData));
+        } catch (err: unknown) {
+            await LogDebug.handleError(err, inter);
+        }
     }
 
-    public static removeLeaderboardUser(userID: string) {
-        const globalData = DataHandlers.getGlobalData();
+    public static async removeLeaderboardUser(userID: string) {
+        try {
+            const globalData = DataHandlers.getGlobalData();
 
-        globalData.leaderboardData.bucks[userID] = undefined;
-        globalData.leaderboardData.total[userID] = undefined;
-        globalData.leaderboardData.uniques[userID] = undefined;
-        globalData.leaderboardData.streak[userID] = undefined;
-        globalData.leaderboardData.attempts[userID] = undefined;
-        globalData.leaderboardData.topAttempts[userID] = undefined;
-        globalData.leaderboardData.giftsUsed[userID] = undefined;
-        globalData.leaderboardData.multiplier[userID] = undefined;
+            globalData.leaderboardData.bucks[userID] = undefined;
+            globalData.leaderboardData.total[userID] = undefined;
+            globalData.leaderboardData.uniques[userID] = undefined;
+            globalData.leaderboardData.streak[userID] = undefined;
+            globalData.leaderboardData.attempts[userID] = undefined;
+            globalData.leaderboardData.topAttempts[userID] = undefined;
+            globalData.leaderboardData.giftsUsed[userID] = undefined;
+            globalData.leaderboardData.multiplier[userID] = undefined;
 
-        fs.writeFileSync(BoarBotApp.getBot().getConfig().pathConfig.globalDataFile, JSON.stringify(globalData));
+            fs.writeFileSync(BoarBotApp.getBot().getConfig().pathConfig.globalDataFile, JSON.stringify(globalData));
+        } catch (err: unknown) {
+            await LogDebug.handleError(err);
+        }
     }
 
     /**

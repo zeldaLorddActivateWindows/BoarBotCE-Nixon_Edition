@@ -169,19 +169,21 @@ export class BoarGift {
                 break;
         }
 
-        await Queue.addQueue(() => {
-            this.giftedUser.refreshUserData();
-            (this.giftedUser.itemCollection.powerups.gift.numOpened as number)++;
-            this.giftedUser.updateUserData();
+        await Queue.addQueue(async () => {
+            try {
+                this.giftedUser.refreshUserData();
+                (this.giftedUser.itemCollection.powerups.gift.numOpened as number)++;
+                this.giftedUser.updateUserData();
+            } catch (err: unknown) {
+                await LogDebug.handleError(err, inter);
+            }
         }, inter.id + inter.user.id);
 
-        await Queue.addQueue(() =>
-            DataHandlers.updateLeaderboardData(this.boarUser),
+        await Queue.addQueue(async () => await DataHandlers.updateLeaderboardData(this.boarUser, inter, this.config),
             inter.id + this.boarUser.user.id + 'global'
         );
 
-        await Queue.addQueue(() =>
-            DataHandlers.updateLeaderboardData(this.giftedUser),
+        await Queue.addQueue(async () => await DataHandlers.updateLeaderboardData(this.giftedUser, inter, this.config),
             inter.id + this.giftedUser.user.id + 'global'
         );
     }
@@ -272,10 +274,14 @@ export class BoarGift {
 
         outcomeName = outcomeName.replace('%@', numBucks.toString());
 
-        await Queue.addQueue(() => {
-            this.giftedUser.refreshUserData();
-            this.giftedUser.stats.general.boarScore += numBucks;
-            this.giftedUser.updateUserData();
+        await Queue.addQueue(async () => {
+            try {
+                this.giftedUser.refreshUserData();
+                this.giftedUser.stats.general.boarScore += numBucks;
+                this.giftedUser.updateUserData();
+            } catch (err: unknown) {
+                await LogDebug.handleError(err, inter);
+            }
         }, inter.id + inter.user.id);
 
         await inter.editReply({
@@ -311,30 +317,34 @@ export class BoarGift {
         const outcomeConfig: OutcomeConfig = (this.config.itemConfigs.powerups.gift.outcomes as OutcomeConfig[])[2];
         const outcomeName: string = outcomeConfig.suboutcomes[suboutcome].name;
 
-        await Queue.addQueue(() => {
-            this.giftedUser.refreshUserData();
+        await Queue.addQueue(async () => {
+            try {
+                this.giftedUser.refreshUserData();
 
-            if (suboutcome === 0) {
-                this.giftedUser.itemCollection.powerups.multiBoost.numTotal += 15;
-                this.giftedUser.itemCollection.powerups.multiBoost.highestTotal = Math.max(
-                    this.giftedUser.itemCollection.powerups.multiBoost.numTotal,
-                    this.giftedUser.itemCollection.powerups.multiBoost.highestTotal
-                )
-            } else if (suboutcome === 1) {
-                this.giftedUser.itemCollection.powerups.extraChance.numTotal += 3;
-                this.giftedUser.itemCollection.powerups.extraChance.highestTotal = Math.max(
-                    this.giftedUser.itemCollection.powerups.extraChance.numTotal,
-                    this.giftedUser.itemCollection.powerups.extraChance.highestTotal
-                )
-            } else {
-                this.giftedUser.itemCollection.powerups.enhancer.numTotal += 3;
-                this.giftedUser.itemCollection.powerups.enhancer.highestTotal = Math.max(
-                    this.giftedUser.itemCollection.powerups.enhancer.numTotal,
-                    this.giftedUser.itemCollection.powerups.enhancer.highestTotal
-                )
+                if (suboutcome === 0) {
+                    this.giftedUser.itemCollection.powerups.multiBoost.numTotal += 15;
+                    this.giftedUser.itemCollection.powerups.multiBoost.highestTotal = Math.max(
+                        this.giftedUser.itemCollection.powerups.multiBoost.numTotal,
+                        this.giftedUser.itemCollection.powerups.multiBoost.highestTotal
+                    )
+                } else if (suboutcome === 1) {
+                    this.giftedUser.itemCollection.powerups.extraChance.numTotal += 3;
+                    this.giftedUser.itemCollection.powerups.extraChance.highestTotal = Math.max(
+                        this.giftedUser.itemCollection.powerups.extraChance.numTotal,
+                        this.giftedUser.itemCollection.powerups.extraChance.highestTotal
+                    )
+                } else {
+                    this.giftedUser.itemCollection.powerups.enhancer.numTotal += 3;
+                    this.giftedUser.itemCollection.powerups.enhancer.highestTotal = Math.max(
+                        this.giftedUser.itemCollection.powerups.enhancer.numTotal,
+                        this.giftedUser.itemCollection.powerups.enhancer.highestTotal
+                    )
+                }
+
+                this.giftedUser.updateUserData();
+            } catch (err: unknown) {
+                await LogDebug.handleError(err, inter);
             }
-
-            this.giftedUser.updateUserData();
         }, inter.id + inter.user.id);
 
         await inter.editReply({

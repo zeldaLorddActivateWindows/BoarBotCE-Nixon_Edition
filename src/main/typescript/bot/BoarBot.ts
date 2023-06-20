@@ -136,9 +136,13 @@ export class BoarBot implements Bot {
 
 		let timeUntilPow: number = 0;
 
-		await Queue.addQueue(() => {
-			const globalData = DataHandlers.getGlobalData();
-			timeUntilPow = globalData.nextPowerup;
+		await Queue.addQueue(async () => {
+			try {
+				const globalData = DataHandlers.getGlobalData();
+				timeUntilPow = globalData.nextPowerup;
+			} catch (err: unknown) {
+				await LogDebug.handleError(err);
+			}
 		}, 'start' + 'global');
 
 		new PowerupSpawner(timeUntilPow).startSpawning();

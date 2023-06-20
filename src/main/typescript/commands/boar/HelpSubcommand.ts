@@ -24,7 +24,7 @@ export default class HelpSubcommand implements Subcommand {
      * @param interaction - The interaction that called the subcommand
      */
     public async execute(interaction: ChatInputCommandInteraction): Promise<void> {
-        const guildData: GuildData | undefined = await InteractionUtils.handleStart(interaction, this.config, true);
+        const guildData: GuildData | undefined = await InteractionUtils.handleStart(interaction, this.config);
         if (!guildData) return;
 
         await interaction.deferReply({ ephemeral: true });

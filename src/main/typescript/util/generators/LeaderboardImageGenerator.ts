@@ -10,6 +10,7 @@ enum Board {
     Bucks = 'bucks',
     Total = 'total',
     Uniques = 'uniques',
+    UniquesSB = 'uniquesSB',
     Streak = 'streak',
     Attempts = 'attempts',
     TopAttempts = 'topAttempts',
@@ -80,20 +81,23 @@ export class LeaderboardImageGenerator {
             case (Board.Uniques):
                 leaderboardTypeStr = topChoices[2].name;
                 break;
-            case (Board.Streak):
+            case (Board.UniquesSB):
                 leaderboardTypeStr = topChoices[3].name;
                 break;
-            case (Board.Attempts):
+            case (Board.Streak):
                 leaderboardTypeStr = topChoices[4].name;
                 break;
-            case (Board.TopAttempts):
+            case (Board.Attempts):
                 leaderboardTypeStr = topChoices[5].name;
                 break;
-            case (Board.GiftsUsed):
+            case (Board.TopAttempts):
                 leaderboardTypeStr = topChoices[6].name;
                 break;
-            case (Board.Multiplier):
+            case (Board.GiftsUsed):
                 leaderboardTypeStr = topChoices[7].name;
+                break;
+            case (Board.Multiplier):
+                leaderboardTypeStr = topChoices[8].name;
                 break;
         }
 
@@ -139,7 +143,9 @@ export class LeaderboardImageGenerator {
             try {
                 username = (await BoarBotApp.getBot().getClient().users.fetch(userID)).username;
             } catch {
-                await Queue.addQueue(() => DataHandlers.removeLeaderboardUser(userID), userID + 'global');
+                await Queue.addQueue(async () => await DataHandlers.removeLeaderboardUser(userID),
+                    userID + 'global'
+                );
             }
 
             switch (position) {

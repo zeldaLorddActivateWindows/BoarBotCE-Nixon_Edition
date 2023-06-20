@@ -220,10 +220,14 @@ export default class CollectionSubcommand implements Subcommand {
                     break;
 
                 case collComponents.favorite.customId:
-                    await Queue.addQueue(() => {
-                        this.boarUser.refreshUserData();
-                        this.boarUser.stats.general.favoriteBoar = this.allBoars[this.curPage].id;
-                        this.boarUser.updateUserData();
+                    await Queue.addQueue(async () => {
+                        try {
+                            this.boarUser.refreshUserData();
+                            this.boarUser.stats.general.favoriteBoar = this.allBoars[this.curPage].id;
+                            this.boarUser.updateUserData();
+                        } catch (err: unknown) {
+                            await LogDebug.handleError(err, inter);
+                        }
                     }, inter.id + this.boarUser.user.id);
                     break;
 
@@ -244,11 +248,15 @@ export default class CollectionSubcommand implements Subcommand {
                     break;
 
                 case collComponents.gift.customId:
-                    await Queue.addQueue(() => {
-                        this.boarUser.refreshUserData();
-                        this.boarUser.itemCollection.powerups.gift.numTotal--;
-                        this.boarUser.itemCollection.powerups.gift.numUsed++;
-                        this.boarUser.updateUserData();
+                    await Queue.addQueue(async () => {
+                        try {
+                            this.boarUser.refreshUserData();
+                            this.boarUser.itemCollection.powerups.gift.numTotal--;
+                            this.boarUser.itemCollection.powerups.gift.numUsed++;
+                            this.boarUser.updateUserData();
+                        } catch (err: unknown) {
+                            await LogDebug.handleError(err, inter);
+                        }
                     }, inter.id + this.boarUser.user.id);
                     await new BoarGift(this.boarUser, this.collectionImage, this.config).sendMessage(inter);
                     break;
@@ -310,17 +318,21 @@ export default class CollectionSubcommand implements Subcommand {
 
         LogDebug.sendDebug(`Enhanced boar to '${enhancedBoar}'`, this.config, this.firstInter);
 
-        await Queue.addQueue(() => {
-            const enhancersUsed = this.allBoars[this.curPage].rarity[1].enhancersNeeded;
-            this.boarUser.refreshUserData();
-            this.boarUser.itemCollection.boars[this.allBoars[this.curPage].id].num--;
-            this.boarUser.itemCollection.boars[this.allBoars[this.curPage].id].editions.pop();
-            this.boarUser.itemCollection.boars[this.allBoars[this.curPage].id].editionDates.pop();
-            this.boarUser.stats.general.boarScore -= enhancersUsed * 5;
-            this.boarUser.itemCollection.powerups.enhancer.numTotal -= enhancersUsed;
-            (this.boarUser.itemCollection.powerups.enhancer.raritiesUsed as number[])
-                [this.allBoars[this.curPage].rarity[0]-1]++;
-            this.boarUser.updateUserData();
+        await Queue.addQueue(async () => {
+            try {
+                const enhancersUsed = this.allBoars[this.curPage].rarity[1].enhancersNeeded;
+                this.boarUser.refreshUserData();
+                this.boarUser.itemCollection.boars[this.allBoars[this.curPage].id].num--;
+                this.boarUser.itemCollection.boars[this.allBoars[this.curPage].id].editions.pop();
+                this.boarUser.itemCollection.boars[this.allBoars[this.curPage].id].editionDates.pop();
+                this.boarUser.stats.general.boarScore -= enhancersUsed * 5;
+                this.boarUser.itemCollection.powerups.enhancer.numTotal -= enhancersUsed;
+                (this.boarUser.itemCollection.powerups.enhancer.raritiesUsed as number[])
+                    [this.allBoars[this.curPage].rarity[0]-1]++;
+                this.boarUser.updateUserData();
+            } catch (err: unknown) {
+                await LogDebug.handleError(err, this.compInter);
+            }
         }, this.compInter.id + this.compInter.user.id);
 
         const editions: number[] = await this.boarUser.addBoars([enhancedBoar], this.firstInter, this.config);
@@ -496,7 +508,8 @@ export default class CollectionSubcommand implements Subcommand {
                 lastObtained: boarInfo.lastObtained,
                 rarity: rarity,
                 color: this.config.colorConfig['rarity' + rarity[0]],
-                description: boarDetails.description
+                description: boarDetails.description,
+                isSB: boarDetails.isSB
             });
 
             this.allBoarsTree = this.allBoarsTree.insert(

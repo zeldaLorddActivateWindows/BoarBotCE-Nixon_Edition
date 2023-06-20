@@ -29,6 +29,7 @@ enum Board {
     Bucks = 'bucks',
     Total = 'total',
     Uniques = 'uniques',
+    UniquesSB = 'uniquesSB',
     Streak = 'streak',
     Attempts = 'attempts',
     TopAttempts = 'topAttempts',

@@ -40,13 +40,11 @@ export class Replies {
      * @param config - Used to get the string to reply with
      * @param interaction - Interaction to reply to
      * @param guildData - Used to get the channels that can be used
-     * @param includeTrade - Whether to include trade channel in usable channels
      */
     public static async wrongChannelReply(
         interaction: ChatInputCommandInteraction,
         guildData: GuildData | undefined,
-        config: BotConfig,
-        includeTrade: boolean = false
+        config: BotConfig
     ): Promise<void> {
         LogDebug.sendDebug('Used in the wrong channel', config, interaction);
         await Replies.handleReply(interaction, config.stringConfig.wrongChannel, config.colorConfig.error);

@@ -46,7 +46,6 @@ export default class SetupSubcommand implements Subcommand {
     private guildData: GuildData = {} as GuildData;
     private userResponses = {
         isSBServer: false,
-        tradeChannelId: '',
         boarChannels: ['', '', '']
     };
     private timerVars = {
@@ -125,28 +124,22 @@ export default class SetupSubcommand implements Subcommand {
 
             const setupRowConfig: RowConfig[][] = this.config.commandConfigs.boarManage.setup.componentFields;
             const setupComponents = {
-                tradeSelect: setupRowConfig[0][0].components[0],
-                refreshTrade: setupRowConfig[0][1].components[0],
-                findChannel: setupRowConfig[0][1].components[1],
-                tradeInfo: setupRowConfig[0][1].components[2],
-                boarSelect1: setupRowConfig[1][0].components[0],
-                boarSelect2: setupRowConfig[1][1].components[0],
-                boarSelect3: setupRowConfig[1][2].components[0],
-                refreshBoar: setupRowConfig[1][3].components[0],
-                boarInfo: setupRowConfig[1][3].components[2],
-                sbYes: setupRowConfig[2][0].components[0],
-                sbNo: setupRowConfig[2][0].components[1],
-                sbInfo: setupRowConfig[2][0].components[2],
-                cancel: setupRowConfig[3][0].components[0],
-                restart: setupRowConfig[3][0].components[1],
-                next: setupRowConfig[3][0].components[2]
+                boarSelect1: setupRowConfig[0][0].components[0],
+                boarSelect2: setupRowConfig[0][1].components[0],
+                boarSelect3: setupRowConfig[0][2].components[0],
+                refreshBoar: setupRowConfig[0][3].components[0],
+                findChannel: setupRowConfig[0][3].components[1],
+                boarInfo: setupRowConfig[0][3].components[2],
+                sbYes: setupRowConfig[1][0].components[0],
+                sbNo: setupRowConfig[1][0].components[1],
+                sbInfo: setupRowConfig[1][0].components[2],
+                cancel: setupRowConfig[2][0].components[0],
+                restart: setupRowConfig[2][0].components[1],
+                next: setupRowConfig[2][0].components[2]
             };
 
             // User wants to input a channel via ID
-            if (
-                inter.customId.startsWith(setupComponents.findChannel.customId) &&
-                (this.curField === 1 || this.curField === 2)
-            ) {
+            if (inter.customId.startsWith(setupComponents.findChannel.customId)) {
                 await this.modalHandle(inter);
                 clearInterval(this.timerVars.updateTime);
                 return;
@@ -157,7 +150,7 @@ export default class SetupSubcommand implements Subcommand {
             switch (inter.customId.split('|')[0]) {
                 // User wants to finish or go to next field
                 case setupComponents.next.customId:
-                    if (this.curField === 3) {
+                    if (this.curField === 2) {
                         CollectorUtils.setupCollectors[inter.user.id].stop(CollectorUtils.Reasons.Finished);
                         break;
                     }
@@ -170,11 +163,6 @@ export default class SetupSubcommand implements Subcommand {
                     CollectorUtils.setupCollectors[inter.user.id].stop(CollectorUtils.Reasons.Cancelled);
                     break;
 
-                // User selects the trade channel
-                case setupComponents.tradeSelect.customId:
-                    await this.doTradeSelect();
-                    break;
-
                 // User selects a boar channel
                 case setupComponents.boarSelect1.customId:
                 case setupComponents.boarSelect2.customId:
@@ -182,8 +170,7 @@ export default class SetupSubcommand implements Subcommand {
                     await this.doBoarSelect();
                     break;
 
-                // User wants to refresh a trade menu or restart the setup process
-                case setupComponents.refreshTrade.customId:
+                // User wants to refresh a channel selection field or restart the setup process
                 case setupComponents.refreshBoar.customId:
                 case setupComponents.restart.customId:
                     await this.doRefreshRestart(setupComponents);
@@ -193,13 +180,6 @@ export default class SetupSubcommand implements Subcommand {
                 case setupComponents.sbYes.customId:
                 case setupComponents.sbNo.customId:
                     await this.doSb(setupComponents);
-                    break;
-
-                // User wants more information on trade channel
-                case setupComponents.tradeInfo.customId:
-                    await Replies.handleReply(
-                        inter, this.config.stringConfig.setupInfoResponse1, undefined, undefined, undefined, true
-                    );
                     break;
 
                 // User wants more information on boar channels
@@ -231,34 +211,12 @@ export default class SetupSubcommand implements Subcommand {
      */
     private async doNext(): Promise<void> {
         const nextButton: ButtonBuilder = this.staticRows[0].components[2] as ButtonBuilder;
-        nextButton.setDisabled(true);
 
-        if (this.curField === 1) {
-            await this.setupFields[1].editReply(this.compInter);
-        } else if (this.curField === 2) {
-            nextButton.setStyle(ButtonStyle.Success);
-            await this.setupFields[2].editReply(this.compInter);
-        }
+        nextButton.setDisabled(true);
+        nextButton.setStyle(ButtonStyle.Success);
+        await this.setupFields[1].editReply(this.compInter);
 
         this.curField++;
-    }
-
-    /**
-     * Handles when the user selects a trade channel
-     *
-     * @private
-     */
-    private async doTradeSelect(): Promise<void> {
-        const selectInter: StringSelectMenuInteraction = this.compInter as StringSelectMenuInteraction;
-        this.userResponses.tradeChannelId = selectInter.values[0];
-
-        // Gets the label of the chosen option
-        const placeholder: string = selectInter.component.options.filter(option =>
-            option.value === selectInter.values[0]
-        )[0].label;
-
-        // Refreshes all select menu options, changes placeholder, and tells user field is done
-        await this.updateSelectField(placeholder);
     }
 
     /**
@@ -296,10 +254,6 @@ export default class SetupSubcommand implements Subcommand {
         const nextButton: ButtonBuilder = this.staticRows[0].components[2] as ButtonBuilder;
 
         if (isRestart || this.curField === 1) {
-            this.userResponses.tradeChannelId = '';
-        }
-
-        if (isRestart || this.curField === 2) {
             this.userResponses.boarChannels = ['','',''];
         }
 
@@ -334,13 +288,13 @@ export default class SetupSubcommand implements Subcommand {
         const strConfig: StringConfig = this.config.stringConfig;
         this.userResponses.isSBServer = this.compInter.customId.startsWith(setupComponents.sbYes.customId);
 
-        this.setupFields[2].content = strConfig.setupFinished3 + (this.userResponses.isSBServer
+        this.setupFields[1].content = strConfig.setupFinished3 + (this.userResponses.isSBServer
             ? setupComponents.sbYes.label
             : setupComponents.sbNo.label);
 
         this.staticRows[0].components[2].setDisabled(false);
 
-        await this.setupFields[2].editReply(this.compInter);
+        await this.setupFields[1].editReply(this.compInter);
     }
 
     /**
@@ -377,7 +331,6 @@ export default class SetupSubcommand implements Subcommand {
                     this.guildData = {
                         fullySetup: true,
                         isSBServer: this.userResponses.isSBServer,
-                        tradeChannel: this.userResponses.tradeChannelId,
                         channels: this.userResponses.boarChannels.filter((ch) => ch !== '')
                     };
 
@@ -518,8 +471,7 @@ export default class SetupSubcommand implements Subcommand {
             );
             const submittedChannel: GuildBasedChannel | undefined = submittedModal.guild.channels.cache
                 .get(submittedChannelID);
-            const notAlreadyChosen: boolean = !this.userResponses.boarChannels.includes(submittedChannelID) &&
-                this.userResponses.tradeChannelId !== submittedChannelID;
+            const notAlreadyChosen: boolean = !this.userResponses.boarChannels.includes(submittedChannelID);
 
             let submittedChannelName: string;
             let submittedChannelParentName: string = strConfig.noParentChannel;
@@ -549,27 +501,21 @@ export default class SetupSubcommand implements Subcommand {
                 .replace('%@', submittedChannelParentName)
                 .substring(0, 100);
 
-            if (this.curField === 1) {
-                this.userResponses.tradeChannelId = submittedChannelID;
-            }
-
             // Last select menu index by default
             let selectIndex: number = 2;
 
-            if (this.curField === 2) {
-                // Gets next select menu that can be changed, if all full, change last one
-                for (let i=0; i<2; i++) {
-                    const selectMenu: StringSelectMenuBuilder =
-                        this.setupFields[1].components[i].components[0] as StringSelectMenuBuilder;
+            // Gets next select menu that can be changed, if all full, change last one
+            for (let i=0; i<2; i++) {
+                const selectMenu: StringSelectMenuBuilder =
+                    this.setupFields[0].components[i].components[0] as StringSelectMenuBuilder;
 
-                    if (selectMenu.data.placeholder === strConfig.defaultSelectPlaceholder) {
-                        selectIndex = i;
-                        break;
-                    }
+                if (selectMenu.data.placeholder === strConfig.defaultSelectPlaceholder) {
+                    selectIndex = i;
+                    break;
                 }
-
-                this.userResponses.boarChannels[selectIndex] = submittedChannelID;
             }
+
+            this.userResponses.boarChannels[selectIndex] = submittedChannelID;
 
             await this.updateSelectField(
                 placeholder,
@@ -605,63 +551,40 @@ export default class SetupSubcommand implements Subcommand {
         const strConfig: StringConfig = this.config.stringConfig;
         const setupRowConfigs: RowConfig[][] = this.config.commandConfigs.boarManage.setup.componentFields;
         const setupComponents = {
-            tradeRefresh: setupRowConfigs[0][1].components[0],
-            boarRefresh: setupRowConfigs[1][3].components[0],
-            restart: setupRowConfigs[3][0].components[1]
+            boarRefresh: setupRowConfigs[0][3].components[0],
+            restart: setupRowConfigs[2][0].components[1]
         };
 
         // Components that need to be changed
-        const fieldOneSelectMenu: StringSelectMenuBuilder =
-            this.setupFields[0].components[0].components[0] as StringSelectMenuBuilder;
-        const fieldTwoSelectMenus: ActionRowBuilder<StringSelectMenuBuilder>[] =
-            this.setupFields[1].components.slice(0,3) as ActionRowBuilder<StringSelectMenuBuilder>[];
+        const fieldOneSelectMenus: ActionRowBuilder<StringSelectMenuBuilder>[] =
+            this.setupFields[0].components.slice(0,3) as ActionRowBuilder<StringSelectMenuBuilder>[];
         const nextButton: ButtonBuilder =
             this.staticRows[0].components[2] as ButtonBuilder;
 
         // Information about the state of the interaction
-        const chosenChannels: string[] =
-            this.userResponses.boarChannels.concat(this.userResponses.tradeChannelId);
-        const isRefresh: boolean = this.compInter.customId.startsWith(setupComponents.tradeRefresh.customId) ||
-            this.compInter.customId.startsWith(setupComponents.boarRefresh.customId) ||
+        const chosenChannels: string[] = this.userResponses.boarChannels;
+        const isRefresh: boolean = this.compInter.customId.startsWith(setupComponents.boarRefresh.customId) ||
             this.compInter.customId.startsWith(setupComponents.restart.customId);
 
         // Disables next button on refresh as it empties all select menus
         nextButton.setDisabled(isRefresh);
 
-        // Change trade select menu even if boar channels are changed since the user can only go back
-        // on restart, meaning changes won't be visible
-        fieldOneSelectMenu
-            .setOptions(...this.getTextChannels(this.compInter, chosenChannels))
-            .setPlaceholder(placeholder)
-            .setDisabled(this.getTextChannels(this.compInter, chosenChannels)[0].label === strConfig.emptySelect);
+        // Update boar channel select menus
+        for (const row of fieldOneSelectMenus) {
+            const fieldOneSelectMenu: StringSelectMenuBuilder = row.components[0] as StringSelectMenuBuilder;
 
-        // Edit trade field content based on if it's a refresh or not
-        if (!isRefresh && this.curField === 1) {
-            this.setupFields[0].content = strConfig.setupFinished1 +
-                FormatStrings.toBasicChannel(this.userResponses.tradeChannelId);
-            await this.setupFields[0].editReply(this.compInter);
-        } else if (isRefresh && this.curField === 1) {
-            this.setupFields[0].content = strConfig.setupUnfinished1;
-            await this.setupFields[0].editReply(this.compInter);
-        }
-
-        // Update boar channel select menus no matter what as changes from trade field must register in
-        // boar channel field
-        for (const row of fieldTwoSelectMenus) {
-            const fieldTwoSelectMenu: StringSelectMenuBuilder = row.components[0] as StringSelectMenuBuilder;
-
-            fieldTwoSelectMenu
+            fieldOneSelectMenu
                 .setOptions(...this.getTextChannels(this.compInter, chosenChannels))
                 .setDisabled(this.getTextChannels(this.compInter, chosenChannels)[0].label === strConfig.emptySelect);
 
             if (isRefresh)
-                fieldTwoSelectMenu.setPlaceholder(placeholder);
+                fieldOneSelectMenu.setPlaceholder(placeholder);
         }
 
         // Edit boar channels field content based on if it's a refresh or not
-        if (!isRefresh && this.curField === 2) {
+        if (!isRefresh) {
             const selectMenu: StringSelectMenuBuilder =
-                this.setupFields[1].components[selectIndex].components[0] as StringSelectMenuBuilder;
+                this.setupFields[0].components[selectIndex].components[0] as StringSelectMenuBuilder;
 
             let channelsString: string = '';
 
@@ -671,12 +594,12 @@ export default class SetupSubcommand implements Subcommand {
             }
 
             selectMenu.setPlaceholder(placeholder);
-            this.setupFields[1].content = strConfig.setupFinished2 + channelsString;
+            this.setupFields[0].content = strConfig.setupFinished2 + channelsString;
 
-            await this.setupFields[1].editReply(this.compInter);
-        } else if (isRefresh && this.curField === 2) {
-            this.setupFields[1].content = strConfig.setupUnfinished2;
-            await this.setupFields[1].editReply(this.compInter);
+            await this.setupFields[0].editReply(this.compInter);
+        } else {
+            this.setupFields[0].content = strConfig.setupUnfinished2;
+            await this.setupFields[0].editReply(this.compInter);
         }
     }
 
@@ -686,7 +609,7 @@ export default class SetupSubcommand implements Subcommand {
      * @private
      */
     private getStaticRows(): ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>[] {
-        const staticRowsConfig: RowConfig[] = this.config.commandConfigs.boarManage.setup.componentFields[3];
+        const staticRowsConfig: RowConfig[] = this.config.commandConfigs.boarManage.setup.componentFields[2];
         let staticRows: ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>[] =
             ComponentUtils.makeRows(staticRowsConfig);
 
@@ -723,9 +646,8 @@ export default class SetupSubcommand implements Subcommand {
         }
 
         return [
-            new FormField(strConfig.setupUnfinished1, allFields[0]),
-            new FormField(strConfig.setupUnfinished2, allFields[1]),
-            new FormField(strConfig.setupUnfinished3, allFields[2])
+            new FormField(strConfig.setupUnfinished2, allFields[0]),
+            new FormField(strConfig.setupUnfinished3, allFields[1])
         ];
     }
 }

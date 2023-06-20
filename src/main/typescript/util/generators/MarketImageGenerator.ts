@@ -114,8 +114,20 @@ export class MarketImageGenerator {
                 sellStartPos[1] + Math.floor(i / cols) * incY
             ];
 
-            const buyVal = item.instaBuys.length > 0 ? item.instaBuys[0].price.toLocaleString() : 'N/A';
-            const sellVal = item.instaSells.length > 0 ? item.instaSells[0].price.toLocaleString() : 'N/A';
+            let buyVal = 'N/A';
+            let sellVal = 'N/A';
+
+            for (const instaBuy of item.instaBuys) {
+                if (instaBuy.num === instaBuy.filledAmount || instaBuy.listTime + nums.orderExpire < Date.now())
+                    continue;
+                buyVal = instaBuy.price.toLocaleString();
+            }
+
+            for (const instaSell of item.instaSells) {
+                if (instaSell.num === instaSell.filledAmount || instaSell.listTime + nums.orderExpire < Date.now())
+                    continue;
+                sellVal = instaSell.price.toLocaleString();
+            }
 
             CanvasUtils.drawText(
                 ctx, 'B: %@' + buyVal, buyPos, font, 'center', colorConfig.font, 420, false,
@@ -268,19 +280,28 @@ export class MarketImageGenerator {
         const colorConfig = this.config.colorConfig;
 
         let orderInfo: {data: BuySellData, id: string, type: string};
-        let claimStr: string;
+        let claimText: string = 'None';
+        let coloredClaimText: string = '';
 
         if (page < this.userBuyOrders.length) {
             orderInfo = this.userBuyOrders[page];
-            claimStr = orderInfo.data.claimedAmount < orderInfo.data.filledAmount
-                ? orderInfo.data.filledAmount - orderInfo.data.claimedAmount + ' ' +
-                this.config.itemConfigs[orderInfo.type][orderInfo.id].pluralName
-                : 'None';
+            const numToClaim = orderInfo.data.filledAmount - orderInfo.data.claimedAmount;
+
+            if (orderInfo.data.claimedAmount < orderInfo.data.filledAmount && numToClaim === 1) {
+                claimText = numToClaim.toLocaleString() + ' %@';
+                coloredClaimText = this.config.itemConfigs[orderInfo.type][orderInfo.id].name;
+            } else if (orderInfo.data.claimedAmount < orderInfo.data.filledAmount) {
+                claimText = numToClaim.toLocaleString() + ' %@';
+                coloredClaimText = this.config.itemConfigs[orderInfo.type][orderInfo.id].pluralName;
+            }
         } else {
             orderInfo = this.userSellOrders[page - this.userBuyOrders.length];
-            claimStr = orderInfo.data.claimedAmount < orderInfo.data.filledAmount
-                ? '$' + (orderInfo.data.filledAmount - orderInfo.data.claimedAmount) * orderInfo.data.price
-                : 'None';
+            const numToClaim = orderInfo.data.filledAmount - orderInfo.data.claimedAmount;
+
+            if (orderInfo.data.claimedAmount < orderInfo.data.filledAmount) {
+                claimText = '%@ ' + (numToClaim * orderInfo.data.price).toLocaleString();
+                coloredClaimText = '$';
+            }
         }
 
         let rarityColor = colorConfig.powerup;
@@ -333,7 +354,10 @@ export class MarketImageGenerator {
         );
 
         CanvasUtils.drawText(ctx, 'Items/Bucks to Claim', [1348, 971], mediumFont, 'center', colorConfig.font);
-        CanvasUtils.drawText(ctx, claimStr, [1348, 1042], smallMediumFont, 'center', colorConfig.font);
+        CanvasUtils.drawText(
+            ctx, claimText, [1348, 1026], smallMediumFont, 'center', colorConfig.font, 620, false,
+            coloredClaimText, coloredClaimText === '$' ? colorConfig.bucks : rarityColor
+        );
 
         return new AttachmentBuilder(canvas.toBuffer(), { name: `${strConfig.imageName}.png` });
     }

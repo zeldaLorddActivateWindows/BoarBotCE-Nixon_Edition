@@ -138,6 +138,7 @@
         "collGiftDetails": " has sent out a %@! These gifts include boars, boar bucks, other powerups, and exclusive items. Be the first to click \"Claim\" to claim it!",
         "collEditionTitle": "__Your editions for %@__",
         "collEditionLine": "**Edition #%@:** %@\n",
+        "collDescriptionSB": " (Skyblock Boar)",
         "giftFail": "BoarBot is missing permissions needed to send gifts!",
         "enhanceGotten": "You received %@ from your enhancement!",
         "powRightFull": "%@ It took you %@ms to guess correctly! Wait for the powerup to end to see your placement.",
@@ -166,7 +167,10 @@
         "marketInstaComplete": "Transaction complete! All boar bucks/items have been received.",
         "marketConfirmBuyOrder": "Are you sure? You're setting up a buy order for %@, bringing the total potential cost to $%@. Click 'Buy Order' again to confirm your order.",
         "marketConfirmSellOrder": "Are you sure? You're setting up a sell offer for %@, bringing the total potential return to $%@. Click 'Sell Offer' again to confirm your offer.",
-        "marketOrderComplete": "Order/Offer placed! To see the status of your order, click 'Orders'. If it's not filled within a week, it will expire and you'll have to .",
+        "marketOrderComplete": "Order/Offer placed! To see the status of your order, click 'Orders'.",
+        "marketConfirmUpdateIncrease": "Are you sure? Your order/offer for %@ will increase in price from $%@ to $%@.",
+        "marketConfirmUpdateDecrease": "Are you sure? Your order/offer for %@ will decrease in price from $%@ to $%@.",
+        "marketUpdateComplete": "Successfully updated your order/offer!",
         "noParentChannel": "NO CATEGORY",
         "notValidChannel": "This channel isn't valid! Try a different one! The channel should be a text channel, be not already chosen, and exists in this server.",
         "defaultSelectPlaceholder": "UNSELECTED",
@@ -363,7 +367,7 @@
         "embedMaxWidth": 1500,
         "embedMinHeight": 204,
         "embedTextPadding": 50,
-        "powInterval": 7200000,
+        "powInterval": 1800000,
         "powDuration": 30000,
         "collectorIdle": 120000,
         "emojiRows": 4,
@@ -583,6 +587,10 @@
                             {
                                 "name": "Unique Boars",
                                 "value": "uniques"
+                            },
+                            {
+                                "name": "Unique Boars (SB included)",
+                                "value": "uniquesSB"
                             },
                             {
                                 "name": "Boar Streak",
@@ -973,6 +981,24 @@
                                 ]
                             }
                         ]
+                    },
+                    {
+                        "title": "Updating Price: ",
+                        "customId": "MARKET_UPDATE_MODAL",
+                        "components": [
+                            {
+                                "type": 1,
+                                "components": [
+                                    {
+                                        "type": 4,
+                                        "customId": "MARKET_UPDATE_PRICE_INPUT",
+                                        "label": "NEW PRICE PER UNIT",
+                                        "style": 1,
+                                        "required": true
+                                    }
+                                ]
+                            }
+                        ]
                     }
                 ]
             }
@@ -986,41 +1012,6 @@
                 "description": "Set BoarBot up to your liking",
                 "cooldown": true,
                 "componentFields": [
-                    [
-                        {
-                            "type": 1,
-                            "components": [
-                                {
-                                    "type": 3,
-                                    "customId": "SETUP_TRADE_CHANNEL_SELECT",
-                                    "placeholder": "UNSELECTED"
-                                }
-                            ]
-                        },
-                        {
-                            "type": 1,
-                            "components": [
-                                {
-                                    "type": 2,
-                                    "customId": "SETUP_REFRESH_TRADE_CHANNEL",
-                                    "label": "Refresh",
-                                    "style": 2
-                                },
-                                {
-                                    "type": 2,
-                                    "customId": "SETUP_FIND",
-                                    "emoji": "\uD83D\uDCDD",
-                                    "style": 2
-                                },
-                                {
-                                    "type": 2,
-                                    "customId": "SETUP_INFO_TRADE_CHANNEL",
-                                    "emoji": "\u2754",
-                                    "style": 2
-                                }
-                            ]
-                        }
-                    ],
                     [
                         {
                             "type": 1,

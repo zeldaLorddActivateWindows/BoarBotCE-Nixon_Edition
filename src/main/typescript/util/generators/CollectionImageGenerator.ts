@@ -321,9 +321,12 @@ export class CollectionImageGenerator {
         const boarFile: string = curBoar.staticFile ? boarsFolder + curBoar.staticFile : boarsFolder + curBoar.file;
         const numCollectedString: string = Math.min(curBoar.num, nums.maxIndivBoars).toLocaleString();
         const firstObtainedDate: string = new Date(curBoar.firstObtained)
-            .toLocaleString('en-US',{month:'long',day:'numeric',year:'numeric'});
+            .toLocaleString('en-US', {month:'long',day:'numeric',year:'numeric'});
         const lastObtainedDate: string = new Date(curBoar.lastObtained)
-            .toLocaleString('en-US',{month:'long',day:'numeric',year:'numeric'});
+            .toLocaleString('en-US', {month:'long',day:'numeric',year:'numeric'});
+        const description = curBoar.description + (curBoar.isSB
+            ? strConfig.collDescriptionSB
+            : '');
 
         const canvas: Canvas.Canvas = Canvas.createCanvas(nums.collImageSize[0], nums.collImageSize[1]);
         const ctx: Canvas.CanvasRenderingContext2D = canvas.getContext('2d');
@@ -374,7 +377,7 @@ export class CollectionImageGenerator {
         );
 
         CanvasUtils.drawText(
-            ctx, curBoar.description, nums.collDescriptionPos, smallestFont,
+            ctx, description, nums.collDescriptionPos, smallestFont,
             'center', colorConfig.font, nums.collDescriptionWidth, true
         );
 

@@ -78,10 +78,14 @@ export class PowerupSpawner {
                 Math.round(config.numberConfig.powInterval * (Math.random() * (1.25 - .75) + .75))
             );
 
-            await Queue.addQueue(() => {
-                const globalData = DataHandlers.getGlobalData();
-                globalData.nextPowerup = Date.now() + this.intervalVal;
-                fs.writeFileSync(config.pathConfig.globalDataFile, JSON.stringify(globalData));
+            await Queue.addQueue(async () => {
+                try {
+                    const globalData = DataHandlers.getGlobalData();
+                    globalData.nextPowerup = Date.now() + this.intervalVal;
+                    fs.writeFileSync(config.pathConfig.globalDataFile, JSON.stringify(globalData));
+                } catch (err: unknown) {
+                    await LogDebug.handleError(err);
+                }
             }, 'pow' + 'global');
 
             // Get all channels to send powerups in
@@ -601,8 +605,9 @@ export class PowerupSpawner {
                         }
 
                         boarUser.updateUserData();
-                        await Queue.addQueue(() =>
-                            DataHandlers.updateLeaderboardData(boarUser), interaction.id + 'global'
+                        await Queue.addQueue(async () =>
+                            await DataHandlers.updateLeaderboardData(boarUser, interaction, config),
+                            interaction.id + 'global'
                         );
                     } catch (err: unknown) {
                         LogDebug.handleError(err, interaction);

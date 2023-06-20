@@ -25,13 +25,11 @@ export class InteractionUtils {
      *
      * @param config - Used to get the string to reply with
      * @param interaction - Interaction to reply to
-     * @param includeTrade - Whether to include trade menu when deciding usable channels
      * @return guildData - Guild data parsed from JSON
      */
     public static async handleStart(
         interaction: ChatInputCommandInteraction,
-        config: BotConfig,
-        includeTrade: boolean = false
+        config: BotConfig
     ): Promise<any> {
         if (!interaction.guild || !interaction.channel) return;
 
@@ -45,12 +43,8 @@ export class InteractionUtils {
 
         const acceptableChannels: string[] = [...guildData.channels];
 
-        if (includeTrade) {
-            acceptableChannels.push(guildData.tradeChannel);
-        }
-
         if (!acceptableChannels.includes(interaction.channel.id)) {
-            await Replies.wrongChannelReply(interaction, guildData, config, includeTrade);
+            await Replies.wrongChannelReply(interaction, guildData, config);
             return;
         }
 

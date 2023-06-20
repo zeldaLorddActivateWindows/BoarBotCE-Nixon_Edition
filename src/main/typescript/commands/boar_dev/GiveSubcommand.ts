@@ -2,7 +2,6 @@ import {AttachmentBuilder, AutocompleteInteraction, ChatInputCommandInteraction,
 import {BoarUser} from '../../util/boar/BoarUser';
 import {BoarBotApp} from '../../BoarBotApp';
 import {Subcommand} from '../../api/commands/Subcommand';
-import {Queue} from '../../util/interactions/Queue';
 import {InteractionUtils} from '../../util/interactions/InteractionUtils';
 import {Replies} from '../../util/interactions/Replies';
 import {LogDebug} from '../../util/logging/LogDebug';
@@ -96,11 +95,7 @@ export default class GiveSubcommand implements Subcommand {
 
         const strConfig: StringConfig = this.config.stringConfig;
 
-        let boarUser: BoarUser = {} as BoarUser;
-
-        await Queue.addQueue(() => {
-            boarUser = new BoarUser(this.userInput, true);
-        }, this.interaction.id + this.interaction.user.id);
+        const boarUser: BoarUser =  new BoarUser(this.userInput, true);
 
         LogDebug.sendDebug(
             'Gave \'' + this.idInput + '\' to ' + this.userInput.username + '(' + this.userInput.id + ')',

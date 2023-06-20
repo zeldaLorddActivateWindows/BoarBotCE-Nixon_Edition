@@ -68,67 +68,71 @@ export default class DailySubcommand implements Subcommand {
         let usedExtra: boolean = false;
 
         await Queue.addQueue(async () => {
-            // New boar user object used for easier manipulation of data
-            boarUser = new BoarUser(this.interaction.user, true);
+            try {
+                // New boar user object used for easier manipulation of data
+                boarUser = new BoarUser(this.interaction.user, true);
 
-            const canUseDaily: boolean = await this.canUseDaily(boarUser);
-            if (!canUseDaily) return;
+                const canUseDaily: boolean = await this.canUseDaily(boarUser);
+                if (!canUseDaily) return;
 
-            // Gets whether to use boost
-            const boostInput: boolean = this.interaction.options.getBoolean(this.subcommandInfo.args[0].name)
-                ? this.interaction.options.getBoolean(this.subcommandInfo.args[0].name) as boolean
-                : false;
-            const extraInput: boolean = this.interaction.options.getBoolean(this.subcommandInfo.args[1].name)
-                ? this.interaction.options.getBoolean(this.subcommandInfo.args[1].name) as boolean
-                : false;
+                // Gets whether to use boost
+                const boostInput: boolean = this.interaction.options.getBoolean(this.subcommandInfo.args[0].name)
+                    ? this.interaction.options.getBoolean(this.subcommandInfo.args[0].name) as boolean
+                    : false;
+                const extraInput: boolean = this.interaction.options.getBoolean(this.subcommandInfo.args[1].name)
+                    ? this.interaction.options.getBoolean(this.subcommandInfo.args[1].name) as boolean
+                    : false;
 
-            // Map of rarity index keys and weight values
-            let rarityWeights: Map<number, number> = BoarUtils.getBaseRarityWeights(this.config);
-            let userMultiplier: number = boarUser.stats.general.multiplier;
+                // Map of rarity index keys and weight values
+                let rarityWeights: Map<number, number> = BoarUtils.getBaseRarityWeights(this.config);
+                let userMultiplier: number = boarUser.stats.general.multiplier;
 
-            if (boostInput) {
-                userMultiplier += boarUser.itemCollection.powerups.multiBoost.numTotal;
+                if (boostInput) {
+                    userMultiplier += boarUser.itemCollection.powerups.multiBoost.numTotal;
+                }
+
+                usedBoost = boostInput && boarUser.itemCollection.powerups.multiBoost.numTotal > 0;
+                usedExtra = extraInput && boarUser.itemCollection.powerups.extraChance.numTotal > 0;
+
+                rarityWeights = this.applyMultiplier(userMultiplier, rarityWeights);
+
+                boarIDs = BoarUtils.getRandBoars(
+                    this.guildData, this.interaction, rarityWeights,
+                    extraInput, boarUser.itemCollection.powerups.extraChance.numTotal, this.config
+                );
+
+                if (boarIDs.includes('')) {
+                    await LogDebug.handleError(this.config.stringConfig.dailyNoBoarFound, this.interaction);
+                    return;
+                }
+
+                if (boostInput && boarUser.itemCollection.powerups.multiBoost.numTotal > 0) {
+                    boarUser.itemCollection.powerups.multiBoost.numTotal = 0;
+                    boarUser.itemCollection.powerups.multiBoost.numUsed++;
+                }
+
+                if (boarUser.itemCollection.powerups.extraChance.numTotal > 0) {
+                    boarUser.itemCollection.powerups.extraChance.numTotal = 0;
+                    boarUser.itemCollection.powerups.extraChance.numUsed++;
+                }
+
+                boarUser.stats.general.boarStreak++;
+                boarUser.stats.general.multiplier++;
+
+                boarUser.stats.general.highestMulti =
+                    Math.max(boarUser.stats.general.multiplier, boarUser.stats.general.highestMulti);
+
+                boarUser.stats.general.lastDaily = Date.now();
+                boarUser.stats.general.numDailies++;
+
+                if (boarUser.stats.general.firstDaily === 0) {
+                    boarUser.stats.general.firstDaily = Date.now();
+                }
+
+                boarUser.updateUserData();
+            } catch (err: unknown) {
+                await LogDebug.handleError(err, this.interaction);
             }
-
-            usedBoost = boostInput && boarUser.itemCollection.powerups.multiBoost.numTotal > 0;
-            usedExtra = extraInput && boarUser.itemCollection.powerups.extraChance.numTotal > 0;
-
-            rarityWeights = this.applyMultiplier(userMultiplier, rarityWeights);
-
-            boarIDs = BoarUtils.getRandBoars(
-                this.guildData, this.interaction, rarityWeights,
-                extraInput, boarUser.itemCollection.powerups.extraChance.numTotal, this.config
-            );
-
-            if (boarIDs.includes('')) {
-                await LogDebug.handleError(this.config.stringConfig.dailyNoBoarFound, this.interaction);
-                return;
-            }
-
-            if (boostInput && boarUser.itemCollection.powerups.multiBoost.numTotal > 0) {
-                boarUser.itemCollection.powerups.multiBoost.numTotal = 0;
-                boarUser.itemCollection.powerups.multiBoost.numUsed++;
-            }
-
-            if (boarUser.itemCollection.powerups.extraChance.numTotal > 0) {
-                boarUser.itemCollection.powerups.extraChance.numTotal = 0;
-                boarUser.itemCollection.powerups.extraChance.numUsed++;
-            }
-
-            boarUser.stats.general.boarStreak++;
-            boarUser.stats.general.multiplier++;
-
-            boarUser.stats.general.highestMulti =
-                Math.max(boarUser.stats.general.multiplier, boarUser.stats.general.highestMulti);
-
-            boarUser.stats.general.lastDaily = Date.now();
-            boarUser.stats.general.numDailies++;
-
-            if (boarUser.stats.general.firstDaily === 0) {
-                boarUser.stats.general.firstDaily = Date.now();
-            }
-
-            boarUser.updateUserData();
         }, this.interaction.id + this.interaction.user.id);
 
         if (boarIDs.includes('')) return;
