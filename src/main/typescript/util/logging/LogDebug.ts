@@ -65,11 +65,7 @@ export class LogDebug {
 
         const completeString = prefix + time + debugMessage;
 
-        try {
-            this.sendLogMessage(completeString, config);
-        } catch {
-            console.log(completeString);
-        }
+        console.log(completeString);
     }
 
     /**
@@ -82,12 +78,14 @@ export class LogDebug {
         err: unknown | string,
         interaction?: ChatInputCommandInteraction | ModalSubmitInteraction |
             AutocompleteInteraction | MessageComponentInteraction
-    ): Promise<void> {
+    ): Promise<boolean> {
         try {
             let errString: string | undefined = typeof err === 'string' ? err : (err as Error).stack;
             const prefix: string = `[${Colors.Green}CAUGHT ERROR${Colors.White}] `;
             const time: string = LogDebug.getPrefixTime();
             const config: BotConfig = BoarBotApp.getBot().getConfig();
+
+            if (errString && errString.includes('Unknown interaction')) return false;
 
             let completeString: string = prefix + time;
             if (interaction && interaction.isChatInputCommand()) {
@@ -106,7 +104,7 @@ export class LogDebug {
                 console.log(completeString);
             }
 
-            if (!interaction || interaction.isAutocomplete()) return;
+            if (!interaction || interaction.isAutocomplete()) return true;
 
             let errResponse: string = config.stringConfig.error;
 
@@ -114,6 +112,8 @@ export class LogDebug {
         } catch (err: unknown) {
             await this.handleError(err);
         }
+
+        return true;
     }
 
     /**

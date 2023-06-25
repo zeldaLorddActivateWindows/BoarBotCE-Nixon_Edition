@@ -145,7 +145,7 @@ export class LeaderboardImageGenerator {
             } catch {
                 await Queue.addQueue(async () => await DataHandlers.removeLeaderboardUser(userID),
                     userID + 'global'
-                );
+                ).catch((err) => { throw err });
             }
 
             switch (position) {

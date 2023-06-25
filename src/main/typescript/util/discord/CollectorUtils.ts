@@ -3,6 +3,8 @@ import {
     InteractionCollector, MessageComponentInteraction, StringSelectMenuInteraction, TextChannel,
 } from 'discord.js';
 import {NumberConfig} from '../../bot/config/NumberConfig';
+import {Replies} from '../interactions/Replies';
+import {BoarBotApp} from '../../BoarBotApp';
 
 // Reasons for ending collection
 enum Reasons {
@@ -31,6 +33,8 @@ export class CollectorUtils {
         Record<string, InteractionCollector<ButtonInteraction | StringSelectMenuInteraction>> = {};
     public static setupCollectors:
         Record<string, InteractionCollector<ButtonInteraction | StringSelectMenuInteraction>> = {};
+    public static helpCollectors:
+        Record<string, InteractionCollector<ButtonInteraction | StringSelectMenuInteraction>> = {};
 
     /**
      * Determines whether the interaction should be processed
@@ -42,12 +46,18 @@ export class CollectorUtils {
         timerVars: { timeUntilNextCollect: number, updateTime: NodeJS.Timer },
         inter?: ButtonInteraction | StringSelectMenuInteraction,
     ): Promise<boolean> {
+        const startTime = Date.now();
+
         // If the collection attempt was too quick, cancel it
-        if (inter && Date.now() < timerVars.timeUntilNextCollect) {
+        if (
+            inter && (startTime <= timerVars.timeUntilNextCollect ||
+            inter.createdTimestamp <= timerVars.timeUntilNextCollect)
+        ) {
             await inter.deferUpdate();
+            return false;
         }
 
-        if (Date.now() < timerVars.timeUntilNextCollect) {
+        if (startTime <= timerVars.timeUntilNextCollect) {
             return false;
         }
 
@@ -82,6 +92,27 @@ export class CollectorUtils {
         const filter = async (compInter: MessageComponentInteraction) => {
             const modifiers: string[] = compInter.customId.split('|').slice(1);
             let returnVal: boolean = modifiers[0] === id;
+
+            if (
+                compInter.customId.toLowerCase().startsWith('gift') && returnVal &&
+                excludeUser && modifiers[1] === compInter.user.id
+            ) {
+                try {
+                    await Replies.handleReply(
+                        compInter, 'You can\'t claim your own gift!', BoarBotApp.getBot().getConfig().colorConfig.error
+                    );
+                } catch {}
+            } else if (
+                returnVal && modifiers.length > 1 && excludeUser && modifiers[1] === compInter.user.id ||
+                returnVal && modifiers.length > 1 && !excludeUser && modifiers[1] !== compInter.user.id
+            ) {
+                try {
+                    await Replies.handleReply(
+                        compInter, 'This isn\'t yours to interact with!',
+                        BoarBotApp.getBot().getConfig().colorConfig.error
+                    );
+                } catch {}
+            }
 
             if (modifiers.length > 1 && excludeUser) {
                 return returnVal && modifiers[1] !== compInter.user.id;

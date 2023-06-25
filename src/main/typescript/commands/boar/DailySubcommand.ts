@@ -1,4 +1,10 @@
-import {AttachmentBuilder, ChatInputCommandInteraction} from 'discord.js';
+import {
+    ActionRowBuilder,
+    AttachmentBuilder, ButtonBuilder, ButtonInteraction,
+    ChatInputCommandInteraction,
+    StringSelectMenuBuilder,
+    TextChannel
+} from 'discord.js';
 import {BoarUser} from '../../util/boar/BoarUser';
 import {BoarBotApp} from '../../BoarBotApp';
 import moment from 'moment/moment';
@@ -15,6 +21,10 @@ import {GuildData} from '../../util/data/global/GuildData';
 import {StringConfig} from '../../bot/config/StringConfig';
 import {ColorConfig} from '../../bot/config/ColorConfig';
 import {ItemConfigs} from '../../bot/config/items/ItemConfigs';
+import {CollectorUtils} from '../../util/discord/CollectorUtils';
+import {CustomEmbedGenerator} from '../../util/generators/CustomEmbedGenerator';
+import {ComponentUtils} from '../../util/discord/ComponentUtils';
+import {RowConfig} from '../../bot/config/components/RowConfig';
 
 /**
  * {@link DailySubcommand DailySubcommand.ts}
@@ -111,7 +121,7 @@ export default class DailySubcommand implements Subcommand {
                     boarUser.itemCollection.powerups.multiBoost.numUsed++;
                 }
 
-                if (boarUser.itemCollection.powerups.extraChance.numTotal > 0) {
+                if (usedExtra && boarUser.itemCollection.powerups.extraChance.numTotal > 0) {
                     boarUser.itemCollection.powerups.extraChance.numTotal = 0;
                     boarUser.itemCollection.powerups.extraChance.numUsed++;
                 }
@@ -133,7 +143,7 @@ export default class DailySubcommand implements Subcommand {
             } catch (err: unknown) {
                 await LogDebug.handleError(err, this.interaction);
             }
-        }, this.interaction.id + this.interaction.user.id);
+        }, this.interaction.id + this.interaction.user.id).catch((err) => { throw err });
 
         if (boarIDs.includes('')) return;
 
@@ -216,10 +226,85 @@ export default class DailySubcommand implements Subcommand {
 
         // Returns if user has already used their daily boar
         if (boarUser.stats.general.lastDaily >= nextBoarTime - (1000 * 60 * 60 * 24) && !this.config.unlimitedBoars) {
-            await Replies.handleReply(
-                this.interaction,
-                this.config.stringConfig.dailyUsed + moment(nextBoarTime).fromNow()
-            );
+            if (!boarUser.stats.general.notificationsOn) {
+                const dailyRows: RowConfig[] = this.config.commandConfigs.boar.daily.componentFields[0];
+                const dailyComponentRows: ActionRowBuilder<StringSelectMenuBuilder | ButtonBuilder>[] =
+                    ComponentUtils.makeRows(dailyRows);
+
+                ComponentUtils.addToIDs(dailyRows, dailyComponentRows, this.interaction.id, this.interaction.user.id);
+
+                const collector = await CollectorUtils.createCollector(
+                    this.interaction.channel as TextChannel, this.interaction.id, this.config.numberConfig, false,
+                    15000
+                );
+
+                const msg = await this.interaction.editReply({
+                    files: [
+                        await CustomEmbedGenerator.makeEmbed(
+                            this.config.stringConfig.dailyUsedNotify, this.config.colorConfig.font, this.config,
+                            moment(nextBoarTime).fromNow().substring(3), this.config.colorConfig.silver
+                        )
+                    ],
+                    components: dailyComponentRows
+                });
+
+                collector.on('collect', async (inter: ButtonInteraction) => {
+                    try {
+                        await Queue.addQueue(async () => {
+                            try {
+                                await this.interaction.user.send(
+                                    'You\'ve successfully enabled notifications! You\'ll only be notified when ' +
+                                    'your daily boar is available.\n||Message me STOP to turn off notifications||'
+                                );
+
+                                await Replies.handleReply(
+                                    inter, 'Success! You should\'ve received a DM from BoarBot.',
+                                    this.config.colorConfig.green
+                                );
+
+                                await msg.edit({
+                                    files: [
+                                        await CustomEmbedGenerator.makeEmbed(
+                                            this.config.stringConfig.dailyUsed, this.config.colorConfig.font,
+                                            this.config, moment(nextBoarTime).fromNow().substring(3),
+                                            this.config.colorConfig.silver
+                                        )
+                                    ],
+                                    components: []
+                                });
+
+                                boarUser.refreshUserData();
+                                boarUser.stats.general.notificationsOn = true;
+                                boarUser.updateUserData();
+                            } catch {
+                                try {
+                                    await Replies.handleReply(
+                                        inter, 'Failed to enable notifications! BoarBot is unable to send you DMs.',
+                                        this.config.colorConfig.error
+                                    );
+                                } catch (err: unknown) {
+                                    await LogDebug.handleError(err, this.interaction);
+                                }
+                            }
+                        }, this.interaction + this.interaction.id);
+                    } catch (err: unknown) {
+                        await LogDebug.handleError(err, this.interaction);
+                    }
+                });
+
+                collector.once('end', async () => {
+                    try {
+                        await msg.delete();
+                    } catch (err: unknown) {
+                        await LogDebug.handleError(err, this.interaction);
+                    }
+                });
+            } else {
+                await Replies.handleReply(
+                    this.interaction, this.config.stringConfig.dailyUsed, this.config.colorConfig.font,
+                    moment(nextBoarTime).fromNow().substring(3), this.config.colorConfig.silver
+                );
+            }
             return false;
         }
 

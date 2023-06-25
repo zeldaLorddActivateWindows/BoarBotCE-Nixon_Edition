@@ -63,7 +63,7 @@ export class BoarGift {
         if (!interaction.channel) return;
 
         this.collector = await CollectorUtils.createCollector(
-            interaction.channel as TextChannel, interaction.id, this.config.numberConfig, true, 10000
+            interaction.channel as TextChannel, interaction.id, this.config.numberConfig, true, 30000
         );
 
         this.firstInter = interaction;
@@ -103,8 +103,10 @@ export class BoarGift {
             this.compInters.push(inter);
             this.collector.stop();
         } catch (err: unknown) {
-            await LogDebug.handleError(err);
-            this.collector.stop(CollectorUtils.Reasons.Error);
+            const canStop = await LogDebug.handleError(err, this.firstInter);
+            if (canStop && Object.keys(this.collector).length > 0) {
+                this.collector.stop(CollectorUtils.Reasons.Error);
+            }
         }
     }
 
@@ -130,8 +132,10 @@ export class BoarGift {
                 }
             }
         } catch (err: unknown) {
-            await LogDebug.handleError(err);
-            this.collector.stop(CollectorUtils.Reasons.Error);
+            const canStop = await LogDebug.handleError(err, this.firstInter);
+            if (canStop && Object.keys(this.collector).length > 0) {
+                this.collector.stop(CollectorUtils.Reasons.Error);
+            }
         }
     }
 
@@ -171,21 +175,32 @@ export class BoarGift {
 
         await Queue.addQueue(async () => {
             try {
+                this.boarUser.refreshUserData();
+                this.boarUser.itemCollection.powerups.gift.numTotal--;
+                this.boarUser.itemCollection.powerups.gift.numUsed++;
+                this.boarUser.updateUserData();
+            } catch (err: unknown) {
+                await LogDebug.handleError(err, inter);
+            }
+        }, inter.id + inter.user.id).catch((err) => { throw err });
+
+        await Queue.addQueue(async () => {
+            try {
                 this.giftedUser.refreshUserData();
                 (this.giftedUser.itemCollection.powerups.gift.numOpened as number)++;
                 this.giftedUser.updateUserData();
             } catch (err: unknown) {
                 await LogDebug.handleError(err, inter);
             }
-        }, inter.id + inter.user.id);
+        }, inter.id + this.giftedUser.user.id).catch((err) => { throw err });
 
         await Queue.addQueue(async () => await DataHandlers.updateLeaderboardData(this.boarUser, inter, this.config),
             inter.id + this.boarUser.user.id + 'global'
-        );
+        ).catch((err) => { throw err });
 
         await Queue.addQueue(async () => await DataHandlers.updateLeaderboardData(this.giftedUser, inter, this.config),
             inter.id + this.giftedUser.user.id + 'global'
-        );
+        ).catch((err) => { throw err });
     }
 
     /**
@@ -282,7 +297,7 @@ export class BoarGift {
             } catch (err: unknown) {
                 await LogDebug.handleError(err, inter);
             }
-        }, inter.id + inter.user.id);
+        }, inter.id + inter.user.id).catch((err) => { throw err });
 
         await inter.editReply({
             files: [
@@ -345,7 +360,7 @@ export class BoarGift {
             } catch (err: unknown) {
                 await LogDebug.handleError(err, inter);
             }
-        }, inter.id + inter.user.id);
+        }, inter.id + inter.user.id).catch((err) => { throw err });
 
         await inter.editReply({
             files: [

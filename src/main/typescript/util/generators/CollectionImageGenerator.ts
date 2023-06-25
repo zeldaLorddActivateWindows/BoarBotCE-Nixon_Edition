@@ -72,7 +72,13 @@ export class CollectionImageGenerator {
         const collectionUnderlay: string = this.config.pathConfig.collAssets + this.config.pathConfig.collUnderlay;
 
         const maxUniques: number = Object.keys(this.config.itemConfigs.boars).length;
-        const userUniques: number = Object.keys(this.boarUser.itemCollection.boars).length;
+        let userUniques: number = Object.keys(this.boarUser.itemCollection.boars).length;
+
+        for (const boarID of Object.keys(this.boarUser.itemCollection.boars)) {
+            if (this.boarUser.itemCollection.boars[boarID].num === 0) {
+                userUniques--;
+            }
+        }
 
         // Fixes stats through flooring/alternate values
 
@@ -477,8 +483,12 @@ export class CollectionImageGenerator {
         const multiBoost: string = '+' + Math.min(powerupItemsData.multiBoost.numTotal, nums.maxMultiBoost)
             .toLocaleString();
         const gifts: string = Math.min(powerupItemsData.gift.numTotal, nums.maxPowBase).toLocaleString();
-        const extraChance: string = Math.min(powerupItemsData.extraChance.numTotal, nums.maxExtraChance)
+        let extraChance: string = Math.min(powerupItemsData.extraChance.numTotal, nums.maxExtraChance)
             .toLocaleString() + '%';
+
+        if (Math.min(powerupItemsData.extraChance.numTotal, nums.maxExtraChance) === nums.maxExtraChance) {
+            extraChance += ' (MAX)'
+        }
 
         const canvas: Canvas.Canvas = Canvas.createCanvas(nums.collImageSize[0], nums.collImageSize[1]);
         const ctx: Canvas.CanvasRenderingContext2D = canvas.getContext('2d');

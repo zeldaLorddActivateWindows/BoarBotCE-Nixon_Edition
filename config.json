@@ -45,7 +45,14 @@
         "favorite": "favorite.png",
         "thankYouImage": "BoarBotThanks.png",
         "mainFont": "MinecraftFont.ttf",
-        "helpBackground": "Help.png",
+        "helpGeneral1": "BoarHelpGeneral.png",
+        "helpPowerup1": "BoarHelpPowerups.png",
+        "helpPowerup2": "BoarHelpPowerups2.png",
+        "helpMarket1": "BoarHelpMarket.png",
+        "helpMarket2": "BoarHelpMarket2.png",
+        "helpBadgeBoar1": "BoarHelpBadgeBoar.png",
+        "helpBadgeBoar2": "BoarHelpBadgeBoar2.png",
+        "helpBadgeBoar3": "BoarHelpBadgeBoar3.png",
         "circleMask": "CircleMask.png",
         "bucks": "BoarBucksGift.png",
         "powerup": "BoarPowerup.png",
@@ -81,7 +88,8 @@
         "setupInfoResponse1": "This bot has a trading system! In order for the trading system to work properly, it needs its own channel. Threads will dynamically be created and deleted in this channel unless the bot doesn't have permission to do so. If this is the case, trading will unfortunately be automatically disabled. This channel can be changed at any time using /boar-manage setup. Use the pencil button to enter a channel ID (right-click channel name, Copy ID) that isn't shown in the select box.",
         "setupInfoResponse2": "This bot has slash commands, which can produce spammy content depending on how large your server is, so you'll need to decide which channel(s) the bot is enabled in. These channels can be changed at any time using /boar-manage setup. Use the pencil button to enter a channel ID (right-click channel name, Copy ID) that isn't shown in the select box.",
         "setupInfoResponse3": "This bot originated on a Discord server dedicated to Hypixel Skyblock. If you don't know what that is, no sweat! Just click \"No\". If you do and you're part of the community, it's highly recommended that you click \"Yes\". This can be changed at any time using /boar-manage setup.",
-        "dailyUsed": "You've already used your daily boar! The next time you can use the command is ",
+        "dailyUsed": "You've already used your daily boar! The next time you can use the command is in %@.",
+        "dailyUsedNotify": "You've already used your daily boar! The next time you can use the command is in %@. Click the button below to be notified!",
         "dailyPowUsed": "Successfully used your %@!",
         "dailyTitle": "Daily Boar!",
         "extraTitle": "Extra Boar!",
@@ -136,7 +144,7 @@
         "collEnhanceBoarLose": "-1 %@",
         "collEnhanceBoarGain": "+1 %@ Boar",
         "collGiftDetails": " has sent out a %@! These gifts include boars, boar bucks, other powerups, and exclusive items. Be the first to click \"Claim\" to claim it!",
-        "collEditionTitle": "__Your editions for %@__",
+        "collEditionTitle": "__Editions for %@__",
         "collEditionLine": "**Edition #%@:** %@\n",
         "collDescriptionSB": " (Skyblock Boar)",
         "giftFail": "BoarBot is missing permissions needed to send gifts!",
@@ -261,7 +269,7 @@
         "collLastObtainedLabelPos": [370, 818],
         "collLastObtainedPos": [370, 889],
         "collDescriptionLabelPos": [370, 1003],
-        "collDescriptionPos": [370, 1216],
+        "collDescriptionPos": [370, 1206],
         "collDescriptionWidth": 630,
         "collAttemptsLabelPos": [486, 313],
         "collAttemptsPos": [486, 384],
@@ -394,7 +402,68 @@
             "help": {
                 "name": "help",
                 "description": "See all boar command information",
-                "cooldown": true
+                "args": [
+                    {
+                        "name": "area",
+                        "description": "The area you may need help with",
+                        "choices": [
+                            {
+                                "name": "General",
+                                "value": 0
+                            },
+                            {
+                                "name": "Powerups",
+                                "value": 1
+                            },
+                            {
+                                "name": "Market",
+                                "value": 2
+                            },
+                            {
+                                "name": "Badges & Special Boars",
+                                "value": 3
+                            }
+                        ]
+                    },
+                    {
+                        "name": "page",
+                        "description": "The page to start out on"
+                    }
+                ],
+                "cooldown": true,
+                "componentFields": [
+                    [
+                        {
+                            "type": 1,
+                            "components": [
+                                {
+                                    "type": 2,
+                                    "customId": "HELP_BACK",
+                                    "emoji": "<:back:1073072529507369072>",
+                                    "style": 2,
+                                    "disabled": true
+                                },
+                                {
+                                    "type": 2,
+                                    "customId": "HELP_FORWARD",
+                                    "emoji": "<:forward:1073071982096175184>",
+                                    "style": 2,
+                                    "disabled": true
+                                }
+                            ]
+                        },
+                        {
+                            "type": 1,
+                            "components": [
+                                {
+                                    "type": 3,
+                                    "customId": "HELP_AREA_SELECT",
+                                    "placeholder": "Choose Help Area..."
+                                }
+                            ]
+                        }
+                    ]
+                ]
             },
             "daily": {
                 "name": "daily",
@@ -408,11 +477,28 @@
                         "name": "extra-boar",
                         "description": "Apply your extra boar chance"
                     }
+                ],
+                "cooldown": true,
+                "componentFields": [
+                    [
+                        {
+                            "type": 1,
+                            "components": [
+                                {
+                                    "type": 2,
+                                    "customId": "DAILY_NOTIFY",
+                                    "label": "Enable Notifications",
+                                    "style": 3,
+                                    "disabled": false
+                                }
+                            ]
+                        }
+                    ]
                 ]
             },
             "collection": {
                 "name": "collection",
-                "description": "View your collection of daily boars",
+                "description": "View someone's collection of boars, badges, and powerups",
                 "args": [
                     {
                         "name": "user",
@@ -589,7 +675,7 @@
                                 "value": "uniques"
                             },
                             {
-                                "name": "Unique Boars (SB included)",
+                                "name": "Unique Boars (SkyBlock included)",
                                 "value": "uniquesSB"
                             },
                             {
@@ -792,12 +878,6 @@
                                     "label": "Sell Now",
                                     "style": 3,
                                     "disabled": true
-                                },
-                                {
-                                    "type": 2,
-                                    "customId": "MARKET_BUY_SELL_INFO",
-                                    "emoji": "\u2754",
-                                    "style": 2
                                 }
                             ]
                         },
@@ -1342,7 +1422,7 @@
                 "name": "Normal Boar",
                 "pluralName": "Normal Boars",
                 "file": "NormalBoar.png",
-                "description": "The origin of all boars. Quite unremarkable.",
+                "description": "The original boar. Quite unremarkable.",
                 "isSB": false,
                 "blacklisted": false
             },
@@ -1350,7 +1430,7 @@
                 "name": "Explosionless Boar",
                 "pluralName": "Explosionless Boars",
                 "file": "ExplosionlessBoar.png",
-                "description": "Its mind was blown so hard that it refuses to ignite anymore. If it ever does, though, it's assumed its explosion would be... cataclysmic.",
+                "description": "Its mind was blown so hard that it refuses to ignite anymore. If it ever does, though, the assumption is that the resulting explosion would be... cataclysmic.",
                 "isSB": false,
                 "blacklisted": false
             },
@@ -1358,7 +1438,7 @@
                 "name": "Tiny Boar",
                 "pluralName": "Tiny Boars",
                 "file": "TinyBoar.png",
-                "description": "The result of an experiment gone wrong with the Wizard Boar. Has come to terms with its condition by living with ants.",
+                "description": "The result of failed experiment done by Wizard Boar. Has come to terms with its condition by living with ants.",
                 "isSB": false,
                 "blacklisted": false
             },
@@ -1366,7 +1446,7 @@
                 "name": "Carrot Boar",
                 "pluralName": "Carrot Boars",
                 "file": "CarrotBoar.png",
-                "description": "On the surface, it's indistinguishable from the grass around it. The only one capable of spotting them is Farmer Boar.",
+                "description": "On the surface, it's indistinguishable from the grass around it. The only being capable of spotting them is Farmer Boar.",
                 "isSB": false,
                 "blacklisted": false
             },
@@ -1382,7 +1462,7 @@
                 "name": "Chocolate Boar",
                 "pluralName": "Chocolate Boars",
                 "file": "ChocolateBoar.png",
-                "description": "A discontinued chocolate bar from 1999. It was pulled off shelves after traces of boar meat were discovered inside it.",
+                "description": "A discontinued chocolate bar from 1999. It was pulled off the shelves after traces of boar meat were discovered inside it.",
                 "isSB": false,
                 "blacklisted": false
             },
@@ -1390,7 +1470,7 @@
                 "name": "Emo Boar",
                 "pluralName": "Emo Boars",
                 "file": "EmoBoar.png",
-                "description": "Is said to be so emotional and sensitive that it can feel the emotions of those around them. Its parents say it's a phase, but it most definitely is not.",
+                "description": "Is said to be so emotional and sensitive that it can feel the emotions of those around them. Mostly keeps to itself.",
                 "isSB": false,
                 "blacklisted": false
             },
@@ -1398,7 +1478,7 @@
                 "name": "Matrix Boar",
                 "pluralName": "Matrix Boars",
                 "file": "MatrixBoar.png",
-                "description": "Keeps taking Acetaminophen because of its red color. Believes it's its destiny to save humanity from its AI overlords.",
+                "description": "Keeps taking Acetaminophen because of its red color. Believes that its destiny is to save humanity from the AI overlords.",
                 "isSB": false,
                 "blacklisted": false
             },
@@ -1406,7 +1486,7 @@
                 "name": "Soda Boar",
                 "pluralName": "Soda Boars",
                 "file": "SodaBoar.png",
-                "description": "After much engineering and toil, scientists created this boar, which replaces the signature explosion with a constant stream of soda.",
+                "description": "After much engineering and toil, scientists created this boar, which replaces its signature explosion with a constant stream of soda.",
                 "isSB": false,
                 "blacklisted": false
             },
@@ -1414,7 +1494,7 @@
                 "name": "Clown Boar",
                 "pluralName": "Clown Boars",
                 "file": "ClownBoar.png",
-                "description": "It is said that this boar was directly modeled after someone that posted cringe on the internet.",
+                "description": "It is said that this boar was directly modeled after someone who posted cringe on the internet.",
                 "isSB": false,
                 "blacklisted": false
             },
@@ -1439,7 +1519,7 @@
                 "name": "Boarfish",
                 "pluralName": "Boarfish",
                 "file": "FishBoar.png",
-                "description": "A highly invasive fish species. It has a friendly personality around humans but vicious predatory instincts for other fish in its environment.",
+                "description": "A highly invasive fish-boar amalgamation. It has a friendly personality around humans but displays vicious predatory instincts for other fish in its environment.",
                 "isSB": false,
                 "blacklisted": false
             },
@@ -1455,7 +1535,7 @@
                 "name": "Rainy Boar",
                 "pluralName": "Rainy Boars",
                 "file": "RainyBoar.png",
-                "description": "Cursed by the God of All Boars for something unspeakable, this boar constantly has a rain cloud pouring down around it. Lightning smites it at random intervals.",
+                "description": "Cursed by Creator Boar for something unspeakable, this boar has a constant rain cloud pouring down around it. Lightning also smites it at random intervals.",
                 "isSB": false,
                 "blacklisted": false
             },
@@ -1470,7 +1550,7 @@
                 "name": "Creepy Boar",
                 "pluralName": "Creepy Boars",
                 "file": "CreepyBoar.png",
-                "description": "Looks strikingly similar to a normal boar at first glance, but is actually a paranormal being that lives in the skin of recently perished boars.",
+                "description": "While it may look strikingly similar to a normal boar at first glance, it's actually a paranormal being that lives inside the skin of recently deceased boars.",
                 "isSB": false,
                 "blacklisted": false
             },
@@ -1478,7 +1558,7 @@
                 "name": "RoboBoar-9000",
                 "pluralName": "RoboBoar-9000s",
                 "file": "RobotBoar.png",
-                "description": "A sentient robot capable of overthrowing the human race but simply decides not to. Matrix Boar is convinced they're up to something nefarious but can't prove it.",
+                "description": "A sentient robot capable of overthrowing the human race that simply decides not to. Matrix Boar is convinced they're up to something nefarious, but can't seem to prove it.",
                 "isSB": false,
                 "blacklisted": false
             },
@@ -1486,7 +1566,7 @@
                 "name": "Coffee Girl Boar",
                 "pluralName": "Coffee Girl Boars",
                 "file": "CoffeeGirlBoar.png",
-                "description": "Rarely seen not drinking coffee. When she's not, she's typically getting her nails done or posting a selfie of herself on social media.",
+                "description": "Rarely seen not drinking coffee. Can typically be found getting her nails done or posting a selfie of herself on social media.",
                 "isSB": false,
                 "blacklisted": false
             },
@@ -1494,7 +1574,7 @@
                 "name": "Moon Boar",
                 "pluralName": "Moon Boars",
                 "file": "MoonBoar.png",
-                "description": "Moon Boar is actually just the other side of the Moon that we can't see. NASA spends billions a year to keep the secret from getting out.",
+                "description": "This boar is actually just the other side of the Moon that we can't see. NASA spends billions every year to keep the secret from getting out.",
                 "isSB": false,
                 "blacklisted": false
             },
@@ -1510,7 +1590,7 @@
                 "name": "Wizard Boar",
                 "pluralName": "Wizard Boars",
                 "file": "WizardBoar.png",
-                "description": "Cheated its way to an Honors Boarwarts diploma. It now performs street magic to pay its bills as it never learned how to actually cast spells.",
+                "description": "Cheated its way to an Honors Boarwarts diploma. It now performs street magic to pay its bills, as it never learned how to actually cast spells.",
                 "isSB": false,
                 "blacklisted": false
             },
@@ -1518,7 +1598,7 @@
                 "name": "Aurora Boarealis",
                 "pluralName": "Aurora Boarealis",
                 "file": "AuroraBoar.png",
-                "description": "People travel across the world to see its beauty. It only appears when Moon Boar is eclipsing the sun.",
+                "description": "People travel across the world to see its beauty. Only appears when Moon Boar is eclipsing the sun.",
                 "isSB": false,
                 "blacklisted": false
             },
@@ -1551,7 +1631,7 @@
                 "name": "Cowboar",
                 "pluralName": "Cowboars",
                 "file": "CowboyBoar.png",
-                "description": "Unparalleled skills when it comes to the lasso and piloting horses. Refuses to touch any modern technology.",
+                "description": "This boar has unparalleled skill when it comes to lassoing and piloting horses. It also refuses to touch any modern technology.",
                 "isSB": false,
                 "blacklisted": false
             },
@@ -1559,7 +1639,7 @@
                 "name": "Realistic Boar",
                 "pluralName": "Realistic Boars",
                 "file": "RealisticBoar.png",
-                "description": "A taxidermy of a boar that came before the current generation of boars. To have it appeal to modern society, they had to make its head explode.",
+                "description": "A taxidermy of a boar that came before the rise of Creator Boar. After much debate, it was modified to match the look of Normal Boar.",
                 "isSB": false,
                 "blacklisted": false
             },
@@ -1567,7 +1647,7 @@
                 "name": "Farmer Boar",
                 "pluralName": "Farmer Boars",
                 "file": "FarmerBoar.png",
-                "description": "Harvests Carrot Boars to sell to Cowboar. Lives a mundane, yet comforting life with a wife and kids.",
+                "description": "Harvests Carrot Boars to sell to Cowboar. Lives a mundane yet comforting life with its wife and kids.",
                 "isSB": true,
                 "blacklisted": false
             },
@@ -1576,7 +1656,7 @@
                 "pluralName": "Rickroll Boars",
                 "file": "RickrollBoar.gif",
                 "staticFile": "RickrollBoarSTATIC.png",
-                "description": "Spreads the word of the God of All Boars. He'll never give you up, nor will he let you down. He'll never run around and... desert you.",
+                "description": "Spreads the word of Creator Boar. He'll never give you up, nor will he let you down. He certainly won't run around and... desert you.",
                 "isSB": false,
                 "blacklisted": false
             },
@@ -1589,10 +1669,10 @@
                 "blacklisted": false
             },
             "god": {
-                "name": "God of All Boars",
-                "pluralName": "Gods of All Boars",
+                "name": "Creator Boar",
+                "pluralName": "Creator Boars",
                 "file": "GodofAllBoars.png",
-                "description": "Created all boars in the universe. While it may seem like a divine being, it's actually just an albino boar hellbent on artificially creating new boar species.",
+                "description": "Guides the creation of all boars in the universe. While it may seem like a divine being, it's actually just an albino boar hell-bent on creating an artificial boar species.",
                 "isSB": false,
                 "blacklisted": false
             },
@@ -1600,7 +1680,7 @@
                 "name": "Imposter Boar",
                 "pluralName": "Imposter Boars",
                 "file": "ImposterBoar.png",
-                "description": "Kills its crew mates on the International Boar Station and frames it as a spacewalking accident. Its kill count is said to be in the dozens.",
+                "description": "Kills its crewmates on the International Boar Station and frames it as a spacewalking accident. Its kill count is said to be in the dozens.",
                 "isSB": false,
                 "blacklisted": false
             },
@@ -1617,7 +1697,7 @@
                 "pluralName": "Gameboarkers",
                 "file": "Gameboarker.gif",
                 "staticFile": "GameboarkerSTATIC.png",
-                "description": "This boar takes explosion to a whole other level, fusing its cells with gunpowder to create bigger explosions. Awarded to those who find and report several bugs.",
+                "description": "This boar takes the classic explosion to a whole new level, fusing its cells with gunpowder to generate a larger explosion. Awarded to those who found and reported several bugs.",
                 "isSB": false,
                 "blacklisted": false
             },
@@ -1898,10 +1978,10 @@
         "rarity5": "#FFC500",
         "rarity6": "#F300FF",
         "rarity7": "#00FFFB",
-        "rarity8": "#FFEEB0",
+        "rarity8": "#FFFEBB",
         "rarity9": "#FF3136"
     },
-    "unlimitedBoars": true,
+    "unlimitedBoars": false,
     "debugMode": true,
-    "maintenanceMode": true
+    "maintenanceMode": false
 }

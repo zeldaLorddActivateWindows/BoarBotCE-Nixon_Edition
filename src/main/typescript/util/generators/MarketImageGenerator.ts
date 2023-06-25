@@ -121,12 +121,14 @@ export class MarketImageGenerator {
                 if (instaBuy.num === instaBuy.filledAmount || instaBuy.listTime + nums.orderExpire < Date.now())
                     continue;
                 buyVal = instaBuy.price.toLocaleString();
+                break;
             }
 
             for (const instaSell of item.instaSells) {
                 if (instaSell.num === instaSell.filledAmount || instaSell.listTime + nums.orderExpire < Date.now())
                     continue;
                 sellVal = instaSell.price.toLocaleString();
+                break;
             }
 
             CanvasUtils.drawText(
@@ -299,13 +301,14 @@ export class MarketImageGenerator {
             const numToClaim = orderInfo.data.filledAmount - orderInfo.data.claimedAmount;
 
             if (orderInfo.data.claimedAmount < orderInfo.data.filledAmount) {
-                claimText = '%@ ' + (numToClaim * orderInfo.data.price).toLocaleString();
+                claimText = '%@' + (numToClaim * orderInfo.data.price).toLocaleString();
                 coloredClaimText = '$';
             }
         }
 
         let rarityColor = colorConfig.powerup;
         let isSpecial = false;
+        const isSell = page >= this.userBuyOrders.length;
 
         if (orderInfo.type === 'boars') {
             const rarity = BoarUtils.findRarity(orderInfo.id, this.config);
@@ -329,8 +332,8 @@ export class MarketImageGenerator {
         ctx.drawImage(await Canvas.loadImage(file), 25, 395, 780, 780);
 
         CanvasUtils.drawText(
-            ctx, 'Buying: %@', [415, 308], mediumFont, 'center', colorConfig.font, 740, true,
-            this.config.itemConfigs[orderInfo.type][orderInfo.id].name + (isSpecial
+            ctx, (isSell ? 'Selling' : 'Buying') + ': %@', [415, 308], mediumFont, 'center', colorConfig.font, 740,
+            true, this.config.itemConfigs[orderInfo.type][orderInfo.id].name + (isSpecial
                 ? ' #' + orderInfo.data.editions[0]
                 : ''),
             rarityColor

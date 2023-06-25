@@ -18,4 +18,5 @@ export class GeneralStats {
     public boarStreak: number = 0;
     public multiplier: number = 1;
     public highestMulti: number = 0;
+    public notificationsOn: boolean = false;
 }

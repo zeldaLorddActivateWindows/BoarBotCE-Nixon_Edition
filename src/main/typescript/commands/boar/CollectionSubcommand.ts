@@ -228,7 +228,7 @@ export default class CollectionSubcommand implements Subcommand {
                         } catch (err: unknown) {
                             await LogDebug.handleError(err, inter);
                         }
-                    }, inter.id + this.boarUser.user.id);
+                    }, inter.id + this.boarUser.user.id).catch((err) => { throw err });
                     break;
 
                 case collComponents.editions.customId:
@@ -248,16 +248,6 @@ export default class CollectionSubcommand implements Subcommand {
                     break;
 
                 case collComponents.gift.customId:
-                    await Queue.addQueue(async () => {
-                        try {
-                            this.boarUser.refreshUserData();
-                            this.boarUser.itemCollection.powerups.gift.numTotal--;
-                            this.boarUser.itemCollection.powerups.gift.numUsed++;
-                            this.boarUser.updateUserData();
-                        } catch (err: unknown) {
-                            await LogDebug.handleError(err, inter);
-                        }
-                    }, inter.id + this.boarUser.user.id);
                     await new BoarGift(this.boarUser, this.collectionImage, this.config).sendMessage(inter);
                     break;
             }
@@ -265,8 +255,10 @@ export default class CollectionSubcommand implements Subcommand {
             this.enhanceStage--;
             await this.showCollection();
         } catch (err: unknown) {
-            await LogDebug.handleError(err);
-            CollectorUtils.collectionCollectors[inter.user.id].stop(CollectorUtils.Reasons.Error);
+            const canStop = await LogDebug.handleError(err, this.firstInter);
+            if (canStop && CollectorUtils.collectionCollectors[inter.user.id]) {
+                CollectorUtils.collectionCollectors[inter.user.id].stop(CollectorUtils.Reasons.Error);
+            }
         }
 
         clearInterval(this.timerVars.updateTime);
@@ -325,7 +317,7 @@ export default class CollectionSubcommand implements Subcommand {
                 this.boarUser.itemCollection.boars[this.allBoars[this.curPage].id].num--;
                 this.boarUser.itemCollection.boars[this.allBoars[this.curPage].id].editions.pop();
                 this.boarUser.itemCollection.boars[this.allBoars[this.curPage].id].editionDates.pop();
-                this.boarUser.stats.general.boarScore -= enhancersUsed * 5;
+                this.boarUser.stats.general.boarScore += enhancersUsed * 5;
                 this.boarUser.itemCollection.powerups.enhancer.numTotal -= enhancersUsed;
                 (this.boarUser.itemCollection.powerups.enhancer.raritiesUsed as number[])
                     [this.allBoars[this.curPage].rarity[0]-1]++;
@@ -333,7 +325,7 @@ export default class CollectionSubcommand implements Subcommand {
             } catch (err: unknown) {
                 await LogDebug.handleError(err, this.compInter);
             }
-        }, this.compInter.id + this.compInter.user.id);
+        }, this.compInter.id + this.compInter.user.id).catch((err) => { throw err });
 
         const editions: number[] = await this.boarUser.addBoars([enhancedBoar], this.firstInter, this.config);
 
@@ -390,6 +382,8 @@ export default class CollectionSubcommand implements Subcommand {
      */
     private modalListener = async (submittedModal: Interaction): Promise<void> => {
         try  {
+            if (submittedModal.user.id !== this.firstInter.user.id) return;
+
             // If not a modal submission on current interaction, destroy the modal listener
             if (
                 submittedModal.isMessageComponent() &&
@@ -405,7 +399,9 @@ export default class CollectionSubcommand implements Subcommand {
             if (!canInteract) return;
 
             if (
-                !submittedModal.isModalSubmit() || CollectorUtils.collectionCollectors[submittedModal.user.id].ended ||
+                !submittedModal.isModalSubmit() ||
+                (CollectorUtils.collectionCollectors[submittedModal.user.id] &&
+                    CollectorUtils.collectionCollectors[submittedModal.user.id].ended) ||
                 !submittedModal.guild || submittedModal.customId !== this.modalShowing.data.custom_id
             ) {
                 this.endModalListener(submittedModal.client);
@@ -433,8 +429,10 @@ export default class CollectionSubcommand implements Subcommand {
 
             await this.showCollection();
         } catch (err: unknown) {
-            await LogDebug.handleError(err);
-            CollectorUtils.collectionCollectors[submittedModal.user.id].stop(CollectorUtils.Reasons.Error);
+            const canStop = await LogDebug.handleError(err, this.firstInter);
+            if (canStop && CollectorUtils.collectionCollectors[submittedModal.user.id]) {
+                CollectorUtils.collectionCollectors[submittedModal.user.id].stop(CollectorUtils.Reasons.Error);
+            }
         }
 
         this.endModalListener(submittedModal.client);
@@ -458,10 +456,10 @@ export default class CollectionSubcommand implements Subcommand {
         try {
             LogDebug.sendDebug('Ended collection with reason: ' + reason, this.config, this.firstInter);
 
-            if (reason == CollectorUtils.Reasons.Error) {
+            if (reason === CollectorUtils.Reasons.Error) {
                 await Replies.handleReply(
                     this.firstInter, this.config.stringConfig.setupError,
-                    this.config.colorConfig.error, undefined, undefined, true
+                    this.config.colorConfig.error
                 );
             }
 
@@ -469,7 +467,7 @@ export default class CollectionSubcommand implements Subcommand {
                 components: []
             });
         } catch (err: unknown) {
-            await LogDebug.handleError(err);
+            await LogDebug.handleError(err, this.firstInter);
         }
     }
 

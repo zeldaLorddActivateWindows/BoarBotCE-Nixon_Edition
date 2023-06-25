@@ -197,8 +197,10 @@ export default class SetupSubcommand implements Subcommand {
                     break;
             }
         } catch (err: unknown) {
-            await LogDebug.handleError(err);
-            CollectorUtils.setupCollectors[inter.user.id].stop(CollectorUtils.Reasons.Error);
+            const canStop = await LogDebug.handleError(err, this.firstInter);
+            if (canStop && CollectorUtils.setupCollectors[inter.user.id]) {
+                CollectorUtils.setupCollectors[inter.user.id].stop(CollectorUtils.Reasons.Error);
+            }
         }
 
         clearInterval(this.timerVars.updateTime);
@@ -347,7 +349,7 @@ export default class SetupSubcommand implements Subcommand {
 
             await Replies.handleReply(this.firstInter, replyContent, color);
         } catch (err: unknown) {
-            await LogDebug.handleError(err);
+            await LogDebug.handleError(err, this.firstInter);
         }
     }
 
@@ -421,7 +423,7 @@ export default class SetupSubcommand implements Subcommand {
         const modals: ModalConfig[] = this.config.commandConfigs.boarManage.setup.modals;
 
         this.modalShowing = new ModalBuilder(modals[this.curField-1]);
-        this.modalShowing.setCustomId(modals[this.curField-1].customId + + '|' + inter.id);
+        this.modalShowing.setCustomId(modals[this.curField-1].customId + '|' + inter.id);
         await inter.showModal(this.modalShowing);
 
         inter.client.on(
@@ -442,6 +444,8 @@ export default class SetupSubcommand implements Subcommand {
      */
     private modalListener = async (submittedModal: Interaction) => {
         try  {
+            if (submittedModal.user.id !== this.firstInter.user.id) return;
+
             // If not a modal submission on current interaction, destroy the modal listener
             if (submittedModal.isMessageComponent() && submittedModal.customId.endsWith(this.firstInter.id as string) ||
                 BoarBotApp.getBot().getConfig().maintenanceMode && !this.config.devs.includes(this.compInter.user.id)
@@ -454,7 +458,10 @@ export default class SetupSubcommand implements Subcommand {
             let canInteract = await CollectorUtils.canInteract(this.timerVars);
             if (!canInteract) return;
 
-            if (!submittedModal.isModalSubmit() || CollectorUtils.setupCollectors[submittedModal.user.id].ended ||
+            if (
+                !submittedModal.isModalSubmit() ||
+                (CollectorUtils.setupCollectors[submittedModal.user.id] &&
+                    CollectorUtils.setupCollectors[submittedModal.user.id].ended) ||
                 !submittedModal.guild || submittedModal.customId !== this.modalShowing.data.custom_id
             ) {
                 this.endModalListener(submittedModal.client);
@@ -522,8 +529,10 @@ export default class SetupSubcommand implements Subcommand {
                 selectIndex
             );
         } catch (err: unknown) {
-            await LogDebug.handleError(err);
-            CollectorUtils.setupCollectors[submittedModal.user.id].stop(CollectorUtils.Reasons.Error);
+            const canStop = await LogDebug.handleError(err, this.firstInter);
+            if (canStop && CollectorUtils.setupCollectors[submittedModal.user.id]) {
+                CollectorUtils.setupCollectors[submittedModal.user.id].stop(CollectorUtils.Reasons.Error);
+            }
         }
 
         this.endModalListener(submittedModal.client);

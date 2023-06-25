@@ -48,6 +48,7 @@ export class StringConfig {
 
     public readonly dailyPowUsed: string = ' ';
     public readonly dailyUsed: string = ' ';
+    public readonly dailyUsedNotify: string = ' ';
     public readonly dailyTitle: string = ' ';
     public readonly extraTitle: string = ' ';
     public readonly dailyNoBoarFound: string = ' ';

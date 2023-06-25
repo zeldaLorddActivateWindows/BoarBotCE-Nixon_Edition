@@ -86,7 +86,7 @@ export class PowerupSpawner {
                 } catch (err: unknown) {
                     await LogDebug.handleError(err);
                 }
-            }, 'pow' + 'global');
+            }, 'pow' + 'global').catch((err) => { throw err });
 
             // Get all channels to send powerups in
             for (const guildFile of fs.readdirSync(config.pathConfig.guildDataFolder)) {
@@ -159,6 +159,7 @@ export class PowerupSpawner {
                     }).catch((err) => { throw err; });
 
                     this.numMsgs++;
+                    this.numNotFinished++;
 
                     collector.on('collect', async (inter: ButtonInteraction) => await this.handleCollect(inter, powMsg, config));
                     collector.on('end', async () => await this.handleEndCollect(powMsg, config));
@@ -226,11 +227,13 @@ export class PowerupSpawner {
         config: BotConfig
     ) {
         try {
-            this.numNotFinished++;
+            try {
+                await powMsg.edit({
+                    components: [new ActionRowBuilder<ButtonBuilder>(config.promptConfigs.rows[1])]
+                });
+            } catch {}
 
-            await powMsg.edit({
-                components: [new ActionRowBuilder<ButtonBuilder>(config.promptConfigs.rows[1])]
-            }).catch((err) => { throw err; });
+            LogDebug.sendDebug("Tabulating powerup message #: " + this.numMsgs, config);
 
             // Gets percentages once all powerup messages are waiting for tabulation
             if (--this.numMsgs === 0) {
@@ -269,11 +272,12 @@ export class PowerupSpawner {
                 return;
             }
 
+
             // Waits until percentages have been calculated to finish (after last message has tabulated)
             const finishInterval = setInterval(async () => {
                 if (this.readyToEnd) {
-                    await this.finishPow(powMsg, config);
                     clearInterval(finishInterval);
+                    await this.finishPow(powMsg, config);
                 }
             }, 1000);
         } catch (err: unknown) {
@@ -488,142 +492,149 @@ export class PowerupSpawner {
      * @private
      */
     private async finishPow(powMsg: Message, config: BotConfig) {
-        const powItemConfigs: ItemConfigs = config.itemConfigs.powerups;
-        const strConfig: StringConfig = config.stringConfig;
-
         try {
-            await powMsg.edit({
-                files: [this.powEndImage],
-                components: []
-            });
-        } catch {}
+            try {
+                await powMsg.edit({
+                    files: [this.powEndImage],
+                    components: []
+                });
+            } catch {}
 
-        // Updates and restores information to what it should be once the final message is done processing
-        if (--this.numNotFinished === 0) {
-            for (const interaction of this.interactions) {
-                const userTime: number | undefined = this.claimers.get(interaction.user.id);
-                const userPercent: number = (
-                    ([...this.claimers.keys()].indexOf(interaction.user.id) + 1) /
-                    this.claimers.size
-                ) * 100;
-                let userPowTier: number = -1;
-                let responseString: string = strConfig.powNoRewardResponse;
+            LogDebug.sendDebug("Editing powerup message #: " + this.numNotFinished, config);
 
-                if (!userTime) {
-                    await LogDebug.handleError('Failed to find user\'s powerup data.', interaction);
-                    continue;
-                }
+            // Updates and restores information to what it should be once the final message is done processing
+            if (--this.numNotFinished === 0) {
+                LogDebug.sendDebug('Attempting to finish powerup', config);
 
-                if (userTime <= this.topOnePercent) {
-                    userPowTier = 0;
-                    responseString = strConfig.powTopOneResponse;
-                } else if (userTime <= this.topTenPercent) {
-                    userPowTier = 1;
-                    responseString = strConfig.powTopTenResponse;
-                } else if (userTime <= this.topFiftyPercent) {
-                    userPowTier = 2;
-                    responseString = strConfig.powTopFiftyResponse;
+                for (const interaction of this.interactions) {
+                    const powItemConfigs: ItemConfigs = config.itemConfigs.powerups;
+                    const strConfig: StringConfig = config.stringConfig;
 
-                }
+                    const userTime: number | undefined = this.claimers.get(interaction.user.id);
+                    const userPercent: number = (
+                        ([...this.claimers.keys()].indexOf(interaction.user.id) + 1) /
+                        this.claimers.size
+                    ) * 100;
+                    let userPowTier: number = -1;
+                    let responseString: string = strConfig.powNoRewardResponse;
 
-                if ((this.powerupType.tiers as number[])[userPowTier] === 0) {
-                    responseString = strConfig.powNoRewardResponse;
-                }
-
-                await Replies.handleReply(
-                    interaction,
-                    responseString.replace('%@', userTime.toString()), config.colorConfig.font,
-                    PowerupImageGenerator.getPowerupString(
-                        this.powerupType, (this.powerupType.tiers as number[])[userPowTier], config
-                    ),
-                    config.colorConfig.powerup,
-                    true
-                );
-
-                Queue.addQueue(async () => {
-                    try {
-                        const boarUser: BoarUser = new BoarUser(interaction.user, true);
-
-                        if (!boarUser.stats.powerups.prompts[this.promptTypeID][this.promptID]) {
-                            boarUser.stats.powerups.prompts[this.promptTypeID][this.promptID] = new PromptData();
-                        }
-
-                        boarUser.stats.powerups.prompts[this.promptTypeID][this.promptID].avg =
-                            (boarUser.stats.powerups.prompts[this.promptTypeID][this.promptID].avg *
-                                boarUser.stats.powerups.prompts[this.promptTypeID][this.promptID].attempts++ +
-                                userPercent
-                            ) / boarUser.stats.powerups.prompts[this.promptTypeID][this.promptID].attempts;
-
-                        boarUser.stats.powerups.attempts++;
-
-                        if (userPowTier === 0) {
-                            boarUser.stats.powerups.oneAttempts++;
-                        } else if (userPowTier === 1) {
-                            boarUser.stats.powerups.tenAttempts++;
-                        } else if (userPowTier === 2) {
-                            boarUser.stats.powerups.fiftyAttempts++;
-                        }
-
-                        if (userPowTier !== -1 && this.powerupType.name === powItemConfigs.multiBoost.name) {
-                            boarUser.itemCollection.powerups.multiBoost.numTotal +=
-                                (this.powerupType.tiers as number[])[userPowTier];
-                            boarUser.itemCollection.powerups.multiBoost.numClaimed++;
-                            boarUser.itemCollection.powerups.multiBoost.highestTotal = Math.min(Math.max(
-                                boarUser.itemCollection.powerups.multiBoost.highestTotal,
-                                boarUser.itemCollection.powerups.multiBoost.numTotal
-                            ), config.numberConfig.maxMultiBoost);
-                        }
-
-                        if (userPowTier !== -1 && this.powerupType.name === powItemConfigs.extraChance.name) {
-                            boarUser.itemCollection.powerups.extraChance.numTotal +=
-                                (this.powerupType.tiers as number[])[userPowTier];
-                            boarUser.itemCollection.powerups.extraChance.numClaimed++;
-                            boarUser.itemCollection.powerups.extraChance.highestTotal = Math.min(Math.max(
-                                boarUser.itemCollection.powerups.extraChance.highestTotal,
-                                boarUser.itemCollection.powerups.extraChance.numTotal
-                            ), config.numberConfig.maxExtraChance);
-                        }
-
-                        if (userPowTier !== -1 && this.powerupType.name === powItemConfigs.gift.name) {
-                            boarUser.itemCollection.powerups.gift.numTotal +=
-                                (this.powerupType.tiers as number[])[userPowTier];
-                            boarUser.itemCollection.powerups.gift.numClaimed++;
-                            boarUser.itemCollection.powerups.gift.highestTotal = Math.min(Math.max(
-                                boarUser.itemCollection.powerups.gift.highestTotal,
-                                boarUser.itemCollection.powerups.gift.numTotal
-                            ), config.numberConfig.maxPowBase);
-                        }
-
-                        if (userPowTier !== -1 && this.powerupType.name === powItemConfigs.enhancer.name) {
-                            boarUser.itemCollection.powerups.enhancer.numTotal +=
-                                (this.powerupType.tiers as number[])[userPowTier];
-                            boarUser.itemCollection.powerups.enhancer.numClaimed++;
-                            boarUser.itemCollection.powerups.enhancer.highestTotal = Math.min(Math.max(
-                                boarUser.itemCollection.powerups.enhancer.highestTotal,
-                                boarUser.itemCollection.powerups.enhancer.numTotal
-                            ), config.numberConfig.maxEnhancers);
-                        }
-
-                        boarUser.updateUserData();
-                        await Queue.addQueue(async () =>
-                            await DataHandlers.updateLeaderboardData(boarUser, interaction, config),
-                            interaction.id + 'global'
-                        );
-                    } catch (err: unknown) {
-                        LogDebug.handleError(err, interaction);
+                    if (!userTime) {
+                        await LogDebug.handleError('Failed to find user\'s powerup data.', interaction);
+                        continue;
                     }
-                }, interaction.id + interaction.user.id);
+
+                    if (userTime <= this.topOnePercent) {
+                        userPowTier = 0;
+                        responseString = strConfig.powTopOneResponse;
+                    } else if (userTime <= this.topTenPercent) {
+                        userPowTier = 1;
+                        responseString = strConfig.powTopTenResponse;
+                    } else if (userTime <= this.topFiftyPercent) {
+                        userPowTier = 2;
+                        responseString = strConfig.powTopFiftyResponse;
+                    }
+
+                    if ((this.powerupType.tiers as number[])[userPowTier] === 0) {
+                        responseString = strConfig.powNoRewardResponse;
+                    }
+
+                    await Replies.handleReply(
+                        interaction,
+                        responseString.replace('%@', userTime.toString()), config.colorConfig.font,
+                        PowerupImageGenerator.getPowerupString(
+                            this.powerupType, (this.powerupType.tiers as number[])[userPowTier], config
+                        ),
+                        config.colorConfig.powerup,
+                        true
+                    );
+
+                    await Queue.addQueue(async () => {
+                        try {
+                            const boarUser: BoarUser = new BoarUser(interaction.user, true);
+
+                            if (!boarUser.stats.powerups.prompts[this.promptTypeID][this.promptID]) {
+                                boarUser.stats.powerups.prompts[this.promptTypeID][this.promptID] = new PromptData();
+                            }
+
+                            boarUser.stats.powerups.prompts[this.promptTypeID][this.promptID].avg =
+                                (boarUser.stats.powerups.prompts[this.promptTypeID][this.promptID].avg *
+                                    boarUser.stats.powerups.prompts[this.promptTypeID][this.promptID].attempts++ +
+                                    userPercent
+                                ) / boarUser.stats.powerups.prompts[this.promptTypeID][this.promptID].attempts;
+
+                            boarUser.stats.powerups.attempts++;
+
+                            if (userPowTier === 0) {
+                                boarUser.stats.powerups.oneAttempts++;
+                            } else if (userPowTier === 1) {
+                                boarUser.stats.powerups.tenAttempts++;
+                            } else if (userPowTier === 2) {
+                                boarUser.stats.powerups.fiftyAttempts++;
+                            }
+
+                            if (userPowTier !== -1 && this.powerupType.name === powItemConfigs.multiBoost.name) {
+                                boarUser.itemCollection.powerups.multiBoost.numTotal +=
+                                    (this.powerupType.tiers as number[])[userPowTier];
+                                boarUser.itemCollection.powerups.multiBoost.numClaimed++;
+                                boarUser.itemCollection.powerups.multiBoost.highestTotal = Math.min(Math.max(
+                                    boarUser.itemCollection.powerups.multiBoost.highestTotal,
+                                    boarUser.itemCollection.powerups.multiBoost.numTotal
+                                ), config.numberConfig.maxMultiBoost);
+                            }
+
+                            if (userPowTier !== -1 && this.powerupType.name === powItemConfigs.extraChance.name) {
+                                boarUser.itemCollection.powerups.extraChance.numTotal +=
+                                    (this.powerupType.tiers as number[])[userPowTier];
+                                boarUser.itemCollection.powerups.extraChance.numClaimed++;
+                                boarUser.itemCollection.powerups.extraChance.highestTotal = Math.min(Math.max(
+                                    boarUser.itemCollection.powerups.extraChance.highestTotal,
+                                    boarUser.itemCollection.powerups.extraChance.numTotal
+                                ), config.numberConfig.maxExtraChance);
+                            }
+
+                            if (userPowTier !== -1 && this.powerupType.name === powItemConfigs.gift.name) {
+                                boarUser.itemCollection.powerups.gift.numTotal +=
+                                    (this.powerupType.tiers as number[])[userPowTier];
+                                boarUser.itemCollection.powerups.gift.numClaimed++;
+                                boarUser.itemCollection.powerups.gift.highestTotal = Math.min(Math.max(
+                                    boarUser.itemCollection.powerups.gift.highestTotal,
+                                    boarUser.itemCollection.powerups.gift.numTotal
+                                ), config.numberConfig.maxPowBase);
+                            }
+
+                            if (userPowTier !== -1 && this.powerupType.name === powItemConfigs.enhancer.name) {
+                                boarUser.itemCollection.powerups.enhancer.numTotal +=
+                                    (this.powerupType.tiers as number[])[userPowTier];
+                                boarUser.itemCollection.powerups.enhancer.numClaimed++;
+                                boarUser.itemCollection.powerups.enhancer.highestTotal = Math.min(Math.max(
+                                    boarUser.itemCollection.powerups.enhancer.highestTotal,
+                                    boarUser.itemCollection.powerups.enhancer.numTotal
+                                ), config.numberConfig.maxEnhancers);
+                            }
+
+                            boarUser.updateUserData();
+                            await Queue.addQueue(async () =>
+                                    await DataHandlers.updateLeaderboardData(boarUser, interaction, config),
+                                interaction.id + 'global'
+                            ).catch((err) => { throw err });
+                        } catch (err: unknown) {
+                            await LogDebug.handleError(err, interaction);
+                        }
+                    }, interaction.id + interaction.user.id).catch((err) => { throw err });
+                }
+
+                this.claimers = new Map<string, number>();
+                this.interactions = [];
+                this.topOnePercent = -1;
+                this.topTenPercent = -1;
+                this.topFiftyPercent = -1;
+                this.powerupType = {} as ItemConfig;
+                this.readyToEnd = false;
+
+                LogDebug.sendDebug('Powerup finished. Interactions: ' + this.interactions.length, config);
             }
-
-            this.claimers = new Map<string, number>();
-            this.interactions = [];
-            this.topOnePercent = -1;
-            this.topTenPercent = -1;
-            this.topFiftyPercent = -1;
-            this.powerupType = {} as ItemConfig;
-            this.readyToEnd = false;
-
-            LogDebug.sendDebug('Finished', config);
+        } catch (err: unknown) {
+            await LogDebug.handleError(err);
         }
     }
 }

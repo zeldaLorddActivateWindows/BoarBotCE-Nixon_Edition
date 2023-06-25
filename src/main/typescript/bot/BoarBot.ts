@@ -6,7 +6,7 @@ import {
 	Events,
 	GatewayIntentBits,
 	Partials,
-	TextChannel
+	TextChannel, User
 } from 'discord.js';
 import {Bot} from '../api/bot/Bot';
 import {FormatStrings} from '../util/discord/FormatStrings';
@@ -22,6 +22,8 @@ import {PowerupSpawner} from '../util/boar/PowerupSpawner';
 import {Queue} from '../util/interactions/Queue';
 import {DataHandlers} from '../util/data/DataHandlers';
 import {GuildData} from '../util/data/global/GuildData';
+import {CronJob} from 'cron';
+import {BoarUser} from '../util/boar/BoarUser';
 
 dotenv.config();
 
@@ -128,41 +130,62 @@ export class BoarBot implements Bot {
 	 * Sends a status message on start
 	 */
 	public async onStart(): Promise<void> {
-		LogDebug.sendDebug('Successfully logged in! Bot online!', this.getConfig());
-
-		setInterval(() => {
-			LogDebug.sendDebug('Interaction Listeners: ' + this.client.listenerCount(Events.InteractionCreate), this.getConfig())
-		}, 30000);
-
-		let timeUntilPow: number = 0;
-
-		await Queue.addQueue(async () => {
-			try {
-				const globalData = DataHandlers.getGlobalData();
-				timeUntilPow = globalData.nextPowerup;
-			} catch (err: unknown) {
-				await LogDebug.handleError(err);
-			}
-		}, 'start' + 'global');
-
-		new PowerupSpawner(timeUntilPow).startSpawning();
-
-		const botStatusChannel: TextChannel | undefined =
-			await InteractionUtils.getTextChannel(this.getConfig().botStatusChannel);
-
-		if (!botStatusChannel) return;
-
 		try {
+			LogDebug.sendDebug('Successfully logged in! Bot online!', this.getConfig());
+
+			setInterval(() => {
+				LogDebug.sendDebug('Interaction Listeners: ' + this.client.listenerCount(Events.InteractionCreate), this.getConfig())
+			}, 180000);
+
+			let timeUntilPow: number = 0;
+
+			await Queue.addQueue(async () => {
+				try {
+					const globalData = DataHandlers.getGlobalData();
+					timeUntilPow = globalData.nextPowerup;
+				} catch (err: unknown) {
+					await LogDebug.handleError(err);
+				}
+			}, 'start' + 'global').catch((err) => { throw err });
+
+			new PowerupSpawner(timeUntilPow).startSpawning();
+
+			const botStatusChannel: TextChannel | undefined =
+				await InteractionUtils.getTextChannel(this.getConfig().botStatusChannel);
+
+			if (!botStatusChannel) return;
+
 			await botStatusChannel.send(
 				this.getConfig().stringConfig.botStatus +
 				FormatStrings.toRelTime(Math.round(Date.now() / 1000))
 			);
+
+			LogDebug.sendDebug('Successfully sent status message!', this.getConfig());
+
+			new CronJob('0 0 * * *', async () => {
+				for (const userFile of fs.readdirSync(this.getConfig().pathConfig.userDataFolder)) {
+					let user: User | undefined;
+
+					try {
+						user = await this.getClient().users.fetch(userFile.split('.')[0]);
+					} catch {}
+
+					if (!user) continue;
+
+					const boarUser = new BoarUser(user);
+
+					if (boarUser.stats.general.notificationsOn) {
+						try {
+							await user.send('Your daily boar is ready!\n||Message me STOP to turn off notifications||');
+						} catch (err: unknown) {
+							await LogDebug.handleError(err);
+						}
+					}
+				}
+			}, null, true, 'UTC');
 		} catch (err: unknown) {
 			await LogDebug.handleError(err);
-			return;
 		}
-
-		LogDebug.sendDebug('Successfully sent status message!', this.getConfig());
 	}
 
 	/**

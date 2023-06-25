@@ -120,13 +120,11 @@ export default class TopSubcommand implements Subcommand {
         await this.showLeaderboard();
 
         CollectorUtils.topCollectors[interaction.user.id].on(
-            'collect',
-            async (inter: ButtonInteraction | StringSelectMenuInteraction) => await this.handleCollect(inter)
+            'collect', async (inter: ButtonInteraction | StringSelectMenuInteraction) => await this.handleCollect(inter)
         );
 
         CollectorUtils.topCollectors[interaction.user.id].once(
-            'end',
-            async (collected, reason) => await this.handleEndCollect(reason)
+            'end', async (collected, reason) => await this.handleEndCollect(reason)
         );
     }
 
@@ -187,8 +185,10 @@ export default class TopSubcommand implements Subcommand {
 
             await this.showLeaderboard();
         } catch (err: unknown) {
-            await LogDebug.handleError(err);
-            CollectorUtils.topCollectors[inter.user.id].stop(CollectorUtils.Reasons.Error);
+            const canStop = await LogDebug.handleError(err, this.firstInter);
+            if (canStop && CollectorUtils.topCollectors[inter.user.id]) {
+                CollectorUtils.topCollectors[inter.user.id].stop(CollectorUtils.Reasons.Error);
+            }
         }
 
         clearInterval(this.timerVars.updateTime);
@@ -200,8 +200,7 @@ export default class TopSubcommand implements Subcommand {
 
             if (reason == CollectorUtils.Reasons.Error) {
                 await Replies.handleReply(
-                    this.firstInter, this.config.stringConfig.setupError,
-                    this.config.colorConfig.error, undefined, undefined, true
+                    this.firstInter, this.config.stringConfig.setupError, this.config.colorConfig.error
                 );
             }
 
@@ -209,7 +208,7 @@ export default class TopSubcommand implements Subcommand {
                 components: []
             });
         } catch (err: unknown) {
-            await LogDebug.handleError(err);
+            await LogDebug.handleError(err, this.firstInter);
         }
     }
 
@@ -229,6 +228,8 @@ export default class TopSubcommand implements Subcommand {
 
     private modalListener = async (submittedModal: Interaction): Promise<void> => {
         try  {
+            if (submittedModal.user.id !== this.firstInter.user.id) return;
+
             // If not a modal submission on current interaction, destroy the modal listener
             if (
                 submittedModal.isMessageComponent() &&
@@ -244,7 +245,9 @@ export default class TopSubcommand implements Subcommand {
             if (!canInteract) return;
 
             if (
-                !submittedModal.isModalSubmit() || CollectorUtils.topCollectors[submittedModal.user.id].ended ||
+                !submittedModal.isModalSubmit() ||
+                (CollectorUtils.topCollectors[submittedModal.user.id] &&
+                    CollectorUtils.topCollectors[submittedModal.user.id].ended) ||
                 !submittedModal.guild || submittedModal.customId !== this.modalShowing.data.custom_id
             ) {
                 this.endModalListener(submittedModal.client);
@@ -270,8 +273,10 @@ export default class TopSubcommand implements Subcommand {
 
             await this.showLeaderboard();
         } catch (err: unknown) {
-            await LogDebug.handleError(err);
-            CollectorUtils.topCollectors[submittedModal.user.id].stop(CollectorUtils.Reasons.Error);
+            const canStop = await LogDebug.handleError(err, this.firstInter);
+            if (canStop && CollectorUtils.topCollectors[submittedModal.user.id]) {
+                CollectorUtils.topCollectors[submittedModal.user.id].stop(CollectorUtils.Reasons.Error);
+            }
         }
 
         this.endModalListener(submittedModal.client);
@@ -298,8 +303,8 @@ export default class TopSubcommand implements Subcommand {
 
         this.rows[0].components[0].setDisabled(this.curPage === 0);
         this.rows[0].components[1].setDisabled(this.maxPage === 0);
-        this.rows[1].components[0].setDisabled(false);
         this.rows[0].components[2].setDisabled(this.curPage === this.maxPage);
+        this.rows[1].components[0].setDisabled(false);
 
         await this.firstInter.editReply({
             files: [await this.imageGen.makeLeaderboardImage(this.curPage)],

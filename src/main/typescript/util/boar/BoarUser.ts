@@ -22,6 +22,7 @@ import {CollectedBadge} from '../data/userdata/collectibles/CollectedBadge';
 import {CollectedPowerup} from '../data/userdata/collectibles/CollectedPowerup';
 import {GlobalData} from '../data/global/GlobalData';
 import {ItemData} from '../data/global/ItemData';
+import {GuildData} from '../data/global/GuildData';
 
 /**
  * {@link BoarUser BoarUser.ts}
@@ -190,6 +191,8 @@ export class BoarUser {
             this.stats.general.boarStreak = 0;
         }
 
+        this.stats.general.boarScore = Math.max(this.stats.general.boarScore, 0);
+
         userData.itemCollection = this.itemCollection;
         userData.stats = this.stats;
 
@@ -288,7 +291,7 @@ export class BoarUser {
             } catch (err: unknown) {
                 await LogDebug.handleError(err, interaction);
             }
-        }, interaction.id + 'global');
+        }, interaction.id + 'global').catch((err) => { throw err });
 
         await Queue.addQueue(async () => {
             try {
@@ -328,7 +331,7 @@ export class BoarUser {
             } catch (err: unknown) {
                 await LogDebug.handleError(err, interaction);
             }
-        }, interaction.id + interaction.user.id);
+        }, interaction.id + interaction.user.id).catch((err) => { throw err });
 
         if (racerEditions.length > 0) {
             await Queue.addQueue(async () => {
@@ -353,12 +356,12 @@ export class BoarUser {
 
                 this.updateUserData();
                 await this.orderBoars(interaction, config);
-            }, interaction.id + interaction.user.id);
+            }, interaction.id + interaction.user.id).catch((err) => { throw err });
         }
 
         await Queue.addQueue(async () => await DataHandlers.updateLeaderboardData(this, interaction, config),
             interaction.id + 'global'
-        );
+        ).catch((err) => { throw err });
 
         return boarEditions;
     }
@@ -386,7 +389,7 @@ export class BoarUser {
                 this.refreshUserData();
                 hasBadge = this.addBadgeToUser(badgeID);
                 this.updateUserData();
-            }, interaction.id + interaction.user.id);
+            }, interaction.id + interaction.user.id).catch((err) => { throw err });
         }
 
         return hasBadge;
@@ -436,23 +439,25 @@ export class BoarUser {
     ): Promise<void> {
         const obtainedBoars: string[] = Object.keys(this.itemCollection.boars);
 
-        if (
-            obtainedBoars.length === Object.keys(config.itemConfigs.boars).length &&
-            this.itemCollection.badges['hunter'] && this.itemCollection.badges['hunter'].possession
-        ) {
-            return;
-        }
-
         const orderedRarities: RarityConfig[] = [...config.rarityConfigs]
             .sort((rarity1, rarity2) => { return rarity1.weight - rarity2.weight; });
         let numSpecial: number = 0;
         let numZeroBoars: number = 0;
 
         let maxUniques: number = 0;
+        const guildData: GuildData | undefined = await DataHandlers.getGuildData(interaction.guild?.id);
+        const isSBServer: boolean | undefined = guildData?.isSBServer;
 
         for (const rarity of orderedRarities) {
             if (rarity.name !== 'Special') {
                 maxUniques += rarity.boars.length;
+            }
+        }
+
+        for (const boarID of Object.keys(config.itemConfigs.boars)) {
+            const boarInfo = config.itemConfigs.boars[boarID];
+            if (!isSBServer && boarInfo.isSB) {
+                maxUniques--;
             }
         }
 
@@ -497,8 +502,6 @@ export class BoarUser {
 
     private orderGlobalBoars(globalData: GlobalData, config: BotConfig): void {
         const globalBoars: string[] = Object.keys(globalData.itemData.boars);
-
-        if (globalBoars.length === Object.keys(config.itemConfigs.boars).length) return;
 
         const orderedRarities: RarityConfig[] = [...config.rarityConfigs]
             .sort((rarity1, rarity2) => { return rarity1.weight - rarity2.weight; });
