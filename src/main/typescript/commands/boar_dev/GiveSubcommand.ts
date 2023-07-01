@@ -22,9 +22,9 @@ export default class GiveSubcommand implements Subcommand {
     private config = BoarBotApp.getBot().getConfig();
     private interaction: ChatInputCommandInteraction = {} as ChatInputCommandInteraction;
     private userInput: User = {} as User;
-    private idInput: string = '';
+    private idInput = '';
     private subcommandInfo = this.config.commandConfigs.boarDev.give;
-    public readonly data = { name: this.subcommandInfo.name, path: __filename, cooldown: this.subcommandInfo.cooldown };
+    public readonly data = { name: this.subcommandInfo.name, path: __filename };
 
     /**
      * Handles the functionality for this subcommand
@@ -108,7 +108,7 @@ export default class GiveSubcommand implements Subcommand {
         let replyString: string = strConfig.giveBoar;
 
         if (
-            tag === strConfig.giveBoarChoiceTag && !BoarUtils.findRarity(inputID, this.config) ||
+            !tag || tag === strConfig.giveBoarChoiceTag && !BoarUtils.findRarity(inputID, this.config) ||
             tag === strConfig.giveBadgeChoiceTag && !this.config.itemConfigs.badges[inputID]
         ) {
             await Replies.handleReply(this.interaction, strConfig.giveBadID);

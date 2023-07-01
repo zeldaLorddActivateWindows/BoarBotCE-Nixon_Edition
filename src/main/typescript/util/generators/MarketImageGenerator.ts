@@ -76,15 +76,7 @@ export class MarketImageGenerator {
 
         ctx.drawImage(await Canvas.loadImage(underlay), ...nums.originPos);
 
-        const curShowing = this.itemPricing.slice(page*8, (page+1) * 8);
-
-        const imgStartPos = [25, 205];
-        const buyStartPos = [248, 698];
-        const sellStartPos = [248, 753];
-        const incX = 466;
-        const incY = 593;
-
-        const cols = 4;
+        const curShowing = this.itemPricing.slice(page*nums.marketPerPage, (page+1) * nums.marketPerPage);
 
         for (let i=0; i<curShowing.length; i++) {
             const item = curShowing[i];
@@ -93,11 +85,11 @@ export class MarketImageGenerator {
                 : this.config.itemConfigs[item.type][item.id].file);
 
             const imagePos: [number, number] = [
-                imgStartPos[0] + i % cols * incX,
-                imgStartPos[1] + Math.floor(i / cols) * incY
+                nums.marketOverImgStart[0] + i % nums.marketOverCols * nums.marketOverIncX,
+                nums.marketOverImgStart[1] + Math.floor(i / nums.marketOverCols) * nums.marketOverIncY
             ];
 
-            ctx.drawImage(await Canvas.loadImage(file), ...imagePos, 443, 443);
+            ctx.drawImage(await Canvas.loadImage(file), ...imagePos, ...nums.marketOverImgSize);
         }
 
         ctx.drawImage(await Canvas.loadImage(overlay), ...nums.originPos);
@@ -106,35 +98,37 @@ export class MarketImageGenerator {
             const item = curShowing[i];
 
             const buyPos: [number, number] = [
-                buyStartPos[0] + i % cols * incX,
-                buyStartPos[1] + Math.floor(i / cols) * incY
+                nums.marketOverBuyStart[0] + i % nums.marketOverCols * nums.marketOverIncX,
+                nums.marketOverBuyStart[1] + Math.floor(i / nums.marketOverCols) * nums.marketOverIncY
             ];
             const sellPos: [number, number] = [
-                sellStartPos[0] + i % cols * incX,
-                sellStartPos[1] + Math.floor(i / cols) * incY
+                nums.marketOverSellStart[0] + i % nums.marketOverCols * nums.marketOverIncX,
+                nums.marketOverSellStart[1] + Math.floor(i / nums.marketOverCols) * nums.marketOverIncY
             ];
 
-            let buyVal = 'N/A';
-            let sellVal = 'N/A';
+            let buyVal = strConfig.unavailable;
+            let sellVal = strConfig.unavailable;
 
             for (const instaBuy of item.instaBuys) {
                 if (instaBuy.num === instaBuy.filledAmount || instaBuy.listTime + nums.orderExpire < Date.now())
                     continue;
                 buyVal = instaBuy.price.toLocaleString();
+                break;
             }
 
             for (const instaSell of item.instaSells) {
                 if (instaSell.num === instaSell.filledAmount || instaSell.listTime + nums.orderExpire < Date.now())
                     continue;
                 sellVal = instaSell.price.toLocaleString();
+                break;
             }
 
             CanvasUtils.drawText(
-                ctx, 'B: %@' + buyVal, buyPos, font, 'center', colorConfig.font, 420, false,
+                ctx, 'B: %@' + buyVal, buyPos, font, 'center', colorConfig.font, nums.marketOverTextWidth, false,
                 buyVal !== 'N/A' ? '$' : '', colorConfig.bucks
             );
             CanvasUtils.drawText(
-                ctx, 'S: %@' + sellVal, sellPos, font, 'center', colorConfig.font, 420, false,
+                ctx, 'S: %@' + sellVal, sellPos, font, 'center', colorConfig.font, nums.marketOverTextWidth, false,
                 sellVal !== 'N/A' ? '$' : '', colorConfig.bucks
             );
         }
@@ -159,10 +153,10 @@ export class MarketImageGenerator {
         let rarityName = 'Powerup';
         let rarityColor = colorConfig.powerup;
         let itemName = this.config.itemConfigs[item.type][item.id].name;
-        let lowBuy: string = 'N/A';
-        let highSell: string = 'N/A';
-        let buyOrderVolume: number = 0;
-        let sellOrderVolume: number = 0;
+        let lowBuy = strConfig.unavailable;
+        let highSell = strConfig.unavailable;
+        let buyOrderVolume = 0;
+        let sellOrderVolume = 0;
 
         if (item.type === 'boars') {
             const rarity = BoarUtils.findRarity(item.id, this.config);
@@ -178,7 +172,7 @@ export class MarketImageGenerator {
 
                 if (noEditionExists) continue;
 
-                if (lowBuy === 'N/A') {
+                if (lowBuy === strConfig.unavailable) {
                     lowBuy = '%@' + instaBuy.price.toLocaleString();
                 }
 
@@ -192,7 +186,7 @@ export class MarketImageGenerator {
 
                 if (noEditionExists) continue;
 
-                if (highSell === 'N/A') {
+                if (highSell === strConfig.unavailable) {
                     highSell = '%@' + instaSell.price.toLocaleString();
                 }
 
@@ -202,7 +196,7 @@ export class MarketImageGenerator {
             itemName += ' #' + edition;
         } else {
             for (const instaBuy of item.instaBuys) {
-                const lowBuyUnset = lowBuy === 'N/A';
+                const lowBuyUnset = lowBuy === strConfig.unavailable;
                 const validOrder = instaBuy.num !== instaBuy.filledAmount &&
                     instaBuy.listTime + nums.orderExpire >= Date.now();
 
@@ -216,7 +210,7 @@ export class MarketImageGenerator {
             }
 
             for (const instaSell of item.instaSells) {
-                const highSellUnset = highSell === 'N/A';
+                const highSellUnset = highSell === strConfig.unavailable;
                 const validOrder = instaSell.num !== instaSell.filledAmount &&
                     instaSell.listTime + nums.orderExpire >= Date.now();
 
@@ -230,42 +224,50 @@ export class MarketImageGenerator {
             }
         }
 
-        const bigFont: string = `${nums.fontBig}px ${strConfig.fontName}`;
-        const mediumFont: string = `${nums.fontMedium}px ${strConfig.fontName}`;
-        const smallMediumFont: string = `${nums.fontSmallMedium}px ${strConfig.fontName}`;
+        const bigFont = `${nums.fontBig}px ${strConfig.fontName}`;
+        const mediumFont = `${nums.fontMedium}px ${strConfig.fontName}`;
+        const smallMediumFont = `${nums.fontSmallMedium}px ${strConfig.fontName}`;
 
         const canvas = Canvas.createCanvas(...nums.marketSize);
         const ctx = canvas.getContext('2d');
 
         ctx.drawImage(await Canvas.loadImage(underlay), ...nums.originPos);
 
-        ctx.drawImage(await Canvas.loadImage(file), 710, 205, 1159, 1159);
+        ctx.drawImage(await Canvas.loadImage(file), ...nums.marketBSImgPos, ...nums.marketBSImgSize);
 
-        CanvasUtils.drawText(ctx, rarityName.toUpperCase(), [358, 334], mediumFont, 'center', rarityColor);
+        CanvasUtils.drawText(ctx, rarityName.toUpperCase(), nums.marketBSRarityPos, mediumFont, 'center', rarityColor);
         CanvasUtils.drawText(
-            ctx, itemName, [358, 400], bigFont, 'center', colorConfig.font, 620
+            ctx, itemName, nums.marketBSNamePos, bigFont, 'center', colorConfig.font, nums.marketBSNameWidth
         );
 
-        CanvasUtils.drawText(ctx, 'Buy Now Price', [358, 568], mediumFont, 'center', colorConfig.font);
         CanvasUtils.drawText(
-            ctx, lowBuy, [358, 639], smallMediumFont, 'center', colorConfig.font,
+            ctx, strConfig.marketBSBuyNowLabel, nums.marketBSBuyNowLabelPos, mediumFont, 'center', colorConfig.font
+        );
+        CanvasUtils.drawText(
+            ctx, lowBuy, nums.marketBSBuyNowPos, smallMediumFont, 'center', colorConfig.font,
             undefined, false, '$', colorConfig.bucks
         );
 
-        CanvasUtils.drawText(ctx, 'Sell Now Price', [358, 764], mediumFont, 'center', colorConfig.font);
         CanvasUtils.drawText(
-            ctx, highSell, [358, 835], smallMediumFont, 'center', colorConfig.font,
+            ctx, strConfig.marketBSSellNowLabel, nums.marketBSSellNowLabelPos, mediumFont, 'center', colorConfig.font
+        );
+        CanvasUtils.drawText(
+            ctx, highSell, nums.marketBSSellNowPos, smallMediumFont, 'center', colorConfig.font,
             undefined, false, '$', colorConfig.bucks
         );
 
-        CanvasUtils.drawText(ctx, 'Buy Order Volume', [358, 960], mediumFont, 'center', colorConfig.font);
         CanvasUtils.drawText(
-            ctx, buyOrderVolume.toLocaleString(), [358, 1031], smallMediumFont, 'center', colorConfig.font
+            ctx, strConfig.marketBSBuyOrdLabel, nums.marketBSBuyOrdLabelPos, mediumFont, 'center', colorConfig.font
+        );
+        CanvasUtils.drawText(
+            ctx, buyOrderVolume.toLocaleString(), nums.marketBSBuyOrdPos, smallMediumFont, 'center', colorConfig.font
         );
 
-        CanvasUtils.drawText(ctx, 'Sell Offer Volume', [358, 1156], mediumFont, 'center', colorConfig.font);
         CanvasUtils.drawText(
-            ctx, sellOrderVolume.toLocaleString(), [358, 1227], smallMediumFont, 'center', colorConfig.font
+            ctx, strConfig.marketBSSellOrdLabel, nums.marketBSSellOrdLabelPos, mediumFont, 'center', colorConfig.font
+        );
+        CanvasUtils.drawText(
+            ctx, sellOrderVolume.toLocaleString(), nums.marketBSSellOrdPos, smallMediumFont, 'center', colorConfig.font
         );
 
         ctx.drawImage(await Canvas.loadImage(overlay), ...nums.originPos);
@@ -280,8 +282,8 @@ export class MarketImageGenerator {
         const colorConfig = this.config.colorConfig;
 
         let orderInfo: {data: BuySellData, id: string, type: string};
-        let claimText: string = 'None';
-        let coloredClaimText: string = '';
+        let claimText = strConfig.emptySelect;
+        let coloredClaimText = '';
 
         if (page < this.userBuyOrders.length) {
             orderInfo = this.userBuyOrders[page];
@@ -299,13 +301,14 @@ export class MarketImageGenerator {
             const numToClaim = orderInfo.data.filledAmount - orderInfo.data.claimedAmount;
 
             if (orderInfo.data.claimedAmount < orderInfo.data.filledAmount) {
-                claimText = '%@ ' + (numToClaim * orderInfo.data.price).toLocaleString();
+                claimText = '%@' + (numToClaim * orderInfo.data.price).toLocaleString();
                 coloredClaimText = '$';
             }
         }
 
         let rarityColor = colorConfig.powerup;
         let isSpecial = false;
+        const isSell = page >= this.userBuyOrders.length;
 
         if (orderInfo.type === 'boars') {
             const rarity = BoarUtils.findRarity(orderInfo.id, this.config);
@@ -326,10 +329,11 @@ export class MarketImageGenerator {
 
         ctx.drawImage(await Canvas.loadImage(underlay), ...nums.originPos);
 
-        ctx.drawImage(await Canvas.loadImage(file), 25, 395, 780, 780);
+        ctx.drawImage(await Canvas.loadImage(file), ...nums.marketOrdImgPos, ...nums.marketOrdImgSize);
 
         CanvasUtils.drawText(
-            ctx, 'Buying: %@', [415, 308], mediumFont, 'center', colorConfig.font, 740, true,
+            ctx, isSell ? strConfig.marketOrdSell : strConfig.marketOrdBuy, nums.marketOrdNamePos, mediumFont, 'center',
+            colorConfig.font, nums.marketOrdNameWidth, true,
             this.config.itemConfigs[orderInfo.type][orderInfo.id].name + (isSpecial
                 ? ' #' + orderInfo.data.editions[0]
                 : ''),
@@ -337,26 +341,38 @@ export class MarketImageGenerator {
         );
 
         CanvasUtils.drawText(
-            ctx, 'Listed ' + moment(orderInfo.data.listTime).fromNow(), [415, 1302], mediumFont, 'center',
-            colorConfig.font, 740, true
+            ctx, strConfig.marketOrdList.replace('%@',moment(orderInfo.data.listTime).fromNow()), nums.marketOrdListPos,
+            mediumFont, 'center', colorConfig.font, nums.marketOrdNameWidth, true,
+            (Date.now() > orderInfo.data.listTime + nums.oneDay * 7)
+                ? strConfig.marketOrdExpire
+                : '',
+            colorConfig.error
         );
 
-        CanvasUtils.drawText(ctx, 'Price per Unit', [1348, 559], mediumFont, 'center', colorConfig.font);
         CanvasUtils.drawText(
-            ctx, '%@' + orderInfo.data.price.toLocaleString(), [1348, 630], smallMediumFont, 'center',
+            ctx, strConfig.marketOrdPriceLabel, nums.marketOrdPriceLabelPos, mediumFont, 'center', colorConfig.font
+        );
+        CanvasUtils.drawText(
+            ctx, '%@' + orderInfo.data.price.toLocaleString(), nums.marketOrdPricePos, smallMediumFont, 'center',
             colorConfig.font, undefined, false, '$', colorConfig.bucks
         );
 
-        CanvasUtils.drawText(ctx, 'Amount Filled', [1348, 765], mediumFont, 'center', colorConfig.font);
+        CanvasUtils.drawText(
+            ctx, strConfig.marketOrdFillLabel, nums.marketOrdFillLabelPos, mediumFont, 'center', colorConfig.font
+        );
         CanvasUtils.drawText(
             ctx, orderInfo.data.filledAmount.toLocaleString() + '/' + orderInfo.data.num.toLocaleString(),
-            [1348, 836], smallMediumFont, 'center', colorConfig.font
+            nums.marketOrdFillPos, smallMediumFont, 'center', colorConfig.font
         );
 
-        CanvasUtils.drawText(ctx, 'Items/Bucks to Claim', [1348, 971], mediumFont, 'center', colorConfig.font);
         CanvasUtils.drawText(
-            ctx, claimText, [1348, 1026], smallMediumFont, 'center', colorConfig.font, 620, false,
-            coloredClaimText, coloredClaimText === '$' ? colorConfig.bucks : rarityColor
+            ctx, strConfig.marketOrdClaimLabel, nums.marketOrdClaimLabelPos, mediumFont, 'center', colorConfig.font
+        );
+        CanvasUtils.drawText(
+            ctx, claimText, nums.marketOrdClaimPos, smallMediumFont, 'center', colorConfig.font,
+            nums.marketOrdClaimWidth, false, coloredClaimText, coloredClaimText === '$'
+                ? colorConfig.bucks
+                : rarityColor
         );
 
         return new AttachmentBuilder(canvas.toBuffer(), { name: `${strConfig.imageName}.png` });

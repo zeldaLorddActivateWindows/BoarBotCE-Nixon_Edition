@@ -4,10 +4,9 @@ import {
     ButtonInteraction,
     ButtonStyle,
     ChannelType, ChatInputCommandInteraction, Client, Collection,
-    ComponentType, Events, GuildBasedChannel, Interaction,
+    Events, GuildBasedChannel, Interaction, InteractionCollector,
     ModalBuilder, PermissionsBitField, SelectMenuComponentOptionData,
     StringSelectMenuBuilder, StringSelectMenuInteraction, TextChannel,
-    TextInputStyle,
 } from 'discord.js';
 import fs from 'fs';
 import {BoarBotApp} from '../../BoarBotApp';
@@ -42,7 +41,7 @@ export default class SetupSubcommand implements Subcommand {
         {} as StringSelectMenuInteraction | ButtonInteraction;
     private staticRows: ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>[] = [];
     private setupFields: FormField[] = [];
-    private guildDataPath: string = '';
+    private guildDataPath = '';
     private guildData: GuildData = {} as GuildData;
     private userResponses = {
         isSBServer: false,
@@ -50,12 +49,14 @@ export default class SetupSubcommand implements Subcommand {
     };
     private timerVars = {
         timeUntilNextCollect: 0,
-        updateTime: setTimeout(() => {}, 0)
+        updateTime: setTimeout(() => {})
     };
-    private curField: number = 1;
+    private curField = 1;
     private modalShowing: ModalBuilder = {} as ModalBuilder;
     private curModalListener: ((submittedModal: Interaction) => Promise<void>) | undefined;
-    public readonly data = { name: this.subcommandInfo.name, path: __filename, cooldown: this.subcommandInfo.cooldown };
+    private collector: InteractionCollector<ButtonInteraction | StringSelectMenuInteraction> =
+        {} as InteractionCollector<ButtonInteraction | StringSelectMenuInteraction>;
+    public readonly data = { name: this.subcommandInfo.name, path: __filename };
 
     /**
      * Handles the functionality for this subcommand
@@ -77,10 +78,11 @@ export default class SetupSubcommand implements Subcommand {
         this.guildData = await DataHandlers.getGuildData(interaction.guild.id, interaction, true) as GuildData;
 
         if (CollectorUtils.setupCollectors[interaction.user.id]) {
-            CollectorUtils.setupCollectors[interaction.user.id].stop('idle');
+            const oldCollector = CollectorUtils.setupCollectors[interaction.user.id];
+            setTimeout(() => { oldCollector.stop(CollectorUtils.Reasons.Expired) }, 1000);
         }
 
-        CollectorUtils.setupCollectors[interaction.user.id] = await CollectorUtils.createCollector(
+        this.collector = CollectorUtils.setupCollectors[interaction.user.id] = await CollectorUtils.createCollector(
             interaction.channel as TextChannel, interaction.id, this.config.numberConfig
         ).catch(async (err: unknown) => {
             await DataHandlers.removeGuildFile(this.guildDataPath, this.guildData);
@@ -92,14 +94,13 @@ export default class SetupSubcommand implements Subcommand {
             throw err;
         });
 
-        CollectorUtils.setupCollectors[interaction.user.id].on(
+        this.collector.on(
             'collect',
             async (inter: StringSelectMenuInteraction | ButtonInteraction) => await this.handleCollect(inter)
         );
 
-        CollectorUtils.setupCollectors[interaction.user.id].once(
-            'end',
-            async (collected, reason) => await this.handleEndCollect(reason)
+        this.collector.once(
+            'end', async (collected, reason) => await this.handleEndCollect(reason)
         );
     }
 
@@ -115,6 +116,10 @@ export default class SetupSubcommand implements Subcommand {
             if (!canInteract) return;
 
             if (!inter.isMessageComponent()) return;
+
+            if (!inter.customId.includes(this.firstInter.id)) {
+                this.collector.stop(CollectorUtils.Reasons.Error);
+            }
 
             this.compInter = inter;
 
@@ -151,7 +156,7 @@ export default class SetupSubcommand implements Subcommand {
                 // User wants to finish or go to next field
                 case setupComponents.next.customId:
                     if (this.curField === 2) {
-                        CollectorUtils.setupCollectors[inter.user.id].stop(CollectorUtils.Reasons.Finished);
+                        this.collector.stop(CollectorUtils.Reasons.Finished);
                         break;
                     }
 
@@ -160,7 +165,7 @@ export default class SetupSubcommand implements Subcommand {
 
                 // User wants to cancel setup
                 case setupComponents.cancel.customId:
-                    CollectorUtils.setupCollectors[inter.user.id].stop(CollectorUtils.Reasons.Cancelled);
+                    this.collector.stop(CollectorUtils.Reasons.Cancelled);
                     break;
 
                 // User selects a boar channel
@@ -197,8 +202,10 @@ export default class SetupSubcommand implements Subcommand {
                     break;
             }
         } catch (err: unknown) {
-            await LogDebug.handleError(err);
-            CollectorUtils.setupCollectors[inter.user.id].stop(CollectorUtils.Reasons.Error);
+            const canStop: boolean = await LogDebug.handleError(err, this.firstInter);
+            if (canStop) {
+                this.collector.stop(CollectorUtils.Reasons.Error);
+            }
         }
 
         clearInterval(this.timerVars.updateTime);
@@ -319,6 +326,7 @@ export default class SetupSubcommand implements Subcommand {
             switch (reason) {
                 case CollectorUtils.Reasons.Cancelled:
                     replyContent = strConfig.setupCancelled;
+                    color = this.config.colorConfig.error;
                     break;
                 case CollectorUtils.Reasons.Error:
                     replyContent = strConfig.setupError;
@@ -326,6 +334,7 @@ export default class SetupSubcommand implements Subcommand {
                     break;
                 case CollectorUtils.Reasons.Expired:
                     replyContent = strConfig.setupExpired;
+                    color = this.config.colorConfig.error;
                     break;
                 case CollectorUtils.Reasons.Finished:
                     this.guildData = {
@@ -347,7 +356,7 @@ export default class SetupSubcommand implements Subcommand {
 
             await Replies.handleReply(this.firstInter, replyContent, color);
         } catch (err: unknown) {
-            await LogDebug.handleError(err);
+            await LogDebug.handleError(err, this.firstInter);
         }
     }
 
@@ -421,7 +430,7 @@ export default class SetupSubcommand implements Subcommand {
         const modals: ModalConfig[] = this.config.commandConfigs.boarManage.setup.modals;
 
         this.modalShowing = new ModalBuilder(modals[this.curField-1]);
-        this.modalShowing.setCustomId(modals[this.curField-1].customId + + '|' + inter.id);
+        this.modalShowing.setCustomId(modals[this.curField-1].customId + '|' + inter.id);
         await inter.showModal(this.modalShowing);
 
         inter.client.on(
@@ -442,6 +451,8 @@ export default class SetupSubcommand implements Subcommand {
      */
     private modalListener = async (submittedModal: Interaction) => {
         try  {
+            if (submittedModal.user.id !== this.firstInter.user.id) return;
+
             // If not a modal submission on current interaction, destroy the modal listener
             if (submittedModal.isMessageComponent() && submittedModal.customId.endsWith(this.firstInter.id as string) ||
                 BoarBotApp.getBot().getConfig().maintenanceMode && !this.config.devs.includes(this.compInter.user.id)
@@ -451,11 +462,15 @@ export default class SetupSubcommand implements Subcommand {
             }
 
             // Updates the cooldown to interact again
-            let canInteract = await CollectorUtils.canInteract(this.timerVars);
-            if (!canInteract) return;
+            const canInteract = await CollectorUtils.canInteract(this.timerVars);
+            if (!canInteract) {
+                this.endModalListener(submittedModal.client);
+                return;
+            }
 
-            if (!submittedModal.isModalSubmit() || CollectorUtils.setupCollectors[submittedModal.user.id].ended ||
-                !submittedModal.guild || submittedModal.customId !== this.modalShowing.data.custom_id
+            if (
+                !submittedModal.isModalSubmit() || this.collector.ended || !submittedModal.guild ||
+                submittedModal.customId !== this.modalShowing.data.custom_id
             ) {
                 this.endModalListener(submittedModal.client);
                 return;
@@ -471,7 +486,7 @@ export default class SetupSubcommand implements Subcommand {
             );
             const submittedChannel: GuildBasedChannel | undefined = submittedModal.guild.channels.cache
                 .get(submittedChannelID);
-            const notAlreadyChosen: boolean = !this.userResponses.boarChannels.includes(submittedChannelID);
+            const notAlreadyChosen = !this.userResponses.boarChannels.includes(submittedChannelID);
 
             let submittedChannelName: string;
             let submittedChannelParentName: string = strConfig.noParentChannel;
@@ -502,7 +517,7 @@ export default class SetupSubcommand implements Subcommand {
                 .substring(0, 100);
 
             // Last select menu index by default
-            let selectIndex: number = 2;
+            let selectIndex = 2;
 
             // Gets next select menu that can be changed, if all full, change last one
             for (let i=0; i<2; i++) {
@@ -522,8 +537,10 @@ export default class SetupSubcommand implements Subcommand {
                 selectIndex
             );
         } catch (err: unknown) {
-            await LogDebug.handleError(err);
-            CollectorUtils.setupCollectors[submittedModal.user.id].stop(CollectorUtils.Reasons.Error);
+            const canStop: boolean = await LogDebug.handleError(err, this.firstInter);
+            if (canStop) {
+                this.collector.stop(CollectorUtils.Reasons.Error);
+            }
         }
 
         this.endModalListener(submittedModal.client);
@@ -546,7 +563,7 @@ export default class SetupSubcommand implements Subcommand {
      */
     private async updateSelectField(
         placeholder: string,
-        selectIndex: number = 0,
+        selectIndex = 0,
     ): Promise<void> {
         const strConfig: StringConfig = this.config.stringConfig;
         const setupRowConfigs: RowConfig[][] = this.config.commandConfigs.boarManage.setup.componentFields;
@@ -586,7 +603,7 @@ export default class SetupSubcommand implements Subcommand {
             const selectMenu: StringSelectMenuBuilder =
                 this.setupFields[0].components[selectIndex].components[0] as StringSelectMenuBuilder;
 
-            let channelsString: string = '';
+            let channelsString = '';
 
             for (const channel of this.userResponses.boarChannels) {
                 if (channel === '') continue;
@@ -610,7 +627,7 @@ export default class SetupSubcommand implements Subcommand {
      */
     private getStaticRows(): ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>[] {
         const staticRowsConfig: RowConfig[] = this.config.commandConfigs.boarManage.setup.componentFields[2];
-        let staticRows: ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>[] =
+        const staticRows: ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>[] =
             ComponentUtils.makeRows(staticRowsConfig);
 
         ComponentUtils.addToIDs(staticRowsConfig, staticRows, this.firstInter.id);

@@ -65,11 +65,7 @@ export class LogDebug {
 
         const completeString = prefix + time + debugMessage;
 
-        try {
-            this.sendLogMessage(completeString, config);
-        } catch {
-            console.log(completeString);
-        }
+        console.log(completeString);
     }
 
     /**
@@ -77,17 +73,21 @@ export class LogDebug {
      *
      * @param err - Error message
      * @param interaction - Interaction to reply to
+     * @param sendToChannel
      */
     public static async handleError(
         err: unknown | string,
         interaction?: ChatInputCommandInteraction | ModalSubmitInteraction |
-            AutocompleteInteraction | MessageComponentInteraction
-    ): Promise<void> {
+            AutocompleteInteraction | MessageComponentInteraction,
+        sendToChannel = true
+    ): Promise<boolean> {
         try {
-            let errString: string | undefined = typeof err === 'string' ? err : (err as Error).stack;
-            const prefix: string = `[${Colors.Green}CAUGHT ERROR${Colors.White}] `;
+            const errString: string | undefined = typeof err === 'string' ? err : (err as Error).stack;
+            const prefix = `[${Colors.Green}CAUGHT ERROR${Colors.White}] `;
             const time: string = LogDebug.getPrefixTime();
             const config: BotConfig = BoarBotApp.getBot().getConfig();
+
+            if (errString && errString.includes('Unknown interaction')) return false;
 
             let completeString: string = prefix + time;
             if (interaction && interaction.isChatInputCommand()) {
@@ -101,19 +101,23 @@ export class LogDebug {
             }
 
             try {
-                await this.sendLogMessage(completeString, config);
+                if (sendToChannel) {
+                    await this.sendLogMessage(completeString, config);
+                }
             } catch {
                 console.log(completeString);
             }
 
-            if (!interaction || interaction.isAutocomplete()) return;
+            if (!interaction || interaction.isAutocomplete()) return true;
 
-            let errResponse: string = config.stringConfig.error;
+            const errResponse = config.stringConfig.error;
 
             await Replies.handleReply(interaction, errResponse, config.colorConfig.error);
         } catch (err: unknown) {
             await this.handleError(err);
         }
+
+        return true;
     }
 
     /**
@@ -123,7 +127,7 @@ export class LogDebug {
      * @param config - Used to get DM reply string
      */
     public static async sendReport(message: Message, config: BotConfig): Promise<void> {
-        const prefix: string = `[${Colors.Blue}DM REPORT${Colors.White}] `;
+        const prefix = `[${Colors.Blue}DM REPORT${Colors.White}] `;
         const time: string = LogDebug.getPrefixTime();
         const completeString: string = prefix + time +
             `${message.author.username + '(' + message.author.id + ')'} sent: ` + message.content;

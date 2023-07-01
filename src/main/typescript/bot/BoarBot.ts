@@ -1,12 +1,11 @@
 import dotenv from 'dotenv';
 import fs from 'fs';
 import {
-	ActivityType,
 	Client,
 	Events,
 	GatewayIntentBits,
 	Partials,
-	TextChannel
+	TextChannel, User
 } from 'discord.js';
 import {Bot} from '../api/bot/Bot';
 import {FormatStrings} from '../util/discord/FormatStrings';
@@ -22,6 +21,8 @@ import {PowerupSpawner} from '../util/boar/PowerupSpawner';
 import {Queue} from '../util/interactions/Queue';
 import {DataHandlers} from '../util/data/DataHandlers';
 import {GuildData} from '../util/data/global/GuildData';
+import {CronJob} from 'cron';
+import {BoarUser} from '../util/boar/BoarUser';
 
 dotenv.config();
 
@@ -125,44 +126,142 @@ export class BoarBot implements Bot {
 	}
 
 	/**
-	 * Sends a status message on start
+	 * Performs actions/functions needed on start
 	 */
 	public async onStart(): Promise<void> {
-		LogDebug.sendDebug('Successfully logged in! Bot online!', this.getConfig());
-
-		setInterval(() => {
-			LogDebug.sendDebug('Interaction Listeners: ' + this.client.listenerCount(Events.InteractionCreate), this.getConfig())
-		}, 30000);
-
-		let timeUntilPow: number = 0;
-
-		await Queue.addQueue(async () => {
-			try {
-				const globalData = DataHandlers.getGlobalData();
-				timeUntilPow = globalData.nextPowerup;
-			} catch (err: unknown) {
-				await LogDebug.handleError(err);
-			}
-		}, 'start' + 'global');
-
-		new PowerupSpawner(timeUntilPow).startSpawning();
-
-		const botStatusChannel: TextChannel | undefined =
-			await InteractionUtils.getTextChannel(this.getConfig().botStatusChannel);
-
-		if (!botStatusChannel) return;
-
 		try {
+			LogDebug.sendDebug('Successfully logged in! Bot online!', this.getConfig());
+
+			this.startNotificationCron();
+			// await this.fixUserTotals();
+
+			// Logs interaction listeners to avoid memory leaks
+			setInterval(() => {
+				LogDebug.sendDebug(
+					'Interaction Listeners: ' + this.client.listenerCount(Events.InteractionCreate), this.getConfig()
+				)
+			}, 180000);
+
+			// Powerup spawning
+
+			let timeUntilPow = 0;
+
+			await Queue.addQueue(async () => {
+				try {
+					const globalData = DataHandlers.getGlobalData();
+					timeUntilPow = globalData.nextPowerup;
+				} catch (err: unknown) {
+					await LogDebug.handleError(err);
+				}
+			}, 'start' + 'global').catch((err) => { throw err });
+
+			new PowerupSpawner(timeUntilPow).startSpawning();
+
+			// Send status message
+
+			const botStatusChannel: TextChannel | undefined =
+				await InteractionUtils.getTextChannel(this.getConfig().botStatusChannel);
+
+			if (!botStatusChannel) return;
+
 			await botStatusChannel.send(
 				this.getConfig().stringConfig.botStatus +
 				FormatStrings.toRelTime(Math.round(Date.now() / 1000))
 			);
+
+			LogDebug.sendDebug('Successfully sent status message!', this.getConfig());
 		} catch (err: unknown) {
 			await LogDebug.handleError(err);
-			return;
 		}
+	}
 
-		LogDebug.sendDebug('Successfully sent status message!', this.getConfig());
+	// private async fixUserTotals(): Promise<void> {
+	// 	for (const userFile of fs.readdirSync(this.getConfig().pathConfig.userDataFolder)) {
+	// 		let user: User | undefined;
+	//
+	// 		try {
+	// 			user = await this.getClient().users.fetch(userFile.split('.')[0]);
+	// 		} catch {}
+	//
+	// 		if (!user) continue;
+	//
+	// 		const boarUser = new BoarUser(user);
+	//
+	// 		let multiActual = 1;
+	//
+	// 		for (const boarID of Object.keys(boarUser.itemCollection.boars)) {
+	// 			const rarity = BoarUtils.findRarity(boarID, this.getConfig());
+	//
+	// 			if (rarity[1].name !== 'Special') {
+	// 				multiActual++;
+	// 			}
+	// 		}
+	//
+	// 		boarUser.stats.general.multiplier = multiActual;
+	// 		boarUser.stats.general.highestMulti = multiActual;
+	// 		boarUser.updateUserData();
+	// 	}
+	// }
+
+	/**
+	 * Starts CronJob that sends notifications for boar daily
+	 * @private
+	 */
+	private startNotificationCron(): void {
+		new CronJob('0 0 * * *', async () => {
+			for (const userFile of fs.readdirSync(this.getConfig().pathConfig.userDataFolder)) {
+				let user: User | undefined;
+
+				try {
+					user = await this.getClient().users.fetch(userFile.split('.')[0]);
+				} catch {}
+
+				if (!user) continue;
+
+				const boarUser = new BoarUser(user);
+
+				if (boarUser.stats.general.notificationsOn) {
+					const msgStrs = this.getConfig().stringConfig.notificationExtras;
+					const dailyReadyStr = this.getConfig().stringConfig.notificationDailyReady;
+					const stopStr = this.getConfig().stringConfig.notificationStopStr;
+
+					const randMsgIndex = Math.floor(Math.random() * msgStrs.length);
+					let randMsgStr = msgStrs[randMsgIndex];
+
+					if (randMsgStr !== '') {
+						randMsgStr = '## ' + randMsgStr + '\n';
+					}
+
+					switch (randMsgIndex) {
+						case 5:
+							randMsgStr = randMsgStr.replace(
+								'%@', Object.keys(this.getConfig().itemConfigs.boars).length.toLocaleString()
+							);
+							break;
+						case 7:
+							randMsgStr = randMsgStr.replace(
+								'%@', fs.readdirSync(this.getConfig().pathConfig.userDataFolder).length.toLocaleString()
+							);
+							break;
+						case 16:
+							randMsgStr = randMsgStr.replace(
+								'%@',
+								fs.readdirSync(this.getConfig().pathConfig.guildDataFolder).length.toLocaleString()
+							);
+							break;
+						case 17:
+							randMsgStr = randMsgStr.replace('%@', boarUser.stats.general.boarStreak.toLocaleString());
+							break;
+					}
+
+					try {
+						await user.send(randMsgStr + dailyReadyStr + stopStr);
+					} catch (err: unknown) {
+						await LogDebug.handleError(err);
+					}
+				}
+			}
+		}, null, true, 'UTC');
 	}
 
 	/**

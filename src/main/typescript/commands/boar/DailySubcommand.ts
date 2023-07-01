@@ -1,4 +1,10 @@
-import {AttachmentBuilder, ChatInputCommandInteraction} from 'discord.js';
+import {
+    ActionRowBuilder,
+    AttachmentBuilder, ButtonBuilder, ButtonInteraction,
+    ChatInputCommandInteraction, InteractionCollector, Message,
+    StringSelectMenuBuilder, StringSelectMenuInteraction,
+    TextChannel
+} from 'discord.js';
 import {BoarUser} from '../../util/boar/BoarUser';
 import {BoarBotApp} from '../../BoarBotApp';
 import moment from 'moment/moment';
@@ -15,6 +21,10 @@ import {GuildData} from '../../util/data/global/GuildData';
 import {StringConfig} from '../../bot/config/StringConfig';
 import {ColorConfig} from '../../bot/config/ColorConfig';
 import {ItemConfigs} from '../../bot/config/items/ItemConfigs';
+import {CollectorUtils} from '../../util/discord/CollectorUtils';
+import {CustomEmbedGenerator} from '../../util/generators/CustomEmbedGenerator';
+import {ComponentUtils} from '../../util/discord/ComponentUtils';
+import {RowConfig} from '../../bot/config/components/RowConfig';
 
 /**
  * {@link DailySubcommand DailySubcommand.ts}
@@ -29,7 +39,7 @@ export default class DailySubcommand implements Subcommand {
     private subcommandInfo: SubcommandConfig = this.config.commandConfigs.boar.daily;
     private guildData: GuildData | undefined;
     private interaction: ChatInputCommandInteraction = {} as ChatInputCommandInteraction;
-    public readonly data = { name: this.subcommandInfo.name, path: __filename, cooldown: this.subcommandInfo.cooldown };
+    public readonly data = { name: this.subcommandInfo.name, path: __filename };
 
     /**
      * Handles the functionality for this subcommand
@@ -37,8 +47,6 @@ export default class DailySubcommand implements Subcommand {
      * @param interaction - The interaction that called the subcommand
      */
     public async execute(interaction: ChatInputCommandInteraction): Promise<void> {
-        this.config = BoarBotApp.getBot().getConfig();
-
         this.guildData = await InteractionUtils.handleStart(interaction, this.config);
         if(!this.guildData) return;
 
@@ -64,8 +72,8 @@ export default class DailySubcommand implements Subcommand {
         let boarUser: BoarUser = {} as BoarUser;
         let boarIDs: string[] = [''];
 
-        let usedBoost: boolean = false;
-        let usedExtra: boolean = false;
+        let usedBoost = false;
+        let usedExtra = false;
 
         await Queue.addQueue(async () => {
             try {
@@ -75,10 +83,12 @@ export default class DailySubcommand implements Subcommand {
                 const canUseDaily: boolean = await this.canUseDaily(boarUser);
                 if (!canUseDaily) return;
 
-                // Gets whether to use boost
+                // Gets whether to try to use boost
                 const boostInput: boolean = this.interaction.options.getBoolean(this.subcommandInfo.args[0].name)
                     ? this.interaction.options.getBoolean(this.subcommandInfo.args[0].name) as boolean
                     : false;
+
+                // Gets whether to try to use extra chance
                 const extraInput: boolean = this.interaction.options.getBoolean(this.subcommandInfo.args[1].name)
                     ? this.interaction.options.getBoolean(this.subcommandInfo.args[1].name) as boolean
                     : false;
@@ -111,7 +121,7 @@ export default class DailySubcommand implements Subcommand {
                     boarUser.itemCollection.powerups.multiBoost.numUsed++;
                 }
 
-                if (boarUser.itemCollection.powerups.extraChance.numTotal > 0) {
+                if (usedExtra && boarUser.itemCollection.powerups.extraChance.numTotal > 0) {
                     boarUser.itemCollection.powerups.extraChance.numTotal = 0;
                     boarUser.itemCollection.powerups.extraChance.numUsed++;
                 }
@@ -133,7 +143,7 @@ export default class DailySubcommand implements Subcommand {
             } catch (err: unknown) {
                 await LogDebug.handleError(err, this.interaction);
             }
-        }, this.interaction.id + this.interaction.user.id);
+        }, this.interaction.id + this.interaction.user.id).catch((err) => { throw err });
 
         if (boarIDs.includes('')) return;
 
@@ -157,9 +167,7 @@ export default class DailySubcommand implements Subcommand {
             attachments.push(
                 await new ItemImageGenerator(
                     boarUser.user, boarIDs[i], i === 0 ? strConfig.dailyTitle : strConfig.extraTitle, this.config
-                ).handleImageCreate(
-                    false, undefined, undefined, undefined, randScores[i]
-                )
+                ).handleImageCreate(false, undefined, undefined, undefined, randScores[i])
             );
         }
 
@@ -176,13 +184,13 @@ export default class DailySubcommand implements Subcommand {
             await this.interaction.followUp({
                 files: [
                     await new ItemImageGenerator(
-                        this.interaction.user, 'racer', this.config.stringConfig.giveTitle, this.config
+                        this.interaction.user, 'bacteria', this.config.stringConfig.giveTitle, this.config
                     ).handleImageCreate()
                 ]
             });
         }
 
-        let coloredText: string = '';
+        let coloredText = '';
 
         if (usedBoost) {
             coloredText += powItemConfigs.multiBoost.name;
@@ -203,23 +211,106 @@ export default class DailySubcommand implements Subcommand {
     }
 
     /**
-     * Returns whether the user can use their daily boar
+     * Returns whether the user can use their daily boar and
+     * takes in user notification choice
      *
      * @param boarUser - User's boar information
      * @private
      */
-    private async canUseDaily(
-        boarUser: BoarUser
-    ): Promise<boolean> {
+    private async canUseDaily(boarUser: BoarUser): Promise<boolean> {
         // Midnight of next day (UTC)
         const nextBoarTime: number = Math.floor(new Date().setUTCHours(24,0,0,0));
 
-        // Returns if user has already used their daily boar
-        if (boarUser.stats.general.lastDaily >= nextBoarTime - (1000 * 60 * 60 * 24) && !this.config.unlimitedBoars) {
-            await Replies.handleReply(
-                this.interaction,
-                this.config.stringConfig.dailyUsed + moment(nextBoarTime).fromNow()
-            );
+        const strConfig = this.config.stringConfig;
+        const nums = this.config.numberConfig;
+        const colorConfig = this.config.colorConfig;
+
+        if (boarUser.stats.general.lastDaily >= nextBoarTime - nums.oneDay && !this.config.unlimitedBoars) {
+            if (!boarUser.stats.general.notificationsOn) {
+                const dailyRows: RowConfig[] = this.config.commandConfigs.boar.daily.componentFields[0];
+                const dailyComponentRows: ActionRowBuilder<StringSelectMenuBuilder | ButtonBuilder>[] =
+                    ComponentUtils.makeRows(dailyRows);
+
+                ComponentUtils.addToIDs(dailyRows, dailyComponentRows, this.interaction.id, this.interaction.user.id);
+
+                const collector: InteractionCollector<ButtonInteraction | StringSelectMenuInteraction> =
+                    await CollectorUtils.createCollector(
+                        this.interaction.channel as TextChannel, this.interaction.id, nums, false,
+                        nums.notificationButtonDelay
+                    );
+
+                const msg: Message = await this.interaction.editReply({
+                    files: [
+                        await CustomEmbedGenerator.makeEmbed(
+                            strConfig.dailyUsedNotify, colorConfig.font, this.config,
+                            moment(nextBoarTime).fromNow().substring(3), colorConfig.silver
+                        )
+                    ],
+                    components: dailyComponentRows
+                });
+
+                collector.on('collect', async (inter: ButtonInteraction) => {
+                    await Queue.addQueue(async () => {
+                        try {
+                            await this.interaction.user.send(
+                                strConfig.notificationSuccess + strConfig.notificationStopStr
+                            );
+
+                            await Replies.handleReply(inter, strConfig.notificationSuccessReply, colorConfig.green);
+
+                            await msg.edit({
+                                files: [
+                                    await CustomEmbedGenerator.makeEmbed(
+                                        strConfig.dailyUsed, colorConfig.font, this.config,
+                                        moment(nextBoarTime).fromNow().substring(3), colorConfig.silver
+                                    )
+                                ],
+                                components: []
+                            });
+
+                            boarUser.refreshUserData();
+                            boarUser.stats.general.notificationsOn = true;
+                            boarUser.updateUserData();
+                        } catch {
+                            try {
+                                await Replies.handleReply(
+                                    inter, 'Failed to enable notifications! BoarBot is unable to send you DMs.',
+                                    colorConfig.error
+                                );
+                            } catch (err: unknown) {
+                                await LogDebug.handleError(err, this.interaction);
+                            }
+                        }
+                    }, this.interaction + this.interaction.id).catch((err: unknown) => {
+                        LogDebug.handleError(err, this.interaction);
+                    });
+                });
+
+                collector.once('end', async () => {
+                    try {
+                        await msg.delete();
+                    } catch (err: unknown) {
+                        await LogDebug.handleError(err, this.interaction);
+                    }
+                });
+            } else {
+                const msg = await this.interaction.editReply({
+                    files: [
+                        CustomEmbedGenerator.makeEmbed(
+                            this.config.stringConfig.dailyUsed, this.config.colorConfig.font, this.config,
+                            moment(nextBoarTime).fromNow().substring(3), this.config.colorConfig.silver
+                        )
+                    ]
+                });
+
+                setTimeout(async () => {
+                    try {
+                        await msg.delete();
+                    } catch (err: unknown) {
+                        await LogDebug.handleError(err, this.interaction);
+                    }
+                }, this.config.numberConfig.notificationButtonDelay)
+            }
             return false;
         }
 

@@ -1,5 +1,3 @@
-import {ButtonStyle, ComponentType} from 'discord.js';
-
 /**
  * {@link ComponentConfig ComponentConfig.ts}
  *

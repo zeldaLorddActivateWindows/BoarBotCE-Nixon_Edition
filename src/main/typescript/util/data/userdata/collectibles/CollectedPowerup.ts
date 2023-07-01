@@ -7,12 +7,12 @@
  * @copyright WeslayCodes 2023
  */
 export class CollectedPowerup {
-    public numTotal: number = 0;
-    public highestTotal: number = 0;
-    public numClaimed: number = 0;
-    public numUsed: number = 0;
-    public firstUsed: number = 0;
-    public lastUsed: number = 0;
+    public numTotal = 0;
+    public highestTotal = 0;
+    public numClaimed = 0;
+    public numUsed = 0;
+    public firstUsed = 0;
+    public lastUsed = 0;
     public numOpened?: number;
     public raritiesUsed?: number[];
 }

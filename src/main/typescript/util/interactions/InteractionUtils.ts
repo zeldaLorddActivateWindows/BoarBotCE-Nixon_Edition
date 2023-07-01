@@ -30,7 +30,7 @@ export class InteractionUtils {
     public static async handleStart(
         interaction: ChatInputCommandInteraction,
         config: BotConfig
-    ): Promise<any> {
+    ): Promise<GuildData | undefined> {
         if (!interaction.guild || !interaction.channel) return;
 
         const guildData: GuildData | undefined = await DataHandlers.getGuildData(interaction.guild.id, interaction);
@@ -77,7 +77,7 @@ export class InteractionUtils {
 
         const memberMePerms: PermissionsString[] = memberMe.permissions.toArray();
         if (!memberMePerms.includes('SendMessages')) {
-            LogDebug.handleError('Bot doesn\'t have permission to send messages to channel.');
+            LogDebug.handleError('Bot doesn\'t have permission to send messages to channel.', undefined, false);
             return;
         }
 

@@ -8,14 +8,15 @@
  */
 
 export class GeneralStats {
-    public lastDaily: number = 0;
-    public numDailies: number = 0;
-    public totalBoars: number = 0;
-    public boarScore: number = 0;
-    public favoriteBoar: string = '';
-    public lastBoar: string = '';
-    public firstDaily: number = 0;
-    public boarStreak: number = 0;
-    public multiplier: number = 1;
-    public highestMulti: number = 0;
+    public lastDaily = 0;
+    public numDailies = 0;
+    public totalBoars = 0;
+    public boarScore = 0;
+    public favoriteBoar = '';
+    public lastBoar = '';
+    public firstDaily = 0;
+    public boarStreak = 0;
+    public multiplier = 1;
+    public highestMulti = 0;
+    public notificationsOn = false;
 }

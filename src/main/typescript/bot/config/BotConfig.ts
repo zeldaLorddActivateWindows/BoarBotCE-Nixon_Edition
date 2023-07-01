@@ -1,7 +1,4 @@
-import {
-    User,
-    TextChannel
-} from 'discord.js';
+import {TextChannel} from 'discord.js';
 import {PathConfig} from './PathConfig';
 import {StringConfig} from './StringConfig';
 import {NumberConfig} from './NumberConfig';
@@ -89,4 +86,9 @@ export class BotConfig {
      * If the bot is in maintenance mode
      */
     public readonly maintenanceMode: boolean = false;
+
+    /**
+     * If the market can be opened using /boar market
+     */
+    public readonly marketOpen: boolean = false;
 }

@@ -30,7 +30,7 @@ export class CustomEmbedGenerator {
         const nums: NumberConfig = config.numberConfig;
         const colorConfig: ColorConfig = config.colorConfig;
 
-        const font: string = `${nums.fontBig}px ${strConfig.fontName}`;
+        const font = `${nums.fontBig}px ${strConfig.fontName}`;
 
         const canvas: Canvas.Canvas = Canvas.createCanvas(0, nums.embedMinHeight);
         const ctx: Canvas.CanvasRenderingContext2D = canvas.getContext('2d');

@@ -31,7 +31,7 @@ export class Queue {
 
         return new Promise((resolve, reject) => {
             setTimeout(() => {
-                reject('Took too long to run queue item.');
+                reject('Took too long to run queue item. ID: ' + id);
             }, 30000);
 
             setInterval(() => {

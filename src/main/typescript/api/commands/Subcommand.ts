@@ -9,6 +9,6 @@ import {ChatInputCommandInteraction} from 'discord.js';
  * @copyright WeslayCodes 2023
  */
 export interface Subcommand {
-    data: { name: string, path: string, cooldown: boolean };
+    data: { name: string, path: string };
     execute(interaction: ChatInputCommandInteraction): void;
 }

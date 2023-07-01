@@ -48,6 +48,7 @@ export class StringConfig {
 
     public readonly dailyPowUsed: string = ' ';
     public readonly dailyUsed: string = ' ';
+    public readonly dailyUsedNotify: string = ' ';
     public readonly dailyTitle: string = ' ';
     public readonly extraTitle: string = ' ';
     public readonly dailyNoBoarFound: string = ' ';
@@ -84,7 +85,7 @@ export class StringConfig {
     public readonly collAttempts50Label: string = ' ';
     public readonly collAttempts10Label: string = ' ';
     public readonly collAttempts1Label: string = ' ';
-    public readonly collMostClaimedLabel: string = ' ';
+    public readonly collFastestTimeLabel: string = ' ';
     public readonly collBestPromptLabel: string = ' ';
     public readonly collMultiplierLabel: string = ' ';
     public readonly collGiftsLabel: string = ' ';
@@ -111,10 +112,8 @@ export class StringConfig {
     public readonly collEditionLine: string = ' ';
     public readonly collDescriptionSB: string = ' ';
 
-    // Miscellaneous strings
+    // Powerup strings
 
-    public readonly giftFail: string = ' ';
-    public readonly enhanceGotten: string = ' ';
     public readonly powRightFull: string = ' ';
     public readonly powRight: string = ' ';
     public readonly powWrongFull: string = ' ';
@@ -130,10 +129,9 @@ export class StringConfig {
     public readonly powNoRewardResponse: string = ' ';
     public readonly powNoClaim: string = ' ';
     public readonly powReward: string = ' ';
-    public readonly notInBoard: string = ' ';
-    public readonly boardHeader: string = ' ';
-    public readonly boardFooter: string = ' ';
-    public readonly deletedUsername: string = ' ';
+
+    // Market Strings
+
     public readonly marketConfirmInstaBuy: string = ' ';
     public readonly marketUpdatedInstaBuy: string = ' ';
     public readonly marketConfirmInstaSell: string = ' ';
@@ -145,6 +143,49 @@ export class StringConfig {
     public readonly marketConfirmUpdateIncrease: string = ' ';
     public readonly marketConfirmUpdateDecrease: string = ' ';
     public readonly marketUpdateComplete: string = ' ';
+    public readonly marketClaimComplete: string = ' ';
+    public readonly marketMaxItems: string = ' ';
+    public readonly marketCancelComplete: string = ' ';
+    public readonly marketNoRoom: string = ' ';
+    public readonly marketMustClaim: string = ' ';
+    public readonly marketNoBucks: string = ' ';
+    public readonly marketNoEdition: string = ' ';
+    public readonly marketNoEditionOrders: string = ' ';
+    public readonly marketNoItems: string = ' ';
+    public readonly marketNoOrders: string = ' ';
+    public readonly marketMaxOrders: string = ' ';
+    public readonly marketInvalid: string = ' ';
+    public readonly marketWrongEdition: string = ' ';
+    public readonly marketTooMany: string = ' ';
+    public readonly marketTooHigh: string = ' ';
+    public readonly marketEditionHigh: string = ' ';
+    public readonly marketHasEdition: string = ' ';
+    public readonly marketClosed: string = ' ';
+    public readonly marketBSBuyNowLabel: string = ' ';
+    public readonly marketBSSellNowLabel: string = ' ';
+    public readonly marketBSBuyOrdLabel: string = ' ';
+    public readonly marketBSSellOrdLabel: string = ' ';
+    public readonly marketOrdSell: string = ' ';
+    public readonly marketOrdBuy: string = ' ';
+    public readonly marketOrdList: string = ' ';
+    public readonly marketOrdExpire: string = ' ';
+    public readonly marketOrdPriceLabel: string = ' ';
+    public readonly marketOrdFillLabel: string = ' ';
+    public readonly marketOrdClaimLabel: string = ' ';
+
+    // Miscellaneous strings
+
+    public readonly giftFail: string = ' ';
+    public readonly enhanceGotten: string = ' ';
+    public readonly notInBoard: string = ' ';
+    public readonly boardHeader: string = ' ';
+    public readonly boardFooter: string = ' ';
+    public readonly deletedUsername: string = ' ';
+    public readonly notificationSuccess: string = ' ';
+    public readonly notificationSuccessReply: string = ' ';
+    public readonly notificationDailyReady: string = ' ';
+    public readonly notificationStopStr: string = ' ';
+    public readonly notificationExtras: string[] = [];
     public readonly noParentChannel: string = ' ';
     public readonly notValidChannel: string = ' ';
     public readonly defaultSelectPlaceholder: string = ' ';

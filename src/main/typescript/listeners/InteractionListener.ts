@@ -12,6 +12,8 @@ import {Cooldown} from '../util/interactions/Cooldown';
 import {Replies} from '../util/interactions/Replies';
 import {Command} from '../api/commands/Command';
 import {StringConfig} from '../bot/config/StringConfig';
+import {PermissionUtils} from '../util/discord/PermissionUtils';
+import {CustomEmbedGenerator} from '../util/generators/CustomEmbedGenerator';
 
 /**
  * {@link InteractionListener InteractionListener.ts}
@@ -48,20 +50,43 @@ export default class InteractionListener implements Listener {
         const command: Command | undefined = BoarBotApp.getBot().getCommands().get(interaction.commandName);
 
         if (command) {
+            const startTime = Date.now();
             LogDebug.sendDebug('Started interaction', this.config, interaction);
 
-            let onCooldown: boolean;
-            try {
-                onCooldown = await Cooldown.handleCooldown(interaction as ChatInputCommandInteraction, this.config);
-            } catch (err: unknown) {
-                await LogDebug.handleError(err, interaction);
-                return;
+            if (interaction.isChatInputCommand()) {
+                let onCooldown: boolean;
+                try {
+                    onCooldown = await Cooldown.handleCooldown(interaction as ChatInputCommandInteraction, this.config);
+                } catch (err: unknown) {
+                    await LogDebug.handleError(err, interaction);
+                    return;
+                }
+
+                if (onCooldown) return;
             }
 
-            if (onCooldown) return;
+            if (Date.now() - startTime > 100) {
+                await LogDebug.handleError('COOLDOWN SLOWDOWN: ' + (Date.now() - startTime));
+            }
 
             try {
                 await command.execute(interaction);
+
+                if (
+                    interaction.isChatInputCommand() && (!PermissionUtils.hasPerm(interaction.guild, 'ViewChannel') ||
+                    !PermissionUtils.hasPerm(interaction.guild, 'SendMessages') ||
+                        !PermissionUtils.hasPerm(interaction.guild, 'AttachFiles')) && Math.random() < .01
+                ) {
+                    await interaction.followUp({
+                        files: [
+                            CustomEmbedGenerator.makeEmbed(
+                                'This server is missing out on powerups! To allow them to spawn, make sure View ' +
+                                'Channels, Send Messages, and Attach Files permissions are all enabled for BoarBot!',
+                                this.config.colorConfig.error, this.config
+                            )
+                        ]
+                    });
+                }
             } catch (err: unknown) {
                 await LogDebug.handleError(err, interaction);
                 return;

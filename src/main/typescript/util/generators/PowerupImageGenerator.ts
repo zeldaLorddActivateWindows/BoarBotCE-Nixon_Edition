@@ -40,7 +40,7 @@ export class PowerupImageGenerator {
         const pathConfig: PathConfig = config.pathConfig;
         const colorConfig: ColorConfig = config.colorConfig;
 
-        const font: string = `${nums.fontBig}px ${strConfig.fontName}`;
+        const font = `${nums.fontBig}px ${strConfig.fontName}`;
 
         const canvas: Canvas.Canvas = Canvas.createCanvas(...nums.powSpawnSize);
         const ctx: Canvas.CanvasRenderingContext2D = canvas.getContext('2d');
@@ -84,7 +84,7 @@ export class PowerupImageGenerator {
         const colorConfig: ColorConfig = config.colorConfig;
         const powTiers: number[] = powerupType.tiers as number[];
 
-        const font: string = `${nums.fontBig}px ${strConfig.fontName}`;
+        const font = `${nums.fontBig}px ${strConfig.fontName}`;
 
         const canvas: Canvas.Canvas = Canvas.createCanvas(...nums.powSpawnSize);
         const ctx: Canvas.CanvasRenderingContext2D = canvas.getContext('2d');
@@ -158,7 +158,7 @@ export class PowerupImageGenerator {
             return config.stringConfig.emptySelect;
         }
 
-        let usePluralName: boolean = false;
+        let usePluralName = false;
         if (num > 1) {
             usePluralName = true;
         }
