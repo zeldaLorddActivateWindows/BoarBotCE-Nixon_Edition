@@ -133,7 +133,6 @@ export class BoarBot implements Bot {
 			LogDebug.sendDebug('Successfully logged in! Bot online!', this.getConfig());
 
 			this.startNotificationCron();
-			// await this.fixUserTotals();
 
 			// Logs interaction listeners to avoid memory leaks
 			setInterval(() => {
@@ -174,34 +173,6 @@ export class BoarBot implements Bot {
 			await LogDebug.handleError(err);
 		}
 	}
-
-	// private async fixUserTotals(): Promise<void> {
-	// 	for (const userFile of fs.readdirSync(this.getConfig().pathConfig.userDataFolder)) {
-	// 		let user: User | undefined;
-	//
-	// 		try {
-	// 			user = await this.getClient().users.fetch(userFile.split('.')[0]);
-	// 		} catch {}
-	//
-	// 		if (!user) continue;
-	//
-	// 		const boarUser = new BoarUser(user);
-	//
-	// 		let multiActual = 1;
-	//
-	// 		for (const boarID of Object.keys(boarUser.itemCollection.boars)) {
-	// 			const rarity = BoarUtils.findRarity(boarID, this.getConfig());
-	//
-	// 			if (rarity[1].name !== 'Special') {
-	// 				multiActual++;
-	// 			}
-	// 		}
-	//
-	// 		boarUser.stats.general.multiplier = multiActual;
-	// 		boarUser.stats.general.highestMulti = multiActual;
-	// 		boarUser.updateUserData();
-	// 	}
-	// }
 
 	/**
 	 * Starts CronJob that sends notifications for boar daily
@@ -255,7 +226,10 @@ export class BoarBot implements Bot {
 					}
 
 					try {
-						await user.send(randMsgStr + dailyReadyStr + stopStr);
+						await user.send(
+							randMsgStr + dailyReadyStr + '\n# ' +
+							FormatStrings.toBasicChannel(boarUser.stats.general.notificationChannel) + stopStr
+						);
 					} catch (err: unknown) {
 						await LogDebug.handleError(err);
 					}

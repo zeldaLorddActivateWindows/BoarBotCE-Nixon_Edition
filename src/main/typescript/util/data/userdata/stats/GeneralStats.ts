@@ -19,4 +19,5 @@ export class GeneralStats {
     public multiplier = 1;
     public highestMulti = 0;
     public notificationsOn = false;
+    public notificationChannel = '';
 }

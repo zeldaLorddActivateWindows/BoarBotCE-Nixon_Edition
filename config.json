@@ -2335,6 +2335,6 @@
     },
     "unlimitedBoars": false,
     "debugMode": true,
-    "maintenanceMode": true,
+    "maintenanceMode": false,
     "marketOpen": true
 }

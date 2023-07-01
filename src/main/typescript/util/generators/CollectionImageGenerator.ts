@@ -343,13 +343,13 @@ export class CollectionImageGenerator {
         const indivRarityPos: [number, number] = [...nums.collIndivRarityPos];
         if (curBoar.id == this.boarUser.stats.general.favoriteBoar) {
             const favoriteFile: string = pathConfig.collAssets + pathConfig.favorite;
+            ctx.font = mediumFont;
 
             indivRarityPos[0] -= nums.collIndivFavSize[0] / 2 + 10;
             const favoritePos: [number, number] = [
                 ctx.measureText(curBoar.rarity[1].name.toUpperCase()).width / 2 + indivRarityPos[0] + 10,
                 nums.collIndivFavHeight
             ];
-            ctx.font = mediumFont;
 
             ctx.drawImage(await Canvas.loadImage(favoriteFile), ...favoritePos, ...nums.collIndivFavSize);
         }
@@ -357,13 +357,11 @@ export class CollectionImageGenerator {
         // Draws stats
 
         CanvasUtils.drawText(
-            ctx, curBoar.rarity[1].name.toUpperCase(), indivRarityPos,
-            mediumFont, 'center', curBoar.color
+            ctx, curBoar.rarity[1].name.toUpperCase(), indivRarityPos, mediumFont, 'center', curBoar.color
         );
 
         CanvasUtils.drawText(
-            ctx, curBoar.name, nums.collBoarNamePos, bigFont,
-            'center', colorConfig.font, nums.collBoarNameWidth
+            ctx, curBoar.name, nums.collBoarNamePos, bigFont, 'center', colorConfig.font, nums.collBoarNameWidth
         );
 
         CanvasUtils.drawText(

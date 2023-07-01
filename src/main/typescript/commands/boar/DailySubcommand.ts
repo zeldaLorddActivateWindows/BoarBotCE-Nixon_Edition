@@ -25,6 +25,7 @@ import {CollectorUtils} from '../../util/discord/CollectorUtils';
 import {CustomEmbedGenerator} from '../../util/generators/CustomEmbedGenerator';
 import {ComponentUtils} from '../../util/discord/ComponentUtils';
 import {RowConfig} from '../../bot/config/components/RowConfig';
+import {FormatStrings} from '../../util/discord/FormatStrings';
 
 /**
  * {@link DailySubcommand DailySubcommand.ts}
@@ -253,7 +254,9 @@ export default class DailySubcommand implements Subcommand {
                     await Queue.addQueue(async () => {
                         try {
                             await this.interaction.user.send(
-                                strConfig.notificationSuccess + strConfig.notificationStopStr
+                                strConfig.notificationSuccess + '\n# ' +
+                                FormatStrings.toBasicChannel(this.interaction.channel?.id) +
+                                strConfig.notificationStopStr
                             );
 
                             await Replies.handleReply(inter, strConfig.notificationSuccessReply, colorConfig.green);
@@ -270,6 +273,9 @@ export default class DailySubcommand implements Subcommand {
 
                             boarUser.refreshUserData();
                             boarUser.stats.general.notificationsOn = true;
+                            boarUser.stats.general.notificationChannel = this.interaction.channel
+                                ? this.interaction.channel.id
+                                : '0';
                             boarUser.updateUserData();
                         } catch {
                             try {

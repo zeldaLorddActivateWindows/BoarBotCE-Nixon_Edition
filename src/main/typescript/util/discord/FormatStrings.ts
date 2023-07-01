@@ -26,5 +26,5 @@ export class FormatStrings {
      *
      * @param id - The channel ID to convert
      */
-    public static toBasicChannel(id: string): string { return `<#${id}>`; }
+    public static toBasicChannel(id: string | undefined): string { return id ? `<#${id}>` : `<#0>` }
 }
