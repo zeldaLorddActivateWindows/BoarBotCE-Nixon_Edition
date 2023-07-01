@@ -113,8 +113,8 @@ export class NumberConfig {
     public readonly collAttempts10Pos: [number, number] = [0, 0];
     public readonly collAttempts50LabelPos: [number, number] = [0, 0];
     public readonly collAttempts50Pos: [number, number] = [0, 0];
-    public readonly collMostClaimedLabelPos: [number, number] = [0, 0];
-    public readonly collMostClaimedPos: [number, number] = [0, 0];
+    public readonly collFastestTimeLabelPos: [number, number] = [0, 0];
+    public readonly collFastestTimePos: [number, number] = [0, 0];
     public readonly collBestPromptLabelPos: [number, number] = [0, 0];
     public readonly collBestPromptPos: [number, number] = [0, 0];
     public readonly collMultiLabelPos: [number, number] = [0, 0];
@@ -181,6 +181,8 @@ export class NumberConfig {
     public readonly collEnhancerCols: number = 0;
     public readonly collEnhancerSize: [number, number] = [0, 0];
 
+    // Powerup image positions, sizes, and values
+
     public readonly powSpawnSize: [number, number] = [0, 0];
     public readonly powSpawnDescriptionPos: [number, number] = [0, 0];
     public readonly powSpawnDescriptionWidth: number = 0;
@@ -189,17 +191,16 @@ export class NumberConfig {
     public readonly powTopTenPos: [number, number] = [0, 0];
     public readonly powTopFiftyPos: [number, number] = [0, 0];
     public readonly powResultsYOffset: number = 0;
-    public readonly border: number = 0;
-    public readonly embedMaxWidth: number = 0;
-    public readonly embedMinHeight: number = 0;
-    public readonly powInterval: number = 0;
-    public readonly powDuration: number = 0;
-    public readonly collectorIdle: number = 0;
     public readonly emojiRows: number = 0;
     public readonly emojiCols: number = 0;
     public readonly triviaRows: number = 0;
     public readonly triviaCols: number = 0;
     public readonly fastCols: number = 0;
+    public readonly powInterval: number = 0;
+    public readonly powDuration: number = 0;
+
+    // Leaderboard image positions, sizes, and values
+
     public readonly leaderboardNumPlayers: number = 0;
     public readonly leaderboardRows: number = 0;
     public readonly leaderboardStart: [number, number] = [0, 0];
@@ -209,6 +210,49 @@ export class NumberConfig {
     public readonly leaderboardTopBotWidth: number = 0;
     public readonly leaderboardFooterPos: [number, number] = [0, 0];
     public readonly leaderboardEntryWidth: number = 0;
+
+    public readonly border: number = 0;
+    public readonly embedMaxWidth: number = 0;
+    public readonly embedMinHeight: number = 0;
+    public readonly collectorIdle: number = 0;
     public readonly marketSize: [number, number] = [0, 0];
+    public readonly marketPerPage: number = 0;
+    public readonly marketMaxOrders: number = 0;
+    public readonly marketMaxBucks: number = 0;
+    public readonly marketOverImgStart: [number, number] = [0, 0];
+    public readonly marketOverBuyStart: [number, number] = [0, 0];
+    public readonly marketOverSellStart: [number, number] = [0, 0];
+    public readonly marketOverIncX: number = 0;
+    public readonly marketOverIncY: number = 0;
+    public readonly marketOverCols: number = 0;
+    public readonly marketOverImgSize: [number, number] = [0, 0];
+    public readonly marketOverTextWidth: number = 0;
+    public readonly marketBSImgPos: [number, number] = [0, 0];
+    public readonly marketBSImgSize: [number, number] = [0, 0];
+    public readonly marketBSRarityPos: [number, number] = [0, 0];
+    public readonly marketBSNamePos: [number, number] = [0, 0];
+    public readonly marketBSNameWidth: number = 0;
+    public readonly marketBSBuyNowLabelPos: [number, number] = [0, 0];
+    public readonly marketBSBuyNowPos: [number, number] = [0, 0];
+    public readonly marketBSSellNowLabelPos: [number, number] = [0, 0];
+    public readonly marketBSSellNowPos: [number, number] = [0, 0];
+    public readonly marketBSBuyOrdLabelPos: [number, number] = [0, 0];
+    public readonly marketBSBuyOrdPos: [number, number] = [0, 0];
+    public readonly marketBSSellOrdLabelPos: [number, number] = [0, 0];
+    public readonly marketBSSellOrdPos: [number, number] = [0, 0];
+    public readonly marketOrdImgPos: [number, number] = [0, 0];
+    public readonly marketOrdImgSize: [number, number] = [0, 0];
+    public readonly marketOrdNamePos: [number, number] = [0, 0];
+    public readonly marketOrdNameWidth: number = 0;
+    public readonly marketOrdListPos: [number, number] = [0, 0];
+    public readonly marketOrdPriceLabelPos: [number, number] = [0, 0];
+    public readonly marketOrdPricePos: [number, number] = [0, 0];
+    public readonly marketOrdFillLabelPos: [number, number] = [0, 0];
+    public readonly marketOrdFillPos: [number, number] = [0, 0];
+    public readonly marketOrdClaimLabelPos: [number, number] = [0, 0];
+    public readonly marketOrdClaimPos: [number, number] = [0, 0];
+    public readonly marketOrdClaimWidth: number = 0;
     public readonly orderExpire: number = 0;
+    public readonly oneDay: number = 0;
+    public readonly notificationButtonDelay: number = 0;
 }

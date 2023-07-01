@@ -31,8 +31,8 @@ export class CanvasUtils {
         align: CanvasTextAlign,
         color: string,
         width?: number,
-        wrap: boolean = false,
-        coloredText: string = '',
+        wrap = false,
+        coloredText = '',
         color2: string = color
     ): number {
         ctx.font = font;
@@ -47,16 +47,16 @@ export class CanvasUtils {
 
         text = text.replace('%@', coloredText);
 
-        let heightDiff: number = 0;
+        let heightDiff = 0;
 
         if (width != undefined && wrap) {
             const words: string[] = text.split(' ');
             const lineHeight: number = (ctx.measureText('Sp').actualBoundingBoxAscent +
                 ctx.measureText('Sp').actualBoundingBoxDescent) * 1.1;
             let newHeight: number = pos[1];
-            let lines: string[] = [];
-            let curLine: string = '';
-            let curIndex: number = -1;
+            const lines: string[] = [];
+            let curLine = '';
+            let curIndex = -1;
 
             for (let i=0; i<words.length; i++) {
                 const word: string = words[i];
@@ -78,11 +78,11 @@ export class CanvasUtils {
 
             newHeight -= lineHeight * (lines.length-1) / 2;
 
-            let charIndex: number = 0;
+            let charIndex = 0;
             const originalColorLength: number = coloredText.length;
-            let numColoredLines: number = 0;
+            let numColoredLines = 0;
             for (const line of lines) {
-                let prevCharIndex: number = charIndex;
+                const prevCharIndex = charIndex;
                 charIndex += line.length;
 
                 if (charIndex > replaceIndex && prevCharIndex < replaceIndex + originalColorLength) {

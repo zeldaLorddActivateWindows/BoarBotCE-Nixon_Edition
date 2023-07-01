@@ -26,16 +26,16 @@ export class ItemImageGenerator {
     private readonly id: string = '';
     private readonly title: string = '';
     private buffer: Buffer = {} as Buffer;
-    private tempPath: string = '';
-    private colorKey: string = '';
-    private imageFilePath: string = '';
-    private userAvatar: string = '';
-    private userTag: string = '';
+    private tempPath = '';
+    private colorKey = '';
+    private imageFilePath = '';
+    private userAvatar = '';
+    private userTag = '';
     private giftingUserAvatar: string | undefined;
     private giftingUserTag: string | undefined;
-    private itemName: string = '';
-    private itemNameColored: string = '';
-    private itemFile: string = '';
+    private itemName = '';
+    private itemNameColored = '';
+    private itemFile = '';
 
     /**
      * Creates a new item image generator
@@ -64,7 +64,7 @@ export class ItemImageGenerator {
      * @private
      */
     public async handleImageCreate(
-        isBadge: boolean = false,
+        isBadge = false,
         giftingUser?: User,
         coloredText?: string,
         manualInput?: {name: string, file: string, colorKey: string},
@@ -189,13 +189,13 @@ export class ItemImageGenerator {
         const origin: [number, number] = nums.originPos;
         const imageSize: [number, number] = nums.itemImageSize;
 
-        let mainPos: [number, number] = nums.itemPos;
-        let mainSize: [number, number] = nums.itemSize;
+        const mainPos: [number, number] = nums.itemPos;
+        const mainSize: [number, number] = nums.itemSize;
 
         // Font info
 
         const fontName: string = strConfig.fontName;
-        const mediumFont: string = `${nums.fontMedium}px ${fontName}`;
+        const mediumFont = `${nums.fontMedium}px ${fontName}`;
 
         const canvas: Canvas.Canvas = Canvas.createCanvas(imageSize[0], imageSize[1]);
         const ctx: Canvas.CanvasRenderingContext2D = canvas.getContext('2d');
@@ -272,7 +272,7 @@ export class ItemImageGenerator {
         const nums: NumberConfig = this.config.numberConfig;
         const colorConfig: ColorConfig = this.config.colorConfig;
 
-        const smallMediumFont: string = `${nums.fontSmallMedium}px ${this.config.stringConfig.fontName}`;
+        const smallMediumFont = `${nums.fontSmallMedium}px ${this.config.stringConfig.fontName}`;
 
         const origin: [number, number] = nums.originPos;
         const imageSize: [number, number] = nums.itemImageSize;

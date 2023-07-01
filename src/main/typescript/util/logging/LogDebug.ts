@@ -73,15 +73,17 @@ export class LogDebug {
      *
      * @param err - Error message
      * @param interaction - Interaction to reply to
+     * @param sendToChannel
      */
     public static async handleError(
         err: unknown | string,
         interaction?: ChatInputCommandInteraction | ModalSubmitInteraction |
-            AutocompleteInteraction | MessageComponentInteraction
+            AutocompleteInteraction | MessageComponentInteraction,
+        sendToChannel = true
     ): Promise<boolean> {
         try {
-            let errString: string | undefined = typeof err === 'string' ? err : (err as Error).stack;
-            const prefix: string = `[${Colors.Green}CAUGHT ERROR${Colors.White}] `;
+            const errString: string | undefined = typeof err === 'string' ? err : (err as Error).stack;
+            const prefix = `[${Colors.Green}CAUGHT ERROR${Colors.White}] `;
             const time: string = LogDebug.getPrefixTime();
             const config: BotConfig = BoarBotApp.getBot().getConfig();
 
@@ -99,14 +101,16 @@ export class LogDebug {
             }
 
             try {
-                await this.sendLogMessage(completeString, config);
+                if (sendToChannel) {
+                    await this.sendLogMessage(completeString, config);
+                }
             } catch {
                 console.log(completeString);
             }
 
             if (!interaction || interaction.isAutocomplete()) return true;
 
-            let errResponse: string = config.stringConfig.error;
+            const errResponse = config.stringConfig.error;
 
             await Replies.handleReply(interaction, errResponse, config.colorConfig.error);
         } catch (err: unknown) {
@@ -123,7 +127,7 @@ export class LogDebug {
      * @param config - Used to get DM reply string
      */
     public static async sendReport(message: Message, config: BotConfig): Promise<void> {
-        const prefix: string = `[${Colors.Blue}DM REPORT${Colors.White}] `;
+        const prefix = `[${Colors.Blue}DM REPORT${Colors.White}] `;
         const time: string = LogDebug.getPrefixTime();
         const completeString: string = prefix + time +
             `${message.author.username + '(' + message.author.id + ')'} sent: ` + message.content;

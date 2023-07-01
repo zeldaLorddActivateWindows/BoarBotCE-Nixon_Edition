@@ -1,4 +1,3 @@
-import {ComponentType} from 'discord.js';
 import {RowConfig} from '../components/RowConfig';
 
 /**

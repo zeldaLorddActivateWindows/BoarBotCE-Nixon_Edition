@@ -15,11 +15,8 @@ export class PermissionUtils {
      * @param guild
      * @param perm - The permissions to check
      */
-    public static hasPerm(
-        guild: Guild | undefined,
-        perm: PermissionResolvable
-    ): boolean {
-        if (!guild || !guild.members.me) return false;
+    public static hasPerm(guild: Guild | null, perm: PermissionResolvable): boolean {
+        if (guild === null || !guild.members.me) return false;
         return guild.members.me.permissions.has(perm);
     }
 }

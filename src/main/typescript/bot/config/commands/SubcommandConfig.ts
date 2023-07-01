@@ -19,10 +19,6 @@ export class SubcommandConfig {
 
     public readonly args: SubcommandArgsConfig[] = [];
 
-    // Tags for the command
-
-    public readonly cooldown: boolean = false;
-
     // Components and modals associated with a command
     // NOTE: Types should expand as more commands with Components and Modals are added
 

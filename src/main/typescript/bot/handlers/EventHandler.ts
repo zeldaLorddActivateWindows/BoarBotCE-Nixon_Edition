@@ -35,7 +35,7 @@ export class EventHandler {
                 const exports: any = require('../../listeners/' + listenerFile);
                 const listenClass: any = new exports.default();
 
-                client.on(listenClass.eventName, (...args: any[]) => listenClass.execute(...args));
+                client.on(listenClass.eventName, (...args: string[]) => listenClass.execute(...args));
 
                 LogDebug.sendDebug('Successfully registered listener for event: ' + listenClass.eventName, config);
             } catch (err: unknown) {

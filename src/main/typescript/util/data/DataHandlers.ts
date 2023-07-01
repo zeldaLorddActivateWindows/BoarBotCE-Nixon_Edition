@@ -39,14 +39,14 @@ export class DataHandlers {
             const globalData = DataHandlers.getGlobalData();
             const userID = boarUser.user.id;
 
-            globalData.leaderboardData.bucks[userID] = boarUser.stats.general.boarScore > 0
+            globalData.leaderboardData.bucks.userData[userID] = boarUser.stats.general.boarScore > 0
                 ? boarUser.stats.general.boarScore
                 : undefined;
-            globalData.leaderboardData.total[userID] = boarUser.stats.general.totalBoars > 0
+            globalData.leaderboardData.total.userData[userID] = boarUser.stats.general.totalBoars > 0
                 ? boarUser.stats.general.totalBoars
                 : undefined;
 
-            let uniques: number = 0;
+            let uniques = 0;
 
             for (let i=0; i<Object.keys(boarUser.itemCollection.boars).length; i++) {
                 const boarInfo = config.itemConfigs.boars[Object.keys(boarUser.itemCollection.boars)[i]];
@@ -56,26 +56,26 @@ export class DataHandlers {
                 uniques++;
             }
 
-            globalData.leaderboardData.uniques[userID] = uniques > 0
+            globalData.leaderboardData.uniques.userData[userID] = uniques > 0
                 ? uniques
                 : undefined;
 
-            globalData.leaderboardData.uniquesSB[userID] = Object.keys(boarUser.itemCollection.boars).length > 0
+            globalData.leaderboardData.uniquesSB.userData[userID] = Object.keys(boarUser.itemCollection.boars).length > 0
                 ? Object.keys(boarUser.itemCollection.boars).length
                 : undefined;
-            globalData.leaderboardData.streak[userID] = boarUser.stats.general.boarStreak > 0
+            globalData.leaderboardData.streak.userData[userID] = boarUser.stats.general.boarStreak > 0
                 ? boarUser.stats.general.boarStreak
                 : undefined;
-            globalData.leaderboardData.attempts[userID] = boarUser.stats.powerups.attempts > 0
+            globalData.leaderboardData.attempts.userData[userID] = boarUser.stats.powerups.attempts > 0
                 ? boarUser.stats.powerups.attempts
                 : undefined;
-            globalData.leaderboardData.topAttempts[userID] = boarUser.stats.powerups.oneAttempts > 0
+            globalData.leaderboardData.topAttempts.userData[userID] = boarUser.stats.powerups.oneAttempts > 0
                 ? boarUser.stats.powerups.oneAttempts
                 : undefined;
-            globalData.leaderboardData.giftsUsed[userID] = boarUser.itemCollection.powerups.gift.numUsed > 0
+            globalData.leaderboardData.giftsUsed.userData[userID] = boarUser.itemCollection.powerups.gift.numUsed > 0
                 ? boarUser.itemCollection.powerups.gift.numUsed
                 : undefined;
-            globalData.leaderboardData.multiplier[userID] = boarUser.stats.general.multiplier > 1
+            globalData.leaderboardData.multiplier.userData[userID] = boarUser.stats.general.multiplier > 1
                 ? boarUser.stats.general.multiplier
                 : undefined;
 
@@ -89,14 +89,39 @@ export class DataHandlers {
         try {
             const globalData = DataHandlers.getGlobalData();
 
-            globalData.leaderboardData.bucks[userID] = undefined;
-            globalData.leaderboardData.total[userID] = undefined;
-            globalData.leaderboardData.uniques[userID] = undefined;
-            globalData.leaderboardData.streak[userID] = undefined;
-            globalData.leaderboardData.attempts[userID] = undefined;
-            globalData.leaderboardData.topAttempts[userID] = undefined;
-            globalData.leaderboardData.giftsUsed[userID] = undefined;
-            globalData.leaderboardData.multiplier[userID] = undefined;
+            globalData.leaderboardData.bucks.userData[userID] = undefined;
+            globalData.leaderboardData.total.userData[userID] = undefined;
+            globalData.leaderboardData.uniques.userData[userID] = undefined;
+            globalData.leaderboardData.streak.userData[userID] = undefined;
+            globalData.leaderboardData.attempts.userData[userID] = undefined;
+            globalData.leaderboardData.topAttempts.userData[userID] = undefined;
+            globalData.leaderboardData.giftsUsed.userData[userID] = undefined;
+            globalData.leaderboardData.multiplier.userData[userID] = undefined;
+
+            globalData.leaderboardData.bucks.topUser = globalData.leaderboardData.bucks.topUser === userID
+                ? undefined
+                : globalData.leaderboardData.bucks.topUser;
+            globalData.leaderboardData.total.topUser = globalData.leaderboardData.total.topUser === userID
+                ? undefined
+                : globalData.leaderboardData.total.topUser;
+            globalData.leaderboardData.uniques.topUser = globalData.leaderboardData.uniques.topUser === userID
+                ? undefined
+                : globalData.leaderboardData.uniques.topUser;
+            globalData.leaderboardData.streak.topUser = globalData.leaderboardData.streak.topUser === userID
+                ? undefined
+                : globalData.leaderboardData.streak.topUser;
+            globalData.leaderboardData.attempts.topUser = globalData.leaderboardData.attempts.topUser === userID
+                ? undefined
+                : globalData.leaderboardData.attempts.topUser;
+            globalData.leaderboardData.topAttempts.topUser = globalData.leaderboardData.topAttempts.topUser === userID
+                ? undefined
+                : globalData.leaderboardData.topAttempts.topUser;
+            globalData.leaderboardData.giftsUsed.topUser = globalData.leaderboardData.giftsUsed.topUser === userID
+                ? undefined
+                : globalData.leaderboardData.giftsUsed.topUser;
+            globalData.leaderboardData.multiplier.topUser = globalData.leaderboardData.multiplier.topUser === userID
+                ? undefined
+                : globalData.leaderboardData.multiplier.topUser;
 
             fs.writeFileSync(BoarBotApp.getBot().getConfig().pathConfig.globalDataFile, JSON.stringify(globalData));
         } catch (err: unknown) {
@@ -115,7 +140,7 @@ export class DataHandlers {
     public static async getGuildData(
         guildID: string | undefined,
         interaction?: ChatInputCommandInteraction | MessageComponentInteraction,
-        create: boolean = false,
+        create = false,
     ): Promise<GuildData | undefined> {
         if (!guildID) return;
 

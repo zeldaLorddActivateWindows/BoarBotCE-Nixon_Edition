@@ -85,13 +85,13 @@ export class CollectorUtils {
         channel: TextChannel,
         id: string,
         nums: NumberConfig,
-        excludeUser: boolean = false,
+        excludeUser = false,
         time?: number
     ): Promise<InteractionCollector<ButtonInteraction | StringSelectMenuInteraction>> {
         // Only allows button presses from current interaction
         const filter = async (compInter: MessageComponentInteraction) => {
             const modifiers: string[] = compInter.customId.split('|').slice(1);
-            let returnVal: boolean = modifiers[0] === id;
+            const returnVal = modifiers[0] === id;
 
             if (
                 compInter.customId.toLowerCase().startsWith('gift') && returnVal &&

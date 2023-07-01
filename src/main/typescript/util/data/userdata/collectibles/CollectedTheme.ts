@@ -7,6 +7,6 @@
  * @copyright WeslayCodes 2023
  */
 export class CollectedTheme {
-    public selected: boolean = false;
-    public firstObtained: number = 0;
+    public selected = false;
+    public firstObtained = 0;
 }

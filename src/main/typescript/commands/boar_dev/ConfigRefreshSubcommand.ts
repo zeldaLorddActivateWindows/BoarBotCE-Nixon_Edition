@@ -14,7 +14,7 @@ import {Replies} from '../../util/interactions/Replies';
 export default class ConfigRefreshSubcommand implements Subcommand {
     private config = BoarBotApp.getBot().getConfig();
     private subcommandInfo = this.config.commandConfigs.boarDev.configRefresh;
-    public readonly data = { name: this.subcommandInfo.name, path: __filename, cooldown: this.subcommandInfo.cooldown };
+    public readonly data = { name: this.subcommandInfo.name, path: __filename };
 
     /**
      * Handles the functionality for this subcommand

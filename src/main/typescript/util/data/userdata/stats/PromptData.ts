@@ -7,6 +7,6 @@
  * @copyright WeslayCodes 2023
  */
 export class PromptData {
-    public avg: number = 100;
-    public attempts: number = 0;
+    public avg = 100;
+    public attempts = 0;
 }

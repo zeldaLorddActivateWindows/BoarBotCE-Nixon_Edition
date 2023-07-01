@@ -49,7 +49,7 @@ export class BoarUtils {
     public static findValid(rarityIndex: number, guildData: GuildData | undefined, config: BotConfig): string {
         const rarities: RarityConfig[] = config.rarityConfigs;
         const boarIDs: ItemConfigs = config.itemConfigs.boars;
-        let randomBoar: number = Math.random();
+        const randomBoar = Math.random();
 
         // Stores the IDs of the current rarity being checked
 
@@ -89,7 +89,7 @@ export class BoarUtils {
         config: BotConfig
     ): string[] {
         const boarIDs: string[] = [];
-        let numBoars: number = 1;
+        let numBoars = 1;
 
         // Sorts from the lowest weight to the highest weight
         rarityWeights = new Map([...rarityWeights.entries()].sort((a, b) => { return a[1] - b[1]; }));
@@ -97,7 +97,7 @@ export class BoarUtils {
 
         // Sets probabilities by adding the previous probability to the current probability
 
-        let prevProb: number = 0;
+        let prevProb = 0;
         const probabilities: Map<number, number> = new Map([...rarityWeights.entries()].map((val) => {
             const prob: [number, number] = [val[0], val[1] / weightTotal + prevProb];
             prevProb = prob[1];
@@ -162,7 +162,7 @@ export class BoarUtils {
     }
 
     public static getClosestName(input: string, root: Node<string, number>): number {
-        if (root.key.includes(input))
+        if (root.key.startsWith(input))
             return root.value;
         if (input > root.key && root.right !== null)
             return this.getClosestName(input, root.right);

@@ -95,8 +95,8 @@ export class Replies {
         color: string = BoarBotApp.getBot().getConfig().colorConfig.font,
         coloredContent?: string,
         color2?: string,
-        forceFollowup: boolean = false,
-        ephemeral: boolean = true
+        forceFollowup = false,
+        ephemeral = true
     ): Promise<void> {
         const embedImage: AttachmentBuilder = CustomEmbedGenerator.makeEmbed(
             content, color, BoarBotApp.getBot().getConfig(), coloredContent, color2
@@ -123,5 +123,7 @@ export class Replies {
                 ephemeral: ephemeral
             });
         }
+
+
     }
 }

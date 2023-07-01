@@ -8,7 +8,7 @@
  */
 
 export class GuildData {
-    public fullySetup: boolean = false;
-    public isSBServer: boolean = false;
+    public fullySetup = false;
+    public isSBServer = false;
     public channels: string[] = [];
 }

@@ -33,7 +33,7 @@ export class ComponentUtils {
         userID?: string,
         options?: SelectMenuComponentOptionData[]
     ): void {
-        let rowIndex: number = 0;
+        let rowIndex = 0;
 
         for (const row of rows) {
             for (const component in row.components) {

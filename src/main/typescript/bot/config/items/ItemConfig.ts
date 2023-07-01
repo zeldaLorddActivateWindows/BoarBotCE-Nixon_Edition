@@ -9,13 +9,13 @@ import {OutcomeConfig} from './OutcomeConfig';
  * @copyright WeslayCodes 2023
  */
 export class ItemConfig {
-    public name: string = '';
-    public pluralName: string = '';
-    public description: string = '';
-    public file: string = '';
-    public staticFile?: string;
-    public isSB: boolean = false;
-    public blacklisted: boolean = false;
-    public tiers?: number[];
-    public outcomes?: OutcomeConfig[];
+    public readonly name: string = '';
+    public readonly pluralName: string = '';
+    public readonly description: string = '';
+    public readonly file: string = '';
+    public readonly staticFile?: string;
+    public readonly isSB: boolean = false;
+    public readonly blacklisted: boolean = false;
+    public readonly tiers?: number[];
+    public readonly outcomes?: OutcomeConfig[];
 }

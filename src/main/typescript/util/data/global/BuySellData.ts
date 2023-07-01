@@ -8,12 +8,12 @@
  */
 
 export class BuySellData {
-    public userID: string = '';
-    public price: number = 0;
-    public num: number = 0;
+    public readonly userID: string = '';
+    public price = 0;
+    public readonly num: number = 0;
     public editions: number[] = [];
     public editionDates: number[] = [];
-    public listTime: number = 0;
-    public filledAmount: number = 0;
-    public claimedAmount: number = 0;
+    public listTime = 0;
+    public filledAmount = 0;
+    public claimedAmount = 0;
 }

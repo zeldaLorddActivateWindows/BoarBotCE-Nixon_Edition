@@ -14,7 +14,7 @@ import fs from 'fs';
 import {
     ActionRowBuilder, AttachmentBuilder,
     ButtonBuilder, ButtonInteraction, Channel,
-    ChannelType, Client, InteractionCollector, Message, StringSelectMenuInteraction,
+    Client, InteractionCollector, Message, StringSelectMenuInteraction,
     TextChannel,
 } from 'discord.js';
 import {GuildData} from '../data/global/GuildData';
@@ -39,16 +39,16 @@ export class PowerupSpawner {
     private readonly initIntervalVal: number = 0;
     private claimers: Map<string, number> = new Map<string, number>();
     private powerupType: ItemConfig = {} as ItemConfig;
-    private promptTypeID: string = '';
-    private promptID: string = '';
-    private topOnePercent: number = -1;
-    private topTenPercent: number = -1;
-    private topFiftyPercent: number = -1;
+    private promptTypeID = '';
+    private promptID = '';
+    private topOnePercent = -1;
+    private topTenPercent = -1;
+    private topFiftyPercent = -1;
     private powEndImage: AttachmentBuilder = {} as AttachmentBuilder;
     private interactions: ButtonInteraction[] = [];
-    private numMsgs: number = 0;
-    private numNotFinished: number = 0;
-    private readyToEnd: boolean = false;
+    private numMsgs = 0;
+    private numNotFinished = 0;
+    private readyToEnd = false;
 
     constructor(initPowTime?: number) {
         this.initIntervalVal = initPowTime !== undefined ? Math.max(initPowTime - Date.now(), 5000) : this.intervalVal;
@@ -87,6 +87,8 @@ export class PowerupSpawner {
                     await LogDebug.handleError(err);
                 }
             }, 'pow' + 'global').catch((err) => { throw err });
+
+            if (config.maintenanceMode) return;
 
             // Get all channels to send powerups in
             for (const guildFile of fs.readdirSync(config.pathConfig.guildDataFolder)) {
@@ -191,15 +193,18 @@ export class PowerupSpawner {
                 this.interactions.push(inter);
 
                 // Modify the 2nd modifiable value
-                let occur: number = 0;
-                correctString = correctString.replace(/%@/g, match => ++occur === 2 ? timeToClaim.toString() : match);
+                let occur = 0;
+                correctString = correctString
+                    .replace(/%@/g, match => ++occur === 2 ? timeToClaim.toLocaleString() : match);
 
-                await Replies.handleReply(inter, correctString, config.colorConfig.font,
+                await Replies.handleReply(
+                    inter, correctString, config.colorConfig.font,
                     config.stringConfig.powRight, config.colorConfig.green, true
                 );
                 LogDebug.sendDebug('Collected: ' + inter.user.username + ' (' + inter.user.id + ')', config);
             } else if (!this.claimers.has(inter.user.id)) {
-                await Replies.handleReply(inter, config.stringConfig.powWrongFull, config.colorConfig.font,
+                await Replies.handleReply(
+                    inter, config.stringConfig.powWrongFull, config.colorConfig.font,
                     config.stringConfig.powWrong, config.colorConfig.error, true
                 );
                 LogDebug.sendDebug('Failed attempt: ' + inter.user.username + ' (' + inter.user.id + ')', config);
@@ -242,7 +247,7 @@ export class PowerupSpawner {
                 const values: number[] = [...this.claimers.values()];
                 const topOneIndex: number = Math.floor(this.claimers.size * .01);
                 let topTenIndex: number = Math.floor(this.claimers.size * .1);
-                let topFiftyIndex: number = Math.floor(this.claimers.size * .5);
+                const topFiftyIndex: number = Math.floor(this.claimers.size * .5);
 
                 if (this.claimers.size > 0) {
                     this.topOnePercent = values[topOneIndex];
@@ -349,7 +354,7 @@ export class PowerupSpawner {
         const emoji1: string = prompt.emoji1;
         const emoji2: string = prompt.emoji2;
 
-        let curIndex: number = 0;
+        let curIndex = 0;
 
         for (let i=0; i<nums.emojiRows; i++) {
             const row: ActionRowBuilder<ButtonBuilder> = new ActionRowBuilder<ButtonBuilder>();
@@ -515,7 +520,7 @@ export class PowerupSpawner {
                         ([...this.claimers.keys()].indexOf(interaction.user.id) + 1) /
                         this.claimers.size
                     ) * 100;
-                    let userPowTier: number = -1;
+                    let userPowTier = -1;
                     let responseString: string = strConfig.powNoRewardResponse;
 
                     if (!userTime) {
@@ -540,7 +545,7 @@ export class PowerupSpawner {
 
                     await Replies.handleReply(
                         interaction,
-                        responseString.replace('%@', userTime.toString()), config.colorConfig.font,
+                        responseString.replace('%@', userTime.toLocaleString()), config.colorConfig.font,
                         PowerupImageGenerator.getPowerupString(
                             this.powerupType, (this.powerupType.tiers as number[])[userPowTier], config
                         ),
@@ -551,6 +556,16 @@ export class PowerupSpawner {
                     await Queue.addQueue(async () => {
                         try {
                             const boarUser: BoarUser = new BoarUser(interaction.user, true);
+
+                            if (boarUser.stats.general.firstDaily === 0) {
+                                boarUser.stats.general.firstDaily = Date.now();
+                            }
+
+                            if (
+                                !boarUser.stats.powerups.fastestTime || userTime < boarUser.stats.powerups.fastestTime
+                            ) {
+                                boarUser.stats.powerups.fastestTime = userTime;
+                            }
 
                             if (!boarUser.stats.powerups.prompts[this.promptTypeID][this.promptID]) {
                                 boarUser.stats.powerups.prompts[this.promptTypeID][this.promptID] = new PromptData();

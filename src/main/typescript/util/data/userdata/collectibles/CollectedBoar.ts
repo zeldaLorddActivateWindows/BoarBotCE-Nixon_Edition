@@ -7,9 +7,9 @@
  * @copyright WeslayCodes 2023
  */
 export class CollectedBoar {
-    public num: number = 0;
+    public num = 0;
     public editions: number[] = [];
     public editionDates: number[] = [];
-    public firstObtained: number = 0;
-    public lastObtained: number = 0;
+    public firstObtained = 0;
+    public lastObtained = 0;
 }

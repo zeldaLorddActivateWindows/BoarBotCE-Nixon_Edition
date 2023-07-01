@@ -30,7 +30,7 @@ export class LeaderboardImageGenerator {
     private config: BotConfig = {} as BotConfig;
     private curBoard: Board = Board.Bucks;
     private boardData: [string, number][] = [];
-    private madeImage: boolean = false;
+    private madeImage = false;
 
     /**
      * Creates a new leaderboard image generator
@@ -142,7 +142,9 @@ export class LeaderboardImageGenerator {
 
             try {
                 username = (await BoarBotApp.getBot().getClient().users.fetch(userID)).username;
-            } catch {
+            } catch {}
+
+            if (username.includes(strConfig.deletedUsername)) {
                 await Queue.addQueue(async () => await DataHandlers.removeLeaderboardUser(userID),
                     userID + 'global'
                 ).catch((err) => { throw err });

@@ -101,7 +101,7 @@ export class ConfigHandler {
             pathConfig.userOverlayScript
         ];
 
-        let passed: boolean = true;
+        let passed = true;
 
         for (const rarity in rarities) {
             const rarityInfo: RarityConfig = rarities[rarity];

@@ -7,9 +7,9 @@
  * @copyright WeslayCodes 2023
  */
 export class CollectedBadge {
-    public possession: boolean = false;
-    public firstObtained: number = 0;
-    public curObtained: number = 0;
-    public lastLost: number = 0;
-    public timesLost: number = 0;
+    public possession = false;
+    public firstObtained = 0;
+    public curObtained = 0;
+    public lastLost = 0;
+    public timesLost = 0;
 }

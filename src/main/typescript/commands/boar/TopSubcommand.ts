@@ -2,7 +2,7 @@ import {
     ActionRowBuilder,
     ButtonBuilder,
     ButtonInteraction,
-    ChatInputCommandInteraction, Client, Events, Interaction,
+    ChatInputCommandInteraction, Client, Events, Interaction, InteractionCollector,
     MessageComponentInteraction, ModalBuilder,
     SelectMenuComponentOptionData,
     StringSelectMenuBuilder,
@@ -24,6 +24,11 @@ import {RowConfig} from '../../bot/config/components/RowConfig';
 import {ComponentUtils} from '../../util/discord/ComponentUtils';
 import {LogDebug} from '../../util/logging/LogDebug';
 import {ModalConfig} from '../../bot/config/modals/ModalConfig';
+import {BoardData} from '../../util/data/global/BoardData';
+import {BoarUser} from '../../util/boar/BoarUser';
+import {Queue} from '../../util/interactions/Queue';
+import fs from 'fs';
+import {GlobalData} from '../../util/data/global/GlobalData';
 
 enum Board {
     Bucks = 'bucks',
@@ -51,11 +56,11 @@ export default class TopSubcommand implements Subcommand {
     private firstInter: ChatInputCommandInteraction = {} as ChatInputCommandInteraction;
     private compInter: MessageComponentInteraction = {} as MessageComponentInteraction;
     private imageGen: LeaderboardImageGenerator = {} as LeaderboardImageGenerator;
-    private leaderboardData: any;
+    private leaderboardData: Record<string, BoardData> = {};
     private curBoard: Board = Board.Bucks;
     private curBoardData: [string, number][] = [];
-    private curPage: number = 0;
-    private maxPage: number = 0;
+    private curPage = 0;
+    private maxPage = 0;
     private rows: ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>[] = [];
     private timerVars = {
         timeUntilNextCollect: 0,
@@ -63,7 +68,9 @@ export default class TopSubcommand implements Subcommand {
     };
     private modalShowing: ModalBuilder = {} as ModalBuilder;
     private curModalListener: ((submittedModal: Interaction) => Promise<void>) | undefined;
-    public readonly data = { name: this.subcommandInfo.name, path: __filename, cooldown: this.subcommandInfo.cooldown };
+    private collector: InteractionCollector<ButtonInteraction | StringSelectMenuInteraction> =
+        {} as InteractionCollector<ButtonInteraction | StringSelectMenuInteraction>;
+    public readonly data = { name: this.subcommandInfo.name, path: __filename };
 
     /**
      * Handles the functionality for this subcommand
@@ -78,22 +85,28 @@ export default class TopSubcommand implements Subcommand {
 
         this.firstInter = interaction;
 
+        // Leaderboard to start out in
         this.curBoard = interaction.options.getString(this.subcommandInfo.args[0].name)
             ? interaction.options.getString(this.subcommandInfo.args[0].name) as Board
             : Board.Bucks;
+
+        // Used to get the page of the board a user is on
         const userInput: User | null = interaction.options.getUser(this.subcommandInfo.args[1].name);
+
+        // Used to get the page to start out on
         const pageInput: number = interaction.options.getInteger(this.subcommandInfo.args[2].name)
             ? interaction.options.getInteger(this.subcommandInfo.args[2].name) as number
             : 1;
 
         this.leaderboardData = DataHandlers.getGlobalData().leaderboardData;
 
-        this.curBoardData = (Object.entries(this.leaderboardData[this.curBoard]) as [string, number][])
+        this.curBoardData = (Object.entries(this.leaderboardData[this.curBoard].userData) as [string, number][])
             .sort((a, b) => b[1] - a[1]);
+        await this.doAthleteBadge();
 
         this.maxPage = Math.ceil(this.curBoardData.length / this.config.numberConfig.leaderboardNumPlayers) - 1;
 
-        if (!userInput || this.getUserIndex(userInput.id) === -1) {
+        if (userInput === null || this.getUserIndex(userInput.id) === -1) {
             this.curPage = Math.max(Math.min(pageInput-1, this.maxPage), 0);
         } else {
             this.curPage = Math.ceil(
@@ -101,39 +114,48 @@ export default class TopSubcommand implements Subcommand {
             ) - 1;
         }
 
-        if (userInput && this.getUserIndex(userInput.id) === -1) {
-            await Replies.handleReply(
-                interaction, 'The user you entered isn\'t on this leaderboard! Defaulting to first page.',
-                undefined, undefined, undefined, true
-            );
-        }
-
         if (CollectorUtils.topCollectors[interaction.user.id]) {
-            CollectorUtils.topCollectors[interaction.user.id].stop('idle');
+            const oldCollector = CollectorUtils.topCollectors[interaction.user.id];
+            setTimeout(() => { oldCollector.stop(CollectorUtils.Reasons.Expired) }, 1000);
         }
 
-        CollectorUtils.topCollectors[interaction.user.id] = await CollectorUtils.createCollector(
+        this.collector = CollectorUtils.topCollectors[interaction.user.id] = await CollectorUtils.createCollector(
             interaction.channel as TextChannel, interaction.id, this.config.numberConfig
         );
 
         this.imageGen = new LeaderboardImageGenerator(this.curBoardData, this.curBoard, this.config);
-        await this.showLeaderboard();
+        this.showLeaderboard();
 
-        CollectorUtils.topCollectors[interaction.user.id].on(
+        if (userInput && this.getUserIndex(userInput.id) === -1) {
+            await Replies.handleReply(
+                interaction, this.config.stringConfig.notInBoard, this.config.colorConfig.error,
+                undefined, undefined, true
+            );
+        }
+
+        this.collector.on(
             'collect', async (inter: ButtonInteraction | StringSelectMenuInteraction) => await this.handleCollect(inter)
         );
 
-        CollectorUtils.topCollectors[interaction.user.id].once(
-            'end', async (collected, reason) => await this.handleEndCollect(reason)
-        );
+        this.collector.once('end', async (collected, reason) => await this.handleEndCollect(reason));
     }
 
-    private async handleCollect(inter: ButtonInteraction | StringSelectMenuInteraction) {
+    /**
+     * Handles collecting button and select menu interactions
+     *
+     * @param inter - The button interaction
+     * @private
+     */
+    private async handleCollect(inter: ButtonInteraction | StringSelectMenuInteraction): Promise<void> {
         try {
             const canInteract: boolean = await CollectorUtils.canInteract(this.timerVars, inter);
             if (!canInteract) return;
 
             if (!inter.isMessageComponent()) return;
+
+            if (!inter.customId.includes(this.firstInter.id)) {
+                this.collector.stop(CollectorUtils.Reasons.Error);
+            }
 
             this.compInter = inter;
 
@@ -171,10 +193,13 @@ export default class TopSubcommand implements Subcommand {
                     this.curPage++;
                     break;
 
+                // User wants to change the boars they're viewing
                 case leaderComponents.boardSelect.customId:
                     this.curBoard = (this.compInter as StringSelectMenuInteraction).values[0] as Board;
-                    this.curBoardData = (Object.entries(this.leaderboardData[this.curBoard]) as [string, number][])
-                        .sort((a, b) => b[1] - a[1]);
+                    this.curBoardData = (Object.entries(
+                        this.leaderboardData[this.curBoard].userData
+                    ) as [string, number][]).sort((a, b) => b[1] - a[1]);
+                    await this.doAthleteBadge();
                     this.maxPage = Math.ceil(
                         this.curBoardData.length / this.config.numberConfig.leaderboardNumPlayers
                     ) - 1;
@@ -185,16 +210,22 @@ export default class TopSubcommand implements Subcommand {
 
             await this.showLeaderboard();
         } catch (err: unknown) {
-            const canStop = await LogDebug.handleError(err, this.firstInter);
-            if (canStop && CollectorUtils.topCollectors[inter.user.id]) {
-                CollectorUtils.topCollectors[inter.user.id].stop(CollectorUtils.Reasons.Error);
+            const canStop: boolean = await LogDebug.handleError(err, this.firstInter);
+            if (canStop) {
+                this.collector.stop(CollectorUtils.Reasons.Error);
             }
         }
 
         clearInterval(this.timerVars.updateTime);
     }
 
-    private async handleEndCollect(reason: string) {
+    /**
+     * Handles when the collection for navigating through leaderboard menu
+     *
+     * @param reason - Why the collection ended
+     * @private
+     */
+    private async handleEndCollect(reason: string): Promise<void> {
         try {
             LogDebug.sendDebug('Ended collection with reason: ' + reason, this.config, this.firstInter);
 
@@ -204,6 +235,7 @@ export default class TopSubcommand implements Subcommand {
                 );
             }
 
+            this.endModalListener(this.compInter.client);
             await this.firstInter.editReply({
                 components: []
             });
@@ -212,7 +244,13 @@ export default class TopSubcommand implements Subcommand {
         }
     }
 
-    private async modalHandle(inter: MessageComponentInteraction) {
+    /**
+     * Sends the modal that gets page input
+     *
+     * @param inter - Used to show the modal and create/remove listener
+     * @private
+     */
+    private async modalHandle(inter: MessageComponentInteraction): Promise<void> {
         const modals: ModalConfig[] = this.config.commandConfigs.boar.top.modals;
 
         this.modalShowing = new ModalBuilder(modals[0]);
@@ -220,12 +258,14 @@ export default class TopSubcommand implements Subcommand {
         await inter.showModal(this.modalShowing);
 
         inter.client.on(Events.InteractionCreate, this.modalListener);
-
-        setTimeout(() => {
-            inter.client.removeListener(Events.InteractionCreate, this.modalListener);
-        }, 60000);
     }
 
+    /**
+     * Handles page input that was input in modal
+     *
+     * @param submittedModal - The interaction to respond to
+     * @private
+     */
     private modalListener = async (submittedModal: Interaction): Promise<void> => {
         try  {
             if (submittedModal.user.id !== this.firstInter.user.id) return;
@@ -241,14 +281,15 @@ export default class TopSubcommand implements Subcommand {
             }
 
             // Updates the cooldown to interact again
-            let canInteract = await CollectorUtils.canInteract(this.timerVars);
-            if (!canInteract) return;
+            const canInteract = await CollectorUtils.canInteract(this.timerVars);
+            if (!canInteract) {
+                this.endModalListener(submittedModal.client);
+                return;
+            }
 
             if (
-                !submittedModal.isModalSubmit() ||
-                (CollectorUtils.topCollectors[submittedModal.user.id] &&
-                    CollectorUtils.topCollectors[submittedModal.user.id].ended) ||
-                !submittedModal.guild || submittedModal.customId !== this.modalShowing.data.custom_id
+                !submittedModal.isModalSubmit() || this.collector.ended || !submittedModal.guild ||
+                submittedModal.customId !== this.modalShowing.data.custom_id
             ) {
                 this.endModalListener(submittedModal.client);
                 return;
@@ -264,7 +305,7 @@ export default class TopSubcommand implements Subcommand {
                 `${submittedModal.customId.split('|')[0]} input value: ` + submittedPage, this.config, this.firstInter
             );
 
-            let pageVal: number = 1;
+            let pageVal = 1;
             if (!Number.isNaN(parseInt(submittedPage))) {
                 pageVal = parseInt(submittedPage);
             }
@@ -273,16 +314,22 @@ export default class TopSubcommand implements Subcommand {
 
             await this.showLeaderboard();
         } catch (err: unknown) {
-            const canStop = await LogDebug.handleError(err, this.firstInter);
-            if (canStop && CollectorUtils.topCollectors[submittedModal.user.id]) {
-                CollectorUtils.topCollectors[submittedModal.user.id].stop(CollectorUtils.Reasons.Error);
+            const canStop: boolean = await LogDebug.handleError(err, this.firstInter);
+            if (canStop) {
+                this.collector.stop(CollectorUtils.Reasons.Error);
             }
         }
 
         this.endModalListener(submittedModal.client);
     };
 
-    private endModalListener(client: Client) {
+    /**
+     * Ends the current modal listener that's active
+     *
+     * @param client - Used to remove the listener
+     * @private
+     */
+    private endModalListener(client: Client): void {
         clearInterval(this.timerVars.updateTime);
         if (this.curModalListener) {
             client.removeListener(Events.InteractionCreate, this.curModalListener);
@@ -290,28 +337,45 @@ export default class TopSubcommand implements Subcommand {
         }
     }
 
-    private async showLeaderboard() {
-        if (!this.imageGen.hasMadeImage()) {
-            this.initButtons();
-        }
+    /**
+     * Displays the leaderboard image and modifies button states
+     *
+     * @private
+     */
+    private async showLeaderboard(): Promise<void> {
+        try {
+            if (!this.imageGen.hasMadeImage()) {
+                this.initButtons();
+            }
 
-        for (const row of this.rows) {
-            for (const component of row.components) {
-                component.setDisabled(true);
+            for (const row of this.rows) {
+                for (const component of row.components) {
+                    component.setDisabled(true);
+                }
+            }
+
+            this.rows[0].components[0].setDisabled(this.curPage === 0);
+            this.rows[0].components[1].setDisabled(this.maxPage === 0);
+            this.rows[0].components[2].setDisabled(this.curPage === this.maxPage);
+            this.rows[1].components[0].setDisabled(false);
+
+            await this.firstInter.editReply({
+                files: [await this.imageGen.makeLeaderboardImage(this.curPage)],
+                components: this.rows
+            });
+        } catch (err: unknown) {
+            const canStop: boolean = await LogDebug.handleError(err, this.firstInter);
+            if (canStop) {
+                this.collector.stop(CollectorUtils.Reasons.Error);
             }
         }
-
-        this.rows[0].components[0].setDisabled(this.curPage === 0);
-        this.rows[0].components[1].setDisabled(this.maxPage === 0);
-        this.rows[0].components[2].setDisabled(this.curPage === this.maxPage);
-        this.rows[1].components[0].setDisabled(false);
-
-        await this.firstInter.editReply({
-            files: [await this.imageGen.makeLeaderboardImage(this.curPage)],
-            components: this.rows
-        });
     }
 
+    /**
+     * Creates the buttons and rows used for collection by adding information to IDs
+     *
+     * @private
+     */
     private initButtons(): void {
         const leaderFieldConfigs: RowConfig[][] = this.config.commandConfigs.boar.top.componentFields;
         const selectOptions: SelectMenuComponentOptionData[] = [];
@@ -334,8 +398,14 @@ export default class TopSubcommand implements Subcommand {
         }
     }
 
-    private getUserIndex(idInput: string) {
-        let i=0;
+    /**
+     * Gets the index position of user on leaderboard
+     *
+     * @param idInput - User ID input to look for
+     * @private
+     */
+    private getUserIndex(idInput: string): number {
+        let i = 0;
         for (const [id] of this.curBoardData) {
             if (id === idInput) {
                 return i;
@@ -343,5 +413,32 @@ export default class TopSubcommand implements Subcommand {
             i++;
         }
         return -1;
+    }
+
+    /**
+     * Attempts to give the top user of the current board the athlete badge
+     *
+     * @private
+     */
+    private async doAthleteBadge(): Promise<void> {
+        const newTopUserID: string | undefined = this.curBoardData.length > 0
+            ? this.curBoardData[0][0]
+            : undefined;
+        const oldTopUserID: string | undefined = this.leaderboardData[this.curBoard].topUser;
+
+        if (newTopUserID && newTopUserID !== oldTopUserID) {
+            try {
+                const newTopUser: User = await this.firstInter.client.users.fetch(newTopUserID);
+                const newTopBoarUser: BoarUser = new BoarUser(newTopUser);
+
+                await newTopBoarUser.addBadge('athlete', this.firstInter);
+
+                await Queue.addQueue(async () => {
+                    const globalData: GlobalData = DataHandlers.getGlobalData();
+                    globalData.leaderboardData[this.curBoard].topUser = newTopUserID;
+                    fs.writeFileSync(this.config.pathConfig.globalDataFile, JSON.stringify(globalData));
+                }, newTopUserID + 'global').catch((err) => { throw err });
+            } catch {}
+        }
     }
 }
