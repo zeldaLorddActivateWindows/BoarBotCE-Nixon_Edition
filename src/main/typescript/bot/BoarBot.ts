@@ -179,15 +179,15 @@ export class BoarBot implements Bot {
 	 * @private
 	 */
 	private startNotificationCron(): void {
-		new CronJob('0 0 * * *', async () => {
-			for (const userFile of fs.readdirSync(this.getConfig().pathConfig.userDataFolder)) {
+		new CronJob('51 0 * * *', async () => {
+			fs.readdirSync(this.getConfig().pathConfig.userDataFolder).forEach(async userFile => {
 				let user: User | undefined;
 
 				try {
 					user = await this.getClient().users.fetch(userFile.split('.')[0]);
 				} catch {}
 
-				if (!user) continue;
+				if (!user) return;
 
 				const boarUser = new BoarUser(user);
 
@@ -226,15 +226,18 @@ export class BoarBot implements Bot {
 					}
 
 					try {
+						const notificationChannelID = boarUser.stats.general.notificationChannel
+							? boarUser.stats.general.notificationChannel
+							: '1124209789518483566';
 						await user.send(
 							randMsgStr + dailyReadyStr + '\n# ' +
-							FormatStrings.toBasicChannel(boarUser.stats.general.notificationChannel) + stopStr
+							FormatStrings.toBasicChannel(notificationChannelID) + stopStr
 						);
 					} catch (err: unknown) {
 						await LogDebug.handleError(err);
 					}
 				}
-			}
+			});
 		}, null, true, 'UTC');
 	}
 

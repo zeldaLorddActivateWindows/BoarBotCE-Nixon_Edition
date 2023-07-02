@@ -1634,7 +1634,7 @@
                 "name": "Spider Boar",
                 "pluralName": "Spider Boars",
                 "file": "SpiderBoar.png",
-                "description": "Forced a spider to bite it for superpowers. Instead, it just turned into a spider. Much less cool are far more gross.",
+                "description": "Forced a spider to bite it for superpowers. Instead, it just turned into a spider. Much less cool and far more gross.",
                 "isSB": false,
                 "blacklisted": true
             },
@@ -1650,7 +1650,7 @@
                 "name": "Zomboar",
                 "pluralName": "Zomboars",
                 "file": "ZombieBoar.png",
-                "description": "It's impossible for boars to be undead, so this boar is actually just a cannibal in a costume. Still frightening either way.",
+                "description": "Zombification is impossible for boars, so this boar is actually just a cannibal in a costume. Still frightening either way.",
                 "isSB": false,
                 "blacklisted": true
             },

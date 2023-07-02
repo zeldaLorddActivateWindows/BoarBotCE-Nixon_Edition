@@ -78,22 +78,22 @@ export class BoarGift {
 
         claimRows[0].components[0].setDisabled(false);
 
+        this.collector.on('collect', async (inter: ButtonInteraction) => await this.handleCollect(inter));
+        this.collector.once('end', async (collected, reason) => await this.handleEndCollect(collected, reason));
+
         try {
             this.giftMessage = await interaction.channel.send({
                 files: [await this.imageGen.finalizeGift()],
                 components: [claimRows[0]]
             });
         } catch {
+            this.completedGift = true;
             await Replies.handleReply(
                 interaction, this.config.stringConfig.giftFail, this.config.colorConfig.error,
                 undefined, undefined, true
-            );
-            this.completedGift = true;
+            ).catch(() => {});
             return;
         }
-
-        this.collector.on('collect', async (inter: ButtonInteraction) => await this.handleCollect(inter));
-        this.collector.once('end', async (collected) => await this.handleEndCollect(collected));
     }
 
     public isCompleted(): boolean {
@@ -123,15 +123,17 @@ export class BoarGift {
      * Handles the logic of getting the first claimer and giving the gift to them
      *
      * @param collected - Collection of all collected information
+     * @param reason - Reason collection ended
      * @private
      */
     private async handleEndCollect(
-        collected:  Collection<string, ButtonInteraction | StringSelectMenuInteraction>
+        collected:  Collection<string, ButtonInteraction | StringSelectMenuInteraction>,
+        reason: string
     ): Promise<void> {
         try {
-            if (collected.size === 0) {
-                await this.giftMessage.delete().catch(() => {});
+            if (collected.size === 0 || reason === CollectorUtils.Reasons.Error) {
                 this.completedGift = true;
+                await this.giftMessage.delete().catch(() => {});
                 return;
             }
 

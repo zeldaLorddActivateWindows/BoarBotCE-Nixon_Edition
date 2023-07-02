@@ -240,16 +240,6 @@ export default class DailySubcommand implements Subcommand {
                         nums.notificationButtonDelay
                     );
 
-                const msg: Message = await this.interaction.editReply({
-                    files: [
-                        await CustomEmbedGenerator.makeEmbed(
-                            strConfig.dailyUsedNotify, colorConfig.font, this.config,
-                            moment(nextBoarTime).fromNow().substring(3), colorConfig.silver
-                        )
-                    ],
-                    components: dailyComponentRows
-                });
-
                 collector.on('collect', async (inter: ButtonInteraction) => {
                     await Queue.addQueue(async () => {
                         try {
@@ -291,13 +281,22 @@ export default class DailySubcommand implements Subcommand {
                         LogDebug.handleError(err, this.interaction);
                     });
                 });
-
                 collector.once('end', async () => {
                     try {
                         await msg.delete();
                     } catch (err: unknown) {
                         await LogDebug.handleError(err, this.interaction);
                     }
+                });
+
+                const msg: Message = await this.interaction.editReply({
+                    files: [
+                        await CustomEmbedGenerator.makeEmbed(
+                            strConfig.dailyUsedNotify, colorConfig.font, this.config,
+                            moment(nextBoarTime).fromNow().substring(3), colorConfig.silver
+                        )
+                    ],
+                    components: dailyComponentRows
                 });
             } else {
                 const msg = await this.interaction.editReply({

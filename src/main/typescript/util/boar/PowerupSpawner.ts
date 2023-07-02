@@ -34,8 +34,6 @@ import {ItemConfigs} from '../../bot/config/items/ItemConfigs';
 import {PromptConfigs} from '../../bot/config/prompts/PromptConfigs';
 
 export class PowerupSpawner {
-    private readonly intervalVal: number =
-        Math.round(BoarBotApp.getBot().getConfig().numberConfig.powInterval * (Math.random() * (1.25 - .75) + .75));
     private readonly initIntervalVal: number = 0;
     private claimers: Map<string, number> = new Map<string, number>();
     private powerupType: ItemConfig = {} as ItemConfig;
@@ -51,7 +49,11 @@ export class PowerupSpawner {
     private readyToEnd = false;
 
     constructor(initPowTime?: number) {
-        this.initIntervalVal = initPowTime !== undefined ? Math.max(initPowTime - Date.now(), 5000) : this.intervalVal;
+        this.initIntervalVal = initPowTime !== undefined
+            ? Math.max(initPowTime - Date.now(), 5000)
+            : Math.round(
+                BoarBotApp.getBot().getConfig().numberConfig.powInterval * (Math.random() * (1.05 - .95) + .95)
+            );
     }
 
     /**
@@ -74,14 +76,13 @@ export class PowerupSpawner {
 
             LogDebug.sendDebug('Spawning powerup', config);
 
-            setTimeout(() => this.doSpawn(),
-                Math.round(config.numberConfig.powInterval * (Math.random() * (1.25 - .75) + .75))
-            );
+            const newInterval = Math.round(config.numberConfig.powInterval * (Math.random() * (1.05 - .95) + .95));
+            setTimeout(() => this.doSpawn(), newInterval);
 
             await Queue.addQueue(async () => {
                 try {
                     const globalData = DataHandlers.getGlobalData();
-                    globalData.nextPowerup = Date.now() + this.intervalVal;
+                    globalData.nextPowerup = Date.now() + newInterval;
                     fs.writeFileSync(config.pathConfig.globalDataFile, JSON.stringify(globalData));
                 } catch (err: unknown) {
                     await LogDebug.handleError(err);
@@ -129,44 +130,51 @@ export class PowerupSpawner {
             const rowsConfig: RowConfig[] = promptConfig.rows;
             let rows: ActionRowBuilder<ButtonBuilder>[] = [];
 
-            switch (this.promptTypeID) {
-                case 'emojiFind':
-                    rows = this.makeEmojiRows(chosenPrompt, rightStyle, wrongStyle, rowsConfig, curTime, nums);
-                    break;
-                case 'trivia':
-                    rows = this.makeTriviaRows(chosenPrompt, rightStyle, wrongStyle, rowsConfig, curTime, nums);
-                    break;
-                case 'fast':
-                    rows = this.makeFastRows(chosenPrompt, rightStyle, wrongStyle, rowsConfig, curTime, nums);
-                    break;
-            }
-
             const powerupSpawnImage: AttachmentBuilder = await PowerupImageGenerator.makePowerupSpawnImage(
                 this.powerupType, promptTypes[this.promptTypeID], chosenPrompt, config
             );
 
             // Sends powerup message to all boar channels
-            for (const channel of allBoarChannels) {
+            allBoarChannels.forEach(async channel => {
                 try {
-                    // if (config.maintenanceMode && channel.guild.id !== '1042593392921677975') continue;
-
                     const collector: InteractionCollector<ButtonInteraction | StringSelectMenuInteraction> =
                         await CollectorUtils.createCollector(channel, curTime.toString(),
                             nums, false, nums.powDuration
                         );
 
-                    const powMsg: Message = await channel.send({
+                    switch (this.promptTypeID) {
+                        case 'emojiFind':
+                            rows = this.makeEmojiRows(chosenPrompt, rightStyle, wrongStyle, rowsConfig, curTime, nums);
+                            break;
+                        case 'trivia':
+                            rows = this.makeTriviaRows(chosenPrompt, rightStyle, wrongStyle, rowsConfig, curTime, nums);
+                            break;
+                        case 'fast':
+                            rows = this.makeFastRows(chosenPrompt, rightStyle, wrongStyle, rowsConfig, curTime, nums);
+                            break;
+                    }
+
+                    const powMsg: {msg: Message} = { msg: {} as Message };
+
+                    collector.on('collect', async (inter: ButtonInteraction) =>
+                        await this.handleCollect(inter, powMsg.msg, config)
+                    );
+                    collector.on('end', async (collected, reason) =>
+                        await this.handleEndCollect(reason, powMsg.msg, config)
+                    );
+
+                    powMsg.msg = await channel.send({
                         files: [powerupSpawnImage],
                         components: rows
-                    }).catch((err) => { throw err; });
+                    }).catch((err) => {
+                        collector.stop(CollectorUtils.Reasons.Error);
+                        throw err;
+                    });
 
                     this.numMsgs++;
                     this.numNotFinished++;
-
-                    collector.on('collect', async (inter: ButtonInteraction) => await this.handleCollect(inter, powMsg, config));
-                    collector.on('end', async () => await this.handleEndCollect(powMsg, config));
                 } catch {}
-            }
+            });
         } catch (err: unknown) {
             await LogDebug.handleError((err as Error).stack);
         }
@@ -223,15 +231,21 @@ export class PowerupSpawner {
      * Handles when the powerup ends, editing the message and
      * replying to all user interactions.
      *
+     * @param reason - Reason for ending collection
      * @param powMsg - The powerup message to edit
      * @param config - Used to get config info
      * @private
      */
     private async handleEndCollect(
+        reason: string,
         powMsg: Message,
         config: BotConfig
     ) {
         try {
+            if (reason === CollectorUtils.Reasons.Error) {
+                return;
+            }
+
             try {
                 await powMsg.edit({
                     components: [new ActionRowBuilder<ButtonBuilder>(config.promptConfigs.rows[1])]

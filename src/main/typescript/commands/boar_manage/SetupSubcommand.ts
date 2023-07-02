@@ -89,19 +89,15 @@ export default class SetupSubcommand implements Subcommand {
             throw err;
         });
 
+        this.collector.on('collect', async (inter: StringSelectMenuInteraction | ButtonInteraction) =>
+            await this.handleCollect(inter)
+        );
+        this.collector.once('end', async (collected, reason) => await this.handleEndCollect(reason));
+
         await this.setupFields[0].editReply(interaction).catch(async (err: unknown) => {
             await DataHandlers.removeGuildFile(this.guildDataPath, this.guildData);
             throw err;
         });
-
-        this.collector.on(
-            'collect',
-            async (inter: StringSelectMenuInteraction | ButtonInteraction) => await this.handleCollect(inter)
-        );
-
-        this.collector.once(
-            'end', async (collected, reason) => await this.handleEndCollect(reason)
-        );
     }
 
     /**

@@ -63,9 +63,9 @@ export class CollectorUtils {
 
         // Updates time to collect every 100ms, preventing
         // users from clicking too fast
-        timerVars.timeUntilNextCollect = Date.now() + 500;
+        timerVars.timeUntilNextCollect = Date.now() + 300;
         timerVars.updateTime = setInterval(() => {
-            timerVars.timeUntilNextCollect = Date.now() + 500;
+            timerVars.timeUntilNextCollect = Date.now() + 300;
         }, 100);
 
         return true;

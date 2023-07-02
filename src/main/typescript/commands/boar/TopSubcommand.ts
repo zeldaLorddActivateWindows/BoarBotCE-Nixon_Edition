@@ -105,6 +105,7 @@ export default class TopSubcommand implements Subcommand {
         await this.doAthleteBadge();
 
         this.maxPage = Math.ceil(this.curBoardData.length / this.config.numberConfig.leaderboardNumPlayers) - 1;
+        this.maxPage = Math.max(0, this.maxPage);
 
         if (userInput === null || this.getUserIndex(userInput.id) === -1) {
             this.curPage = Math.max(Math.min(pageInput-1, this.maxPage), 0);
@@ -123,8 +124,13 @@ export default class TopSubcommand implements Subcommand {
             interaction.channel as TextChannel, interaction.id, this.config.numberConfig
         );
 
+        this.collector.on('collect', async (inter: ButtonInteraction | StringSelectMenuInteraction) =>
+            await this.handleCollect(inter)
+        );
+        this.collector.once('end', async (collected, reason) => await this.handleEndCollect(reason));
+
         this.imageGen = new LeaderboardImageGenerator(this.curBoardData, this.curBoard, this.config);
-        this.showLeaderboard();
+        await this.showLeaderboard();
 
         if (userInput && this.getUserIndex(userInput.id) === -1) {
             await Replies.handleReply(
@@ -132,12 +138,6 @@ export default class TopSubcommand implements Subcommand {
                 undefined, undefined, true
             );
         }
-
-        this.collector.on(
-            'collect', async (inter: ButtonInteraction | StringSelectMenuInteraction) => await this.handleCollect(inter)
-        );
-
-        this.collector.once('end', async (collected, reason) => await this.handleEndCollect(reason));
     }
 
     /**

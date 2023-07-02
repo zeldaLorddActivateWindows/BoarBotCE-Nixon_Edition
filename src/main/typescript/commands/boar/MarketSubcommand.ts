@@ -143,16 +143,15 @@ export default class MarketSubcommand implements Subcommand {
             interaction.channel as TextChannel, interaction.id, this.config.numberConfig
         );
 
+        this.collector.on('collect', async (inter: ButtonInteraction | StringSelectMenuInteraction) =>
+            await this.handleCollect(inter)
+        );
+        this.collector.once('end', async (collected, reason) => await this.handleEndCollect(reason));
+
         this.imageGen = new MarketImageGenerator(
             this.pricingData, this.userBuyOrders, this.userSellOrders, this.config
         );
-        this.showMarket(true);
-
-        this.collector.on(
-            'collect', async (inter: ButtonInteraction | StringSelectMenuInteraction) => await this.handleCollect(inter)
-        );
-
-        this.collector.once('end', async (collected, reason) => await this.handleEndCollect(reason));
+        await this.showMarket(true);
     }
 
     /**
@@ -580,9 +579,14 @@ export default class MarketSubcommand implements Subcommand {
                 }
 
                 if (!isSell && orderInfo.type === 'boars') {
+                    const boarRarity = BoarUtils.findRarity(orderInfo.id, this.config);
+
                     if (!this.boarUser.itemCollection.boars[orderInfo.id]) {
                         this.boarUser.itemCollection.boars[orderInfo.id] = new CollectedBoar;
                         this.boarUser.itemCollection.boars[orderInfo.id].firstObtained = Date.now();
+                        this.boarUser.stats.general.multiplier += boarRarity[1].name === 'Special' ? 0 : 1;
+                        this.boarUser.stats.general.highestMulti =
+                            Math.max(this.boarUser.stats.general.multiplier, this.boarUser.stats.general.highestMulti);
                     }
 
                     this.boarUser.itemCollection.boars[orderInfo.id].lastObtained = Date.now();
@@ -702,16 +706,19 @@ export default class MarketSubcommand implements Subcommand {
                 isInstaSell && (this.optionalRows[0].components[1] as ButtonBuilder).data.style === 4;
 
             if (noEditionBucks || noItemBucks) {
+                await inter.deferUpdate();
                 showModal = false;
                 await Replies.handleReply(
                     inter, strConfig.marketNoBucks, colorConfig.error, undefined, undefined, true
                 );
             } else if (noHaveEdition) {
+                await inter.deferUpdate();
                 showModal = false;
                 await Replies.handleReply(
                     inter, strConfig.marketNoEdition, colorConfig.error, undefined, undefined, true
                 );
             } else if (noHaveItems) {
+                await inter.deferUpdate();
                 showModal = false;
                 await Replies.handleReply(
                     inter, strConfig.marketNoItems, colorConfig.error, undefined, undefined, true
@@ -824,10 +831,14 @@ export default class MarketSubcommand implements Subcommand {
 
                     if (!failedBuy && itemData.type === 'boars') {
                         itemData = this.pricingData[this.curPage];
+                        const boarRarity = BoarUtils.findRarity(itemData.id, this.config);
 
                         if (!this.boarUser.itemCollection.boars[itemData.id]) {
                             this.boarUser.itemCollection.boars[itemData.id] = new CollectedBoar;
                             this.boarUser.itemCollection.boars[itemData.id].firstObtained = Date.now();
+                            this.boarUser.stats.general.multiplier += boarRarity[1].name === 'Special' ? 0 : 1;
+                            this.boarUser.stats.general.highestMulti =
+                                Math.max(this.boarUser.stats.general.multiplier, this.boarUser.stats.general.highestMulti);
                         }
 
                         this.boarUser.itemCollection.boars[itemData.id].num += this.modalData[0];
