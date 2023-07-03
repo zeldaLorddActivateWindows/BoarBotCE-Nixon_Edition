@@ -5,6 +5,10 @@
     ],
     "botStatusChannel": "1042624481044209735",
     "logChannel": "1084972329970442310",
+    "unlimitedBoars": false,
+    "debugMode": true,
+    "maintenanceMode": false,
+    "marketOpen": true,
     "pathConfig": {
         "listeners": "src/main/typescript/listeners/",
         "commands": "src/main/typescript/commands/",
@@ -143,7 +147,7 @@
         "collEnhanceDetails": "This action will take your %@ and convert it into a random boar of the next rarity. The result of this interaction is shown above. Click \"Enhance\" again to confirm.",
         "collEnhanceBoarLose": "-1 %@",
         "collEnhanceBoarGain": "+1 %@ Boar",
-        "collGiftDetails": " has sent out a %@! These gifts include boars, boar bucks, other powerups, and exclusive items. Be the first to click \"Claim\" to claim it!",
+        "collGiftDetails": " has sent out a %@! Be the first to click \"Open\" to claim it! (Both giver and opener get rewards)",
         "collEditionTitle": "__Editions for %@__",
         "collEditionLine": "**Edition #%@:** %@\n",
         "collDescriptionSB": " (SkyBlock Boar)",
@@ -197,6 +201,9 @@
         "marketEditionHigh": "That edition of this item doesn't exist!",
         "marketHasEdition": "You already have that edition of this item or are currently selling it!",
         "marketClosed": "Boar Market is currently closed!",
+        "marketTooYoung": "Your Discord account is too young to use Boar Market!",
+        "marketTooCheap": "The price you entered is too low! Must be at least $%@.",
+        "marketTooExpensive": "The price you entered is too high! Must be at maximum $%@.",
         "marketBSBuyNowLabel": "Buy Now Price",
         "marketBSSellNowLabel": "Sell Now Price",
         "marketBSBuyOrdLabel": "Buy Order Volume",
@@ -483,6 +490,7 @@
         "marketOrdClaimLabelPos": [1348, 971],
         "marketOrdClaimPos": [1348, 1026],
         "marketOrdClaimWidth": 620,
+        "marketRange": 2,
         "orderExpire": 604800000,
         "notificationButtonDelay": 15000
     },
@@ -713,7 +721,7 @@
                                 {
                                     "type": 2,
                                     "customId": "GIFT_CLAIM",
-                                    "label": "Claim",
+                                    "label": "Open",
                                     "style": 3,
                                     "disabled": true
                                 }
@@ -2086,12 +2094,12 @@
                 "tiers": [3, 1, 0],
                 "outcomes": [
                     {
-                        "weight": 0,
+                        "weight": 1,
                         "category": "Special Boar",
                         "suboutcomes": []
                     },
                     {
-                        "weight": 400,
+                        "weight": 800,
                         "category": "Boar Bucks",
                         "suboutcomes": [
                             {
@@ -2109,7 +2117,7 @@
                         ]
                     },
                     {
-                        "weight": 199,
+                        "weight": 399,
                         "category": "Powerups",
                         "suboutcomes": [
                             {
@@ -2127,7 +2135,7 @@
                         ]
                     },
                     {
-                        "weight": 400,
+                        "weight": 800,
                         "category": "Random Boar",
                         "suboutcomes": []
                     }
@@ -2332,9 +2340,5 @@
         "rarity7": "#00FFFB",
         "rarity8": "#FFFEBB",
         "rarity9": "#FF3136"
-    },
-    "unlimitedBoars": false,
-    "debugMode": true,
-    "maintenanceMode": false,
-    "marketOpen": true
+    }
 }

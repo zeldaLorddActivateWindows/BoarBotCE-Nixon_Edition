@@ -128,7 +128,6 @@ export default class DailySubcommand implements Subcommand {
                 }
 
                 boarUser.stats.general.boarStreak++;
-                boarUser.stats.general.multiplier++;
 
                 boarUser.stats.general.highestMulti =
                     Math.max(boarUser.stats.general.multiplier, boarUser.stats.general.highestMulti);

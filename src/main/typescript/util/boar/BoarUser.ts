@@ -176,7 +176,6 @@ export class BoarUser {
             this.itemCollection.powerups.enhancer.raritiesUsed = [0,0,0,0,0,0,0];
         }
 
-        this.stats.general.multiplier = Math.min(this.stats.general.multiplier, nums.maxMulti);
         this.itemCollection.powerups.multiBoost.numTotal =
             Math.max(0, Math.min(this.itemCollection.powerups.multiBoost.numTotal, nums.maxMultiBoost));
         this.itemCollection.powerups.gift.numTotal =
@@ -187,9 +186,20 @@ export class BoarUser {
             Math.max(0, Math.min(this.itemCollection.powerups.enhancer.numTotal, nums.maxEnhancers));
 
         if (this.stats.general.lastDaily < twoDailiesAgo) {
-            this.stats.general.multiplier -= this.stats.general.boarStreak;
             this.stats.general.boarStreak = 0;
         }
+
+        let uniques = 0;
+
+        for (const boarID of Object.keys(this.itemCollection.boars)) {
+            if (this.itemCollection.boars[boarID].num > 0) {
+                uniques++;
+            }
+        }
+
+        this.stats.general.multiplier = 1 + uniques + this.stats.general.boarStreak;
+        this.stats.general.multiplier = Math.min(this.stats.general.multiplier, nums.maxMulti);
+        this.stats.general.highestMulti = Math.max(this.stats.general.multiplier, this.stats.general.highestMulti);
 
         this.stats.general.boarScore = Math.max(this.stats.general.boarScore, 0);
 
@@ -307,9 +317,6 @@ export class BoarUser {
                     if (!this.itemCollection.boars[boarID]) {
                         this.itemCollection.boars[boarID] = new CollectedBoar;
                         this.itemCollection.boars[boarID].firstObtained = Date.now();
-                        this.stats.general.multiplier += rarityInfos[i].name === 'Special' ? 0 : 1;
-                        this.stats.general.highestMulti =
-                            Math.max(this.stats.general.multiplier, this.stats.general.highestMulti);
                     }
 
                     this.itemCollection.boars[boarID].num++;

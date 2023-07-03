@@ -179,7 +179,7 @@ export class BoarBot implements Bot {
 	 * @private
 	 */
 	private startNotificationCron(): void {
-		new CronJob('51 0 * * *', async () => {
+		new CronJob('0 0 * * *', async () => {
 			fs.readdirSync(this.getConfig().pathConfig.userDataFolder).forEach(async userFile => {
 				let user: User | undefined;
 

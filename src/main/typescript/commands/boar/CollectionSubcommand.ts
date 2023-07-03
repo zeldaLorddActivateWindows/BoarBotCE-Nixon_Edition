@@ -543,6 +543,7 @@ export default class CollectionSubcommand implements Subcommand {
                 );
             }
 
+            this.endModalListener(this.firstInter.client);
             await this.firstInter.editReply({
                 components: []
             });
@@ -561,6 +562,7 @@ export default class CollectionSubcommand implements Subcommand {
 
         this.boarUser.refreshUserData();
         this.allBoars = [];
+        this.allBoarsTree = createRBTree();
 
         // Adds information about each boar in user's boar collection to an array
         for (const boarID of Object.keys(this.boarUser.itemCollection.boars)) {

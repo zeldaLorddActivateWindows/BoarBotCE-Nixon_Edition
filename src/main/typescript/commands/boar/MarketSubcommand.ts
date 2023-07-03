@@ -62,7 +62,14 @@ export default class MarketSubcommand implements Subcommand {
     private imageGen: MarketImageGenerator = {} as MarketImageGenerator;
     private firstInter: ChatInputCommandInteraction = {} as ChatInputCommandInteraction;
     private compInter: MessageComponentInteraction = {} as MessageComponentInteraction;
-    private pricingData: {id: string, type: string, instaSells: BuySellData[], instaBuys: BuySellData[]}[] = [];
+    private pricingData: {
+        id: string,
+        type: string,
+        buyers: BuySellData[],
+        sellers: BuySellData[],
+        lastBuy: number,
+        lastSell: number
+    }[] = [];
     private pricingDataTree: Tree<string, number> = createRBTree();
     private boarUser: BoarUser = {} as BoarUser;
     private userBuyOrders: {data: BuySellData, id: string, type: string}[] = [];
@@ -98,6 +105,13 @@ export default class MarketSubcommand implements Subcommand {
         if (!this.config.marketOpen && !this.config.devs.includes(interaction.user.id)) {
             await Replies.handleReply(
                 interaction, this.config.stringConfig.marketClosed, this.config.colorConfig.error
+            );
+            return;
+        }
+
+        if (interaction.user.createdTimestamp > Date.now() + this.config.numberConfig.oneDay * 30) {
+            await Replies.handleReply(
+                interaction, this.config.stringConfig.marketTooYoung, this.config.colorConfig.error
             );
             return;
         }
@@ -381,6 +395,7 @@ export default class MarketSubcommand implements Subcommand {
                         foundOrder = true;
 
                         numToClaim = await this.returnOrderToUser(orderInfo, isSell, true);
+                        await DataHandlers.updateLeaderboardData(this.boarUser, this.compInter, this.config);
 
                         if (
                             orderInfo.data.num === orderInfo.data.filledAmount &&
@@ -411,6 +426,7 @@ export default class MarketSubcommand implements Subcommand {
                         foundOrder = true;
 
                         numToClaim = await this.returnOrderToUser(orderInfo, isSell, true);
+                        await DataHandlers.updateLeaderboardData(this.boarUser, this.compInter, this.config);
 
                         if (
                             orderInfo.data.num === orderInfo.data.filledAmount &&
@@ -485,6 +501,7 @@ export default class MarketSubcommand implements Subcommand {
 
                     if (isSameOrder && canCancel) {
                         const hasEnoughRoom: boolean = (await this.returnOrderToUser(orderInfo, isSell, false)) > 0;
+                        await DataHandlers.updateLeaderboardData(this.boarUser, this.compInter, this.config);
 
                         if (hasEnoughRoom) {
                             await Replies.handleReply(
@@ -516,6 +533,7 @@ export default class MarketSubcommand implements Subcommand {
 
                     if (isSameOrder && canCancel) {
                         const hasEnoughRoom: boolean = (await this.returnOrderToUser(orderInfo, isSell, false)) > 0;
+                        await DataHandlers.updateLeaderboardData(this.boarUser, this.compInter, this.config);
 
                         if (hasEnoughRoom) {
                             await Replies.handleReply(
@@ -579,14 +597,9 @@ export default class MarketSubcommand implements Subcommand {
                 }
 
                 if (!isSell && orderInfo.type === 'boars') {
-                    const boarRarity = BoarUtils.findRarity(orderInfo.id, this.config);
-
                     if (!this.boarUser.itemCollection.boars[orderInfo.id]) {
                         this.boarUser.itemCollection.boars[orderInfo.id] = new CollectedBoar;
                         this.boarUser.itemCollection.boars[orderInfo.id].firstObtained = Date.now();
-                        this.boarUser.stats.general.multiplier += boarRarity[1].name === 'Special' ? 0 : 1;
-                        this.boarUser.stats.general.highestMulti =
-                            Math.max(this.boarUser.stats.general.multiplier, this.boarUser.stats.general.highestMulti);
                     }
 
                     this.boarUser.itemCollection.boars[orderInfo.id].lastObtained = Date.now();
@@ -661,8 +674,14 @@ export default class MarketSubcommand implements Subcommand {
     ): Promise<boolean> {
         try {
             this.boarUser.refreshUserData();
-            let itemData: {id: string, type: string, instaSells: BuySellData[], instaBuys: BuySellData[]} =
-                this.pricingData[this.curPage];
+            let itemData: {
+                id: string,
+                type: string,
+                buyers: BuySellData[],
+                sellers: BuySellData[],
+                lastBuy: number,
+                lastSell: number
+            } = this.pricingData[this.curPage];
             let showModal = true;
             let undoRed = true;
 
@@ -670,27 +689,27 @@ export default class MarketSubcommand implements Subcommand {
             const nums: NumberConfig = this.config.numberConfig;
             const colorConfig: ColorConfig = this.config.colorConfig;
 
-            let sellOrder: BuySellData | undefined;
+            let specialSellOrder: BuySellData | undefined;
             const itemRarity: [number, RarityConfig] = BoarUtils.findRarity(itemData.id, this.config);
             const isSpecial: boolean = itemRarity[1].name === 'Special' && itemRarity[0] !== 0;
 
             if (isInstaBuy && isSpecial) {
-                for (const instaBuy of itemData.instaBuys) {
-                    const noEditionExists: boolean = instaBuy.num === instaBuy.filledAmount ||
-                        instaBuy.listTime + nums.orderExpire < Date.now() ||
-                        instaBuy.editions[0] !== this.curEdition;
+                for (const sellOrder of itemData.sellers) {
+                    const noEditionExists: boolean = sellOrder.num === sellOrder.filledAmount ||
+                        sellOrder.listTime + nums.orderExpire < Date.now() ||
+                        sellOrder.editions[0] !== this.curEdition;
 
                     if (noEditionExists) continue;
 
-                    sellOrder = instaBuy;
+                    specialSellOrder = sellOrder;
                     break;
                 }
             }
 
-            const noEditionBucks: boolean | undefined = isInstaBuy && this.curEdition > 0 && sellOrder &&
-                this.boarUser.stats.general.boarScore < sellOrder.price;
+            const noEditionBucks: boolean | undefined = isInstaBuy && this.curEdition > 0 && specialSellOrder &&
+                this.boarUser.stats.general.boarScore < specialSellOrder.price;
             const noItemBucks: boolean =
-                isInstaBuy && this.boarUser.stats.general.boarScore < itemData.instaBuys[0].price;
+                isInstaBuy && this.boarUser.stats.general.boarScore < itemData.sellers[0].price;
 
             const noHaveEdition: boolean = isInstaSell && this.curEdition > 0 &&
                 this.boarUser.itemCollection.boars[itemData.id] &&
@@ -831,14 +850,10 @@ export default class MarketSubcommand implements Subcommand {
 
                     if (!failedBuy && itemData.type === 'boars') {
                         itemData = this.pricingData[this.curPage];
-                        const boarRarity = BoarUtils.findRarity(itemData.id, this.config);
 
                         if (!this.boarUser.itemCollection.boars[itemData.id]) {
                             this.boarUser.itemCollection.boars[itemData.id] = new CollectedBoar;
                             this.boarUser.itemCollection.boars[itemData.id].firstObtained = Date.now();
-                            this.boarUser.stats.general.multiplier += boarRarity[1].name === 'Special' ? 0 : 1;
-                            this.boarUser.stats.general.highestMulti =
-                                Math.max(this.boarUser.stats.general.multiplier, this.boarUser.stats.general.highestMulti);
                         }
 
                         this.boarUser.itemCollection.boars[itemData.id].num += this.modalData[0];
@@ -848,34 +863,40 @@ export default class MarketSubcommand implements Subcommand {
 
                         if (this.curEdition === 0) {
                             for (let i=0; i<orderFillAmounts.length; i++) {
-                                if (itemData.instaBuys[i].editions.length === 0) continue;
+                                if (itemData.sellers[i].editions.length === 0) continue;
 
                                 this.boarUser.itemCollection.boars[itemData.id].editions =
                                     this.boarUser.itemCollection.boars[itemData.id].editions.concat(
-                                        itemData.instaBuys[i].editions.slice(0, orderFillAmounts[i])
+                                        itemData.sellers[i].editions.slice(0, orderFillAmounts[i])
                                     ).sort((a,b) => a - b);
 
                                 this.boarUser.itemCollection.boars[itemData.id].editionDates =
                                     this.boarUser.itemCollection.boars[itemData.id].editionDates.concat(
-                                        itemData.instaBuys[i].editionDates.slice(0, orderFillAmounts[i])
+                                        itemData.sellers[i].editionDates.slice(0, orderFillAmounts[i])
                                     ).sort((a,b) => a - b);
                             }
                         } else {
-                            let sellOrder: BuySellData | undefined;
+                            let specialSellOrder: BuySellData | undefined;
 
-                            for (const instaBuy of itemData.instaBuys) {
-                                if (instaBuy.editions[0] !== this.curEdition) continue;
-                                sellOrder = instaBuy;
+                            for (const sellOrder of itemData.sellers) {
+                                if (sellOrder.editions[0] !== this.curEdition) continue;
+                                specialSellOrder = sellOrder;
                             }
+
+                            LogDebug.sendMarketLog(
+                                `${this.firstInter.user.id} bought '${itemData.id}' from ${specialSellOrder?.userID} ` +
+                                `for $${specialSellOrder?.price}`,
+                                this.config
+                            );
 
                             this.boarUser.itemCollection.boars[itemData.id].editions =
                                 this.boarUser.itemCollection.boars[itemData.id].editions.concat([this.curEdition])
                                     .sort((a,b) => a - b);
 
-                            if (sellOrder) {
+                            if (specialSellOrder) {
                                 this.boarUser.itemCollection.boars[itemData.id].editionDates =
                                     this.boarUser.itemCollection.boars[itemData.id].editionDates.concat(
-                                        sellOrder.editionDates
+                                        specialSellOrder.editionDates
                                     ).sort((a,b) => a - b);
                             }
 
@@ -997,7 +1018,7 @@ export default class MarketSubcommand implements Subcommand {
                             for (let i=0; i<orderFillAmounts.length; i++) {
                                 if (itemData.type === 'boars') {
                                     const editionIndex: number = this.boarUser.itemCollection.boars[itemData.id]
-                                            .editions.length - orderFillAmounts[i];
+                                        .editions.length - orderFillAmounts[i];
                                     const editionLength: number = this.boarUser.itemCollection.boars[itemData.id]
                                         .editions.length;
 
@@ -1020,6 +1041,13 @@ export default class MarketSubcommand implements Subcommand {
                             if (editionOrderIndex >= 0) {
                                 const editionIndex: number = this.boarUser.itemCollection.boars[itemData.id].editions
                                     .indexOf(this.curEdition);
+
+                                LogDebug.sendMarketLog(
+                                    `${this.firstInter.user.id} sold '${itemData.id}' to ` +
+                                    `${newItemData.buyers[editionOrderIndex].userID} for ` +
+                                    `$${newItemData.buyers[editionOrderIndex].price}`,
+                                    this.config
+                                );
 
                                 this.boarUser.itemCollection.boars[itemData.id].editions.splice(editionIndex, 1);
 
@@ -1106,8 +1134,14 @@ export default class MarketSubcommand implements Subcommand {
     ): Promise<boolean> {
         try {
             this.boarUser.refreshUserData();
-            const itemData: {id: string, type: string, instaSells: BuySellData[], instaBuys: BuySellData[]} =
-                this.pricingData[this.curPage];
+            const itemData: {
+                id: string,
+                type: string,
+                buyers: BuySellData[],
+                sellers: BuySellData[],
+                lastBuy: number,
+                lastSell: number
+            } = this.pricingData[this.curPage];
             let showModal = true;
 
             const strConfig: StringConfig = this.config.stringConfig;
@@ -1157,6 +1191,9 @@ export default class MarketSubcommand implements Subcommand {
 
                             globalData.itemData[itemData.type][itemData.id].buyers.push(order);
                             globalData.itemData[itemData.type][itemData.id].buyers.sort((a, b) => b.price - a.price);
+
+                            globalData.itemData[itemData.type][itemData.id].lastBuy =
+                                globalData.itemData[itemData.type][itemData.id].buyers[0].price;
 
                             fs.writeFileSync(this.config.pathConfig.globalDataFile, JSON.stringify(globalData));
                             this.getPricingData();
@@ -1232,6 +1269,12 @@ export default class MarketSubcommand implements Subcommand {
 
                             globalData.itemData[itemData.type][itemData.id].sellers.push(order);
                             globalData.itemData[itemData.type][itemData.id].sellers.sort((a, b) => a.price - b.price);
+
+                            globalData.itemData[itemData.type][itemData.id].lastSell = Math.max(
+                                globalData.itemData[itemData.type][itemData.id].sellers[0].price,
+                                globalData.itemData[itemData.type][itemData.id].lastBuy
+                            );
+
                             fs.writeFileSync(this.config.pathConfig.globalDataFile, JSON.stringify(globalData));
                             this.getPricingData();
                             this.imageGen.updateInfo(
@@ -1350,6 +1393,9 @@ export default class MarketSubcommand implements Subcommand {
                                     globalData.itemData[orderInfo.type][orderInfo.id].buyers
                                         .sort((a, b) => b.price - a.price);
 
+                                    globalData.itemData[orderInfo.type][orderInfo.id].lastBuy =
+                                        globalData.itemData[orderInfo.type][orderInfo.id].buyers[0].price;
+
                                     await Replies.handleReply(
                                         inter, strConfig.marketUpdateComplete,
                                         colorConfig.green, undefined, undefined, true
@@ -1389,6 +1435,11 @@ export default class MarketSubcommand implements Subcommand {
                                 globalData.itemData[orderInfo.type][orderInfo.id].sellers[i].listTime = Date.now();
                                 globalData.itemData[orderInfo.type][orderInfo.id].sellers
                                     .sort((a, b) => a.price - b.price);
+
+                                globalData.itemData[orderInfo.type][orderInfo.id].lastSell = Math.max(
+                                    globalData.itemData[orderInfo.type][orderInfo.id].sellers[0].price,
+                                    globalData.itemData[orderInfo.type][orderInfo.id].lastBuy
+                                );
 
                                 await Replies.handleReply(
                                     inter, strConfig.marketUpdateComplete, colorConfig.green, undefined, undefined, true
@@ -1462,6 +1513,7 @@ export default class MarketSubcommand implements Subcommand {
             : undefined;
 
         this.pricingData = [];
+        this.pricingDataTree = createRBTree();
         this.userBuyOrders = [];
         this.userSellOrders = [];
 
@@ -1470,8 +1522,10 @@ export default class MarketSubcommand implements Subcommand {
                 this.pricingData.push({
                     id: itemID,
                     type: itemType,
-                    instaSells: itemData[itemType][itemID].buyers,
-                    instaBuys: itemData[itemType][itemID].sellers
+                    buyers: itemData[itemType][itemID].buyers,
+                    sellers: itemData[itemType][itemID].sellers,
+                    lastBuy: itemData[itemType][itemID].lastBuy,
+                    lastSell: itemData[itemType][itemID].lastSell
                 });
 
                 this.pricingDataTree = this.pricingDataTree.insert(
@@ -1482,18 +1536,18 @@ export default class MarketSubcommand implements Subcommand {
         }
 
         for (const priceData of this.pricingData) {
-            for (const buyData of priceData.instaBuys) {
-                if (buyData.userID !== this.firstInter.user.id) continue;
+            for (const sellData of priceData.sellers) {
+                if (sellData.userID !== this.firstInter.user.id) continue;
                 this.userSellOrders.push({
-                    data: buyData,
+                    data: sellData,
                     id: priceData.id,
                     type: priceData.type
                 });
             }
-            for (const sellData of priceData.instaSells) {
-                if (sellData.userID !== this.firstInter.user.id) continue;
+            for (const buyData of priceData.buyers) {
+                if (buyData.userID !== this.firstInter.user.id) continue;
                 this.userBuyOrders.push({
-                    data: sellData,
+                    data: buyData,
                     id: priceData.id,
                     type: priceData.type
                 });
@@ -1702,18 +1756,18 @@ export default class MarketSubcommand implements Subcommand {
             let curIndex = 0;
             while (numGrabbed < numVal) {
                 let numToAdd = 0;
-                if (isInstaBuy && curIndex < itemData.instaBuys.length) {
+                if (isInstaBuy && curIndex < itemData.sellers.length) {
                     numToAdd = Math.min(
                         numVal - numGrabbed,
-                        itemData.instaBuys[curIndex].num - itemData.instaBuys[curIndex].filledAmount
+                        itemData.sellers[curIndex].num - itemData.sellers[curIndex].filledAmount
                     );
-                    curPrice += itemData.instaBuys[curIndex].price * numToAdd;
-                } else if (curIndex < itemData.instaSells.length) {
+                    curPrice += itemData.sellers[curIndex].price * numToAdd;
+                } else if (curIndex < itemData.buyers.length) {
                     numToAdd = Math.min(
                         numVal - numGrabbed,
-                        itemData.instaSells[curIndex].num - itemData.instaSells[curIndex].filledAmount
+                        itemData.buyers[curIndex].num - itemData.buyers[curIndex].filledAmount
                     );
-                    curPrice += itemData.instaSells[curIndex].price * numToAdd;
+                    curPrice += itemData.buyers[curIndex].price * numToAdd;
                 } else {
                     break;
                 }
@@ -1828,25 +1882,25 @@ export default class MarketSubcommand implements Subcommand {
             let curPrice = 0;
 
             if (isInstaBuy) {
-                for (const instaBuy of itemData.instaBuys) {
-                    const noEditionExists = instaBuy.num === instaBuy.filledAmount ||
-                        instaBuy.listTime + nums.orderExpire < Date.now() ||
-                        instaBuy.editions[0] !== this.curEdition;
+                for (const sellOrder of itemData.sellers) {
+                    const noEditionExists = sellOrder.num === sellOrder.filledAmount ||
+                        sellOrder.listTime + nums.orderExpire < Date.now() ||
+                        sellOrder.editions[0] !== this.curEdition;
 
                     if (noEditionExists) continue;
 
-                    curPrice = instaBuy.price;
+                    curPrice = sellOrder.price;
                     break;
                 }
             } else {
-                for (const instaSell of itemData.instaSells) {
-                    const noEditionExists = instaSell.num === instaSell.filledAmount ||
-                        instaSell.listTime + nums.orderExpire < Date.now() ||
-                        instaSell.editions[0] !== this.curEdition;
+                for (const buyOrder of itemData.buyers) {
+                    const noEditionExists = buyOrder.num === buyOrder.filledAmount ||
+                        buyOrder.listTime + nums.orderExpire < Date.now() ||
+                        buyOrder.editions[0] !== this.curEdition;
 
                     if (noEditionExists) continue;
 
-                    curPrice = instaSell.price;
+                    curPrice = buyOrder.price;
                     break;
                 }
             }
@@ -1958,6 +2012,41 @@ export default class MarketSubcommand implements Subcommand {
             this.imageGen.updateInfo(this.pricingData, this.userBuyOrders, this.userSellOrders, this.config);
 
             const itemData = this.pricingData[this.curPage];
+
+            const minBuyVal = Math.ceil(itemData.lastBuy / this.config.numberConfig.marketRange);
+            const maxBuyVal = itemData.lastBuy * this.config.numberConfig.marketRange;
+            const minSellVal = Math.ceil(itemData.lastSell / this.config.numberConfig.marketRange);
+            const maxSellVal = itemData.lastSell * this.config.numberConfig.marketRange;
+
+            if (
+                isBuyOrder && minBuyVal > 0 && priceVal < minBuyVal ||
+                !isBuyOrder && minSellVal > 0 && priceVal < minSellVal
+            ) {
+                await Replies.handleReply(
+                    submittedModal, isBuyOrder
+                        ? strConfig.marketTooCheap.replace('%@', minBuyVal.toLocaleString())
+                        : strConfig.marketTooCheap.replace('%@', minSellVal.toLocaleString()),
+                    colorConfig.error, undefined, undefined, true
+                );
+
+                this.endModalListener(submittedModal.client);
+                return;
+            }
+
+            if (
+                isBuyOrder && maxBuyVal > 0 && priceVal > maxBuyVal ||
+                !isBuyOrder && maxSellVal > 0 && priceVal > maxSellVal
+            ) {
+                await Replies.handleReply(
+                    submittedModal, isBuyOrder
+                        ? strConfig.marketTooExpensive.replace('%@', maxBuyVal.toLocaleString())
+                        : strConfig.marketTooExpensive.replace('%@', maxSellVal.toLocaleString()),
+                    colorConfig.error, undefined, undefined, true
+                );
+
+                this.endModalListener(submittedModal.client);
+                return;
+            }
 
             if (
                 !isBuyOrder &&
@@ -2115,8 +2204,8 @@ export default class MarketSubcommand implements Subcommand {
             }
 
             let isSellingEdition = false;
-            for (const instaBuy of itemData.instaBuys) {
-                if (instaBuy.userID === this.compInter.user.id && instaBuy.editions[0] === editionVal) {
+            for (const sellOrder of itemData.sellers) {
+                if (sellOrder.userID === this.compInter.user.id && sellOrder.editions[0] === editionVal) {
                     isSellingEdition = true;
                     break;
                 }
@@ -2394,16 +2483,17 @@ export default class MarketSubcommand implements Subcommand {
                 let nonFilledBuys = 0;
                 let nonFilledSells = 0;
 
-                for (const instaBuy of item.instaBuys) {
-                    if (instaBuy.num !== instaBuy.filledAmount && instaBuy.listTime + nums.orderExpire >= Date.now()) {
+                for (const sellOrder of item.sellers) {
+                    if (sellOrder.num !== sellOrder.filledAmount &&
+                        sellOrder.listTime + nums.orderExpire >= Date.now()
+                    ) {
                         nonFilledBuys++;
                     }
                 }
 
-                for (const instaSell of item.instaSells) {
+                for (const buyOrder of item.buyers) {
                     if (
-                        instaSell.num !== instaSell.filledAmount &&
-                        instaSell.listTime + nums.orderExpire >= Date.now()
+                        buyOrder.num !== buyOrder.filledAmount && buyOrder.listTime + nums.orderExpire >= Date.now()
                     ) {
                         nonFilledSells++;
                     }
@@ -2419,11 +2509,15 @@ export default class MarketSubcommand implements Subcommand {
                     const instaBuyEditions: number[] = [];
                     const instaSellEditions: number[] = [];
 
-                    for (const instaBuy of item.instaBuys) {
-                        if (instaBuy.num === instaBuy.filledAmount || instaBuy.listTime + nums.orderExpire < Date.now())
+                    for (const sellOrder of item.sellers) {
+                        if (
+                            sellOrder.num === sellOrder.filledAmount ||
+                            sellOrder.listTime + nums.orderExpire < Date.now()
+                        ) {
                             continue;
+                        }
 
-                        const editionNum: number = instaBuy.editions[0];
+                        const editionNum: number = sellOrder.editions[0];
 
                         if (!instaBuyEditions.includes(editionNum)) {
                             selectOptions.push({
@@ -2435,15 +2529,14 @@ export default class MarketSubcommand implements Subcommand {
                         instaBuyEditions.push(editionNum);
                     }
 
-                    for (const instaSell of item.instaSells) {
+                    for (const buyOrder of item.buyers) {
                         if (
-                            instaSell.num === instaSell.filledAmount ||
-                            instaSell.listTime + nums.orderExpire < Date.now()
+                            buyOrder.num === buyOrder.filledAmount || buyOrder.listTime + nums.orderExpire < Date.now()
                         ) {
                             continue;
                         }
 
-                        const editionNum: number = instaSell.editions[0];
+                        const editionNum: number = buyOrder.editions[0];
 
                         if (!instaBuyEditions.includes(editionNum) && !instaSellEditions.includes(editionNum)) {
                             selectOptions.push({

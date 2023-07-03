@@ -15,7 +15,8 @@ enum Colors {
     Yellow = '\x1b[33m',
     Grey = '\x1b[90m',
     Green = '\x1b[32m',
-    Blue = '\x1b[34m'
+    Blue = '\x1b[34m',
+    Red = '\x1b[31m'
 }
 
 /**
@@ -135,6 +136,20 @@ export class LogDebug {
         await this.sendLogMessage(completeString, config);
 
         await message.reply(config.stringConfig.dmReceived);
+    }
+
+    /**
+     * Handles logging suspicious market interactions
+     *
+     * @param content - Content of market log
+     * @param config - Used to get log channel
+     */
+    public static async sendMarketLog(content: string, config: BotConfig): Promise<void> {
+        const prefix = `[${Colors.Red}SUSPICIOUS MARKET ACTIVITY${Colors.White}] `;
+        const time: string = LogDebug.getPrefixTime();
+        const completeString: string = prefix + time + content;
+
+        await this.sendLogMessage(completeString, config);
     }
 
     /**

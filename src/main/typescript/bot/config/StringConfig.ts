@@ -161,6 +161,9 @@ export class StringConfig {
     public readonly marketEditionHigh: string = ' ';
     public readonly marketHasEdition: string = ' ';
     public readonly marketClosed: string = ' ';
+    public readonly marketTooYoung: string = ' ';
+    public readonly marketTooCheap: string = ' ';
+    public readonly marketTooExpensive: string = ' ';
     public readonly marketBSBuyNowLabel: string = ' ';
     public readonly marketBSSellNowLabel: string = ' ';
     public readonly marketBSBuyOrdLabel: string = ' ';
