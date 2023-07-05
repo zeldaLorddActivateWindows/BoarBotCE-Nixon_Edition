@@ -75,6 +75,7 @@ export default class DailySubcommand implements Subcommand {
 
         let usedBoost = false;
         let usedExtra = false;
+        let firstDaily = false;
 
         await Queue.addQueue(async () => {
             try {
@@ -136,7 +137,9 @@ export default class DailySubcommand implements Subcommand {
                 boarUser.stats.general.numDailies++;
 
                 if (boarUser.stats.general.firstDaily === 0) {
+                    firstDaily = true;
                     boarUser.stats.general.firstDaily = Date.now();
+                    boarUser.itemCollection.powerups.multiBoost.numTotal += 50;
                 }
 
                 boarUser.updateUserData();
@@ -179,12 +182,19 @@ export default class DailySubcommand implements Subcommand {
             }
         }
 
+        if (firstDaily) {
+            await Replies.handleReply(
+                this.interaction, strConfig.dailyFirstTime, colorConfig.font,
+                strConfig.dailyBonus, colorConfig.powerup, true, true
+            );
+        }
+
         for (const edition of editions) {
             if (edition !== 1) continue;
             await this.interaction.followUp({
                 files: [
                     await new ItemImageGenerator(
-                        this.interaction.user, 'bacteria', this.config.stringConfig.giveTitle, this.config
+                        this.interaction.user, 'bacteria', strConfig.giveTitle, this.config
                     ).handleImageCreate()
                 ]
             });

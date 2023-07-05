@@ -46,6 +46,7 @@ export class PowerupSpawner {
     private interactions: ButtonInteraction[] = [];
     private numMsgs = 0;
     private numNotFinished = 0;
+    private msgsToDelete: Message[] = [];
     private readyToEnd = false;
 
     constructor(initPowTime?: number) {
@@ -59,8 +60,23 @@ export class PowerupSpawner {
     /**
      * Sets a timeout for when the next powerup should spawn
      */
-    public startSpawning() {
+    public startSpawning(): void {
         setTimeout(() => this.doSpawn(), this.initIntervalVal);
+    }
+
+    /**
+     * Removes all messages to delete
+     */
+    public removeMsgs(): void {
+        this.msgsToDelete.forEach(async (msg, i) => {
+            try {
+                await msg.delete().catch(() => {});
+            } catch {}
+
+            if (i === this.msgsToDelete.length - 1) {
+                this.msgsToDelete = [];
+            }
+        });
     }
 
     /**
@@ -77,7 +93,9 @@ export class PowerupSpawner {
             LogDebug.sendDebug('Spawning powerup', config);
 
             const newInterval = Math.round(config.numberConfig.powInterval * (Math.random() * (1.05 - .95) + .95));
+
             setTimeout(() => this.doSpawn(), newInterval);
+            setTimeout(() => this.removeMsgs(), config.numberConfig.powInterval * .9);
 
             await Queue.addQueue(async () => {
                 try {
@@ -173,6 +191,8 @@ export class PowerupSpawner {
 
                     this.numMsgs++;
                     this.numNotFinished++;
+
+                    this.msgsToDelete.push(powMsg.msg);
                 } catch {}
             });
         } catch (err: unknown) {

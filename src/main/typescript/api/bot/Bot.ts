@@ -2,6 +2,7 @@ import {BotConfig} from '../../bot/config/BotConfig';
 import {Command} from '../commands/Command';
 import {Client} from 'discord.js';
 import {Subcommand} from '../commands/Subcommand';
+import {PowerupSpawner} from '../../util/boar/PowerupSpawner';
 
 /**
  * {@link Bot Bot.ts}
@@ -21,6 +22,7 @@ export interface Bot {
     getSubcommands(): Map<string, Subcommand>;
     deployCommands(): void;
     registerListeners(): void;
+    getPowSpawner(): PowerupSpawner;
     onStart(): void;
     login(): void;
 }

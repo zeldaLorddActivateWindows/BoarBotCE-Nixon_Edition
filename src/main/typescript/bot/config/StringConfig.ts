@@ -48,6 +48,8 @@ export class StringConfig {
 
     public readonly dailyPowUsed: string = ' ';
     public readonly dailyUsed: string = ' ';
+    public readonly dailyFirstTime: string = ' ';
+    public readonly dailyBonus: string = ' ';
     public readonly dailyUsedNotify: string = ' ';
     public readonly dailyTitle: string = ' ';
     public readonly extraTitle: string = ' ';

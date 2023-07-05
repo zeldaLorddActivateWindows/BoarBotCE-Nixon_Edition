@@ -41,6 +41,7 @@ export class BoarBot implements Bot {
 	private configHandler: ConfigHandler = new ConfigHandler;
 	private commandHandler: CommandHandler = new CommandHandler();
 	private eventHandler: EventHandler = new EventHandler();
+	private powSpawner: PowerupSpawner = {} as PowerupSpawner;
 
 	/**
 	 * Creates the bot by loading and registering global information
@@ -113,6 +114,11 @@ export class BoarBot implements Bot {
 	public registerListeners(): void { this.eventHandler.registerListeners(); }
 
 	/**
+	 * Returns the powerup spawner object
+	 */
+	public getPowSpawner(): PowerupSpawner { return this.powSpawner; }
+
+	/**
 	 * Logs the bot in using token
 	 */
 	public async login(): Promise<void> {
@@ -154,7 +160,8 @@ export class BoarBot implements Bot {
 				}
 			}, 'start' + 'global').catch((err) => { throw err });
 
-			new PowerupSpawner(timeUntilPow).startSpawning();
+			this.powSpawner = new PowerupSpawner(timeUntilPow);
+			this.powSpawner.startSpawning();
 
 			// Send status message
 

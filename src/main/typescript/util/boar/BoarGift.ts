@@ -108,6 +108,7 @@ export class BoarGift {
      */
     private async handleCollect(inter: ButtonInteraction): Promise<void> {
         try {
+            LogDebug.sendDebug(`${inter.user.username} tried to open gift`, this.config, inter);
             await inter.deferUpdate();
             this.compInters.push(inter);
             this.collector.stop();
@@ -131,18 +132,14 @@ export class BoarGift {
         reason: string
     ): Promise<void> {
         try {
-            if (collected.size === 0 || reason === CollectorUtils.Reasons.Error) {
+            if (this.compInters.length === 0 || reason === CollectorUtils.Reasons.Error) {
+                LogDebug.sendDebug(`Gift expired`, this.config, this.firstInter);
                 this.completedGift = true;
                 await this.giftMessage.delete().catch(() => {});
                 return;
             }
 
-            for (const inter of this.compInters) {
-                if (inter.user.id === collected.at(0)?.user.id) {
-                    await this.doGift(inter);
-                    break;
-                }
-            }
+            await this.doGift(this.compInters[0]);
         } catch (err: unknown) {
             await LogDebug.handleError(err, this.firstInter);
         }
