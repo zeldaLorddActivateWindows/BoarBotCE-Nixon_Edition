@@ -16,7 +16,14 @@ import moment from 'moment';
  */
 export class MarketImageGenerator {
     private config: BotConfig = {} as BotConfig;
-    private itemPricing: {id: string, type: string, instaSells: BuySellData[], instaBuys: BuySellData[]}[] = [];
+    private itemPricing: {
+        id: string,
+        type: string,
+        buyers: BuySellData[],
+        sellers: BuySellData[],
+        lastBuy: number,
+        lastSell: number
+    }[] = [];
     private userBuyOrders: {data: BuySellData, id: string, type: string}[] = [];
     private userSellOrders: {data: BuySellData, id: string, type: string}[] = [];
 
@@ -29,7 +36,14 @@ export class MarketImageGenerator {
      * @param config - Used to get strings, paths, and other information
      */
     constructor(
-        itemPricing: {id: string, type: string, instaSells: BuySellData[], instaBuys: BuySellData[]}[],
+        itemPricing: {
+            id: string,
+            type: string,
+            buyers: BuySellData[],
+            sellers: BuySellData[],
+            lastBuy: number,
+            lastSell: number
+        }[],
         userBuyOrders: {data: BuySellData, id: string, type: string}[],
         userSellOrders: {data: BuySellData, id: string, type: string}[],
         config: BotConfig
@@ -49,7 +63,14 @@ export class MarketImageGenerator {
      * @param config - Used to get strings, paths, and other information
      */
     public updateInfo(
-        itemPricing: {id: string, type: string, instaSells: BuySellData[], instaBuys: BuySellData[]}[],
+        itemPricing: {
+            id: string,
+            type: string,
+            buyers: BuySellData[],
+            sellers: BuySellData[],
+            lastBuy: number,
+            lastSell: number
+        }[],
         userBuyOrders: {data: BuySellData, id: string, type: string}[],
         userSellOrders: {data: BuySellData, id: string, type: string}[],
         config: BotConfig
@@ -106,30 +127,30 @@ export class MarketImageGenerator {
                 nums.marketOverSellStart[1] + Math.floor(i / nums.marketOverCols) * nums.marketOverIncY
             ];
 
-            let buyVal = strConfig.unavailable;
-            let sellVal = strConfig.unavailable;
+            let buyNowVal = strConfig.unavailable;
+            let sellNowVal = strConfig.unavailable;
 
-            for (const instaBuy of item.instaBuys) {
-                if (instaBuy.num === instaBuy.filledAmount || instaBuy.listTime + nums.orderExpire < Date.now())
+            for (const sellOrder of item.sellers) {
+                if (sellOrder.num === sellOrder.filledAmount || sellOrder.listTime + nums.orderExpire < Date.now())
                     continue;
-                buyVal = instaBuy.price.toLocaleString();
+                buyNowVal = sellOrder.price.toLocaleString();
                 break;
             }
 
-            for (const instaSell of item.instaSells) {
-                if (instaSell.num === instaSell.filledAmount || instaSell.listTime + nums.orderExpire < Date.now())
+            for (const buyOrder of item.buyers) {
+                if (buyOrder.num === buyOrder.filledAmount || buyOrder.listTime + nums.orderExpire < Date.now())
                     continue;
-                sellVal = instaSell.price.toLocaleString();
+                sellNowVal = buyOrder.price.toLocaleString();
                 break;
             }
 
             CanvasUtils.drawText(
-                ctx, 'B: %@' + buyVal, buyPos, font, 'center', colorConfig.font, nums.marketOverTextWidth, false,
-                buyVal !== 'N/A' ? '$' : '', colorConfig.bucks
+                ctx, 'B: %@' + buyNowVal, buyPos, font, 'center', colorConfig.font, nums.marketOverTextWidth, false,
+                buyNowVal !== 'N/A' ? '$' : '', colorConfig.bucks
             );
             CanvasUtils.drawText(
-                ctx, 'S: %@' + sellVal, sellPos, font, 'center', colorConfig.font, nums.marketOverTextWidth, false,
-                sellVal !== 'N/A' ? '$' : '', colorConfig.bucks
+                ctx, 'S: %@' + sellNowVal, sellPos, font, 'center', colorConfig.font, nums.marketOverTextWidth, false,
+                sellNowVal !== 'N/A' ? '$' : '', colorConfig.bucks
             );
         }
 
@@ -153,8 +174,8 @@ export class MarketImageGenerator {
         let rarityName = 'Powerup';
         let rarityColor = colorConfig.powerup;
         let itemName = this.config.itemConfigs[item.type][item.id].name;
-        let lowBuy = strConfig.unavailable;
-        let highSell = strConfig.unavailable;
+        let buyNowVal = strConfig.unavailable;
+        let sellNowVal = strConfig.unavailable;
         let buyOrderVolume = 0;
         let sellOrderVolume = 0;
 
@@ -165,29 +186,29 @@ export class MarketImageGenerator {
         }
 
         if (edition > 0) {
-            for (const instaBuy of item.instaBuys) {
-                const noEditionExists = instaBuy.num === instaBuy.filledAmount ||
-                    instaBuy.listTime + nums.orderExpire < Date.now() ||
-                    instaBuy.editions[0] !== edition;
+            for (const sellOrder of item.sellers) {
+                const noEditionExists = sellOrder.num === sellOrder.filledAmount ||
+                    sellOrder.listTime + nums.orderExpire < Date.now() ||
+                    sellOrder.editions[0] !== edition;
 
                 if (noEditionExists) continue;
 
-                if (lowBuy === strConfig.unavailable) {
-                    lowBuy = '%@' + instaBuy.price.toLocaleString();
+                if (buyNowVal === strConfig.unavailable) {
+                    buyNowVal = '%@' + sellOrder.price.toLocaleString();
                 }
 
                 sellOrderVolume++;
             }
 
-            for (const instaSell of item.instaSells) {
-                const noEditionExists = instaSell.num === instaSell.filledAmount ||
-                    instaSell.listTime + nums.orderExpire < Date.now() ||
-                    instaSell.editions[0] !== edition;
+            for (const buyOrder of item.buyers) {
+                const noEditionExists = buyOrder.num === buyOrder.filledAmount ||
+                    buyOrder.listTime + nums.orderExpire < Date.now() ||
+                    buyOrder.editions[0] !== edition;
 
                 if (noEditionExists) continue;
 
-                if (highSell === strConfig.unavailable) {
-                    highSell = '%@' + instaSell.price.toLocaleString();
+                if (sellNowVal === strConfig.unavailable) {
+                    sellNowVal = '%@' + buyOrder.price.toLocaleString();
                 }
 
                 buyOrderVolume++;
@@ -195,31 +216,31 @@ export class MarketImageGenerator {
 
             itemName += ' #' + edition;
         } else {
-            for (const instaBuy of item.instaBuys) {
-                const lowBuyUnset = lowBuy === strConfig.unavailable;
-                const validOrder = instaBuy.num !== instaBuy.filledAmount &&
-                    instaBuy.listTime + nums.orderExpire >= Date.now();
+            for (const sellOrder of item.sellers) {
+                const lowBuyUnset = buyNowVal === strConfig.unavailable;
+                const validOrder = sellOrder.num !== sellOrder.filledAmount &&
+                    sellOrder.listTime + nums.orderExpire >= Date.now();
 
                 if (!validOrder) continue;
 
-                sellOrderVolume += instaBuy.num - instaBuy.filledAmount;
+                sellOrderVolume += sellOrder.num - sellOrder.filledAmount;
 
                 if (lowBuyUnset) {
-                    lowBuy = '%@' + instaBuy.price.toLocaleString();
+                    buyNowVal = '%@' + sellOrder.price.toLocaleString();
                 }
             }
 
-            for (const instaSell of item.instaSells) {
-                const highSellUnset = highSell === strConfig.unavailable;
-                const validOrder = instaSell.num !== instaSell.filledAmount &&
-                    instaSell.listTime + nums.orderExpire >= Date.now();
+            for (const buyOrder of item.buyers) {
+                const highSellUnset = sellNowVal === strConfig.unavailable;
+                const validOrder = buyOrder.num !== buyOrder.filledAmount &&
+                    buyOrder.listTime + nums.orderExpire >= Date.now();
 
                 if (!validOrder) continue;
 
-                buyOrderVolume += instaSell.num - instaSell.filledAmount;
+                buyOrderVolume += buyOrder.num - buyOrder.filledAmount;
 
                 if (highSellUnset) {
-                    highSell = '%@' + instaSell.price.toLocaleString();
+                    sellNowVal = '%@' + buyOrder.price.toLocaleString();
                 }
             }
         }
@@ -244,7 +265,7 @@ export class MarketImageGenerator {
             ctx, strConfig.marketBSBuyNowLabel, nums.marketBSBuyNowLabelPos, mediumFont, 'center', colorConfig.font
         );
         CanvasUtils.drawText(
-            ctx, lowBuy, nums.marketBSBuyNowPos, smallMediumFont, 'center', colorConfig.font,
+            ctx, buyNowVal, nums.marketBSBuyNowPos, smallMediumFont, 'center', colorConfig.font,
             undefined, false, '$', colorConfig.bucks
         );
 
@@ -252,7 +273,7 @@ export class MarketImageGenerator {
             ctx, strConfig.marketBSSellNowLabel, nums.marketBSSellNowLabelPos, mediumFont, 'center', colorConfig.font
         );
         CanvasUtils.drawText(
-            ctx, highSell, nums.marketBSSellNowPos, smallMediumFont, 'center', colorConfig.font,
+            ctx, sellNowVal, nums.marketBSSellNowPos, smallMediumFont, 'center', colorConfig.font,
             undefined, false, '$', colorConfig.bucks
         );
 

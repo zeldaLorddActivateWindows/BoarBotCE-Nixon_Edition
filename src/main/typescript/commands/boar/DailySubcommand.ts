@@ -25,6 +25,7 @@ import {CollectorUtils} from '../../util/discord/CollectorUtils';
 import {CustomEmbedGenerator} from '../../util/generators/CustomEmbedGenerator';
 import {ComponentUtils} from '../../util/discord/ComponentUtils';
 import {RowConfig} from '../../bot/config/components/RowConfig';
+import {FormatStrings} from '../../util/discord/FormatStrings';
 
 /**
  * {@link DailySubcommand DailySubcommand.ts}
@@ -74,6 +75,7 @@ export default class DailySubcommand implements Subcommand {
 
         let usedBoost = false;
         let usedExtra = false;
+        let firstDaily = false;
 
         await Queue.addQueue(async () => {
             try {
@@ -127,7 +129,6 @@ export default class DailySubcommand implements Subcommand {
                 }
 
                 boarUser.stats.general.boarStreak++;
-                boarUser.stats.general.multiplier++;
 
                 boarUser.stats.general.highestMulti =
                     Math.max(boarUser.stats.general.multiplier, boarUser.stats.general.highestMulti);
@@ -136,7 +137,9 @@ export default class DailySubcommand implements Subcommand {
                 boarUser.stats.general.numDailies++;
 
                 if (boarUser.stats.general.firstDaily === 0) {
+                    firstDaily = true;
                     boarUser.stats.general.firstDaily = Date.now();
+                    boarUser.itemCollection.powerups.multiBoost.numTotal += 50;
                 }
 
                 boarUser.updateUserData();
@@ -179,12 +182,19 @@ export default class DailySubcommand implements Subcommand {
             }
         }
 
+        if (firstDaily) {
+            await Replies.handleReply(
+                this.interaction, strConfig.dailyFirstTime, colorConfig.font,
+                strConfig.dailyBonus, colorConfig.powerup, true, true
+            );
+        }
+
         for (const edition of editions) {
             if (edition !== 1) continue;
             await this.interaction.followUp({
                 files: [
                     await new ItemImageGenerator(
-                        this.interaction.user, 'bacteria', this.config.stringConfig.giveTitle, this.config
+                        this.interaction.user, 'bacteria', strConfig.giveTitle, this.config
                     ).handleImageCreate()
                 ]
             });
@@ -239,21 +249,13 @@ export default class DailySubcommand implements Subcommand {
                         nums.notificationButtonDelay
                     );
 
-                const msg: Message = await this.interaction.editReply({
-                    files: [
-                        await CustomEmbedGenerator.makeEmbed(
-                            strConfig.dailyUsedNotify, colorConfig.font, this.config,
-                            moment(nextBoarTime).fromNow().substring(3), colorConfig.silver
-                        )
-                    ],
-                    components: dailyComponentRows
-                });
-
                 collector.on('collect', async (inter: ButtonInteraction) => {
                     await Queue.addQueue(async () => {
                         try {
                             await this.interaction.user.send(
-                                strConfig.notificationSuccess + strConfig.notificationStopStr
+                                strConfig.notificationSuccess + '\n# ' +
+                                FormatStrings.toBasicChannel(this.interaction.channel?.id) +
+                                strConfig.notificationStopStr
                             );
 
                             await Replies.handleReply(inter, strConfig.notificationSuccessReply, colorConfig.green);
@@ -270,6 +272,9 @@ export default class DailySubcommand implements Subcommand {
 
                             boarUser.refreshUserData();
                             boarUser.stats.general.notificationsOn = true;
+                            boarUser.stats.general.notificationChannel = this.interaction.channel
+                                ? this.interaction.channel.id
+                                : '0';
                             boarUser.updateUserData();
                         } catch {
                             try {
@@ -285,13 +290,22 @@ export default class DailySubcommand implements Subcommand {
                         LogDebug.handleError(err, this.interaction);
                     });
                 });
-
                 collector.once('end', async () => {
                     try {
                         await msg.delete();
                     } catch (err: unknown) {
                         await LogDebug.handleError(err, this.interaction);
                     }
+                });
+
+                const msg: Message = await this.interaction.editReply({
+                    files: [
+                        await CustomEmbedGenerator.makeEmbed(
+                            strConfig.dailyUsedNotify, colorConfig.font, this.config,
+                            moment(nextBoarTime).fromNow().substring(3), colorConfig.silver
+                        )
+                    ],
+                    components: dailyComponentRows
                 });
             } else {
                 const msg = await this.interaction.editReply({

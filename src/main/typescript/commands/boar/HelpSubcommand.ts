@@ -96,13 +96,12 @@ export default class HelpSubcommand implements Subcommand {
             interaction.channel as TextChannel, interaction.id, this.config.numberConfig
         );
 
-        this.showHelp(true);
-
-        this.collector.on(
-            'collect', async (inter: ButtonInteraction | StringSelectMenuInteraction) => await this.handleCollect(inter)
+        this.collector.on('collect', async (inter: ButtonInteraction | StringSelectMenuInteraction) =>
+            await this.handleCollect(inter)
         );
-
         this.collector.once('end', async (collected, reason) => await this.handleEndCollect(reason));
+
+        await this.showHelp(true);
     }
 
     /**

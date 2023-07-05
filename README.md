@@ -1,4 +1,4 @@
-# BoarBot v1.0.0
+# BoarBot v1.0.1
 
 This is a personal project I've set out to create for a Discord community.
 I've always wanted to make something that makes people happy, so this is it.
@@ -26,12 +26,14 @@ This command is used to see what boars you have as well as other information abo
 ### /boar market
 This command is used to buy and sell items to other users using boar bucks.
 
-Images coming soon!
+![image](https://github.com/WeslayCodes/BoarBot/assets/60010287/a4954b6c-010e-4451-9e5e-a3d69351ae77)
+![image](https://github.com/WeslayCodes/BoarBot/assets/60010287/6bd846ae-d1a1-427b-900e-56d6de2b13eb)
+![image](https://github.com/WeslayCodes/BoarBot/assets/60010287/4c42c956-a0f7-45bb-8084-4cac267dbb8a)
 
 ### /boar top
 This command is used to view the leaderboards for different stats.
 
-Images coming soon!
+![image](https://github.com/WeslayCodes/BoarBot/assets/60010287/028a6588-7e9a-4feb-ac1c-192010edbcea)
 
 ### Powerups
 These automatically occur every 1.5 - 2.5 hours and makes getting boars more fun.

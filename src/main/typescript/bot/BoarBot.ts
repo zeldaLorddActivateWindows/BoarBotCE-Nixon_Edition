@@ -41,6 +41,7 @@ export class BoarBot implements Bot {
 	private configHandler: ConfigHandler = new ConfigHandler;
 	private commandHandler: CommandHandler = new CommandHandler();
 	private eventHandler: EventHandler = new EventHandler();
+	private powSpawner: PowerupSpawner = {} as PowerupSpawner;
 
 	/**
 	 * Creates the bot by loading and registering global information
@@ -113,6 +114,11 @@ export class BoarBot implements Bot {
 	public registerListeners(): void { this.eventHandler.registerListeners(); }
 
 	/**
+	 * Returns the powerup spawner object
+	 */
+	public getPowSpawner(): PowerupSpawner { return this.powSpawner; }
+
+	/**
 	 * Logs the bot in using token
 	 */
 	public async login(): Promise<void> {
@@ -133,7 +139,6 @@ export class BoarBot implements Bot {
 			LogDebug.sendDebug('Successfully logged in! Bot online!', this.getConfig());
 
 			this.startNotificationCron();
-			// await this.fixUserTotals();
 
 			// Logs interaction listeners to avoid memory leaks
 			setInterval(() => {
@@ -155,7 +160,8 @@ export class BoarBot implements Bot {
 				}
 			}, 'start' + 'global').catch((err) => { throw err });
 
-			new PowerupSpawner(timeUntilPow).startSpawning();
+			this.powSpawner = new PowerupSpawner(timeUntilPow);
+			this.powSpawner.startSpawning();
 
 			// Send status message
 
@@ -175,48 +181,20 @@ export class BoarBot implements Bot {
 		}
 	}
 
-	// private async fixUserTotals(): Promise<void> {
-	// 	for (const userFile of fs.readdirSync(this.getConfig().pathConfig.userDataFolder)) {
-	// 		let user: User | undefined;
-	//
-	// 		try {
-	// 			user = await this.getClient().users.fetch(userFile.split('.')[0]);
-	// 		} catch {}
-	//
-	// 		if (!user) continue;
-	//
-	// 		const boarUser = new BoarUser(user);
-	//
-	// 		let multiActual = 1;
-	//
-	// 		for (const boarID of Object.keys(boarUser.itemCollection.boars)) {
-	// 			const rarity = BoarUtils.findRarity(boarID, this.getConfig());
-	//
-	// 			if (rarity[1].name !== 'Special') {
-	// 				multiActual++;
-	// 			}
-	// 		}
-	//
-	// 		boarUser.stats.general.multiplier = multiActual;
-	// 		boarUser.stats.general.highestMulti = multiActual;
-	// 		boarUser.updateUserData();
-	// 	}
-	// }
-
 	/**
 	 * Starts CronJob that sends notifications for boar daily
 	 * @private
 	 */
 	private startNotificationCron(): void {
 		new CronJob('0 0 * * *', async () => {
-			for (const userFile of fs.readdirSync(this.getConfig().pathConfig.userDataFolder)) {
+			fs.readdirSync(this.getConfig().pathConfig.userDataFolder).forEach(async userFile => {
 				let user: User | undefined;
 
 				try {
 					user = await this.getClient().users.fetch(userFile.split('.')[0]);
 				} catch {}
 
-				if (!user) continue;
+				if (!user) return;
 
 				const boarUser = new BoarUser(user);
 
@@ -255,12 +233,18 @@ export class BoarBot implements Bot {
 					}
 
 					try {
-						await user.send(randMsgStr + dailyReadyStr + stopStr);
+						const notificationChannelID = boarUser.stats.general.notificationChannel
+							? boarUser.stats.general.notificationChannel
+							: '1124209789518483566';
+						await user.send(
+							randMsgStr + dailyReadyStr + '\n# ' +
+							FormatStrings.toBasicChannel(notificationChannelID) + stopStr
+						);
 					} catch (err: unknown) {
 						await LogDebug.handleError(err);
 					}
 				}
-			}
+			});
 		}, null, true, 'UTC');
 	}
 

@@ -172,12 +172,11 @@ export default class CollectionSubcommand implements Subcommand {
             interaction.channel as TextChannel, interaction.id, this.config.numberConfig
         );
 
-        this.collectionImage = new CollectionImageGenerator(this.boarUser, this.allBoars, this.config);
-        this.showCollection();
-
         this.collector.on('collect', async (inter: ButtonInteraction) => await this.handleCollect(inter));
-
         this.collector.once('end', async (collected, reason) => await this.handleEndCollect(reason));
+
+        this.collectionImage = new CollectionImageGenerator(this.boarUser, this.allBoars, this.config);
+        await this.showCollection();
     }
 
     /**
@@ -379,6 +378,7 @@ export default class CollectionSubcommand implements Subcommand {
                 this.boarUser.itemCollection.boars[this.allBoars[this.curPage].id].editions.pop();
                 this.boarUser.itemCollection.boars[this.allBoars[this.curPage].id].editionDates.pop();
                 this.boarUser.stats.general.boarScore += enhancersUsed * 5;
+                this.boarUser.stats.general.totalBoars--;
                 this.boarUser.itemCollection.powerups.enhancer.numTotal -= enhancersUsed;
                 (this.boarUser.itemCollection.powerups.enhancer.raritiesUsed as number[])[
                     this.allBoars[this.curPage].rarity[0]-1
@@ -543,6 +543,7 @@ export default class CollectionSubcommand implements Subcommand {
                 );
             }
 
+            this.endModalListener(this.firstInter.client);
             await this.firstInter.editReply({
                 components: []
             });
@@ -561,6 +562,7 @@ export default class CollectionSubcommand implements Subcommand {
 
         this.boarUser.refreshUserData();
         this.allBoars = [];
+        this.allBoarsTree = createRBTree();
 
         // Adds information about each boar in user's boar collection to an array
         for (const boarID of Object.keys(this.boarUser.itemCollection.boars)) {

@@ -5,6 +5,10 @@
     ],
     "botStatusChannel": "1042624481044209735",
     "logChannel": "1084972329970442310",
+    "unlimitedBoars": false,
+    "debugMode": true,
+    "maintenanceMode": false,
+    "marketOpen": true,
     "pathConfig": {
         "listeners": "src/main/typescript/listeners/",
         "commands": "src/main/typescript/commands/",
@@ -89,6 +93,8 @@
         "setupInfoResponse2": "This bot has slash commands and can produce spammy content depending on how large your server is. This is why you'll need to decide which channel(s) the bot is enabled in. These channels can be changed at any time using /boar-manage setup. You can also use the pencil button to enter a channel ID (right-click the channel name and click 'Copy ID') of a channel that isn't shown in the selection box.",
         "setupInfoResponse3": "This bot originated on a Discord server dedicated to Hypixel SkyBlock. If you don't know what that is, no sweat! Just click \"No\". If you do and you're part of the community, it's highly recommended that you click \"Yes\". This can be changed at any time using /boar-manage setup.",
         "dailyUsed": "You've already used your daily boar! The next time you can use the command is in %@.",
+        "dailyFirstTime": "It seems like this is your first time using BoarBot! Here's %@ to get you started! If you ever need help, run /boar help.",
+        "dailyBonus": "+50 Multiplier Boost",
         "dailyUsedNotify": "You've already used your daily boar! The next time you can use the command is in %@. Click the button below to be notified!",
         "dailyPowUsed": "Successfully used your %@!",
         "dailyTitle": "Daily Boar!",
@@ -143,7 +149,7 @@
         "collEnhanceDetails": "This action will take your %@ and convert it into a random boar of the next rarity. The result of this interaction is shown above. Click \"Enhance\" again to confirm.",
         "collEnhanceBoarLose": "-1 %@",
         "collEnhanceBoarGain": "+1 %@ Boar",
-        "collGiftDetails": " has sent out a %@! These gifts include boars, boar bucks, other powerups, and exclusive items. Be the first to click \"Claim\" to claim it!",
+        "collGiftDetails": " has sent out a %@! Be the first to click \"Open\" to claim it! (Both giver and opener get rewards)",
         "collEditionTitle": "__Editions for %@__",
         "collEditionLine": "**Edition #%@:** %@\n",
         "collDescriptionSB": " (SkyBlock Boar)",
@@ -197,6 +203,9 @@
         "marketEditionHigh": "That edition of this item doesn't exist!",
         "marketHasEdition": "You already have that edition of this item or are currently selling it!",
         "marketClosed": "Boar Market is currently closed!",
+        "marketTooYoung": "Your Discord account is too young to use Boar Market!",
+        "marketTooCheap": "The price you entered is too low! Must be at least $%@.",
+        "marketTooExpensive": "The price you entered is too high! Must be at maximum $%@.",
         "marketBSBuyNowLabel": "Buy Now Price",
         "marketBSSellNowLabel": "Sell Now Price",
         "marketBSBuyOrdLabel": "Buy Order Volume",
@@ -483,6 +492,7 @@
         "marketOrdClaimLabelPos": [1348, 971],
         "marketOrdClaimPos": [1348, 1026],
         "marketOrdClaimWidth": 620,
+        "marketRange": 2,
         "orderExpire": 604800000,
         "notificationButtonDelay": 15000
     },
@@ -713,7 +723,7 @@
                                 {
                                     "type": 2,
                                     "customId": "GIFT_CLAIM",
-                                    "label": "Claim",
+                                    "label": "Open",
                                     "style": 3,
                                     "disabled": true
                                 }
@@ -1634,7 +1644,7 @@
                 "name": "Spider Boar",
                 "pluralName": "Spider Boars",
                 "file": "SpiderBoar.png",
-                "description": "Forced a spider to bite it for superpowers. Instead, it just turned into a spider. Much less cool are far more gross.",
+                "description": "Forced a spider to bite it for superpowers. Instead, it just turned into a spider. Much less cool and far more gross.",
                 "isSB": false,
                 "blacklisted": true
             },
@@ -1650,7 +1660,7 @@
                 "name": "Zomboar",
                 "pluralName": "Zomboars",
                 "file": "ZombieBoar.png",
-                "description": "It's impossible for boars to be undead, so this boar is actually just a cannibal in a costume. Still frightening either way.",
+                "description": "Zombification is impossible for boars, so this boar is actually just a cannibal in a costume. Still frightening either way.",
                 "isSB": false,
                 "blacklisted": true
             },
@@ -2086,12 +2096,12 @@
                 "tiers": [3, 1, 0],
                 "outcomes": [
                     {
-                        "weight": 0,
+                        "weight": 1,
                         "category": "Special Boar",
                         "suboutcomes": []
                     },
                     {
-                        "weight": 400,
+                        "weight": 800,
                         "category": "Boar Bucks",
                         "suboutcomes": [
                             {
@@ -2109,7 +2119,7 @@
                         ]
                     },
                     {
-                        "weight": 199,
+                        "weight": 399,
                         "category": "Powerups",
                         "suboutcomes": [
                             {
@@ -2127,7 +2137,7 @@
                         ]
                     },
                     {
-                        "weight": 400,
+                        "weight": 800,
                         "category": "Random Boar",
                         "suboutcomes": []
                     }
@@ -2332,9 +2342,5 @@
         "rarity7": "#00FFFB",
         "rarity8": "#FFFEBB",
         "rarity9": "#FF3136"
-    },
-    "unlimitedBoars": false,
-    "debugMode": true,
-    "maintenanceMode": true,
-    "marketOpen": true
+    }
 }

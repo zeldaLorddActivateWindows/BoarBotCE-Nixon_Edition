@@ -49,11 +49,14 @@ export class DataHandlers {
             let uniques = 0;
 
             for (let i=0; i<Object.keys(boarUser.itemCollection.boars).length; i++) {
+                const boarData = boarUser.itemCollection.boars[Object.keys(boarUser.itemCollection.boars)[i]];
                 const boarInfo = config.itemConfigs.boars[Object.keys(boarUser.itemCollection.boars)[i]];
 
                 if (boarInfo.isSB) continue;
 
-                uniques++;
+                if (boarData.num > 0) {
+                    uniques++;
+                }
             }
 
             globalData.leaderboardData.uniques.userData[userID] = uniques > 0

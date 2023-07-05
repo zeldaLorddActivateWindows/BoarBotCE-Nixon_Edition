@@ -211,10 +211,8 @@ export class NumberConfig {
     public readonly leaderboardFooterPos: [number, number] = [0, 0];
     public readonly leaderboardEntryWidth: number = 0;
 
-    public readonly border: number = 0;
-    public readonly embedMaxWidth: number = 0;
-    public readonly embedMinHeight: number = 0;
-    public readonly collectorIdle: number = 0;
+    // Market image positions, sizes, and values
+
     public readonly marketSize: [number, number] = [0, 0];
     public readonly marketPerPage: number = 0;
     public readonly marketMaxOrders: number = 0;
@@ -252,6 +250,12 @@ export class NumberConfig {
     public readonly marketOrdClaimLabelPos: [number, number] = [0, 0];
     public readonly marketOrdClaimPos: [number, number] = [0, 0];
     public readonly marketOrdClaimWidth: number = 0;
+    public readonly marketRange: number = 0;
+
+    public readonly border: number = 0;
+    public readonly embedMaxWidth: number = 0;
+    public readonly embedMinHeight: number = 0;
+    public readonly collectorIdle: number = 0;
     public readonly orderExpire: number = 0;
     public readonly oneDay: number = 0;
     public readonly notificationButtonDelay: number = 0;
