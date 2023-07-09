@@ -30,18 +30,15 @@ import {PromptData} from '../data/userdata/stats/PromptData';
 import {PromptTypeConfigs} from '../../bot/config/prompts/PromptTypeConfigs';
 import {StringConfig} from '../../bot/config/StringConfig';
 import {ItemConfig} from '../../bot/config/items/ItemConfig';
-import {ItemConfigs} from '../../bot/config/items/ItemConfigs';
 import {PromptConfigs} from '../../bot/config/prompts/PromptConfigs';
 
 export class PowerupSpawner {
     private readonly initIntervalVal: number = 0;
     private claimers: Map<string, number> = new Map<string, number>();
     private powerupType: ItemConfig = {} as ItemConfig;
+    private powerupTypeID = '';
     private promptTypeID = '';
     private promptID = '';
-    private topOnePercent = -1;
-    private topTenPercent = -1;
-    private topFiftyPercent = -1;
     private powEndImage: AttachmentBuilder = {} as AttachmentBuilder;
     private interactions: ButtonInteraction[] = [];
     private numMsgs = 0;
@@ -67,8 +64,11 @@ export class PowerupSpawner {
     /**
      * Removes all messages to delete
      */
-    public removeMsgs(): void {
-        this.msgsToDelete.forEach(async (msg, i) => {
+    public async removeMsgs(): Promise<void> {
+        const arrCopy = [...this.msgsToDelete];
+        this.msgsToDelete = [];
+
+        arrCopy.forEach(async (msg, i) => {
             try {
                 await msg.delete().catch(() => {});
             } catch {}
@@ -94,8 +94,8 @@ export class PowerupSpawner {
 
             const newInterval = Math.round(config.numberConfig.powInterval * (Math.random() * (1.05 - .95) + .95));
 
+            setTimeout(() => this.removeMsgs(), newInterval);
             setTimeout(() => this.doSpawn(), newInterval);
-            setTimeout(() => this.removeMsgs(), config.numberConfig.powInterval * .9);
 
             await Queue.addQueue(async () => {
                 try {
@@ -140,7 +140,8 @@ export class PowerupSpawner {
             this.promptID = this.getRandPromptID(this.promptTypeID, config);
             const chosenPrompt: PromptConfig = promptTypes[this.promptTypeID][this.promptID] as PromptConfig;
 
-            this.powerupType = this.getRandPowerup(config);
+            this.powerupTypeID = this.getRandPowerup(config);
+            this.powerupType = config.itemConfigs.powerups[this.powerupTypeID];
 
             const rightStyle: number = promptTypes[this.promptTypeID].rightStyle;
             const wrongStyle: number = promptTypes[this.promptTypeID].wrongStyle;
@@ -149,7 +150,7 @@ export class PowerupSpawner {
             let rows: ActionRowBuilder<ButtonBuilder>[] = [];
 
             const powerupSpawnImage: AttachmentBuilder = await PowerupImageGenerator.makePowerupSpawnImage(
-                this.powerupType, promptTypes[this.promptTypeID], chosenPrompt, config
+                this.powerupTypeID, promptTypes[this.promptTypeID], chosenPrompt, config
             );
 
             // Sends powerup message to all boar channels
@@ -238,7 +239,7 @@ export class PowerupSpawner {
                 LogDebug.sendDebug('Failed attempt: ' + inter.user.username + ' (' + inter.user.id + ')', config);
             } else {
                 await Replies.handleReply(
-                    inter, config.stringConfig.powAttempted, config.colorConfig.error, undefined, undefined, true
+                    inter, config.stringConfig.eventParticipated, config.colorConfig.error, undefined, undefined, true
                 );
                 LogDebug.sendDebug('Already collected: ' + inter.user.username + ' (' + inter.user.id + ')', config);
             }
@@ -278,31 +279,19 @@ export class PowerupSpawner {
             if (--this.numMsgs === 0) {
                 this.claimers = new Map([...this.claimers.entries()].sort((a, b) => a[1] - b[1]));
 
-                const values: number[] = [...this.claimers.values()];
-                const topOneIndex: number = Math.floor(this.claimers.size * .01);
-                let topTenIndex: number = Math.floor(this.claimers.size * .1);
-                const topFiftyIndex: number = Math.floor(this.claimers.size * .5);
+                let topClaimer: [string, number] | undefined;
+                let avgTime: number | undefined;
 
                 if (this.claimers.size > 0) {
-                    this.topOnePercent = values[topOneIndex];
-                }
-
-                if (topOneIndex === topTenIndex && this.claimers.size > 1) {
-                    this.topTenPercent = values[++topTenIndex];
-                } else if (topOneIndex !== topTenIndex) {
-                    this.topTenPercent = values[topTenIndex];
-                }
-
-                if (topOneIndex === topFiftyIndex && this.claimers.size > 2) {
-                    this.topFiftyPercent = values[topFiftyIndex+2];
-                } else if (topTenIndex === topFiftyIndex && this.claimers.size > 2) {
-                    this.topFiftyPercent = values[topFiftyIndex+1];
-                } else if (topTenIndex !== topFiftyIndex) {
-                    this.topFiftyPercent = values[topFiftyIndex];
+                    topClaimer = [...this.claimers][0];
+                    avgTime = Math.round(
+                        [...this.claimers.values()].reduce((sum, val) => sum + val, 0) / this.claimers.size
+                    );
                 }
 
                 this.powEndImage = await PowerupImageGenerator.makePowerupEndImage(
-                    this.topOnePercent, this.topTenPercent, this.topFiftyPercent, this.powerupType, config
+                    this.powerupTypeID, topClaimer, avgTime, this.claimers.size,
+                    this.promptID, this.promptTypeID, config
                 );
 
                 await this.finishPow(powMsg, config);
@@ -350,16 +339,16 @@ export class PowerupSpawner {
     }
 
     /**
-     * Gets a random powerup
+     * Gets a random powerup by ID
      *
      * @param config - Used to get all powerup types
      * @private
      */
-    private getRandPowerup(config: BotConfig): ItemConfig {
+    private getRandPowerup(config: BotConfig): string {
         const powerups = config.itemConfigs.powerups;
         const powerupIDs = Object.keys(powerups);
 
-        return powerups[powerupIDs[Math.floor(Math.random() * powerupIDs.length)]] as ItemConfig;
+        return powerupIDs[Math.floor(Math.random() * powerupIDs.length)];
     }
 
     /**
@@ -546,7 +535,6 @@ export class PowerupSpawner {
                 LogDebug.sendDebug('Attempting to finish powerup', config);
 
                 for (const interaction of this.interactions) {
-                    const powItemConfigs: ItemConfigs = config.itemConfigs.powerups;
                     const strConfig: StringConfig = config.stringConfig;
 
                     const userTime: number | undefined = this.claimers.get(interaction.user.id);
@@ -554,37 +542,16 @@ export class PowerupSpawner {
                         ([...this.claimers.keys()].indexOf(interaction.user.id) + 1) /
                         this.claimers.size
                     ) * 100;
-                    let userPowTier = -1;
-                    let responseString: string = strConfig.powNoRewardResponse;
 
                     if (!userTime) {
                         await LogDebug.handleError('Failed to find user\'s powerup data.', interaction);
                         continue;
                     }
 
-                    if (userTime <= this.topOnePercent) {
-                        userPowTier = 0;
-                        responseString = strConfig.powTopOneResponse;
-                    } else if (userTime <= this.topTenPercent) {
-                        userPowTier = 1;
-                        responseString = strConfig.powTopTenResponse;
-                    } else if (userTime <= this.topFiftyPercent) {
-                        userPowTier = 2;
-                        responseString = strConfig.powTopFiftyResponse;
-                    }
-
-                    if ((this.powerupType.tiers as number[])[userPowTier] === 0) {
-                        responseString = strConfig.powNoRewardResponse;
-                    }
-
                     await Replies.handleReply(
-                        interaction,
-                        responseString.replace('%@', userTime.toLocaleString()), config.colorConfig.font,
-                        PowerupImageGenerator.getPowerupString(
-                            this.powerupType, (this.powerupType.tiers as number[])[userPowTier], config
-                        ),
-                        config.colorConfig.powerup,
-                        true
+                        interaction, strConfig.powResponse
+                            .replace('%@', userTime.toLocaleString()),
+                        config.colorConfig.font, undefined, undefined, true
                     );
 
                     await Queue.addQueue(async () => {
@@ -613,53 +580,13 @@ export class PowerupSpawner {
 
                             boarUser.stats.powerups.attempts++;
 
-                            if (userPowTier === 0) {
-                                boarUser.stats.powerups.oneAttempts++;
-                            } else if (userPowTier === 1) {
-                                boarUser.stats.powerups.tenAttempts++;
-                            } else if (userPowTier === 2) {
-                                boarUser.stats.powerups.fiftyAttempts++;
-                            }
-
-                            if (userPowTier !== -1 && this.powerupType.name === powItemConfigs.multiBoost.name) {
-                                boarUser.itemCollection.powerups.multiBoost.numTotal +=
-                                    (this.powerupType.tiers as number[])[userPowTier];
-                                boarUser.itemCollection.powerups.multiBoost.numClaimed++;
-                                boarUser.itemCollection.powerups.multiBoost.highestTotal = Math.min(Math.max(
-                                    boarUser.itemCollection.powerups.multiBoost.highestTotal,
-                                    boarUser.itemCollection.powerups.multiBoost.numTotal
-                                ), config.numberConfig.maxMultiBoost);
-                            }
-
-                            if (userPowTier !== -1 && this.powerupType.name === powItemConfigs.extraChance.name) {
-                                boarUser.itemCollection.powerups.extraChance.numTotal +=
-                                    (this.powerupType.tiers as number[])[userPowTier];
-                                boarUser.itemCollection.powerups.extraChance.numClaimed++;
-                                boarUser.itemCollection.powerups.extraChance.highestTotal = Math.min(Math.max(
-                                    boarUser.itemCollection.powerups.extraChance.highestTotal,
-                                    boarUser.itemCollection.powerups.extraChance.numTotal
-                                ), config.numberConfig.maxExtraChance);
-                            }
-
-                            if (userPowTier !== -1 && this.powerupType.name === powItemConfigs.gift.name) {
-                                boarUser.itemCollection.powerups.gift.numTotal +=
-                                    (this.powerupType.tiers as number[])[userPowTier];
-                                boarUser.itemCollection.powerups.gift.numClaimed++;
-                                boarUser.itemCollection.powerups.gift.highestTotal = Math.min(Math.max(
-                                    boarUser.itemCollection.powerups.gift.highestTotal,
-                                    boarUser.itemCollection.powerups.gift.numTotal
-                                ), config.numberConfig.maxPowBase);
-                            }
-
-                            if (userPowTier !== -1 && this.powerupType.name === powItemConfigs.enhancer.name) {
-                                boarUser.itemCollection.powerups.enhancer.numTotal +=
-                                    (this.powerupType.tiers as number[])[userPowTier];
-                                boarUser.itemCollection.powerups.enhancer.numClaimed++;
-                                boarUser.itemCollection.powerups.enhancer.highestTotal = Math.min(Math.max(
-                                    boarUser.itemCollection.powerups.enhancer.highestTotal,
-                                    boarUser.itemCollection.powerups.enhancer.numTotal
-                                ), config.numberConfig.maxEnhancers);
-                            }
+                            boarUser.itemCollection.powerups[this.powerupTypeID].numTotal +=
+                                this.powerupType.rewardAmt as number;
+                            boarUser.itemCollection.powerups[this.powerupTypeID].numClaimed++;
+                            boarUser.itemCollection.powerups[this.powerupTypeID].highestTotal = Math.max(
+                                boarUser.itemCollection.powerups[this.powerupTypeID].highestTotal,
+                                boarUser.itemCollection.powerups[this.powerupTypeID].numTotal
+                            );
 
                             boarUser.updateUserData();
                             await Queue.addQueue(async () =>
@@ -674,10 +601,6 @@ export class PowerupSpawner {
 
                 this.claimers = new Map<string, number>();
                 this.interactions = [];
-                this.topOnePercent = -1;
-                this.topTenPercent = -1;
-                this.topFiftyPercent = -1;
-                this.powerupType = {} as ItemConfig;
                 this.readyToEnd = false;
 
                 LogDebug.sendDebug('Powerup finished. Interactions: ' + this.interactions.length, config);

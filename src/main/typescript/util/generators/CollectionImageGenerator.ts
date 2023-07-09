@@ -431,9 +431,7 @@ export class CollectionImageGenerator {
         const powerupData: PowerupStats = this.boarUser.stats.powerups;
 
         const totalAttempts: string = Math.min(powerupData.attempts, nums.maxPowBase).toLocaleString();
-        const totalAttempts1: string = Math.min(powerupData.oneAttempts, nums.maxPowBase).toLocaleString();
-        const totalAttempts10: string = Math.min(powerupData.tenAttempts, nums.maxPowBase).toLocaleString();
-        const totalAttempts50: string = Math.min(powerupData.fiftyAttempts, nums.maxPowBase).toLocaleString();
+        const topAttempts: string = Math.min(powerupData.topAttempts, nums.maxPowBase).toLocaleString();
         const fastestTime: string = powerupData.fastestTime
             ? powerupData.fastestTime.toLocaleString() + 'ms'
             : 'N/A';
@@ -488,19 +486,9 @@ export class CollectionImageGenerator {
         CanvasUtils.drawText(ctx, totalAttempts, nums.collAttemptsPos, smallMedium, 'center', colorConfig.font);
 
         CanvasUtils.drawText(
-            ctx, strConfig.collAttempts50Label, nums.collAttempts50LabelPos, mediumFont, 'center', colorConfig.font
+            ctx, strConfig.collAttempts50Label, nums.collAttemptsTopLabelPos, mediumFont, 'center', colorConfig.font
         );
-        CanvasUtils.drawText(ctx, totalAttempts50, nums.collAttempts50Pos, smallMedium, 'center', colorConfig.font);
-
-        CanvasUtils.drawText(
-            ctx, strConfig.collAttempts10Label, nums.collAttempts10LabelPos, mediumFont, 'center', colorConfig.font
-        );
-        CanvasUtils.drawText(ctx, totalAttempts10, nums.collAttempts10Pos, smallMedium, 'center', colorConfig.font);
-
-        CanvasUtils.drawText(
-            ctx, strConfig.collAttempts1Label, nums.collAttempts1LabelPos, mediumFont, 'center', colorConfig.font
-        );
-        CanvasUtils.drawText(ctx, totalAttempts1, nums.collAttempts1Pos, smallMedium, 'center', colorConfig.font);
+        CanvasUtils.drawText(ctx, topAttempts, nums.collAttemptsTopPos, smallMedium, 'center', colorConfig.font);
 
         CanvasUtils.drawText(
             ctx, strConfig.collFastestTimeLabel, nums.collFastestTimeLabelPos, mediumFont, 'center', colorConfig.font
@@ -775,7 +763,7 @@ export class CollectionImageGenerator {
      *
      * @param ctx - CanvasRenderingContext2D
      */
-    public async drawTopBar(ctx: Canvas.CanvasRenderingContext2D,): Promise<void> {
+    public async drawTopBar(ctx: Canvas.CanvasRenderingContext2D): Promise<void> {
         // Config aliases
 
         const strConfig: StringConfig = this.config.stringConfig;

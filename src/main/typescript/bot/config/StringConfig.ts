@@ -114,22 +114,26 @@ export class StringConfig {
     public readonly collEditionLine: string = ' ';
     public readonly collDescriptionSB: string = ' ';
 
+    // Event strings
+
+    public readonly eventTitle: string = ' ';
+    public readonly eventEndedTitle: string = ' ';
+    public readonly eventParticipated: string = ' ';
+    public readonly eventNobody: string = ' ';
+
     // Powerup strings
 
     public readonly powRightFull: string = ' ';
     public readonly powRight: string = ' ';
     public readonly powWrongFull: string = ' ';
     public readonly powWrong: string = ' ';
-    public readonly powAttempted: string = ' ';
-    public readonly powLessThan: string = ' ';
-    public readonly powTopOne: string = ' ';
-    public readonly powTopOneResponse: string = ' ';
-    public readonly powTopTen: string = ' ';
-    public readonly powTopTenResponse: string = ' ';
-    public readonly powTopFifty: string = ' ';
-    public readonly powTopFiftyResponse: string = ' ';
-    public readonly powNoRewardResponse: string = ' ';
-    public readonly powNoClaim: string = ' ';
+    public readonly powTop: string = ' ';
+    public readonly powTopResult: string = ' ';
+    public readonly powAvg: string = ' ';
+    public readonly powAvgResult: string = ' ';
+    public readonly powAvgResultPlural: string = ' ';
+    public readonly powPrompt: string = ' ';
+    public readonly powResponse: string = ' ';
     public readonly powReward: string = ' ';
 
     // Market Strings

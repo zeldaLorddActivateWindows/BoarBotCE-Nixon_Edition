@@ -12,6 +12,7 @@ export class NumberConfig {
 
     // Font sizes
 
+    public readonly fontHuge: number = 0;
     public readonly fontBig: number = 0;
     public readonly fontMedium: number = 0;
     public readonly fontSmallMedium: number = 0;
@@ -107,12 +108,8 @@ export class NumberConfig {
     public readonly collDescriptionWidth: number = 0;
     public readonly collAttemptsLabelPos: [number, number] = [0, 0];
     public readonly collAttemptsPos: [number, number] = [0, 0];
-    public readonly collAttempts1LabelPos: [number, number] = [0, 0];
-    public readonly collAttempts1Pos: [number, number] = [0, 0];
-    public readonly collAttempts10LabelPos: [number, number] = [0, 0];
-    public readonly collAttempts10Pos: [number, number] = [0, 0];
-    public readonly collAttempts50LabelPos: [number, number] = [0, 0];
-    public readonly collAttempts50Pos: [number, number] = [0, 0];
+    public readonly collAttemptsTopLabelPos: [number, number] = [0, 0];
+    public readonly collAttemptsTopPos: [number, number] = [0, 0];
     public readonly collFastestTimeLabelPos: [number, number] = [0, 0];
     public readonly collFastestTimePos: [number, number] = [0, 0];
     public readonly collBestPromptLabelPos: [number, number] = [0, 0];
@@ -181,16 +178,27 @@ export class NumberConfig {
     public readonly collEnhancerCols: number = 0;
     public readonly collEnhancerSize: [number, number] = [0, 0];
 
+    // Event image positions, sizes, and values
+
+    public readonly eventSpawnSize: [number, number] = [0, 0];
+    public readonly eventTitlePos: [number, number] = [0, 0];
+    public readonly eventTitleWidth: number = 0;
+    public readonly eventCornerImgSize: [number, number] = [0, 0];
+    public readonly eventCornerImgPos1: [number, number] = [0, 0];
+    public readonly eventCornerImgPos2: [number, number] = [0, 0];
+
     // Powerup image positions, sizes, and values
 
-    public readonly powSpawnSize: [number, number] = [0, 0];
     public readonly powSpawnDescriptionPos: [number, number] = [0, 0];
     public readonly powSpawnDescriptionWidth: number = 0;
     public readonly powSpawnRewardPos: [number, number] = [0, 0];
-    public readonly powTopOnePos: [number, number] = [0, 0];
-    public readonly powTopTenPos: [number, number] = [0, 0];
-    public readonly powTopFiftyPos: [number, number] = [0, 0];
-    public readonly powResultsYOffset: number = 0;
+    public readonly powTopLabelPos: [number, number] = [0, 0];
+    public readonly powTopPos: [number, number] = [0, 0];
+    public readonly powAvgLabelPos: [number, number] = [0, 0];
+    public readonly powAvgPos: [number, number] = [0, 0];
+    public readonly powPromptLabelPos: [number, number] = [0, 0];
+    public readonly powPromptPos: [number, number] = [0, 0];
+    public readonly powDataWidth: number = 0;
     public readonly emojiRows: number = 0;
     public readonly emojiCols: number = 0;
     public readonly triviaRows: number = 0;

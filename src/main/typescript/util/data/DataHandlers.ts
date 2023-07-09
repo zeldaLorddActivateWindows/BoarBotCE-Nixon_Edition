@@ -72,8 +72,8 @@ export class DataHandlers {
             globalData.leaderboardData.attempts.userData[userID] = boarUser.stats.powerups.attempts > 0
                 ? boarUser.stats.powerups.attempts
                 : undefined;
-            globalData.leaderboardData.topAttempts.userData[userID] = boarUser.stats.powerups.oneAttempts > 0
-                ? boarUser.stats.powerups.oneAttempts
+            globalData.leaderboardData.topAttempts.userData[userID] = boarUser.stats.powerups.topAttempts > 0
+                ? boarUser.stats.powerups.topAttempts
                 : undefined;
             globalData.leaderboardData.giftsUsed.userData[userID] = boarUser.itemCollection.powerups.gift.numUsed > 0
                 ? boarUser.itemCollection.powerups.gift.numUsed

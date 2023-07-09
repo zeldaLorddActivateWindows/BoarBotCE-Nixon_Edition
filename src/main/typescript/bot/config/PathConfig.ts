@@ -55,8 +55,7 @@ export class PathConfig {
 
     // Other image/asset file names
 
-    public readonly powerupSpawn: string = '';
-    public readonly powerupEnd: string = '';
+    public readonly eventUnderlay: string = '';
     public readonly leaderboardUnderlay: string = '';
     public readonly marketOverviewUnderlay: string = '';
     public readonly marketOverviewOverlay: string = '';
