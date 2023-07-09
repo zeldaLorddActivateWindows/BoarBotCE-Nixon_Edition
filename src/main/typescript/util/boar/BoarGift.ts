@@ -382,7 +382,7 @@ export class BoarGift {
                         this.giftedUser.itemCollection.powerups.extraChance.highestTotal
                     )
                 } else {
-                    this.giftedUser.itemCollection.powerups.enhancer.numTotal += 3;
+                    this.giftedUser.itemCollection.powerups.enhancer.numTotal++;
                     this.giftedUser.itemCollection.powerups.enhancer.highestTotal = Math.max(
                         this.giftedUser.itemCollection.powerups.enhancer.numTotal,
                         this.giftedUser.itemCollection.powerups.enhancer.highestTotal
@@ -412,7 +412,7 @@ export class BoarGift {
                         this.boarUser.itemCollection.powerups.extraChance.highestTotal
                     )
                 } else {
-                    this.boarUser.itemCollection.powerups.enhancer.numTotal += 3;
+                    this.boarUser.itemCollection.powerups.enhancer.numTotal++;
                     this.boarUser.itemCollection.powerups.enhancer.highestTotal = Math.max(
                         this.boarUser.itemCollection.powerups.enhancer.numTotal,
                         this.boarUser.itemCollection.powerups.enhancer.highestTotal
