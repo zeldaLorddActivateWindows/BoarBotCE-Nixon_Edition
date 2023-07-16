@@ -41,6 +41,7 @@ import {ColorConfig} from '../../bot/config/ColorConfig';
 import {NumberConfig} from '../../bot/config/NumberConfig';
 import {RarityConfig} from '../../bot/config/items/RarityConfig';
 import {ItemData} from '../../util/data/global/ItemData';
+import moment from 'moment';
 
 enum View {
     Overview,
@@ -101,6 +102,16 @@ export default class MarketSubcommand implements Subcommand {
         if (!guildData) return;
 
         await interaction.deferReply({ ephemeral: true });
+
+        const boarUser = new BoarUser(interaction.user);
+        const unbanTime: number | undefined = boarUser.stats.general.unbanTime;
+        if (unbanTime && unbanTime > Date.now()) {
+            await Replies.handleReply(
+                interaction, this.config.stringConfig.bannedString.replace('%@', moment(unbanTime).fromNow()),
+                this.config.colorConfig.error
+            );
+            return;
+        }
 
         if (!this.config.marketOpen && !this.config.devs.includes(interaction.user.id)) {
             await Replies.handleReply(
@@ -187,7 +198,7 @@ export default class MarketSubcommand implements Subcommand {
 
             this.compInter = inter;
 
-            LogDebug.sendDebug(
+            LogDebug.log(
                 `${inter.customId.split('|')[0]} on page ${this.curPage} in view ${this.curView}`,
                 this.config, this.firstInter
             );
@@ -746,6 +757,9 @@ export default class MarketSubcommand implements Subcommand {
                 await inter.deferUpdate();
                 showModal = false;
 
+                let prices = '';
+                let userIDs = '';
+
                 if (
                     itemData.id === 'enhancer' &&
                     this.modalData[0] + this.boarUser.itemCollection.powerups.enhancer.numTotal > nums.maxEnhancers ||
@@ -779,6 +793,13 @@ export default class MarketSubcommand implements Subcommand {
                                         newItemData.sellers[curIndex].num - newItemData.sellers[curIndex].filledAmount
                                     );
                                     curPrice += newItemData.sellers[curIndex].price * numToAdd;
+
+                                    if (
+                                        newItemData.sellers[curIndex].filledAmount !== newItemData.sellers[curIndex].num
+                                    ) {
+                                        prices += '$' + newItemData.sellers[curIndex].price + ' ';
+                                        userIDs += newItemData.sellers[curIndex].userID + ' ';
+                                    }
 
                                     numGrabbed += numToAdd;
                                     orderFillAmounts.push(numToAdd);
@@ -883,12 +904,6 @@ export default class MarketSubcommand implements Subcommand {
                                 specialSellOrder = sellOrder;
                             }
 
-                            LogDebug.sendMarketLog(
-                                `${this.firstInter.user.id} bought '${itemData.id}' from ${specialSellOrder?.userID} ` +
-                                `for $${specialSellOrder?.price}`,
-                                this.config
-                            );
-
                             this.boarUser.itemCollection.boars[itemData.id].editions =
                                 this.boarUser.itemCollection.boars[itemData.id].editions.concat([this.curEdition])
                                     .sort((a,b) => a - b);
@@ -911,6 +926,11 @@ export default class MarketSubcommand implements Subcommand {
                     }
 
                     if (!failedBuy) {
+                        LogDebug.log(
+                            `Bought ${this.modalData[0]} of ${itemData.id} for ${prices} from ${userIDs}`,
+                            this.config, inter, true
+                        );
+
                         this.boarUser.stats.general.boarScore -= this.modalData[1];
                         await this.boarUser.orderBoars(this.compInter, this.config);
                         this.boarUser.updateUserData();
@@ -932,6 +952,9 @@ export default class MarketSubcommand implements Subcommand {
             } else if (completeSell) {
                 await inter.deferUpdate();
                 showModal = false;
+
+                let prices = '';
+                let userIDs = '';
 
                 if (
                     this.curEdition > 0 && this.boarUser.itemCollection.boars[itemData.id].num >= this.modalData[0] &&
@@ -964,6 +987,13 @@ export default class MarketSubcommand implements Subcommand {
                                         newItemData.buyers[curIndex].num - newItemData.buyers[curIndex].filledAmount
                                     );
                                     curPrice += newItemData.buyers[curIndex].price * numToAdd;
+
+                                    if (
+                                        newItemData.buyers[curIndex].filledAmount !== newItemData.buyers[curIndex].num
+                                    ) {
+                                        prices += '$' + newItemData.sellers[curIndex].price + ' ';
+                                        userIDs += newItemData.sellers[curIndex].userID + ' ';
+                                    }
 
                                     numGrabbed += numToAdd;
                                     orderFillAmounts.push(numToAdd);
@@ -1042,13 +1072,6 @@ export default class MarketSubcommand implements Subcommand {
                                 const editionIndex: number = this.boarUser.itemCollection.boars[itemData.id].editions
                                     .indexOf(this.curEdition);
 
-                                LogDebug.sendMarketLog(
-                                    `${this.firstInter.user.id} sold '${itemData.id}' to ` +
-                                    `${newItemData.buyers[editionOrderIndex].userID} for ` +
-                                    `$${newItemData.buyers[editionOrderIndex].price}`,
-                                    this.config
-                                );
-
                                 this.boarUser.itemCollection.boars[itemData.id].editions.splice(editionIndex, 1);
 
                                 newItemData.buyers[editionOrderIndex].editionDates =
@@ -1074,6 +1097,11 @@ export default class MarketSubcommand implements Subcommand {
                     }, inter.id + 'global').catch((err) => { throw err });
 
                     if (!failedSale) {
+                        LogDebug.log(
+                            `Sold ${this.modalData[0]} of ${itemData.id} for ${prices} from ${userIDs}`,
+                            this.config, inter, true
+                        );
+
                         if (itemData.type === 'boars') {
                             this.boarUser.itemCollection.boars[itemData.id].num -= this.modalData[0];
                             this.boarUser.stats.general.totalBoars -= this.modalData[0];
@@ -1489,7 +1517,7 @@ export default class MarketSubcommand implements Subcommand {
 
     private async handleEndCollect(reason: string) {
         try {
-            LogDebug.sendDebug('Ended collection with reason: ' + reason, this.config, this.firstInter);
+            LogDebug.log('Ended collection with reason: ' + reason, this.config, this.firstInter);
 
             if (reason == CollectorUtils.Reasons.Error) {
                 await Replies.handleReply(
@@ -1665,7 +1693,7 @@ export default class MarketSubcommand implements Subcommand {
                 this.modalShowing.components[0].components[0].data.custom_id as string
             ).toLowerCase().replace(/\s+/g, '');
 
-            LogDebug.sendDebug(
+            LogDebug.log(
                 `${submittedModal.customId.split('|')[0]} input value: ` + submittedPage, this.config, this.firstInter
             );
 
@@ -1713,7 +1741,7 @@ export default class MarketSubcommand implements Subcommand {
                 this.modalShowing.components[0].components[0].data.custom_id as string
             ).toLowerCase().replace(/\s+/g, '');
 
-            LogDebug.sendDebug(
+            LogDebug.log(
                 `${submittedModal.customId.split('|')[0]} input value: ` + submittedNum, this.config, this.firstInter
             );
 
@@ -1836,7 +1864,7 @@ export default class MarketSubcommand implements Subcommand {
                 this.modalShowing.components[0].components[0].data.custom_id as string
             ).toLowerCase().replace(/\s+/g, '');
 
-            LogDebug.sendDebug(
+            LogDebug.log(
                 `${submittedModal.customId.split('|')[0]} input value: ` + submittedNum, this.config, this.firstInter
             );
 
@@ -1965,7 +1993,7 @@ export default class MarketSubcommand implements Subcommand {
                 this.modalShowing.components[1].components[0].data.custom_id as string
             ).toLowerCase().replace(/\s+/g, '');
 
-            LogDebug.sendDebug(
+            LogDebug.log(
                 `${submittedModal.customId.split('|')[0]} input values: ${submittedNum}, ${submittedPrice}`,
                 this.config, this.firstInter
             );
@@ -2141,7 +2169,7 @@ export default class MarketSubcommand implements Subcommand {
                 this.modalShowing.components[1].components[0].data.custom_id as string
             ).toLowerCase().replace(/\s+/g, '');
 
-            LogDebug.sendDebug(
+            LogDebug.log(
                 `${submittedModal.customId.split('|')[0]} input values: ${submittedEdition}, ${submittedPrice}`,
                 this.config, this.firstInter
             );
@@ -2288,7 +2316,7 @@ export default class MarketSubcommand implements Subcommand {
                 this.modalShowing.components[0].components[0].data.custom_id as string
             ).toLowerCase().replace(/\s+/g, '');
 
-            LogDebug.sendDebug(
+            LogDebug.log(
                 `${submittedModal.customId.split('|')[0]} input value: ` + submittedPrice, this.config, this.firstInter
             );
 

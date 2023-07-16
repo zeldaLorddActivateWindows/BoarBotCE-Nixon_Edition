@@ -107,7 +107,7 @@ export default class CollectionSubcommand implements Subcommand {
                 .toLowerCase().replace(/\s+/g, '')
             : '1';
 
-        LogDebug.sendDebug(
+        LogDebug.log(
             `User: ${userInput}, View: ${viewInput}, Page: ${pageInput}`, this.config, this.firstInter
         );
 
@@ -198,7 +198,7 @@ export default class CollectionSubcommand implements Subcommand {
 
             this.compInter = inter;
 
-            LogDebug.sendDebug(
+            LogDebug.log(
                 `${inter.customId.split('|')[0]} on page ${this.curPage} in view ${this.curView}`, this.config, this.firstInter
             );
 
@@ -358,7 +358,10 @@ export default class CollectionSubcommand implements Subcommand {
             return;
         }
 
-        LogDebug.sendDebug(`Enhancing boar to '${enhancedBoar}...'`, this.config, this.firstInter);
+        LogDebug.log(
+            `Attempting to enhance ${this.allBoars[this.curPage].id} to '${enhancedBoar}'`,
+            this.config, this.firstInter, true
+        );
 
         let canEnhance = true;
         await Queue.addQueue(async () => {
@@ -390,10 +393,16 @@ export default class CollectionSubcommand implements Subcommand {
         }, this.compInter.id + this.boarUser.user.id).catch((err) => { throw err });
 
         if (!canEnhance) {
+            LogDebug.log(
+                `Failed to enhance ${this.allBoars[this.curPage].id} to '${enhancedBoar}'`,
+                this.config, this.firstInter, true
+            );
+
             await Replies.handleReply(
                 this.compInter, 'Unable to enhance! Try again!',
                 this.config.colorConfig.error, undefined, undefined, true
             );
+
             this.collectionImage.updateInfo(this.boarUser, this.allBoars, this.config);
             await this.collectionImage.createNormalBase();
             return;
@@ -486,7 +495,7 @@ export default class CollectionSubcommand implements Subcommand {
                 this.modalShowing.components[0].components[0].data.custom_id as string
             ).toLowerCase().replace(/\s+/g, '');
 
-            LogDebug.sendDebug(
+            LogDebug.log(
                 `${submittedModal.customId.split('|')[0]} input value: ` + submittedPage, this.config, this.firstInter
             );
 
@@ -534,7 +543,7 @@ export default class CollectionSubcommand implements Subcommand {
      */
     private async handleEndCollect(reason: string): Promise<void> {
         try {
-            LogDebug.sendDebug('Ended collection with reason: ' + reason, this.config, this.firstInter);
+            LogDebug.log('Ended collection with reason: ' + reason, this.config, this.firstInter);
 
             if (reason === CollectorUtils.Reasons.Error) {
                 await Replies.handleReply(

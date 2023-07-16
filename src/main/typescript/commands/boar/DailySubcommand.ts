@@ -119,11 +119,21 @@ export default class DailySubcommand implements Subcommand {
                 }
 
                 if (boostInput && boarUser.itemCollection.powerups.multiBoost.numTotal > 0) {
+                    LogDebug.log(
+                        `Used up all ${boarUser.itemCollection.powerups.multiBoost.numTotal}x Multiplier Boost`,
+                        this.config, this.interaction, true
+                    );
+
                     boarUser.itemCollection.powerups.multiBoost.numTotal = 0;
                     boarUser.itemCollection.powerups.multiBoost.numUsed++;
                 }
 
                 if (usedExtra && boarUser.itemCollection.powerups.extraChance.numTotal > 0) {
+                    LogDebug.log(
+                        `Used up all +${boarUser.itemCollection.powerups.extraChance.numTotal}% Extra Chance`,
+                        this.config, this.interaction, true
+                    );
+
                     boarUser.itemCollection.powerups.extraChance.numTotal = 0;
                     boarUser.itemCollection.powerups.extraChance.numUsed++;
                 }
@@ -276,6 +286,11 @@ export default class DailySubcommand implements Subcommand {
                                 ? this.interaction.channel.id
                                 : '0';
                             boarUser.updateUserData();
+
+                            LogDebug.log(
+                                `${inter.user.username} (${inter.user.id}) turned ON notifications`,
+                                this.config, undefined, true
+                            );
                         } catch {
                             try {
                                 await Replies.handleReply(

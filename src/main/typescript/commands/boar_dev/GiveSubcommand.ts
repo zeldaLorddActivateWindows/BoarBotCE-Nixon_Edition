@@ -97,9 +97,9 @@ export default class GiveSubcommand implements Subcommand {
 
         const boarUser: BoarUser =  new BoarUser(this.userInput, true);
 
-        LogDebug.sendDebug(
+        LogDebug.log(
             'Gave \'' + this.idInput + '\' to ' + this.userInput.username + '(' + this.userInput.id + ')',
-            this.config, this.interaction
+            this.config, this.interaction, true
         );
 
         const inputID: string = this.idInput.split(' ')[0];

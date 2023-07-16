@@ -19,6 +19,7 @@ import {ItemImageGenerator} from '../generators/ItemImageGenerator';
 import {LogDebug} from '../logging/LogDebug';
 import {Replies} from '../interactions/Replies';
 import {RowConfig} from '../../bot/config/components/RowConfig';
+import moment from 'moment';
 
 /**
  * {@link BoarGift BoarGift.ts}
@@ -108,8 +109,22 @@ export class BoarGift {
      */
     private async handleCollect(inter: ButtonInteraction): Promise<void> {
         try {
-            LogDebug.sendDebug(`${inter.user.username} tried to open gift`, this.config, inter);
+            LogDebug.log(
+                `${inter.user.username} (${inter.user.id}) tried to open gift`, this.config, this.firstInter, true
+            );
+
             await inter.deferUpdate();
+
+            const boarUser = new BoarUser(inter.user);
+            const unbanTime: number | undefined = boarUser.stats.general.unbanTime;
+            if (unbanTime && unbanTime > Date.now()) {
+                await Replies.handleReply(
+                    inter, this.config.stringConfig.bannedString.replace('%@', moment(unbanTime).fromNow()),
+                    this.config.colorConfig.error, undefined, undefined, true
+                );
+                return;
+            }
+
             this.compInters.push(inter);
             this.collector.stop();
         } catch (err: unknown) {
@@ -133,7 +148,7 @@ export class BoarGift {
     ): Promise<void> {
         try {
             if (this.compInters.length === 0 || reason === CollectorUtils.Reasons.Error) {
-                LogDebug.sendDebug(`Gift expired`, this.config, this.firstInter);
+                LogDebug.log(`Gift expired`, this.config, this.firstInter, true);
                 this.completedGift = true;
                 await this.giftMessage.delete().catch(() => {});
                 return;
@@ -279,6 +294,11 @@ export class BoarGift {
      * @private
      */
     private async giveSpecial(inter: ButtonInteraction): Promise<void> {
+        LogDebug.log(
+            `Received underwear boar from ${this.boarUser.user.username} (${this.boarUser.user.id}) in gift`,
+            this.config, inter, true
+        );
+
         await this.giftedUser.addBoars(['underwear'], inter, this.config);
         await this.boarUser.addBoars(['underwear'], inter, this.config);
 
@@ -305,12 +325,17 @@ export class BoarGift {
         let numBucks = 0;
 
         if (suboutcome === 0) {
-            numBucks = Math.round(Math.random() * (25 - 1) + 1)
+            numBucks = Math.round(Math.random() * (3 - 1) + 1)
         } else if (suboutcome === 1) {
-            numBucks = Math.round(Math.random() * (100 - 50) + 50)
+            numBucks = Math.round(Math.random() * (40 - 10) + 10)
         } else {
-            numBucks = Math.round(Math.random() * (300 - 200) + 200)
+            numBucks = Math.round(Math.random() * (400 - 100) + 100)
         }
+
+        LogDebug.log(
+            `Received $${numBucks} from ${this.boarUser.user.username} (${this.boarUser.user.id}) in gift`,
+            this.config, inter, true
+        );
 
         outcomeName = outcomeName.replace('%@', numBucks.toString());
 
@@ -370,18 +395,33 @@ export class BoarGift {
                 this.giftedUser.refreshUserData();
 
                 if (suboutcome === 0) {
+                    LogDebug.log(
+                        `Received Multi Boost from ${this.boarUser.user.username} (${this.boarUser.user.id}) in gift`,
+                        this.config, inter, true
+                    );
+
                     this.giftedUser.itemCollection.powerups.multiBoost.numTotal += 15;
                     this.giftedUser.itemCollection.powerups.multiBoost.highestTotal = Math.max(
                         this.giftedUser.itemCollection.powerups.multiBoost.numTotal,
                         this.giftedUser.itemCollection.powerups.multiBoost.highestTotal
                     )
                 } else if (suboutcome === 1) {
+                    LogDebug.log(
+                        `Received Extra Chance from ${this.boarUser.user.username} (${this.boarUser.user.id}) in gift`,
+                        this.config, inter, true
+                    );
+
                     this.giftedUser.itemCollection.powerups.extraChance.numTotal += 3;
                     this.giftedUser.itemCollection.powerups.extraChance.highestTotal = Math.max(
                         this.giftedUser.itemCollection.powerups.extraChance.numTotal,
                         this.giftedUser.itemCollection.powerups.extraChance.highestTotal
                     )
                 } else {
+                    LogDebug.log(
+                        `Received Enhancer from ${this.boarUser.user.username} (${this.boarUser.user.id}) in gift`,
+                        this.config, inter, true
+                    );
+
                     this.giftedUser.itemCollection.powerups.enhancer.numTotal++;
                     this.giftedUser.itemCollection.powerups.enhancer.highestTotal = Math.max(
                         this.giftedUser.itemCollection.powerups.enhancer.numTotal,
@@ -457,6 +497,11 @@ export class BoarGift {
             await DataHandlers.getGuildData(inter.guild?.id, inter), inter, rarityWeights, false, 0, this.config
         );
 
+        LogDebug.log(
+            `Received ${boarIDs[0]} from ${this.boarUser.user.username} (${this.boarUser.user.id}) in gift`,
+            this.config, inter, true
+        );
+
         const editions: number[] = await this.giftedUser.addBoars(boarIDs, inter, this.config);
         await this.boarUser.addBoars(boarIDs, inter, this.config);
 
@@ -471,6 +516,12 @@ export class BoarGift {
 
         for (const edition of editions) {
             if (edition !== 1) continue;
+
+            LogDebug.log(
+                `Received bacteria boar from ${this.boarUser.user.username} (${this.boarUser.user.id}) in gift`,
+                this.config, inter, true
+            );
+
             await inter.followUp({
                 files: [
                     await new ItemImageGenerator(

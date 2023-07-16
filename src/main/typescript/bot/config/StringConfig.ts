@@ -7,12 +7,6 @@
  * @copyright WeslayCodes 2023
  */
 export class StringConfig {
-    // Non-interaction messages
-
-    public readonly botStatus: string = ' ';
-    public readonly guildAdd: string = ' ';
-    public readonly dmReceived: string = ' ';
-
     // General interaction responses
 
     public readonly noPermission: string = ' ';
@@ -27,6 +21,8 @@ export class StringConfig {
     public readonly noAttachmentPerms: string = ' ';
     public readonly error: string = ' ';
     public readonly maintenance: string = ' ';
+    public readonly bannedString: string = ' ';
+    public readonly banSuccess: string = ' ';
 
     // Setup command messages
 

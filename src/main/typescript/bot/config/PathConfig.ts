@@ -19,6 +19,7 @@ export class PathConfig {
     public readonly guildDataFolder: string = '';
     public readonly userDataFolder: string = '';
     public readonly globalDataFile: string = '';
+    public readonly logsFolder: string = '';
 
     // Base paths for images/assets
 

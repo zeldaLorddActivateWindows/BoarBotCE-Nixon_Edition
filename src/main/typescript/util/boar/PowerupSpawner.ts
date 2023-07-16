@@ -90,8 +90,6 @@ export class PowerupSpawner {
             const nums: NumberConfig = config.numberConfig;
             const allBoarChannels: TextChannel[] = [];
 
-            LogDebug.sendDebug('Spawning powerup', config);
-
             const newInterval = Math.round(config.numberConfig.powInterval * (Math.random() * (1.05 - .95) + .95));
 
             setTimeout(() => this.doSpawn(), newInterval);
@@ -141,6 +139,8 @@ export class PowerupSpawner {
             const chosenPrompt: PromptConfig = promptTypes[this.promptTypeID][this.promptID] as PromptConfig;
 
             this.powerupType = this.getRandPowerup(config);
+
+            LogDebug.log(`Powerup Event spawning for ${this.powerupType.pluralName}`, config);
 
             const rightStyle: number = promptTypes[this.promptTypeID].rightStyle;
             const wrongStyle: number = promptTypes[this.promptTypeID].wrongStyle;
@@ -214,6 +214,11 @@ export class PowerupSpawner {
             await inter.deferUpdate();
 
             if (!this.claimers.has(inter.user.id) && inter.customId.toLowerCase().includes('correct')) {
+                LogDebug.log(
+                    `${inter.user.username} (${inter.user.id}) guessed CORRECT in Powerup Event`,
+                    config, undefined, true
+                );
+
                 let correctString: string = config.stringConfig.powRightFull;
                 const timeToClaim: number = inter.createdTimestamp - powMsg.createdTimestamp;
 
@@ -229,18 +234,20 @@ export class PowerupSpawner {
                     inter, correctString, config.colorConfig.font,
                     config.stringConfig.powRight, config.colorConfig.green, true
                 );
-                LogDebug.sendDebug('Collected: ' + inter.user.username + ' (' + inter.user.id + ')', config);
             } else if (!this.claimers.has(inter.user.id)) {
+                LogDebug.log(
+                    `${inter.user.username} (${inter.user.id}) guessed INCORRECT in Powerup Event`,
+                    config, undefined, true
+                );
+
                 await Replies.handleReply(
                     inter, config.stringConfig.powWrongFull, config.colorConfig.font,
                     config.stringConfig.powWrong, config.colorConfig.error, true
                 );
-                LogDebug.sendDebug('Failed attempt: ' + inter.user.username + ' (' + inter.user.id + ')', config);
             } else {
                 await Replies.handleReply(
                     inter, config.stringConfig.powAttempted, config.colorConfig.error, undefined, undefined, true
                 );
-                LogDebug.sendDebug('Already collected: ' + inter.user.username + ' (' + inter.user.id + ')', config);
             }
         } catch (err: unknown) {
             await LogDebug.handleError(err);
@@ -271,8 +278,6 @@ export class PowerupSpawner {
                     components: [new ActionRowBuilder<ButtonBuilder>(config.promptConfigs.rows[1])]
                 });
             } catch {}
-
-            LogDebug.sendDebug("Tabulating powerup message #: " + this.numMsgs, config);
 
             // Gets percentages once all powerup messages are waiting for tabulation
             if (--this.numMsgs === 0) {
@@ -359,7 +364,7 @@ export class PowerupSpawner {
         const powerups = config.itemConfigs.powerups;
         const powerupIDs = Object.keys(powerups);
 
-        return powerups[powerupIDs[Math.floor(Math.random() * powerupIDs.length)]] as ItemConfig;
+        return powerups[powerupIDs[Math.floor(Math.random() * (powerupIDs.length-1))]] as ItemConfig;
     }
 
     /**
@@ -539,11 +544,9 @@ export class PowerupSpawner {
                 });
             } catch {}
 
-            LogDebug.sendDebug("Editing powerup message #: " + this.numNotFinished, config);
-
             // Updates and restores information to what it should be once the final message is done processing
             if (--this.numNotFinished === 0) {
-                LogDebug.sendDebug('Attempting to finish powerup', config);
+                LogDebug.log('Attempting to conclude Powerup Event', config);
 
                 for (const interaction of this.interactions) {
                     const powItemConfigs: ItemConfigs = config.itemConfigs.powerups;
@@ -680,7 +683,7 @@ export class PowerupSpawner {
                 this.powerupType = {} as ItemConfig;
                 this.readyToEnd = false;
 
-                LogDebug.sendDebug('Powerup finished. Interactions: ' + this.interactions.length, config);
+                LogDebug.log('Powerup Event finished.', config);
             }
         } catch (err: unknown) {
             await LogDebug.handleError(err);

@@ -34,6 +34,17 @@ export default class BoarDevCommand implements Command {
         )
         .addSubcommand(sub => sub.setName(this.commandInfo.configRefresh.name)
             .setDescription(this.commandInfo.configRefresh.description)
+        )
+        .addSubcommand(sub => sub.setName(this.commandInfo.ban.name)
+            .setDescription(this.commandInfo.ban.description)
+            .addUserOption(option => option.setName(this.commandInfo.ban.args[0].name)
+                .setDescription(this.commandInfo.ban.args[0].description)
+                .setRequired(this.commandInfo.ban.args[0].required !== undefined)
+            )
+            .addIntegerOption(option => option.setName(this.commandInfo.ban.args[1].name)
+                .setDescription(this.commandInfo.ban.args[1].description)
+                .setRequired(this.commandInfo.ban.args[1].required !== undefined)
+            )
         );
 
     /**

@@ -1,7 +1,6 @@
 import {RarityConfig} from '../../bot/config/items/RarityConfig';
 import {BotConfig} from '../../bot/config/BotConfig';
 import {ChatInputCommandInteraction, MessageComponentInteraction} from 'discord.js';
-import {LogDebug} from '../logging/LogDebug';
 import {GuildData} from '../data/global/GuildData';
 import {ItemConfigs} from '../../bot/config/items/ItemConfigs';
 import {Node} from 'functional-red-black-tree';
@@ -127,8 +126,6 @@ export class BoarUtils {
                     continue;
 
                 const boarGotten: string = BoarUtils.findValid(rarityIndex, guildData, config);
-
-                LogDebug.sendDebug(`Rolled boar with ID '${boarGotten}'`, config, inter);
 
                 boarIDs.push(boarGotten);
                 break;
