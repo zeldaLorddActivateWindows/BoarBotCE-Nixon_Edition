@@ -121,7 +121,7 @@ export default class HelpSubcommand implements Subcommand {
                 this.collector.stop(CollectorUtils.Reasons.Error);
             }
 
-            LogDebug.sendDebug(
+            LogDebug.log(
                 `${inter.customId.split('|')[0]} on page ${this.curPage} in area ${this.curArea}`,
                 this.config, this.firstInter
             );
@@ -172,7 +172,7 @@ export default class HelpSubcommand implements Subcommand {
      */
     private async handleEndCollect(reason: string): Promise<void> {
         try {
-            LogDebug.sendDebug('Ended collection with reason: ' + reason, this.config, this.firstInter);
+            LogDebug.log('Ended collection with reason: ' + reason, this.config, this.firstInter);
 
             if (reason == CollectorUtils.Reasons.Error) {
                 await Replies.handleReply(

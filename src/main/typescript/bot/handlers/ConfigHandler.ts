@@ -35,13 +35,13 @@ export class ConfigHandler {
         }
 
         if (!await this.validateConfig(parsedConfig)) {
-            LogDebug.sendDebug('Failed to validate config file, sticking with old/default version.', this.config);
+            LogDebug.log('Failed to validate config file, sticking with old/default version.', this.config);
             return;
         }
 
         this.config = parsedConfig;
 
-        LogDebug.sendDebug('Config file successfully loaded!', this.config);
+        LogDebug.log('Config file successfully loaded!', this.config);
 
         this.removeTempFiles();
         this.loadFonts();
@@ -112,11 +112,11 @@ export class ConfigHandler {
                 }
 
                 if (!boarIDs.includes(boar)) {
-                    LogDebug.sendDebug(`Boar ID '${boar}' not found in rarity '${rarity}'`, this.config);
+                    LogDebug.log(`Boar ID '${boar}' not found in rarity '${rarity}'`, this.config);
                 }
 
                 if (foundBoars.includes(boar)) {
-                    LogDebug.sendDebug(`Boar ID '${boar}' used more than once`, this.config);
+                    LogDebug.log(`Boar ID '${boar}' used more than once`, this.config);
                 }
 
                 passed = false;
@@ -129,7 +129,7 @@ export class ConfigHandler {
 
             if (foundBoars.includes(boar)) continue;
 
-            LogDebug.sendDebug(`Boar ID '${boar}' is unused`, this.config);
+            LogDebug.log(`Boar ID '${boar}' is unused`, this.config);
             passed = false;
         }
 
@@ -144,7 +144,7 @@ export class ConfigHandler {
         for (const path of allPaths) {
             if (fs.existsSync(path)) continue;
 
-            LogDebug.sendDebug(`Path '${path}' is invalid`, this.config);
+            LogDebug.log(`Path '${path}' is invalid`, this.config);
             passed = false;
         }
 
@@ -164,7 +164,7 @@ export class ConfigHandler {
             fs.rmSync(tempItemFolder + file);
         }
 
-        LogDebug.sendDebug('Deleted all temp files!', this.config);
+        LogDebug.log('Deleted all temp files!', this.config);
     }
 
     /**
@@ -185,7 +185,7 @@ export class ConfigHandler {
             return;
         }
 
-        LogDebug.sendDebug('Fonts successfully loaded!', this.config);
+        LogDebug.log('Fonts successfully loaded!', this.config);
     }
 
     /**
@@ -218,6 +218,6 @@ export class ConfigHandler {
             }
         });
 
-        LogDebug.sendDebug('Relative time information set!', this.config);
+        LogDebug.log('Relative time information set!', this.config);
     }
 }

@@ -1,4 +1,4 @@
-import {TextChannel} from 'discord.js';
+import {TextChannel, ForumChannel} from 'discord.js';
 import {PathConfig} from './PathConfig';
 import {StringConfig} from './StringConfig';
 import {NumberConfig} from './NumberConfig';
@@ -23,14 +23,14 @@ export class BotConfig {
     public readonly devs: string[] = [];
 
     /**
-     * The {@link TextChannel} ID the bot sends status messages to
-     */
-    public readonly botStatusChannel: string = '';
-
-    /**
-     * The {@link TextChannel} ID the bot sends logs and reports to
+     * The {@link TextChannel} ID the bot sends certain logs to
      */
     public readonly logChannel: string = '';
+
+    /**
+     * The {@link ForumChannel} ID the bot sends reports to
+     */
+    public readonly reportsChannel: string = '';
 
     /**
      * The {@link PathConfig paths} of all files/folders the bot accesses

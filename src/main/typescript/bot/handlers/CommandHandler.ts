@@ -106,7 +106,7 @@ export class CommandHandler {
                     this.subcommands.set(commandClass.data.name, commandClass);
                 }
 
-                LogDebug.sendDebug('Successfully found and set command: ' + commandClass.data.name, config);
+                LogDebug.log('Successfully found and set command: ' + commandClass.data.name, config);
             } catch (err: unknown) {
                 LogDebug.handleError(err);
                 process.exit(-1);
@@ -161,7 +161,7 @@ export class CommandHandler {
     ): Promise<void> {
         try {
             await rest.put(Routes.applicationCommands(process.env.CLIENT_ID as string), { body: commandData });
-            LogDebug.sendDebug('Application commands have successfully been registered!', config);
+            LogDebug.log('Application commands have successfully been registered!', config);
         } catch (err: unknown) {
             await LogDebug.handleError(err);
         }
@@ -185,7 +185,7 @@ export class CommandHandler {
                 Routes.applicationGuildCommands(process.env.CLIENT_ID as string, process.env.GUILD_ID as string),
                 { body: commandData }
             );
-            LogDebug.sendDebug('Guild commands have successfully been registered!', config);
+            LogDebug.log('Guild commands have successfully been registered!', config);
         } catch (err: unknown) {
             await LogDebug.handleError(err);
         }

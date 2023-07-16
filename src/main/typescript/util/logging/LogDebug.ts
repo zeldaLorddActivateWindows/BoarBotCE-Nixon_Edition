@@ -1,21 +1,21 @@
 import {
     AutocompleteInteraction,
     ChatInputCommandInteraction,
-    Message, MessageComponentInteraction,
+    MessageComponentInteraction,
     ModalSubmitInteraction, TextChannel
 } from 'discord.js';
 import {BotConfig} from '../../bot/config/BotConfig';
 import {BoarBotApp} from '../../BoarBotApp';
 import {InteractionUtils} from '../interactions/InteractionUtils';
 import {Replies} from '../interactions/Replies';
+import fs from 'fs';
+import AdmZip from 'adm-zip';
 
 // Console colors
 enum Colors {
     White = '\x1b[0m',
     Yellow = '\x1b[33m',
     Grey = '\x1b[90m',
-    Green = '\x1b[32m',
-    Blue = '\x1b[34m',
     Red = '\x1b[31m'
 }
 
@@ -35,15 +35,17 @@ export class LogDebug {
      * @param debugMessage - Message to send to debug
      * @param config - Used to get debug prefix and see if debug mode
      * @param interaction - Whether to prepend string with command and user info
+     * @param sendToChannel
      */
-    public static sendDebug(
+    public static log(
         debugMessage: any,
         config: BotConfig,
-        interaction?: ChatInputCommandInteraction | AutocompleteInteraction | MessageComponentInteraction
+        interaction?: ChatInputCommandInteraction | AutocompleteInteraction | MessageComponentInteraction,
+        sendToChannel = false
     ): void {
         if (!config.debugMode) return;
 
-        const prefix = `[${Colors.Yellow}DEBUG${Colors.White}] `;
+        const prefix = `[${Colors.Yellow}LOG${Colors.White}] `;
         const time = LogDebug.getPrefixTime();
 
         if (typeof debugMessage !== 'string') {
@@ -53,7 +55,7 @@ export class LogDebug {
         if (interaction && !interaction.isMessageComponent()) {
             debugMessage = config.stringConfig.commandDebugPrefix
                 .replace('%@', interaction.user.username + ' (' + interaction.user.id + ')')
-                .replace('%@', interaction.commandName)
+                .replace('%@', interaction.commandName + ' ')
                 .replace('%@', interaction.options.getSubcommand()) +
                 debugMessage
         } else if (interaction) {
@@ -66,7 +68,40 @@ export class LogDebug {
 
         const completeString = prefix + time + debugMessage;
 
-        console.log(completeString);
+        try {
+            if (sendToChannel) {
+                this.sendLogToChannel(completeString, config);
+            } else {
+                console.log(completeString);
+            }
+        } catch {
+            console.log(completeString);
+        }
+
+        if (BoarBotApp.getBot().getClient().isReady()) {
+            const curTime = Date.now();
+            const curFolderName = new Date(curTime).toLocaleDateString().replaceAll('/','-');
+            const oldFolderName =
+                new Date(curTime - config.numberConfig.oneDay).toLocaleDateString().replaceAll('/','-');
+
+            if (fs.existsSync(config.pathConfig.logsFolder + oldFolderName)) {
+                const zip = new AdmZip();
+                zip.addLocalFolder(config.pathConfig.logsFolder + oldFolderName);
+                zip.writeZip(config.pathConfig.logsFolder + oldFolderName + '.zip');
+                fs.rmdirSync(config.pathConfig.logsFolder + oldFolderName, { recursive: true });
+            }
+
+            if (!fs.existsSync(config.pathConfig.logsFolder + curFolderName)) {
+                fs.mkdirSync(config.pathConfig.logsFolder + curFolderName);
+            }
+
+            fs.appendFileSync(
+                config.pathConfig.logsFolder + curFolderName + '/' + BoarBotApp.getBot().getClient().readyTimestamp +
+                '.log', completeString.replace(
+                    /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, ''
+                ) + '\n'
+            );
+        }
     }
 
     /**
@@ -84,11 +119,12 @@ export class LogDebug {
     ): Promise<boolean> {
         try {
             const errString: string | undefined = typeof err === 'string' ? err : (err as Error).stack;
-            const prefix = `[${Colors.Green}CAUGHT ERROR${Colors.White}] `;
+            const prefix = `[${Colors.Red}CAUGHT ERROR${Colors.White}] `;
             const time: string = LogDebug.getPrefixTime();
             const config: BotConfig = BoarBotApp.getBot().getConfig();
 
-            if (errString && errString.includes('Unknown interaction')) return false;
+            if (errString && (errString.includes('Unknown interaction') || errString.includes('Unknown Message')))
+                return false;
 
             let completeString: string = prefix + time;
             if (interaction && interaction.isChatInputCommand()) {
@@ -103,7 +139,9 @@ export class LogDebug {
 
             try {
                 if (sendToChannel) {
-                    await this.sendLogMessage(completeString, config);
+                    await this.sendLogToChannel(completeString, config);
+                } else {
+                    console.log(completeString);
                 }
             } catch {
                 console.log(completeString);
@@ -119,37 +157,6 @@ export class LogDebug {
         }
 
         return true;
-    }
-
-    /**
-     * Handles DM reports
-     *
-     * @param message - Message from DM
-     * @param config - Used to get DM reply string
-     */
-    public static async sendReport(message: Message, config: BotConfig): Promise<void> {
-        const prefix = `[${Colors.Blue}DM REPORT${Colors.White}] `;
-        const time: string = LogDebug.getPrefixTime();
-        const completeString: string = prefix + time +
-            `${message.author.username + '(' + message.author.id + ')'} sent: ` + message.content;
-
-        await this.sendLogMessage(completeString, config);
-
-        await message.reply(config.stringConfig.dmReceived);
-    }
-
-    /**
-     * Handles logging suspicious market interactions
-     *
-     * @param content - Content of market log
-     * @param config - Used to get log channel
-     */
-    public static async sendMarketLog(content: string, config: BotConfig): Promise<void> {
-        const prefix = `[${Colors.Red}SUSPICIOUS MARKET ACTIVITY${Colors.White}] `;
-        const time: string = LogDebug.getPrefixTime();
-        const completeString: string = prefix + time + content;
-
-        await this.sendLogMessage(completeString, config);
     }
 
     /**
@@ -170,14 +177,14 @@ export class LogDebug {
         return `[${Colors.Grey}${new Date().toLocaleString()}${Colors.White}]\n`;
     }
 
-    private static async sendLogMessage(message: string, config: BotConfig): Promise<void> {
+    private static async sendLogToChannel(message: string, config: BotConfig): Promise<void> {
         console.log(message);
 
         if (BoarBotApp.getBot().getClient().isReady()) {
             const logChannel: TextChannel | undefined = await InteractionUtils.getTextChannel(config.logChannel);
 
             if (!logChannel) return;
-            await logChannel.send('```ansi\n' + message.substring(0, 1900) + '```').catch(() => {});
+            await logChannel.send('```ansi\n' + message.substring(0, 1800) + '```').catch(() => {});
         }
     }
 }

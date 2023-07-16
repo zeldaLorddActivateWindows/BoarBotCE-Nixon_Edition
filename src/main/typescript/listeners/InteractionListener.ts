@@ -50,8 +50,7 @@ export default class InteractionListener implements Listener {
         const command: Command | undefined = BoarBotApp.getBot().getCommands().get(interaction.commandName);
 
         if (command) {
-            const startTime = Date.now();
-            LogDebug.sendDebug('Started interaction', this.config, interaction);
+            LogDebug.log('Started interaction', this.config, interaction);
 
             if (interaction.isChatInputCommand()) {
                 let onCooldown: boolean;
@@ -63,10 +62,6 @@ export default class InteractionListener implements Listener {
                 }
 
                 if (onCooldown) return;
-            }
-
-            if (Date.now() - startTime > 100) {
-                await LogDebug.handleError('COOLDOWN SLOWDOWN: ' + (Date.now() - startTime));
             }
 
             try {
@@ -92,7 +87,7 @@ export default class InteractionListener implements Listener {
                 return;
             }
 
-            LogDebug.sendDebug('End of interaction', this.config, interaction);
+            LogDebug.log('End of interaction', this.config, interaction);
         }
     }
 

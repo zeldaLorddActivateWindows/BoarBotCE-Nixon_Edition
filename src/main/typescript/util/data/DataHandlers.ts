@@ -161,7 +161,7 @@ export class DataHandlers {
             }
 
             if (interaction) {
-                LogDebug.sendDebug('Setup not configured', config, interaction);
+                LogDebug.log('Setup not configured', config, interaction);
                 await Replies.handleReply(interaction, strConfig.noSetup);
             }
         }

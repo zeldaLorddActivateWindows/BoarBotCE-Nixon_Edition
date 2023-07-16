@@ -30,7 +30,7 @@ export class Replies {
         interaction: ChatInputCommandInteraction,
         config: BotConfig
     ): Promise<void> {
-        LogDebug.sendDebug('Tried to run command while setup being configured', config, interaction);
+        LogDebug.log('Tried to run command while setup being configured', config, interaction);
         await Replies.handleReply(interaction, config.stringConfig.doingSetup, config.colorConfig.error);
     }
 
@@ -46,7 +46,7 @@ export class Replies {
         guildData: GuildData | undefined,
         config: BotConfig
     ): Promise<void> {
-        LogDebug.sendDebug('Used in the wrong channel', config, interaction);
+        LogDebug.log('Used in the wrong channel', config, interaction);
         await Replies.handleReply(interaction, config.stringConfig.wrongChannel, config.colorConfig.error);
     }
 
@@ -60,7 +60,7 @@ export class Replies {
         interaction: ChatInputCommandInteraction,
         config: BotConfig
     ): Promise<void> {
-        LogDebug.sendDebug('Not a developer', config, interaction);
+        LogDebug.log('Not a developer', config, interaction);
         await Replies.handleReply(interaction, config.stringConfig.noPermission, config.colorConfig.error);
     }
 
@@ -74,7 +74,7 @@ export class Replies {
         interaction: ChatInputCommandInteraction,
         config: BotConfig
     ): Promise<void> {
-        LogDebug.sendDebug('Currently on cooldown', config, interaction);
+        LogDebug.log('Currently on cooldown', config, interaction);
         await Replies.handleReply(interaction, config.stringConfig.onCooldown, config.colorConfig.error);
     }
 

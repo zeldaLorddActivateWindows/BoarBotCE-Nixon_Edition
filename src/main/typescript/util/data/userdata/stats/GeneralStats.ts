@@ -20,4 +20,5 @@ export class GeneralStats {
     public highestMulti = 0;
     public notificationsOn = false;
     public notificationChannel = '';
+    public unbanTime = 0;
 }
