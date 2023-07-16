@@ -305,11 +305,11 @@ export class BoarGift {
         let numBucks = 0;
 
         if (suboutcome === 0) {
-            numBucks = Math.round(Math.random() * (25 - 1) + 1)
+            numBucks = Math.round(Math.random() * (3 - 1) + 1)
         } else if (suboutcome === 1) {
-            numBucks = Math.round(Math.random() * (100 - 50) + 50)
+            numBucks = Math.round(Math.random() * (40 - 10) + 10)
         } else {
-            numBucks = Math.round(Math.random() * (300 - 200) + 200)
+            numBucks = Math.round(Math.random() * (400 - 100) + 100)
         }
 
         outcomeName = outcomeName.replace('%@', numBucks.toString());

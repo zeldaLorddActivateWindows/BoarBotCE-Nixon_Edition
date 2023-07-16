@@ -359,7 +359,7 @@ export class PowerupSpawner {
         const powerups = config.itemConfigs.powerups;
         const powerupIDs = Object.keys(powerups);
 
-        return powerups[powerupIDs[Math.floor(Math.random() * powerupIDs.length)]] as ItemConfig;
+        return powerups[powerupIDs[Math.floor(Math.random() * (powerupIDs.length-1))]] as ItemConfig;
     }
 
     /**

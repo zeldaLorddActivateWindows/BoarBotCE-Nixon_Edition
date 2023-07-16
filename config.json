@@ -8,7 +8,7 @@
     "unlimitedBoars": false,
     "debugMode": true,
     "maintenanceMode": false,
-    "marketOpen": true,
+    "marketOpen": false,
     "pathConfig": {
         "listeners": "src/main/typescript/listeners/",
         "commands": "src/main/typescript/commands/",
@@ -2084,7 +2084,7 @@
                 "description": "Boosts your multiplier by adding to its current value, making it more likely to get rarer boars when you do /boar daily.",
                 "isSB": false,
                 "blacklisted": false,
-                "tiers": [50, 25, 10]
+                "tiers": [30, 30, 30]
             },
             "gift": {
                 "name": "Boar Gift",
@@ -2093,7 +2093,7 @@
                 "description": "A gift that you can be sent to and opened by other people. Contains boar bucks, boars, rare surprises, and more.",
                 "isSB": false,
                 "blacklisted": false,
-                "tiers": [3, 1, 0],
+                "tiers": [1, 1, 1],
                 "outcomes": [
                     {
                         "weight": 1,
@@ -2123,15 +2123,15 @@
                         "category": "Powerups",
                         "suboutcomes": [
                             {
-                                "weight": 45,
+                                "weight": 49,
                                 "name": "+15 Multiplier Boost"
                             },
                             {
-                                "weight": 45,
+                                "weight": 49,
                                 "name": "+3% Extra Boar Chance"
                             },
                             {
-                                "weight": 10,
+                                "weight": 1,
                                 "name": "+1 Enhancer"
                             }
                         ]
@@ -2150,7 +2150,7 @@
                 "description": "Increases your chance of getting an extra boar when you do /boar daily. Capped at 300%. Multiplier boosts apply to all extra boars.",
                 "isSB": false,
                 "blacklisted": false,
-                "tiers": [10, 5, 1]
+                "tiers": [12, 12, 12]
             },
             "enhancer": {
                 "name": "Boar Enhancer",
@@ -2159,7 +2159,7 @@
                 "description": "Can be used to enhance a boar to a random boar of the next rarity. Capped at 16. Divine is the maximum rarity that can be enhanced.",
                 "isSB": false,
                 "blacklisted": false,
-                "tiers": [1, 1, 0]
+                "tiers": [0, 0, 0]
             }
         }
     },
