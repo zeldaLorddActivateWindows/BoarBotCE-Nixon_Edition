@@ -78,30 +78,7 @@ export class LogDebug {
             console.log(completeString);
         }
 
-        if (BoarBotApp.getBot().getClient().isReady()) {
-            const curTime = Date.now();
-            const curFolderName = new Date(curTime).toLocaleDateString().replaceAll('/','-');
-            const oldFolderName =
-                new Date(curTime - config.numberConfig.oneDay).toLocaleDateString().replaceAll('/','-');
-
-            if (fs.existsSync(config.pathConfig.logsFolder + oldFolderName)) {
-                const zip = new AdmZip();
-                zip.addLocalFolder(config.pathConfig.logsFolder + oldFolderName);
-                zip.writeZip(config.pathConfig.logsFolder + oldFolderName + '.zip');
-                fs.rmdirSync(config.pathConfig.logsFolder + oldFolderName, { recursive: true });
-            }
-
-            if (!fs.existsSync(config.pathConfig.logsFolder + curFolderName)) {
-                fs.mkdirSync(config.pathConfig.logsFolder + curFolderName);
-            }
-
-            fs.appendFileSync(
-                config.pathConfig.logsFolder + curFolderName + '/' + BoarBotApp.getBot().getClient().readyTimestamp +
-                '.log', completeString.replace(
-                    /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, ''
-                ) + '\n'
-            );
-        }
+        this.writeToLogFile(completeString, config);
     }
 
     /**
@@ -139,13 +116,15 @@ export class LogDebug {
 
             try {
                 if (sendToChannel) {
-                    await this.sendLogToChannel(completeString, config);
+                    await this.sendLogToChannel(completeString, config, true);
                 } else {
                     console.log(completeString);
                 }
             } catch {
                 console.log(completeString);
             }
+
+            this.writeToLogFile(completeString, config);
 
             if (!interaction || interaction.isAutocomplete()) return true;
 
@@ -177,14 +156,44 @@ export class LogDebug {
         return `[${Colors.Grey}${new Date().toLocaleString()}${Colors.White}]\n`;
     }
 
-    private static async sendLogToChannel(message: string, config: BotConfig): Promise<void> {
+    private static async sendLogToChannel(message: string, config: BotConfig, ping = false): Promise<void> {
         console.log(message);
 
         if (BoarBotApp.getBot().getClient().isReady()) {
             const logChannel: TextChannel | undefined = await InteractionUtils.getTextChannel(config.logChannel);
+            const pingMessage = ping
+                ? `<@${config.devs[0]}>`
+                : '';
 
             if (!logChannel) return;
-            await logChannel.send('```ansi\n' + message.substring(0, 1800) + '```').catch(() => {});
+            await logChannel.send(pingMessage + '```ansi\n' + message.substring(0, 1800) + '```').catch(() => {});
+        }
+    }
+
+    private static writeToLogFile(completeString: string, config: BotConfig): void {
+        if (BoarBotApp.getBot().getClient().isReady()) {
+            const curTime = Date.now();
+            const curFolderName = new Date(curTime).toLocaleDateString().replaceAll('/','-');
+            const oldFolderName =
+                new Date(curTime - config.numberConfig.oneDay).toLocaleDateString().replaceAll('/','-');
+
+            if (fs.existsSync(config.pathConfig.logsFolder + oldFolderName)) {
+                const zip = new AdmZip();
+                zip.addLocalFolder(config.pathConfig.logsFolder + oldFolderName);
+                zip.writeZip(config.pathConfig.logsFolder + oldFolderName + '.zip');
+                fs.rmSync(config.pathConfig.logsFolder + oldFolderName, { recursive: true });
+            }
+
+            if (!fs.existsSync(config.pathConfig.logsFolder + curFolderName)) {
+                fs.mkdirSync(config.pathConfig.logsFolder + curFolderName);
+            }
+
+            fs.appendFileSync(
+                config.pathConfig.logsFolder + curFolderName + '/' + BoarBotApp.getBot().getClient().readyTimestamp +
+                '.log', completeString.replace(
+                /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, ''
+            ) + '\n'
+            );
         }
     }
 }
