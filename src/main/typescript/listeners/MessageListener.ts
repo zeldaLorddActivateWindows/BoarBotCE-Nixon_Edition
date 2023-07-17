@@ -27,29 +27,31 @@ export default class MessageListener implements Listener {
 		const config: BotConfig = BoarBotApp.getBot().getConfig();
 		if (config.maintenanceMode || !message.channel.isDMBased() || message.author.id === message.client.user.id) return;
 
-		await Queue.addQueue(async () => {
-			try {
-				const boarUser = new BoarUser(message.author);
+		if (message.content.trim().toLowerCase() === 'stop') {
+			await Queue.addQueue(async () => {
+				try {
+					const boarUser = new BoarUser(message.author);
 
-				if (
-					boarUser.stats.general.notificationsOn !== undefined &&
-					!boarUser.stats.general.notificationsOn
-				) {
-					return;
+					if (
+						boarUser.stats.general.notificationsOn !== undefined &&
+						!boarUser.stats.general.notificationsOn
+					) {
+						return;
+					}
+
+					boarUser.stats.general.notificationsOn = false;
+					boarUser.updateUserData();
+
+					LogDebug.log(
+						`${message.author.username} (${message.author.id}) turned OFF notifications`,
+						config, undefined, true
+					);
+
+					await message.reply('Successfully turned off notifications!');
+				} catch (err: unknown) {
+					await LogDebug.handleError(err);
 				}
-
-				boarUser.stats.general.notificationsOn = false;
-				boarUser.updateUserData();
-
-				LogDebug.log(
-					`${message.author.username} (${message.author.id}) turned OFF notifications`,
-					config, undefined, true
-				);
-
-				await message.reply('Successfully turned off notifications!');
-			} catch (err: unknown) {
-				await LogDebug.handleError(err);
-			}
-		}, message.id + message.author.id);
+			}, message.id + message.author.id);
+		}
 	}
 }
