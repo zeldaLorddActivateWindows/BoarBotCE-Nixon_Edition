@@ -433,7 +433,8 @@ export default class SetupSubcommand implements Subcommand {
         this.modalShowing.setCustomId(modals[this.curField-1].customId + '|' + inter.id);
         await inter.showModal(this.modalShowing);
 
-        inter.client.on(Events.InteractionCreate, this.modalListener);
+        this.curModalListener = this.modalListener;
+        inter.client.on(Events.InteractionCreate, this.curModalListener);
     }
 
     /**

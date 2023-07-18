@@ -7,8 +7,8 @@
     "reportsChannel": "1130166216921718824",
     "unlimitedBoars": false,
     "debugMode": true,
-    "maintenanceMode": false,
-    "marketOpen": false,
+    "maintenanceMode": true,
+    "marketOpen": true,
     "pathConfig": {
         "listeners": "src/main/typescript/listeners/",
         "commands": "src/main/typescript/commands/",
@@ -207,6 +207,7 @@
         "marketTooYoung": "Your Discord account is too young to use Boar Market!",
         "marketTooCheap": "The price you entered is too low! Must be at least $%@.",
         "marketTooExpensive": "The price you entered is too high! Must be at maximum $%@.",
+        "marketBestOrder": "You already have the best order for this item!",
         "marketBSBuyNowLabel": "Buy Now Price",
         "marketBSSellNowLabel": "Sell Now Price",
         "marketBSBuyOrdLabel": "Buy Order Volume",
@@ -1596,7 +1597,7 @@
                 "name": "Tiny Boar",
                 "pluralName": "Tiny Boars",
                 "file": "TinyBoar.png",
-                "description": "The result of failed experiment done by Wizard Boar. Has come to terms with its condition by living with ants.",
+                "description": "The result of a failed experiment done by Wizard Boar. Has come to terms with its condition by living with ants.",
                 "isSB": false,
                 "blacklisted": false
             },
