@@ -162,6 +162,7 @@ export class StringConfig {
     public readonly marketTooYoung: string = ' ';
     public readonly marketTooCheap: string = ' ';
     public readonly marketTooExpensive: string = ' ';
+    public readonly marketBestOrder: string = ' ';
     public readonly marketBSBuyNowLabel: string = ' ';
     public readonly marketBSSellNowLabel: string = ' ';
     public readonly marketBSBuyOrdLabel: string = ' ';

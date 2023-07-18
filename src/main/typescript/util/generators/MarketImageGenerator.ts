@@ -21,11 +21,23 @@ export class MarketImageGenerator {
         type: string,
         buyers: BuySellData[],
         sellers: BuySellData[],
-        lastBuy: number,
-        lastSell: number
+        lastBuys: [number, number, string, string],
+        lastSells: [number, number, string, string]
     }[] = [];
-    private userBuyOrders: {data: BuySellData, id: string, type: string}[] = [];
-    private userSellOrders: {data: BuySellData, id: string, type: string}[] = [];
+    private userBuyOrders: {
+        data: BuySellData,
+        id: string,
+        type: string,
+        lastBuys: [number, number, string, string],
+        lastSells: [number, number, string, string]
+    }[] = [];
+    private userSellOrders: {
+        data: BuySellData,
+        id: string,
+        type: string,
+        lastBuys: [number, number, string, string],
+        lastSells: [number, number, string, string]
+    }[] = [];
 
     /**
      * Creates a new leaderboard image generator
@@ -41,11 +53,23 @@ export class MarketImageGenerator {
             type: string,
             buyers: BuySellData[],
             sellers: BuySellData[],
-            lastBuy: number,
-            lastSell: number
+            lastBuys: [number, number, string, string],
+            lastSells: [number, number, string, string]
         }[],
-        userBuyOrders: {data: BuySellData, id: string, type: string}[],
-        userSellOrders: {data: BuySellData, id: string, type: string}[],
+        userBuyOrders: {
+            data: BuySellData,
+            id: string,
+            type: string,
+            lastBuys: [number, number, string, string],
+            lastSells: [number, number, string, string]
+        }[],
+        userSellOrders: {
+            data: BuySellData,
+            id: string,
+            type: string,
+            lastBuys: [number, number, string, string],
+            lastSells: [number, number, string, string]
+        }[],
         config: BotConfig
     ) {
         this.itemPricing = itemPricing;
@@ -68,11 +92,23 @@ export class MarketImageGenerator {
             type: string,
             buyers: BuySellData[],
             sellers: BuySellData[],
-            lastBuy: number,
-            lastSell: number
+            lastBuys: [number, number, string, string],
+            lastSells: [number, number, string, string]
         }[],
-        userBuyOrders: {data: BuySellData, id: string, type: string}[],
-        userSellOrders: {data: BuySellData, id: string, type: string}[],
+        userBuyOrders: {
+            data: BuySellData,
+            id: string,
+            type: string,
+            lastBuys: [number, number, string, string],
+            lastSells: [number, number, string, string]
+        }[],
+        userSellOrders: {
+            data: BuySellData,
+            id: string,
+            type: string,
+            lastBuys: [number, number, string, string],
+            lastSells: [number, number, string, string]
+        }[],
         config: BotConfig
     ): void {
         this.itemPricing = itemPricing;

@@ -137,6 +137,14 @@ export class BoarBot implements Bot {
 		try {
 			LogDebug.log('Successfully logged in! Bot online!', this.getConfig());
 
+			fs.readdirSync(this.getConfig().pathConfig.userDataFolder).forEach(async userFile => {
+				try {
+					await this.getClient().users.fetch(userFile.split('.')[0]);
+				} catch {
+					LogDebug.handleError('Failed to find user ' + userFile.split('.')[0]);
+				}
+			});
+
 			this.startNotificationCron();
 
 			// Logs interaction listeners to avoid memory leaks
@@ -175,11 +183,7 @@ export class BoarBot implements Bot {
 	private startNotificationCron(): void {
 		new CronJob('0 0 * * *', async () => {
 			fs.readdirSync(this.getConfig().pathConfig.userDataFolder).forEach(async userFile => {
-				let user: User | undefined;
-
-				try {
-					user = await this.getClient().users.fetch(userFile.split('.')[0]);
-				} catch {}
+				const user: User | undefined = this.getClient().users.cache.get(userFile.split('.')[0]);
 
 				if (!user) return;
 

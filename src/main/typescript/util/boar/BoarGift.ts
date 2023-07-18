@@ -338,6 +338,9 @@ export class BoarGift {
         );
 
         outcomeName = outcomeName.replace('%@', numBucks.toString());
+        outcomeName = numBucks > 1
+            ? outcomeName
+            : outcomeName.substring(0, outcomeName.length-1);
 
         await Queue.addQueue(async () => {
             try {

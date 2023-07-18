@@ -107,7 +107,7 @@ export class LogDebug {
             if (interaction && interaction.isChatInputCommand()) {
                 completeString += config.stringConfig.commandDebugPrefix
                     .replace('%@', interaction.user.username + ' (' + interaction.user.id + ')')
-                    .replace('%@', interaction.commandName)
+                    .replace('%@', interaction.commandName + ' ')
                     .replace('%@', interaction.options.getSubcommand()) +
                     errString;
             } else {

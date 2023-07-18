@@ -428,7 +428,10 @@ export default class TopSubcommand implements Subcommand {
 
         if (newTopUserID && newTopUserID !== oldTopUserID) {
             try {
-                const newTopUser: User = await this.firstInter.client.users.fetch(newTopUserID);
+                const newTopUser: User | undefined = this.firstInter.client.users.cache.get(newTopUserID);
+
+                if (!newTopUser) return;
+
                 const newTopBoarUser: BoarUser = new BoarUser(newTopUser);
 
                 await newTopBoarUser.addBadge('athlete', this.firstInter);

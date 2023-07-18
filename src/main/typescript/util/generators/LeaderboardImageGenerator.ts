@@ -137,14 +137,13 @@ export class LeaderboardImageGenerator {
             const userID = curShowing[i][0];
             const userVal = curShowing[i][1].toLocaleString();
             const position: number = (page*nums.leaderboardNumPlayers)+1+i;
-            let username: string = strConfig.deletedUsername;
+            let username: string | undefined;
             let positionColor: string;
 
-            try {
-                username = (await BoarBotApp.getBot().getClient().users.fetch(userID)).username;
-            } catch {}
+            username = BoarBotApp.getBot().getClient().users.cache.get(userID)?.username;
 
-            if (username.includes(strConfig.deletedUsername)) {
+            if (!username) {
+                username = strConfig.deletedUsername;
                 await Queue.addQueue(async () => await DataHandlers.removeLeaderboardUser(userID),
                     userID + 'global'
                 ).catch((err) => { throw err });
