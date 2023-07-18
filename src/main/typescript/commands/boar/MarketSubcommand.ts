@@ -928,6 +928,7 @@ export default class MarketSubcommand implements Subcommand {
                                 this.pricingData, this.userBuyOrders, this.userSellOrders, this.config
                             );
                         } catch (err: unknown) {
+                            failedBuy = true;
                             await LogDebug.handleError(err, inter);
                         }
                     }, inter.id + 'global').catch((err) => { throw err });
@@ -1160,6 +1161,7 @@ export default class MarketSubcommand implements Subcommand {
                                 this.pricingData, this.userBuyOrders, this.userSellOrders, this.config
                             );
                         } catch (err: unknown) {
+                            failedSale = true;
                             await LogDebug.handleError(err, inter);
                         }
                     }, inter.id + 'global').catch((err) => { throw err });
@@ -1313,7 +1315,6 @@ export default class MarketSubcommand implements Subcommand {
                                 globalData.itemData[itemData.type][itemData.id].lastBuys[0] = highestBuyOrder.price;
                                 globalData.itemData[itemData.type][itemData.id].lastBuys[2] = highestBuyOrder.userID;
                             }
-
 
                             fs.writeFileSync(this.config.pathConfig.globalDataFile, JSON.stringify(globalData));
                             this.getPricingData();

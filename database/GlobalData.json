@@ -3,31 +3,70 @@
     "powerups": {
       "multiBoost": {
         "buyers": [],
-        "sellers": []
+        "sellers": [],
+        "lastBuys": [
+          0,
+          0,
+          "",
+          ""
+        ],
+        "lastSells": [
+          0,
+          0,
+          "",
+          ""
+        ]
       },
       "gift": {
         "buyers": [],
-        "sellers": []
+        "sellers": [],
+        "lastBuys": [
+          0,
+          0,
+          "",
+          ""
+        ],
+        "lastSells": [
+          0,
+          0,
+          "",
+          ""
+        ]
       },
       "extraChance": {
         "buyers": [],
-        "sellers": []
+        "sellers": [],
+        "lastBuys": [
+          0,
+          0,
+          "",
+          ""
+        ],
+        "lastSells": [
+          0,
+          0,
+          "",
+          ""
+        ]
       },
       "enhancer": {
         "buyers": [],
-        "sellers": []
+        "sellers": [],
+        "lastBuys": [
+          0,
+          0,
+          "",
+          ""
+        ],
+        "lastSells": [
+          0,
+          0,
+          "",
+          ""
+        ]
       }
     },
-    "boars": {
-      "trophy": {},
-      "gamebreaker": {},
-      "spooky": {},
-      "vampire": {},
-      "zombie": {},
-      "spider": {},
-      "pumpkin": {},
-      "ghost": {}
-    }
+    "boars": {}
   },
   "leaderboardData": {
     "bucks": {
