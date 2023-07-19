@@ -287,9 +287,11 @@ export class BoarUser {
 
                         globalData.itemData.boars[boarID] = new ItemData;
                         globalData.itemData.boars[boarID].curEdition = 0;
-                        globalData.itemData.boars[boarID].lastBuys[1] = rarityInfos[i].baseScore === 1
+                        const lastBuySell = rarityInfos[i].baseScore === 1
                             ? 4
                             : rarityInfos[i].baseScore;
+                        globalData.itemData.boars[boarID].lastBuys[1] = lastBuySell;
+                        globalData.itemData.boars[boarID].lastSells[1] = lastBuySell;
 
                         if (rarityName !== 'Special') {
                             let specialEdition = 0;

@@ -21,22 +21,22 @@ export class MarketImageGenerator {
         type: string,
         buyers: BuySellData[],
         sellers: BuySellData[],
-        lastBuys: [number, number, string, string],
-        lastSells: [number, number, string, string]
+        lastBuys: [number, number, string],
+        lastSells: [number, number, string]
     }[] = [];
     private userBuyOrders: {
         data: BuySellData,
         id: string,
         type: string,
-        lastBuys: [number, number, string, string],
-        lastSells: [number, number, string, string]
+        lastBuys: [number, number, string],
+        lastSells: [number, number, string]
     }[] = [];
     private userSellOrders: {
         data: BuySellData,
         id: string,
         type: string,
-        lastBuys: [number, number, string, string],
-        lastSells: [number, number, string, string]
+        lastBuys: [number, number, string],
+        lastSells: [number, number, string]
     }[] = [];
 
     /**
@@ -53,22 +53,22 @@ export class MarketImageGenerator {
             type: string,
             buyers: BuySellData[],
             sellers: BuySellData[],
-            lastBuys: [number, number, string, string],
-            lastSells: [number, number, string, string]
+            lastBuys: [number, number, string],
+            lastSells: [number, number, string]
         }[],
         userBuyOrders: {
             data: BuySellData,
             id: string,
             type: string,
-            lastBuys: [number, number, string, string],
-            lastSells: [number, number, string, string]
+            lastBuys: [number, number, string],
+            lastSells: [number, number, string]
         }[],
         userSellOrders: {
             data: BuySellData,
             id: string,
             type: string,
-            lastBuys: [number, number, string, string],
-            lastSells: [number, number, string, string]
+            lastBuys: [number, number, string],
+            lastSells: [number, number, string]
         }[],
         config: BotConfig
     ) {
@@ -92,22 +92,22 @@ export class MarketImageGenerator {
             type: string,
             buyers: BuySellData[],
             sellers: BuySellData[],
-            lastBuys: [number, number, string, string],
-            lastSells: [number, number, string, string]
+            lastBuys: [number, number, string],
+            lastSells: [number, number, string]
         }[],
         userBuyOrders: {
             data: BuySellData,
             id: string,
             type: string,
-            lastBuys: [number, number, string, string],
-            lastSells: [number, number, string, string]
+            lastBuys: [number, number, string],
+            lastSells: [number, number, string]
         }[],
         userSellOrders: {
             data: BuySellData,
             id: string,
             type: string,
-            lastBuys: [number, number, string, string],
-            lastSells: [number, number, string, string]
+            lastBuys: [number, number, string],
+            lastSells: [number, number, string]
         }[],
         config: BotConfig
     ): void {
