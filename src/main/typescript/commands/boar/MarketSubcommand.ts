@@ -593,7 +593,7 @@ export default class MarketSubcommand implements Subcommand {
 
                             globalData.itemData[orderInfo.type][orderInfo.id].sellers.splice(i, 1);
 
-                            if (isSpecial && orderPrice === itemLastSell) {
+                            if (!isSpecial && orderPrice === itemLastSell) {
                                 globalData.itemData[orderInfo.type][orderInfo.id].lastSells[0] = 0;
                                 globalData.itemData[orderInfo.type][orderInfo.id].lastSells[2] = '';
                                 for (const possibleOrder of globalData.itemData[orderInfo.type][orderInfo.id].sellers) {
