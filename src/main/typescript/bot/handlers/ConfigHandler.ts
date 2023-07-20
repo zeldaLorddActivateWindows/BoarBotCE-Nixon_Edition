@@ -78,7 +78,7 @@ export class ConfigHandler {
             pathConfig.commands,
             pathConfig.guildDataFolder,
             pathConfig.userDataFolder,
-            pathConfig.globalDataFile,
+            pathConfig.globalDataFolder,
             itemAssets + pathConfig.itemOverlay,
             itemAssets + pathConfig.itemUnderlay,
             itemAssets + pathConfig.itemBackplate,

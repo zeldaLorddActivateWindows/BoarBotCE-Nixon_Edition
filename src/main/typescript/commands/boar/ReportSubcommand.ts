@@ -117,6 +117,9 @@ export default class ReportSubcommand implements Subcommand {
                 this.modalShowing.components[2].components[0].data.custom_id as string
             );
 
+            await Replies.handleReply(
+                submittedModal, this.config.stringConfig.sentReport, undefined, undefined, undefined, true, true
+            );
             await this.sendReport(submittedTitle, submittedDetails, submittedLink);
         } catch (err: unknown) {
             await LogDebug.handleError(err, this.interaction);

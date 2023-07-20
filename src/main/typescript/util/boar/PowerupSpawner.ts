@@ -99,7 +99,7 @@ export class PowerupSpawner {
                 try {
                     const globalData = DataHandlers.getGlobalData();
                     globalData.nextPowerup = Date.now() + newInterval;
-                    fs.writeFileSync(config.pathConfig.globalDataFile, JSON.stringify(globalData));
+                    DataHandlers.saveGlobalData(globalData);
                 } catch (err: unknown) {
                     await LogDebug.handleError(err);
                 }
