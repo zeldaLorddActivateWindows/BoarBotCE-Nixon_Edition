@@ -27,7 +27,6 @@ import {ModalConfig} from '../../bot/config/modals/ModalConfig';
 import {BoardData} from '../../util/data/global/BoardData';
 import {BoarUser} from '../../util/boar/BoarUser';
 import {Queue} from '../../util/interactions/Queue';
-import fs from 'fs';
 import {GlobalData} from '../../util/data/global/GlobalData';
 
 enum Board {
@@ -439,7 +438,7 @@ export default class TopSubcommand implements Subcommand {
                 await Queue.addQueue(async () => {
                     const globalData: GlobalData = DataHandlers.getGlobalData();
                     globalData.leaderboardData[this.curBoard].topUser = newTopUserID;
-                    fs.writeFileSync(this.config.pathConfig.globalDataFile, JSON.stringify(globalData));
+                    DataHandlers.saveGlobalData(globalData);
                 }, newTopUserID + 'global').catch((err) => { throw err });
             } catch {}
         }

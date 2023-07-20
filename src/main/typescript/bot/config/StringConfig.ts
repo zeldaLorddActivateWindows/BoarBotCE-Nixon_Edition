@@ -13,12 +13,8 @@ export class StringConfig {
     public readonly noSetup: string = ' ';
     public readonly doingSetup: string = ' ';
     public readonly wrongChannel: string = ' ';
-    public readonly noGuild: string = ' ';
     public readonly nullFound: string = ' ';
-    public readonly invalidID: string = ' ';
-    public readonly invalidPage: string = ' ';
     public readonly onCooldown: string = ' ';
-    public readonly noAttachmentPerms: string = ' ';
     public readonly error: string = ' ';
     public readonly maintenance: string = ' ';
     public readonly bannedString: string = ' ';
@@ -32,13 +28,10 @@ export class StringConfig {
     public readonly setupExpired: string = ' ';
     public readonly setupUnfinished1: string = ' ';
     public readonly setupUnfinished2: string = ' ';
-    public readonly setupUnfinished3: string = ' ';
     public readonly setupFinished1: string = ' ';
     public readonly setupFinished2: string = ' ';
-    public readonly setupFinished3: string = ' ';
     public readonly setupInfoResponse1: string = ' ';
     public readonly setupInfoResponse2: string = ' ';
-    public readonly setupInfoResponse3: string = ' ';
 
     // Daily command messages/strings
 
@@ -190,6 +183,7 @@ export class StringConfig {
     public readonly notificationExtras: string[] = [];
     public readonly noParentChannel: string = ' ';
     public readonly notValidChannel: string = ' ';
+    public readonly sentReport: string = ' ';
     public readonly defaultSelectPlaceholder: string = ' ';
     public readonly emptySelect: string = ' ';
     public readonly channelOptionLabel: string = ' ';

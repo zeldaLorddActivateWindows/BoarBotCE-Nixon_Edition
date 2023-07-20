@@ -14,7 +14,6 @@ import {CollectedBoar} from '../data/userdata/collectibles/CollectedBoar';
 import {PromptTypeData} from '../data/userdata/stats/PromptTypeData';
 import {BoarUtils} from './BoarUtils';
 import {NumberConfig} from '../../bot/config/NumberConfig';
-import {PathConfig} from '../../bot/config/PathConfig';
 import {StringConfig} from '../../bot/config/StringConfig';
 import {CollectedItems} from '../data/userdata/collectibles/CollectedItems';
 import {UserStats} from '../data/userdata/stats/UserStats';
@@ -243,7 +242,6 @@ export class BoarUser {
         scores: number[] = []
     ): Promise<number[]> {
         // Config aliases
-        const pathConfig: PathConfig = config.pathConfig;
         const strConfig: StringConfig = config.stringConfig;
         const numConfig: NumberConfig = config.numberConfig;
 
@@ -308,7 +306,7 @@ export class BoarUser {
                 }
 
                 this.orderGlobalBoars(globalData, config);
-                fs.writeFileSync(pathConfig.globalDataFile, JSON.stringify(globalData));
+                DataHandlers.saveGlobalData(globalData);
             } catch (err: unknown) {
                 await LogDebug.handleError(err, interaction);
             }

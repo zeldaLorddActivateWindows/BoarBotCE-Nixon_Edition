@@ -33,7 +33,6 @@ import {BoarUser} from '../../util/boar/BoarUser';
 import {ModalConfig} from '../../bot/config/modals/ModalConfig';
 import {BoarUtils} from '../../util/boar/BoarUtils';
 import {Queue} from '../../util/interactions/Queue';
-import fs from 'fs';
 import {CollectedBoar} from '../../util/data/userdata/collectibles/CollectedBoar';
 import {GlobalData} from '../../util/data/global/GlobalData';
 import {StringConfig} from '../../bot/config/StringConfig';
@@ -465,7 +464,7 @@ export default class MarketSubcommand implements Subcommand {
                     }
                 }
 
-                fs.writeFileSync(this.config.pathConfig.globalDataFile, JSON.stringify(globalData));
+                DataHandlers.saveGlobalData(globalData);
                 this.getPricingData();
                 this.imageGen.updateInfo(
                     this.pricingData, this.userBuyOrders, this.userSellOrders, this.config
@@ -627,7 +626,7 @@ export default class MarketSubcommand implements Subcommand {
                     }
                 }
 
-                fs.writeFileSync(this.config.pathConfig.globalDataFile, JSON.stringify(globalData));
+                DataHandlers.saveGlobalData(globalData);
                 this.getPricingData();
                 this.imageGen.updateInfo(
                     this.pricingData, this.userBuyOrders, this.userSellOrders, this.config
@@ -942,7 +941,7 @@ export default class MarketSubcommand implements Subcommand {
                                 }
                             }
 
-                            fs.writeFileSync(this.config.pathConfig.globalDataFile, JSON.stringify(globalData));
+                            DataHandlers.saveGlobalData(globalData);
                             this.getPricingData();
                             this.imageGen.updateInfo(
                                 this.pricingData, this.userBuyOrders, this.userSellOrders, this.config
@@ -1195,7 +1194,7 @@ export default class MarketSubcommand implements Subcommand {
                                 }
                             }
 
-                            fs.writeFileSync(this.config.pathConfig.globalDataFile, JSON.stringify(globalData));
+                            DataHandlers.saveGlobalData(globalData);
                             this.getPricingData();
                             this.imageGen.updateInfo(
                                 this.pricingData, this.userBuyOrders, this.userSellOrders, this.config
@@ -1356,7 +1355,7 @@ export default class MarketSubcommand implements Subcommand {
                                 globalData.itemData[itemData.type][itemData.id].lastBuys[2] = highestBuyOrder.userID;
                             }
 
-                            fs.writeFileSync(this.config.pathConfig.globalDataFile, JSON.stringify(globalData));
+                            DataHandlers.saveGlobalData(globalData);
                             this.getPricingData();
                             this.imageGen.updateInfo(
                                 this.pricingData, this.userBuyOrders, this.userSellOrders, this.config
@@ -1450,7 +1449,7 @@ export default class MarketSubcommand implements Subcommand {
                                 globalData.itemData[itemData.type][itemData.id].lastSells[2] = lowestSellOrder.userID;
                             }
 
-                            fs.writeFileSync(this.config.pathConfig.globalDataFile, JSON.stringify(globalData));
+                            DataHandlers.saveGlobalData(globalData);
                             this.getPricingData();
                             this.imageGen.updateInfo(
                                 this.pricingData, this.userBuyOrders, this.userSellOrders, this.config
@@ -1691,7 +1690,7 @@ export default class MarketSubcommand implements Subcommand {
                         }
                     }
 
-                    fs.writeFileSync(this.config.pathConfig.globalDataFile, JSON.stringify(globalData));
+                    DataHandlers.saveGlobalData(globalData);
                     this.getPricingData();
                     this.imageGen.updateInfo(
                         this.pricingData, this.userBuyOrders, this.userSellOrders, this.config

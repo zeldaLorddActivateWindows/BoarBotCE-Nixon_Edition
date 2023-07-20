@@ -186,14 +186,14 @@ export default class SetupSubcommand implements Subcommand {
                 // User wants more information on boar channels
                 case setupComponents.boarInfo.customId:
                     await Replies.handleReply(
-                        inter, this.config.stringConfig.setupInfoResponse2, undefined, undefined, undefined, true
+                        inter, this.config.stringConfig.setupInfoResponse1, undefined, undefined, undefined, true
                     );
                     break;
 
                 // User wants more information on SB boars
                 case setupComponents.sbInfo.customId:
                     await Replies.handleReply(
-                        inter, this.config.stringConfig.setupInfoResponse3, undefined, undefined, undefined, true
+                        inter, this.config.stringConfig.setupInfoResponse2, undefined, undefined, undefined, true
                     );
                     break;
             }
@@ -291,7 +291,7 @@ export default class SetupSubcommand implements Subcommand {
         const strConfig: StringConfig = this.config.stringConfig;
         this.userResponses.isSBServer = this.compInter.customId.startsWith(setupComponents.sbYes.customId);
 
-        this.setupFields[1].content = strConfig.setupFinished3 + (this.userResponses.isSBServer
+        this.setupFields[1].content = strConfig.setupFinished2 + (this.userResponses.isSBServer
             ? setupComponents.sbYes.label
             : setupComponents.sbNo.label);
 
@@ -604,11 +604,11 @@ export default class SetupSubcommand implements Subcommand {
             }
 
             selectMenu.setPlaceholder(placeholder);
-            this.setupFields[0].content = strConfig.setupFinished2 + channelsString;
+            this.setupFields[0].content = strConfig.setupFinished1 + channelsString;
 
             await this.setupFields[0].editReply(this.compInter);
         } else {
-            this.setupFields[0].content = strConfig.setupUnfinished2;
+            this.setupFields[0].content = strConfig.setupUnfinished1;
             await this.setupFields[0].editReply(this.compInter);
         }
     }
@@ -656,8 +656,8 @@ export default class SetupSubcommand implements Subcommand {
         }
 
         return [
-            new FormField(strConfig.setupUnfinished2, allFields[0]),
-            new FormField(strConfig.setupUnfinished3, allFields[1])
+            new FormField(strConfig.setupUnfinished1, allFields[0]),
+            new FormField(strConfig.setupUnfinished2, allFields[1])
         ];
     }
 }

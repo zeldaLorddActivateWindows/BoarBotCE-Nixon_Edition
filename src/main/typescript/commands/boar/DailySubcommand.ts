@@ -64,8 +64,6 @@ export default class DailySubcommand implements Subcommand {
      * @private
      */
     private async doDaily(): Promise<void> {
-        if (!this.interaction.guild || !this.interaction.channel) return;
-
         const strConfig: StringConfig = this.config.stringConfig;
         const colorConfig: ColorConfig = this.config.colorConfig;
         const powItemConfigs: ItemConfigs = this.config.itemConfigs.powerups;

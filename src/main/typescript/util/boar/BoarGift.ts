@@ -295,7 +295,7 @@ export class BoarGift {
      */
     private async giveSpecial(inter: ButtonInteraction): Promise<void> {
         LogDebug.log(
-            `Received underwear boar from ${this.boarUser.user.username} (${this.boarUser.user.id}) in gift`,
+            `Received special boar from ${this.boarUser.user.username} (${this.boarUser.user.id}) in gift`,
             this.config, inter, true
         );
 
