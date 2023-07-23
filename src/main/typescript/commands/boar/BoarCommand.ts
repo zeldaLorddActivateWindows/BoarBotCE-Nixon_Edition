@@ -89,6 +89,9 @@ export default class BoarCommand implements Command {
         )
         .addSubcommand(sub => sub.setName(this.commandInfo.report.name)
             .setDescription(this.commandInfo.report.description)
+        )
+        .addSubcommand(sub => sub.setName(this.commandInfo.selfWipe.name)
+            .setDescription(this.commandInfo.selfWipe.description)
         );
 
     /**
