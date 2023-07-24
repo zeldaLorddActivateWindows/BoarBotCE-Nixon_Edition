@@ -9,6 +9,7 @@ import {StringConfig} from '../../bot/config/StringConfig';
 import {BoarUser} from '../boar/BoarUser';
 import {GlobalData} from './global/GlobalData';
 import {ItemData} from './global/ItemData';
+import {BoardData} from './global/BoardData';
 
 /**
  * {@link DataHandlers DataHandlers.ts}
@@ -41,6 +42,11 @@ export class DataHandlers {
 
             for (const powerupID of Object.keys(config.itemConfigs.powerups)) {
                 globalData.itemData.powerups[powerupID] = new ItemData;
+            }
+
+            for (let i=0; i<config.commandConfigs.boar.top.args[0].choices.length; i++) {
+                const boardID = config.commandConfigs.boar.top.args[0].choices[i].value;
+                globalData.leaderboardData[boardID] = new BoardData;
             }
 
             DataHandlers.saveGlobalData(globalData);

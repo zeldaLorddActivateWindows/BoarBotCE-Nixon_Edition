@@ -115,14 +115,23 @@ export class BoarGift {
 
             await inter.deferUpdate();
 
-            const boarUser = new BoarUser(inter.user);
-            const unbanTime: number | undefined = boarUser.stats.general.unbanTime;
+            const unbanTime: number | undefined = DataHandlers.getGlobalData().bannedUsers[inter.user.id];
             if (unbanTime && unbanTime > Date.now()) {
                 await Replies.handleReply(
                     inter, this.config.stringConfig.bannedString.replace('%@', moment(unbanTime).fromNow()),
-                    this.config.colorConfig.error, undefined, undefined, true
+                    this.config.colorConfig.error
                 );
                 return;
+            } else if (unbanTime && unbanTime <= Date.now()) {
+                await Queue.addQueue(async () => {
+                    try {
+                        const globalData = DataHandlers.getGlobalData();
+                        globalData.bannedUsers[inter.user.id] = undefined;
+                        DataHandlers.saveGlobalData(globalData);
+                    } catch (err: unknown) {
+                        await LogDebug.handleError(err, inter);
+                    }
+                }, inter.id + 'global');
             }
 
             this.compInters.push(inter);

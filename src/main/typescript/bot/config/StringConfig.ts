@@ -184,6 +184,10 @@ export class StringConfig {
     public readonly noParentChannel: string = ' ';
     public readonly notValidChannel: string = ' ';
     public readonly sentReport: string = ' ';
+    public readonly deletedData: string = ' ';
+    public readonly cancelDelete: string = ' ';
+    public readonly deleteMsgOne: string = ' ';
+    public readonly deleteMsgTwo: string = ' ';
     public readonly defaultSelectPlaceholder: string = ' ';
     public readonly emptySelect: string = ' ';
     public readonly channelOptionLabel: string = ' ';

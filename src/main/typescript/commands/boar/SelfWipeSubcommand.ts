@@ -16,7 +16,8 @@ import {Replies} from '../../util/interactions/Replies';
 import {CollectorUtils} from '../../util/discord/CollectorUtils';
 import {RowConfig} from '../../bot/config/components/RowConfig';
 import {ComponentUtils} from '../../util/discord/ComponentUtils';
-import fs from 'fs';
+import {Queue} from '../../util/interactions/Queue';
+import {BoarUser} from '../../util/boar/BoarUser';
 
 /**
  * {@link SelfWipeSubcommand SelfWipeSubcommand.ts}
@@ -120,19 +121,21 @@ export default class SelfWipeSubcommand implements Subcommand {
             }
 
             if (reason === CollectorUtils.Reasons.Finished) {
-                try {
-                    fs.rmSync(this.config.pathConfig.userDataFolder + this.firstInter.user.id + '.json');
-                } catch {}
+                await Queue.addQueue(() => {
+                    const boarUser = new BoarUser(this.firstInter.user);
+                    boarUser.stats.general.deletionTime = Date.now() + this.config.numberConfig.oneDay;
+                    boarUser.updateUserData();
+                }, this.firstInter.id + this.firstInter.user.id);
 
                 await this.firstInter.editReply({
-                    content: 'Successfully deleted all of your data.',
+                    content: this.config.stringConfig.deletedData,
                     components: []
                 });
                 return;
             }
 
             await this.firstInter.editReply({
-                content: 'Cancelled the self-wipe process.',
+                content: this.config.stringConfig.cancelDelete,
                 components: []
             });
         } catch (err: unknown) {
@@ -161,8 +164,8 @@ export default class SelfWipeSubcommand implements Subcommand {
             }
 
             const contentStr = firstRun
-                ? 'Are you **absolutely** sure you want to **completely** wipe your data from BoarBot?'
-                : '**THIS WILL DELETE EVERYTHING!** All of your progress will be gone forever and will not be recoverable. So once again, are you **ABSOLUTELY** sure you want to **COMPLETELY** wipe your data from BoarBot?';
+                ? this.config.stringConfig.deleteMsgOne
+                : this.config.stringConfig.deleteMsgTwo;
 
             this.baseRows[0].components[1].setDisabled(false);
             await this.firstInter.editReply({ content: contentStr, components: this.baseRows });

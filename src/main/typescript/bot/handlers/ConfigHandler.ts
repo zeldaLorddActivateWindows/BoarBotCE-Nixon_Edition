@@ -148,7 +148,7 @@ export class ConfigHandler {
             passed = false;
         }
 
-        return passed;
+        return passed || parsedConfig.maintenanceMode;
     }
 
     /**
