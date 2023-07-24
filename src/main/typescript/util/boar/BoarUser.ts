@@ -189,6 +189,10 @@ export class BoarUser {
             this.stats.general.boarStreak = 0;
         }
 
+        if (this.stats.general.unbanTime !== undefined) {
+            this.stats.general.unbanTime = undefined;
+        }
+
         let uniques = 0;
 
         for (const boarID of Object.keys(this.itemCollection.boars)) {

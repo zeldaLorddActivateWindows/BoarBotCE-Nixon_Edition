@@ -13,5 +13,6 @@ import {BoardData} from './BoardData';
 export class GlobalData {
     public itemData: ItemsData = new ItemsData;
     public leaderboardData: Record<string, BoardData> = {};
+    public bannedUsers: Record<string, number | undefined> = {};
     public nextPowerup = 0;
 }

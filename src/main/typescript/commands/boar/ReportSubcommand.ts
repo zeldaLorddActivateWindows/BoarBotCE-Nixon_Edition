@@ -13,9 +13,10 @@ import {SubcommandConfig} from '../../bot/config/commands/SubcommandConfig';
 import {GuildData} from '../../util/data/global/GuildData';
 import {ModalConfig} from '../../bot/config/modals/ModalConfig';
 import {LogDebug} from '../../util/logging/LogDebug';
-import {BoarUser} from '../../util/boar/BoarUser';
 import {Replies} from '../../util/interactions/Replies';
 import moment from 'moment/moment';
+import {DataHandlers} from '../../util/data/DataHandlers';
+import {Queue} from '../../util/interactions/Queue';
 
 /**
  * {@link ReportSubcommand ReportSubcommand.ts}
@@ -44,14 +45,23 @@ export default class ReportSubcommand implements Subcommand {
         this.guildData = await InteractionUtils.handleStart(interaction, this.config);
         if (!this.guildData) return;
 
-        const boarUser = new BoarUser(interaction.user);
-        const unbanTime: number | undefined = boarUser.stats.general.unbanTime;
+        const unbanTime: number | undefined = DataHandlers.getGlobalData().bannedUsers[interaction.user.id];
         if (unbanTime && unbanTime > Date.now()) {
             await Replies.handleReply(
                 interaction, this.config.stringConfig.bannedString.replace('%@', moment(unbanTime).fromNow()),
                 this.config.colorConfig.error
             );
             return;
+        } else if (unbanTime && unbanTime <= Date.now()) {
+            await Queue.addQueue(async () => {
+                try {
+                    const globalData = DataHandlers.getGlobalData();
+                    globalData.bannedUsers[interaction.user.id] = undefined;
+                    DataHandlers.saveGlobalData(globalData);
+                } catch (err: unknown) {
+                    await LogDebug.handleError(err, interaction);
+                }
+            }, interaction.id + 'global');
         }
 
         this.interaction = interaction;

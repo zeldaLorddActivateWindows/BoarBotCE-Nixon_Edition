@@ -20,5 +20,6 @@ export class GeneralStats {
     public highestMulti = 0;
     public notificationsOn = false;
     public notificationChannel = '';
-    public unbanTime = 0;
+    public unbanTime: number | undefined; // No longer supported
+    public deletionTime: number | undefined;
 }

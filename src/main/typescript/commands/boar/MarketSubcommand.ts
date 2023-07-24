@@ -114,14 +114,23 @@ export default class MarketSubcommand implements Subcommand {
 
         await interaction.deferReply({ ephemeral: true });
 
-        const boarUser = new BoarUser(interaction.user);
-        const unbanTime: number | undefined = boarUser.stats.general.unbanTime;
+        const unbanTime: number | undefined = DataHandlers.getGlobalData().bannedUsers[interaction.user.id];
         if (unbanTime && unbanTime > Date.now()) {
             await Replies.handleReply(
                 interaction, this.config.stringConfig.bannedString.replace('%@', moment(unbanTime).fromNow()),
                 this.config.colorConfig.error
             );
             return;
+        } else if (unbanTime && unbanTime <= Date.now()) {
+            await Queue.addQueue(async () => {
+                try {
+                    const globalData = DataHandlers.getGlobalData();
+                    globalData.bannedUsers[interaction.user.id] = undefined;
+                    DataHandlers.saveGlobalData(globalData);
+                } catch (err: unknown) {
+                    await LogDebug.handleError(err, interaction);
+                }
+            }, interaction.id + 'global');
         }
 
         if (!this.config.marketOpen && !this.config.devs.includes(interaction.user.id)) {

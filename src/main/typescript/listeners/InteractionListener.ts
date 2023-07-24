@@ -14,6 +14,9 @@ import {Command} from '../api/commands/Command';
 import {StringConfig} from '../bot/config/StringConfig';
 import {PermissionUtils} from '../util/discord/PermissionUtils';
 import {CustomEmbedGenerator} from '../util/generators/CustomEmbedGenerator';
+import {Queue} from '../util/interactions/Queue';
+import {BoarUser} from '../util/boar/BoarUser';
+import fs from 'fs';
 
 /**
  * {@link InteractionListener InteractionListener.ts}
@@ -27,7 +30,7 @@ import {CustomEmbedGenerator} from '../util/generators/CustomEmbedGenerator';
 export default class InteractionListener implements Listener {
     public readonly eventName: Events = Events.InteractionCreate;
     private interaction: ChatInputCommandInteraction | AutocompleteInteraction | null = null;
-    private config: BotConfig | null = null;
+    private config: BotConfig = BoarBotApp.getBot().getConfig();
 
     /**
      * Executes the called subcommand group if it exists
@@ -38,7 +41,6 @@ export default class InteractionListener implements Listener {
         if (!interaction.isChatInputCommand() && !interaction.isAutocomplete()) return;
 
         this.interaction = interaction;
-        this.config = BoarBotApp.getBot().getConfig();
 
         try {
             if (!await this.handleMaintenance()) return;
@@ -54,6 +56,24 @@ export default class InteractionListener implements Listener {
 
             if (interaction.isChatInputCommand()) {
                 let onCooldown: boolean;
+
+                await Queue.addQueue(() => {
+                    const boarUser = new BoarUser(interaction.user);
+
+                    if (
+                        boarUser.stats.general.deletionTime !== undefined &&
+                        boarUser.stats.general.deletionTime < Date.now()
+                    ) {
+                        try {
+                            fs.rmSync(this.config.pathConfig.userDataFolder + interaction.user.id + '.json');
+                        } catch {}
+                    } else if (boarUser.stats.general.deletionTime !== undefined) {
+                        boarUser.stats.general.deletionTime = undefined;
+                        boarUser.updateUserData();
+                    }
+
+                }, interaction.id + interaction.user.id);
+
                 try {
                     onCooldown = await Cooldown.handleCooldown(interaction as ChatInputCommandInteraction, this.config);
                 } catch (err: unknown) {

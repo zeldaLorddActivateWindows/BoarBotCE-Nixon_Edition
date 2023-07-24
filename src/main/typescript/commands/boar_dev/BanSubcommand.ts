@@ -7,7 +7,7 @@ import {GuildData} from '../../util/data/global/GuildData';
 import {StringConfig} from '../../bot/config/StringConfig';
 import {Queue} from '../../util/interactions/Queue';
 import {LogDebug} from '../../util/logging/LogDebug';
-import {BoarUser} from '../../util/boar/BoarUser';
+import {DataHandlers} from '../../util/data/DataHandlers';
 
 /**
  * {@link BanSubcommand BanSubcommand.ts}
@@ -56,9 +56,9 @@ export default class BanSubcommand implements Subcommand {
 
         await Queue.addQueue(async () => {
             try {
-                const boarUser = new BoarUser(userInput, true);
-                boarUser.stats.general.unbanTime = Date.now() + timeInput * 60 * 60 * 1000;
-                boarUser.updateUserData();
+                const globalData = DataHandlers.getGlobalData();
+                globalData.bannedUsers[userInput.id] = Date.now() + timeInput * 60 * 60 * 1000;
+                DataHandlers.saveGlobalData(globalData);
 
                 await Replies.handleReply(
                     interaction, this.config.stringConfig.banSuccess
@@ -68,6 +68,6 @@ export default class BanSubcommand implements Subcommand {
             } catch (err: unknown) {
                 await LogDebug.handleError(err, this.interaction);
             }
-        }, this.interaction.id + interaction.user.id);
+        }, this.interaction.id + 'global');
     }
 }
