@@ -47,6 +47,7 @@ export class PowerupSpawner {
     private numMsgs = 0;
     private numNotFinished = 0;
     private msgsToDelete: Message[] = [];
+    private failedServers: Record<string, number> = {};
     private readyToEnd = false;
 
     constructor(initPowTime?: number) {
@@ -109,10 +110,34 @@ export class PowerupSpawner {
 
             // Get all channels to send powerups in
             for (const guildFile of fs.readdirSync(config.pathConfig.guildDataFolder)) {
-                const guildData: GuildData | undefined = await DataHandlers.getGuildData(guildFile.split('.')[0]);
+                const guildID = guildFile.split('.')[0];
+                const guildData: GuildData | undefined = await DataHandlers.getGuildData(guildID);
                 if (!guildData) continue;
 
                 const client: Client = BoarBotApp.getBot().getClient();
+
+                try {
+                    await client.guilds.fetch(guildFile.split('.')[0]);
+                    if (this.failedServers[guildID] !== undefined) {
+                        delete this.failedServers[guildID];
+                    }
+                } catch {
+                    if (this.failedServers[guildID] === undefined) {
+                        this.failedServers[guildID] = 0;
+                    }
+
+                    this.failedServers[guildID]++;
+
+                    if (this.failedServers[guildID] && this.failedServers[guildID] >= 3) {
+                        try {
+                            fs.rmSync(config.pathConfig.guildDataFolder + guildFile);
+                            delete this.failedServers[guildID];
+                        } catch {}
+                    }
+
+                    continue;
+                }
+
                 for (const channelID of guildData.channels) {
                     let channel: Channel | null;
 
