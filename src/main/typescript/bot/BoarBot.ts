@@ -5,7 +5,7 @@ import {
 	Events,
 	GatewayIntentBits,
 	Partials,
-	TextChannel, User
+	User
 } from 'discord.js';
 import {Bot} from '../api/bot/Bot';
 import {FormatStrings} from '../util/discord/FormatStrings';
@@ -16,7 +16,6 @@ import {BotConfig} from './config/BotConfig';
 import {Command} from '../api/commands/Command';
 import {Subcommand} from '../api/commands/Subcommand';
 import {LogDebug} from '../util/logging/LogDebug';
-import {InteractionUtils} from '../util/interactions/InteractionUtils';
 import {PowerupSpawner} from '../util/boar/PowerupSpawner';
 import {Queue} from '../util/interactions/Queue';
 import {DataHandlers} from '../util/data/DataHandlers';
@@ -64,7 +63,7 @@ export class BoarBot implements Bot {
 	public buildClient(): void {
 		this.client = new Client({
 			partials: [
-				Partials.Channel // For DM Reporting
+				Partials.Channel // For notifications
 			],
 			intents: [
 				GatewayIntentBits.Guilds,
@@ -123,7 +122,7 @@ export class BoarBot implements Bot {
 	 */
 	public async login(): Promise<void> {
 		try {
-			LogDebug.sendDebug('Logging in...', this.getConfig());
+			LogDebug.log('Logging in...', this.getConfig());
 			await this.client.login(process.env.TOKEN);
 		} catch {
 			await LogDebug.handleError('Client wasn\'t initialized or you used an invalid token!');
@@ -136,13 +135,21 @@ export class BoarBot implements Bot {
 	 */
 	public async onStart(): Promise<void> {
 		try {
-			LogDebug.sendDebug('Successfully logged in! Bot online!', this.getConfig());
+			LogDebug.log('Successfully logged in! Bot online!', this.getConfig());
+
+			fs.readdirSync(this.getConfig().pathConfig.userDataFolder).forEach(async userFile => {
+				try {
+					await this.getClient().users.fetch(userFile.split('.')[0]);
+				} catch {
+					LogDebug.handleError('Failed to find user ' + userFile.split('.')[0]);
+				}
+			});
 
 			this.startNotificationCron();
 
 			// Logs interaction listeners to avoid memory leaks
 			setInterval(() => {
-				LogDebug.sendDebug(
+				LogDebug.log(
 					'Interaction Listeners: ' + this.client.listenerCount(Events.InteractionCreate), this.getConfig()
 				)
 			}, 180000);
@@ -163,19 +170,7 @@ export class BoarBot implements Bot {
 			this.powSpawner = new PowerupSpawner(timeUntilPow);
 			this.powSpawner.startSpawning();
 
-			// Send status message
-
-			const botStatusChannel: TextChannel | undefined =
-				await InteractionUtils.getTextChannel(this.getConfig().botStatusChannel);
-
-			if (!botStatusChannel) return;
-
-			await botStatusChannel.send(
-				this.getConfig().stringConfig.botStatus +
-				FormatStrings.toRelTime(Math.round(Date.now() / 1000))
-			);
-
-			LogDebug.sendDebug('Successfully sent status message!', this.getConfig());
+			LogDebug.log('Successfully started powerup spawning interval!', this.getConfig());
 		} catch (err: unknown) {
 			await LogDebug.handleError(err);
 		}
@@ -188,11 +183,7 @@ export class BoarBot implements Bot {
 	private startNotificationCron(): void {
 		new CronJob('0 0 * * *', async () => {
 			fs.readdirSync(this.getConfig().pathConfig.userDataFolder).forEach(async userFile => {
-				let user: User | undefined;
-
-				try {
-					user = await this.getClient().users.fetch(userFile.split('.')[0]);
-				} catch {}
+				const user: User | undefined = this.getClient().users.cache.get(userFile.split('.')[0]);
 
 				if (!user) return;
 
@@ -232,17 +223,13 @@ export class BoarBot implements Bot {
 							break;
 					}
 
-					try {
-						const notificationChannelID = boarUser.stats.general.notificationChannel
-							? boarUser.stats.general.notificationChannel
-							: '1124209789518483566';
-						await user.send(
-							randMsgStr + dailyReadyStr + '\n# ' +
-							FormatStrings.toBasicChannel(notificationChannelID) + stopStr
-						);
-					} catch (err: unknown) {
-						await LogDebug.handleError(err);
-					}
+					const notificationChannelID = boarUser.stats.general.notificationChannel
+						? boarUser.stats.general.notificationChannel
+						: '1124209789518483566';
+					await user.send(
+						randMsgStr + dailyReadyStr + '\n# ' +
+						FormatStrings.toBasicChannel(notificationChannelID) + stopStr
+					).catch(() => {});
 				}
 			});
 		}, null, true, 'UTC');
@@ -271,9 +258,9 @@ export class BoarBot implements Bot {
 
 			fs.rmSync(guildDataFolder + guildFile);
 
-			LogDebug.sendDebug('Deleted unfinished guild file: ' + guildFile, this.getConfig());
+			LogDebug.log('Deleted unfinished guild file: ' + guildFile, this.getConfig());
 		}
 
-		LogDebug.sendDebug('Guild data fixed!', this.getConfig())
+		LogDebug.log('Guild data fixed!', this.getConfig())
 	}
 }

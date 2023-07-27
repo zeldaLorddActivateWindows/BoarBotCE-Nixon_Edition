@@ -27,7 +27,6 @@ import {ModalConfig} from '../../bot/config/modals/ModalConfig';
 import {BoardData} from '../../util/data/global/BoardData';
 import {BoarUser} from '../../util/boar/BoarUser';
 import {Queue} from '../../util/interactions/Queue';
-import fs from 'fs';
 import {GlobalData} from '../../util/data/global/GlobalData';
 
 enum Board {
@@ -159,7 +158,7 @@ export default class TopSubcommand implements Subcommand {
 
             this.compInter = inter;
 
-            LogDebug.sendDebug(
+            LogDebug.log(
                 `${inter.customId.split('|')[0]} on page ${this.curPage} in board ${this.curBoard}`,
                 this.config, this.firstInter
             );
@@ -227,7 +226,7 @@ export default class TopSubcommand implements Subcommand {
      */
     private async handleEndCollect(reason: string): Promise<void> {
         try {
-            LogDebug.sendDebug('Ended collection with reason: ' + reason, this.config, this.firstInter);
+            LogDebug.log('Ended collection with reason: ' + reason, this.config, this.firstInter);
 
             if (reason == CollectorUtils.Reasons.Error) {
                 await Replies.handleReply(
@@ -301,7 +300,7 @@ export default class TopSubcommand implements Subcommand {
                 this.modalShowing.components[0].components[0].data.custom_id as string
             ).toLowerCase().replace(/\s+/g, '');
 
-            LogDebug.sendDebug(
+            LogDebug.log(
                 `${submittedModal.customId.split('|')[0]} input value: ` + submittedPage, this.config, this.firstInter
             );
 
@@ -428,7 +427,10 @@ export default class TopSubcommand implements Subcommand {
 
         if (newTopUserID && newTopUserID !== oldTopUserID) {
             try {
-                const newTopUser: User = await this.firstInter.client.users.fetch(newTopUserID);
+                const newTopUser: User | undefined = this.firstInter.client.users.cache.get(newTopUserID);
+
+                if (!newTopUser) return;
+
                 const newTopBoarUser: BoarUser = new BoarUser(newTopUser);
 
                 await newTopBoarUser.addBadge('athlete', this.firstInter);
@@ -436,7 +438,7 @@ export default class TopSubcommand implements Subcommand {
                 await Queue.addQueue(async () => {
                     const globalData: GlobalData = DataHandlers.getGlobalData();
                     globalData.leaderboardData[this.curBoard].topUser = newTopUserID;
-                    fs.writeFileSync(this.config.pathConfig.globalDataFile, JSON.stringify(globalData));
+                    DataHandlers.saveGlobalData(globalData);
                 }, newTopUserID + 'global').catch((err) => { throw err });
             } catch {}
         }

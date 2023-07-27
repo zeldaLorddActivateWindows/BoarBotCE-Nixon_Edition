@@ -1,10 +1,13 @@
 .env
 .idea
 /node_modules
-src/main/resources/temp_items/*
-database/guilds/*.json
-database/users/*.json
+src/main/resources
+/logs
+/database
 *.txt
+/website
 package.json
 package-lock.json
 tsconfig.json
+config.json
+*.cjs

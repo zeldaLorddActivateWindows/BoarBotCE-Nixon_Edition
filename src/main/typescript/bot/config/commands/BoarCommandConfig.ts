@@ -35,4 +35,14 @@ export class BoarCommandConfig extends CommandConfig {
      * {@link SubcommandConfig Subcommand information} for {@link MarketSubcommand}
      */
     public readonly market: SubcommandConfig = new SubcommandConfig;
+
+    /**
+     * {@link SubcommandConfig Subcommand information} for {@link ReportSubcommand}
+     */
+    public readonly report: SubcommandConfig = new SubcommandConfig;
+
+    /**
+     * {@link SubcommandConfig Subcommand information} for {@link SelfWipeSubcommand}
+     */
+    public readonly selfWipe: SubcommandConfig = new SubcommandConfig;
 }

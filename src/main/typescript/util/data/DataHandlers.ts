@@ -8,6 +8,8 @@ import {BotConfig} from '../../bot/config/BotConfig';
 import {StringConfig} from '../../bot/config/StringConfig';
 import {BoarUser} from '../boar/BoarUser';
 import {GlobalData} from './global/GlobalData';
+import {ItemData} from './global/ItemData';
+import {BoardData} from './global/BoardData';
 
 /**
  * {@link DataHandlers DataHandlers.ts}
@@ -27,9 +29,36 @@ export class DataHandlers {
     public static getGlobalData(): GlobalData {
         const config: BotConfig = BoarBotApp.getBot().getConfig();
 
-        const globalFile: string = config.pathConfig.globalDataFile;
+        const globalFile: string = config.pathConfig.globalDataFolder + config.pathConfig.globalFileName;
+        let globalData: GlobalData | undefined;
 
-        return JSON.parse(fs.readFileSync(globalFile, 'utf-8'));
+        try {
+            globalData = JSON.parse(fs.readFileSync(globalFile, 'utf-8'));
+        } catch {}
+
+        if (!globalData || globalData.nextPowerup === undefined) {
+            LogDebug.log('Creating global data file...', config);
+            globalData = new GlobalData;
+
+            for (const powerupID of Object.keys(config.itemConfigs.powerups)) {
+                globalData.itemData.powerups[powerupID] = new ItemData;
+            }
+
+            for (let i=0; i<config.commandConfigs.boar.top.args[0].choices.length; i++) {
+                const boardID = config.commandConfigs.boar.top.args[0].choices[i].value;
+                globalData.leaderboardData[boardID] = new BoardData;
+            }
+
+            DataHandlers.saveGlobalData(globalData);
+        }
+
+        return globalData;
+    }
+
+    public static saveGlobalData(data: GlobalData) {
+        const config: BotConfig = BoarBotApp.getBot().getConfig();
+
+        fs.writeFileSync(config.pathConfig.globalDataFolder + config.pathConfig.globalFileName, JSON.stringify(data));
     }
 
     public static async updateLeaderboardData(
@@ -82,7 +111,7 @@ export class DataHandlers {
                 ? boarUser.stats.general.multiplier
                 : undefined;
 
-            fs.writeFileSync(BoarBotApp.getBot().getConfig().pathConfig.globalDataFile, JSON.stringify(globalData));
+            DataHandlers.saveGlobalData(globalData);
         } catch (err: unknown) {
             await LogDebug.handleError(err, inter);
         }
@@ -126,7 +155,7 @@ export class DataHandlers {
                 ? undefined
                 : globalData.leaderboardData.multiplier.topUser;
 
-            fs.writeFileSync(BoarBotApp.getBot().getConfig().pathConfig.globalDataFile, JSON.stringify(globalData));
+            DataHandlers.saveGlobalData(globalData);
         } catch (err: unknown) {
             await LogDebug.handleError(err);
         }
@@ -161,7 +190,7 @@ export class DataHandlers {
             }
 
             if (interaction) {
-                LogDebug.sendDebug('Setup not configured', config, interaction);
+                LogDebug.log('Setup not configured', config, interaction);
                 await Replies.handleReply(interaction, strConfig.noSetup);
             }
         }

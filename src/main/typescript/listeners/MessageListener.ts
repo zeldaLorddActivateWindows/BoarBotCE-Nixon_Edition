@@ -42,13 +42,16 @@ export default class MessageListener implements Listener {
 					boarUser.stats.general.notificationsOn = false;
 					boarUser.updateUserData();
 
+					LogDebug.log(
+						`${message.author.username} (${message.author.id}) turned OFF notifications`,
+						config, undefined, true
+					);
+
 					await message.reply('Successfully turned off notifications!');
 				} catch (err: unknown) {
 					await LogDebug.handleError(err);
 				}
 			}, message.id + message.author.id);
-		} else {
-			await LogDebug.sendReport(message, config);
 		}
 	}
 }

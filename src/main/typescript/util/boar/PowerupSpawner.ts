@@ -44,6 +44,7 @@ export class PowerupSpawner {
     private numMsgs = 0;
     private numNotFinished = 0;
     private msgsToDelete: Message[] = [];
+    private failedServers: Record<string, number> = {};
     private readyToEnd = false;
 
     constructor(initPowTime?: number) {
@@ -90,8 +91,6 @@ export class PowerupSpawner {
             const nums: NumberConfig = config.numberConfig;
             const allBoarChannels: TextChannel[] = [];
 
-            LogDebug.sendDebug('Spawning powerup', config);
-
             const newInterval = Math.round(config.numberConfig.powInterval * (Math.random() * (1.05 - .95) + .95));
 
             setTimeout(() => this.removeMsgs(), newInterval);
@@ -101,7 +100,7 @@ export class PowerupSpawner {
                 try {
                     const globalData = DataHandlers.getGlobalData();
                     globalData.nextPowerup = Date.now() + newInterval;
-                    fs.writeFileSync(config.pathConfig.globalDataFile, JSON.stringify(globalData));
+                    DataHandlers.saveGlobalData(globalData);
                 } catch (err: unknown) {
                     await LogDebug.handleError(err);
                 }
@@ -111,10 +110,34 @@ export class PowerupSpawner {
 
             // Get all channels to send powerups in
             for (const guildFile of fs.readdirSync(config.pathConfig.guildDataFolder)) {
-                const guildData: GuildData | undefined = await DataHandlers.getGuildData(guildFile.split('.')[0]);
+                const guildID = guildFile.split('.')[0];
+                const guildData: GuildData | undefined = await DataHandlers.getGuildData(guildID);
                 if (!guildData) continue;
 
                 const client: Client = BoarBotApp.getBot().getClient();
+
+                try {
+                    await client.guilds.fetch(guildFile.split('.')[0]);
+                    if (this.failedServers[guildID] !== undefined) {
+                        delete this.failedServers[guildID];
+                    }
+                } catch {
+                    if (this.failedServers[guildID] === undefined) {
+                        this.failedServers[guildID] = 0;
+                    }
+
+                    this.failedServers[guildID]++;
+
+                    if (this.failedServers[guildID] && this.failedServers[guildID] >= 3) {
+                        try {
+                            fs.rmSync(config.pathConfig.guildDataFolder + guildFile);
+                            delete this.failedServers[guildID];
+                        } catch {}
+                    }
+
+                    continue;
+                }
+
                 for (const channelID of guildData.channels) {
                     let channel: Channel | null;
 
@@ -142,6 +165,8 @@ export class PowerupSpawner {
 
             this.powerupTypeID = this.getRandPowerup(config);
             this.powerupType = config.itemConfigs.powerups[this.powerupTypeID];
+
+            LogDebug.log(`Powerup Event spawning for ${this.powerupType.pluralName}`, config);
 
             const rightStyle: number = promptTypes[this.promptTypeID].rightStyle;
             const wrongStyle: number = promptTypes[this.promptTypeID].wrongStyle;
@@ -215,6 +240,11 @@ export class PowerupSpawner {
             await inter.deferUpdate();
 
             if (!this.claimers.has(inter.user.id) && inter.customId.toLowerCase().includes('correct')) {
+                LogDebug.log(
+                    `${inter.user.username} (${inter.user.id}) guessed CORRECT in Powerup Event`,
+                    config, undefined, true
+                );
+
                 let correctString: string = config.stringConfig.powRightFull;
                 const timeToClaim: number = inter.createdTimestamp - powMsg.createdTimestamp;
 
@@ -230,18 +260,20 @@ export class PowerupSpawner {
                     inter, correctString, config.colorConfig.font,
                     config.stringConfig.powRight, config.colorConfig.green, true
                 );
-                LogDebug.sendDebug('Collected: ' + inter.user.username + ' (' + inter.user.id + ')', config);
             } else if (!this.claimers.has(inter.user.id)) {
+                LogDebug.log(
+                    `${inter.user.username} (${inter.user.id}) guessed INCORRECT in Powerup Event`,
+                    config, undefined, true
+                );
+
                 await Replies.handleReply(
                     inter, config.stringConfig.powWrongFull, config.colorConfig.font,
                     config.stringConfig.powWrong, config.colorConfig.error, true
                 );
-                LogDebug.sendDebug('Failed attempt: ' + inter.user.username + ' (' + inter.user.id + ')', config);
             } else {
                 await Replies.handleReply(
                     inter, config.stringConfig.eventParticipated, config.colorConfig.error, undefined, undefined, true
                 );
-                LogDebug.sendDebug('Already collected: ' + inter.user.username + ' (' + inter.user.id + ')', config);
             }
         } catch (err: unknown) {
             await LogDebug.handleError(err);
@@ -272,8 +304,6 @@ export class PowerupSpawner {
                     components: [new ActionRowBuilder<ButtonBuilder>(config.promptConfigs.rows[1])]
                 });
             } catch {}
-
-            LogDebug.sendDebug("Tabulating powerup message #: " + this.numMsgs, config);
 
             // Gets percentages once all powerup messages are waiting for tabulation
             if (--this.numMsgs === 0) {
@@ -528,11 +558,9 @@ export class PowerupSpawner {
                 });
             } catch {}
 
-            LogDebug.sendDebug("Editing powerup message #: " + this.numNotFinished, config);
-
             // Updates and restores information to what it should be once the final message is done processing
             if (--this.numNotFinished === 0) {
-                LogDebug.sendDebug('Attempting to finish powerup', config);
+                LogDebug.log('Attempting to conclude Powerup Event', config);
 
                 for (const interaction of this.interactions) {
                     const strConfig: StringConfig = config.stringConfig;
@@ -603,7 +631,7 @@ export class PowerupSpawner {
                 this.interactions = [];
                 this.readyToEnd = false;
 
-                LogDebug.sendDebug('Powerup finished. Interactions: ' + this.interactions.length, config);
+                LogDebug.log('Powerup Event finished.', config);
             }
         } catch (err: unknown) {
             await LogDebug.handleError(err);

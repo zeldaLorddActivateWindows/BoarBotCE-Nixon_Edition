@@ -37,7 +37,7 @@ export class EventHandler {
 
                 client.on(listenClass.eventName, (...args: string[]) => listenClass.execute(...args));
 
-                LogDebug.sendDebug('Successfully registered listener for event: ' + listenClass.eventName, config);
+                LogDebug.log('Successfully registered listener for event: ' + listenClass.eventName, config);
             } catch (err: unknown) {
                 LogDebug.handleError(err);
                 process.exit(-1);

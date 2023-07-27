@@ -119,7 +119,7 @@ export default class SetupSubcommand implements Subcommand {
 
             this.compInter = inter;
 
-            LogDebug.sendDebug(
+            LogDebug.log(
                 `${inter.customId.split('|')[0]} on field ${this.curField}`, this.config, this.firstInter
             );
 
@@ -186,14 +186,14 @@ export default class SetupSubcommand implements Subcommand {
                 // User wants more information on boar channels
                 case setupComponents.boarInfo.customId:
                     await Replies.handleReply(
-                        inter, this.config.stringConfig.setupInfoResponse2, undefined, undefined, undefined, true
+                        inter, this.config.stringConfig.setupInfoResponse1, undefined, undefined, undefined, true
                     );
                     break;
 
                 // User wants more information on SB boars
                 case setupComponents.sbInfo.customId:
                     await Replies.handleReply(
-                        inter, this.config.stringConfig.setupInfoResponse3, undefined, undefined, undefined, true
+                        inter, this.config.stringConfig.setupInfoResponse2, undefined, undefined, undefined, true
                     );
                     break;
             }
@@ -291,7 +291,7 @@ export default class SetupSubcommand implements Subcommand {
         const strConfig: StringConfig = this.config.stringConfig;
         this.userResponses.isSBServer = this.compInter.customId.startsWith(setupComponents.sbYes.customId);
 
-        this.setupFields[1].content = strConfig.setupFinished3 + (this.userResponses.isSBServer
+        this.setupFields[1].content = strConfig.setupFinished2 + (this.userResponses.isSBServer
             ? setupComponents.sbYes.label
             : setupComponents.sbNo.label);
 
@@ -308,7 +308,7 @@ export default class SetupSubcommand implements Subcommand {
      */
     private async handleEndCollect(reason: string): Promise<void> {
         try {
-            LogDebug.sendDebug('Ended collection with reason: ' + reason, this.config, this.firstInter);
+            LogDebug.log('Ended collection with reason: ' + reason, this.config, this.firstInter);
 
             const strConfig: StringConfig = this.config.stringConfig;
 
@@ -333,6 +333,8 @@ export default class SetupSubcommand implements Subcommand {
                     color = this.config.colorConfig.error;
                     break;
                 case CollectorUtils.Reasons.Finished:
+                    LogDebug.log(`${this.firstInter.guild?.id} had BoarBot set up`, this.config, undefined, true);
+
                     this.guildData = {
                         fullySetup: true,
                         isSBServer: this.userResponses.isSBServer,
@@ -354,6 +356,8 @@ export default class SetupSubcommand implements Subcommand {
         } catch (err: unknown) {
             await LogDebug.handleError(err, this.firstInter);
         }
+
+        this.endModalListener(this.firstInter.client);
     }
 
     /**
@@ -429,14 +433,8 @@ export default class SetupSubcommand implements Subcommand {
         this.modalShowing.setCustomId(modals[this.curField-1].customId + '|' + inter.id);
         await inter.showModal(this.modalShowing);
 
-        inter.client.on(
-            Events.InteractionCreate,
-            this.modalListener
-        );
-
-        setTimeout(() => {
-            inter.client.removeListener(Events.InteractionCreate, this.modalListener);
-        }, 60000);
+        this.curModalListener = this.modalListener;
+        inter.client.on(Events.InteractionCreate, this.curModalListener);
     }
 
     /**
@@ -487,10 +485,9 @@ export default class SetupSubcommand implements Subcommand {
             let submittedChannelName: string;
             let submittedChannelParentName: string = strConfig.noParentChannel;
 
-            LogDebug.sendDebug(
+            LogDebug.log(
                 `${submittedModal.customId.split('|')[0]} input value: ` + submittedChannelID,
-                this.config,
-                this.firstInter
+                this.config, this.firstInter
             );
 
             // Checking if channel exists and getting properties of channel
@@ -607,11 +604,11 @@ export default class SetupSubcommand implements Subcommand {
             }
 
             selectMenu.setPlaceholder(placeholder);
-            this.setupFields[0].content = strConfig.setupFinished2 + channelsString;
+            this.setupFields[0].content = strConfig.setupFinished1 + channelsString;
 
             await this.setupFields[0].editReply(this.compInter);
         } else {
-            this.setupFields[0].content = strConfig.setupUnfinished2;
+            this.setupFields[0].content = strConfig.setupUnfinished1;
             await this.setupFields[0].editReply(this.compInter);
         }
     }
@@ -659,8 +656,8 @@ export default class SetupSubcommand implements Subcommand {
         }
 
         return [
-            new FormField(strConfig.setupUnfinished2, allFields[0]),
-            new FormField(strConfig.setupUnfinished3, allFields[1])
+            new FormField(strConfig.setupUnfinished1, allFields[0]),
+            new FormField(strConfig.setupUnfinished2, allFields[1])
         ];
     }
 }

@@ -91,15 +91,13 @@ export default class GiveSubcommand implements Subcommand {
      * @private
      */
     private async doGive(): Promise<void> {
-        if (!this.interaction.guild || !this.interaction.channel) return;
-
         const strConfig: StringConfig = this.config.stringConfig;
 
         const boarUser: BoarUser =  new BoarUser(this.userInput, true);
 
-        LogDebug.sendDebug(
+        LogDebug.log(
             'Gave \'' + this.idInput + '\' to ' + this.userInput.username + '(' + this.userInput.id + ')',
-            this.config, this.interaction
+            this.config, this.interaction, true
         );
 
         const inputID: string = this.idInput.split(' ')[0];

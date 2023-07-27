@@ -14,6 +14,10 @@ import {Command} from '../api/commands/Command';
 import {StringConfig} from '../bot/config/StringConfig';
 import {PermissionUtils} from '../util/discord/PermissionUtils';
 import {CustomEmbedGenerator} from '../util/generators/CustomEmbedGenerator';
+import {Queue} from '../util/interactions/Queue';
+import {BoarUser} from '../util/boar/BoarUser';
+import fs from 'fs';
+import {DataHandlers} from '../util/data/DataHandlers';
 
 /**
  * {@link InteractionListener InteractionListener.ts}
@@ -27,7 +31,7 @@ import {CustomEmbedGenerator} from '../util/generators/CustomEmbedGenerator';
 export default class InteractionListener implements Listener {
     public readonly eventName: Events = Events.InteractionCreate;
     private interaction: ChatInputCommandInteraction | AutocompleteInteraction | null = null;
-    private config: BotConfig | null = null;
+    private config: BotConfig = {} as BotConfig;
 
     /**
      * Executes the called subcommand group if it exists
@@ -37,8 +41,8 @@ export default class InteractionListener implements Listener {
     public async execute(interaction: Interaction): Promise<void> {
         if (!interaction.isChatInputCommand() && !interaction.isAutocomplete()) return;
 
-        this.interaction = interaction;
         this.config = BoarBotApp.getBot().getConfig();
+        this.interaction = interaction;
 
         try {
             if (!await this.handleMaintenance()) return;
@@ -50,11 +54,55 @@ export default class InteractionListener implements Listener {
         const command: Command | undefined = BoarBotApp.getBot().getCommands().get(interaction.commandName);
 
         if (command) {
-            const startTime = Date.now();
-            LogDebug.sendDebug('Started interaction', this.config, interaction);
+            LogDebug.log('Started interaction', this.config, interaction);
 
             if (interaction.isChatInputCommand()) {
                 let onCooldown: boolean;
+
+                await Queue.addQueue(async () => {
+                    const boarUser = new BoarUser(interaction.user);
+
+                    if (
+                        boarUser.stats.general.deletionTime !== undefined &&
+                        boarUser.stats.general.deletionTime < Date.now()
+                    ) {
+                        try {
+                            fs.rmSync(this.config.pathConfig.userDataFolder + interaction.user.id + '.json');
+                        } catch {}
+                        await Queue.addQueue(() => {
+                            const globalData = DataHandlers.getGlobalData();
+
+                            for (const itemTypeID of Object.keys(globalData.itemData)) {
+                                for (const itemID of Object.keys(globalData.itemData[itemTypeID])) {
+                                    const itemData = globalData.itemData[itemTypeID][itemID];
+
+                                    for (let i=0; i<itemData.buyers.length; i++) {
+                                        const buyOrder = itemData.buyers[i];
+
+                                        if (buyOrder.userID === boarUser.user.id) {
+                                            globalData.itemData[itemTypeID][itemID].buyers.splice(i, 1);
+                                        }
+                                    }
+
+                                    for (let i=0; i<itemData.sellers.length; i++) {
+                                        const sellOrder = itemData.sellers[i];
+
+                                        if (sellOrder.userID === boarUser.user.id) {
+                                            globalData.itemData[itemTypeID][itemID].sellers.splice(i, 1);
+                                        }
+                                    }
+                                }
+                            }
+
+                            DataHandlers.saveGlobalData(globalData);
+                        }, interaction.id + 'global');
+                    } else if (boarUser.stats.general.deletionTime !== undefined) {
+                        boarUser.stats.general.deletionTime = undefined;
+                        boarUser.updateUserData();
+                    }
+
+                }, interaction.id + interaction.user.id);
+
                 try {
                     onCooldown = await Cooldown.handleCooldown(interaction as ChatInputCommandInteraction, this.config);
                 } catch (err: unknown) {
@@ -63,10 +111,6 @@ export default class InteractionListener implements Listener {
                 }
 
                 if (onCooldown) return;
-            }
-
-            if (Date.now() - startTime > 100) {
-                await LogDebug.handleError('COOLDOWN SLOWDOWN: ' + (Date.now() - startTime));
             }
 
             try {
@@ -92,7 +136,7 @@ export default class InteractionListener implements Listener {
                 return;
             }
 
-            LogDebug.sendDebug('End of interaction', this.config, interaction);
+            LogDebug.log('End of interaction', this.config, interaction);
         }
     }
 

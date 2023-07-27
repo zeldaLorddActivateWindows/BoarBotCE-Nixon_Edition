@@ -14,7 +14,6 @@ import {CollectedBoar} from '../data/userdata/collectibles/CollectedBoar';
 import {PromptTypeData} from '../data/userdata/stats/PromptTypeData';
 import {BoarUtils} from './BoarUtils';
 import {NumberConfig} from '../../bot/config/NumberConfig';
-import {PathConfig} from '../../bot/config/PathConfig';
 import {StringConfig} from '../../bot/config/StringConfig';
 import {CollectedItems} from '../data/userdata/collectibles/CollectedItems';
 import {UserStats} from '../data/userdata/stats/UserStats';
@@ -74,6 +73,7 @@ export class BoarUser {
             const { user, ...fixedObject } = this; // Returns object with all properties except user
 
             if (createFile) {
+                LogDebug.log(`New user! ${user.username} (${user.id}) had their file created`, config, undefined, true);
                 fs.writeFileSync(userFile, JSON.stringify(fixedObject));
                 userDataJSON = fs.readFileSync(userFile, 'utf-8');
             } else {
@@ -189,6 +189,10 @@ export class BoarUser {
             this.stats.general.boarStreak = 0;
         }
 
+        if (this.stats.general.unbanTime !== undefined) {
+            this.stats.general.unbanTime = undefined;
+        }
+
         let uniques = 0;
 
         for (const boarID of Object.keys(this.itemCollection.boars)) {
@@ -242,7 +246,6 @@ export class BoarUser {
         scores: number[] = []
     ): Promise<number[]> {
         // Config aliases
-        const pathConfig: PathConfig = config.pathConfig;
         const strConfig: StringConfig = config.stringConfig;
         const numConfig: NumberConfig = config.numberConfig;
 
@@ -273,7 +276,7 @@ export class BoarUser {
         // Updates global edition data
         await Queue.addQueue(async () => {
             try {
-                LogDebug.sendDebug('Updating global edition info...', config, interaction);
+                LogDebug.log('Updating global edition info...', config, interaction);
                 const globalData: GlobalData = DataHandlers.getGlobalData();
 
                 // Sets edition numbers
@@ -282,8 +285,15 @@ export class BoarUser {
                     const rarityName = rarityInfos[i].name;
 
                     if (!globalData.itemData.boars[boarID]) {
+                        LogDebug.log(`First edition of ${boarID}`, config, interaction, true);
+
                         globalData.itemData.boars[boarID] = new ItemData;
                         globalData.itemData.boars[boarID].curEdition = 0;
+                        const lastBuySell = rarityInfos[i].baseScore === 1
+                            ? 4
+                            : rarityInfos[i].baseScore;
+                        globalData.itemData.boars[boarID].lastBuys[1] = lastBuySell;
+                        globalData.itemData.boars[boarID].lastSells[1] = lastBuySell;
 
                         if (rarityName !== 'Special') {
                             let specialEdition = 0;
@@ -300,7 +310,7 @@ export class BoarUser {
                 }
 
                 this.orderGlobalBoars(globalData, config);
-                fs.writeFileSync(pathConfig.globalDataFile, JSON.stringify(globalData));
+                DataHandlers.saveGlobalData(globalData);
             } catch (err: unknown) {
                 await LogDebug.handleError(err, interaction);
             }
@@ -308,11 +318,13 @@ export class BoarUser {
 
         await Queue.addQueue(async () => {
             try {
-                LogDebug.sendDebug('Updating user info...', config, interaction);
+                LogDebug.log('Updating user info...', config, interaction);
                 this.refreshUserData();
 
                 for (let i=0; i<boarIDs.length; i++) {
                     const boarID: string = boarIDs[i];
+
+                    LogDebug.log(`Adding ${boarID} to collection`, config, interaction, true);
 
                     if (!this.itemCollection.boars[boarID]) {
                         this.itemCollection.boars[boarID] = new CollectedBoar;
@@ -345,6 +357,8 @@ export class BoarUser {
         if (bacteriaEditions.length > 0) {
             await Queue.addQueue(async () => {
                 this.refreshUserData();
+
+                LogDebug.log(`Adding bacteria to collection`, config, interaction, true);
 
                 if (!this.itemCollection.boars['bacteria']) {
                     this.itemCollection.boars['bacteria'] = new CollectedBoar;
@@ -402,6 +416,10 @@ export class BoarUser {
             }, interaction.id + this.user.id).catch((err) => { throw err });
         }
 
+        if (!hasBadge) {
+            LogDebug.log(`Added ${badgeID} badge to collection`, BoarBotApp.getBot().getConfig(), interaction, true);
+        }
+
         return hasBadge;
     }
 
@@ -417,6 +435,7 @@ export class BoarUser {
 
         this.itemCollection.badges[badgeID].possession = true;
         this.itemCollection.badges[badgeID].curObtained = Date.now();
+
         return hasBadge;
     }
 
@@ -443,6 +462,8 @@ export class BoarUser {
                 this.updateUserData();
             }, interaction.id + this.user.id);
         }
+
+        LogDebug.log(`Removed ${badgeID} badge from collection`, BoarBotApp.getBot().getConfig(), interaction, true);
 
         this.updateUserData();
     }
