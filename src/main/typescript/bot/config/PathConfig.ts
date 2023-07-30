@@ -20,7 +20,10 @@ export class PathConfig {
     public readonly userDataFolder: string = '';
     public readonly globalDataFolder: string = '';
     public readonly globalFileName: string = '';
+    public readonly githubFileName: string = '';
     public readonly logsFolder: string = '';
+    public readonly prodStartScript: string = '';
+    public readonly prodRemotePath: string = '';
 
     // Base paths for images/assets
 

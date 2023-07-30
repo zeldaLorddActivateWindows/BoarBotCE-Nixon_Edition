@@ -199,4 +199,6 @@ export class StringConfig {
     public readonly imageName: string = ' ';
     public readonly fontName: string = ' ';
     public readonly commandDebugPrefix: string = ' ';
+    public readonly commitLink: string = ' ';
+    public readonly githubImg: string = ' ';
 }

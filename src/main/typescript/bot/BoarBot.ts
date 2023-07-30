@@ -1,7 +1,6 @@
-import dotenv from 'dotenv';
 import fs from 'fs';
 import {
-	Client,
+	Client, ColorResolvable, EmbedBuilder,
 	Events,
 	GatewayIntentBits,
 	Partials,
@@ -22,8 +21,10 @@ import {DataHandlers} from '../util/data/DataHandlers';
 import {GuildData} from '../util/data/global/GuildData';
 import {CronJob} from 'cron';
 import {BoarUser} from '../util/boar/BoarUser';
-
-dotenv.config();
+import axios from 'axios';
+import {InteractionUtils} from '../util/interactions/InteractionUtils';
+import {GitHubData} from '../util/data/global/GitHubData';
+import * as crypto from 'crypto';
 
 /**
  * {@link BoarBot BoarBot.ts}
@@ -52,6 +53,7 @@ export class BoarBot implements Bot {
 		this.registerCommands();
 		this.registerListeners();
 		this.fixGuildData();
+		// this.updateAllData();
 
 		await this.login();
 		await this.onStart();
@@ -86,6 +88,14 @@ export class BoarBot implements Bot {
 	 * Returns config information that was gathered from config file
 	 */
 	public getConfig(): BotConfig { return this.configHandler.getConfig(); }
+
+	public getConfigHash(): string {
+		const configFile = fs.readFileSync('config.json');
+		const hashSum = crypto.createHash('sha256');
+		hashSum.update(configFile);
+
+		return hashSum.digest('hex');
+	}
 
 	/**
 	 * Registers command and subcommand information from files
@@ -147,11 +157,18 @@ export class BoarBot implements Bot {
 
 			this.startNotificationCron();
 
-			// Logs interaction listeners to avoid memory leaks
-			setInterval(() => {
-				LogDebug.log(
-					'Interaction Listeners: ' + this.client.listenerCount(Events.InteractionCreate), this.getConfig()
-				)
+			const githubData = DataHandlers.getGithubData();
+			let configHash = this.getConfigHash();
+
+			setInterval(async () => {
+				if (configHash !== this.getConfigHash()) {
+					configHash = this.getConfigHash();
+					this.loadConfig();
+				}
+
+				const config = this.getConfig();
+				LogDebug.log('Interaction Listeners: ' + this.client.listenerCount(Events.InteractionCreate), config);
+				await this.sendUpdateInfo(githubData);
 			}, 180000);
 
 			// Powerup spawning
@@ -170,7 +187,7 @@ export class BoarBot implements Bot {
 			this.powSpawner = new PowerupSpawner(timeUntilPow);
 			this.powSpawner.startSpawning();
 
-			LogDebug.log('Successfully started powerup spawning interval!', this.getConfig());
+			LogDebug.log('All functions online!', this.getConfig(), undefined, true);
 		} catch (err: unknown) {
 			await LogDebug.handleError(err);
 		}
@@ -233,6 +250,41 @@ export class BoarBot implements Bot {
 				}
 			});
 		}, null, true, 'UTC');
+	}
+
+	private async sendUpdateInfo(githubData: GitHubData | undefined): Promise<void> {
+		const config = this.getConfig();
+
+		try {
+			if (!githubData) return;
+
+			const commit = await axios.get(config.stringConfig.commitLink, {
+				headers: { Authorization: 'Token ' + process.env.GITHUB_TOKEN as string }
+			});
+			const commitData = commit.data;
+
+			if (commitData.sha !== githubData.lastCommitSha) {
+				githubData.lastCommitSha = commitData.sha;
+				fs.writeFileSync(
+					config.pathConfig.globalDataFolder + config.pathConfig.githubFileName,
+					JSON.stringify(githubData)
+				);
+
+				const commitMsg = commitData.commit.message;
+				const commitName = commitMsg.substring(0, commitMsg.indexOf('\n'));
+				const commitChannel = await InteractionUtils.getTextChannel(config.logChannel);
+				const commitEmbed = new EmbedBuilder()
+					.setColor(config.colorConfig.dark as ColorResolvable)
+					.setTitle(commitName)
+					.setURL(commitData.html_url)
+					.setDescription(commitMsg.replace(commitName, ''))
+					.setThumbnail(config.stringConfig.githubImg);
+
+				commitChannel?.send({ embeds: [commitEmbed] });
+			}
+		} catch {
+			LogDebug.log('Failed to get latest GitHub commit', config);
+		}
 	}
 
 	/**

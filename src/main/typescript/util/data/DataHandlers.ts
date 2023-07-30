@@ -10,6 +10,7 @@ import {BoarUser} from '../boar/BoarUser';
 import {GlobalData} from './global/GlobalData';
 import {ItemData} from './global/ItemData';
 import {BoardData} from './global/BoardData';
+import {GitHubData} from './global/GitHubData';
 
 /**
  * {@link DataHandlers DataHandlers.ts}
@@ -210,5 +211,23 @@ export class DataHandlers {
         } catch {
             await LogDebug.handleError('Already deleted this file!');
         }
+    }
+
+    public static getGithubData(): GitHubData | undefined {
+        const config: BotConfig = BoarBotApp.getBot().getConfig();
+
+        const githubFile: string = config.pathConfig.globalDataFolder + config.pathConfig.githubFileName;
+        let githubData: GitHubData | undefined;
+
+        try {
+            githubData = JSON.parse(fs.readFileSync(githubFile, 'utf-8'));
+        } catch {
+            try {
+                githubData = new GitHubData();
+                fs.writeFileSync(githubFile, JSON.stringify(githubData));
+            } catch {}
+        }
+
+        return githubData;
     }
 }

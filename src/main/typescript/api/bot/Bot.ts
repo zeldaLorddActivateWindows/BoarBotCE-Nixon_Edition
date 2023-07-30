@@ -17,6 +17,7 @@ export interface Bot {
     getClient(): Client;
     loadConfig(): void;
     getConfig(): BotConfig;
+    getConfigHash(): string;
     registerCommands(): void;
     getCommands(): Map<string, Command>;
     getSubcommands(): Map<string, Subcommand>;

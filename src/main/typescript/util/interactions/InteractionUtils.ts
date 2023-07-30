@@ -64,7 +64,7 @@ export class InteractionUtils {
         } catch {
             LogDebug.handleError(
                 'Bot cannot find the channel.\nIs the channel ID \'' + channelID +
-                '\' correct? Does the bot have view channel permissions?'
+                '\' correct? Does the bot have view channel permissions?', undefined, false
             );
             return;
         }

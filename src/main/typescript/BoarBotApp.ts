@@ -1,6 +1,12 @@
 import {BoarBot} from './bot/BoarBot';
 import {Bot} from './api/bot/Bot';
 import {LogDebug} from './util/logging/LogDebug';
+import fs from 'fs';
+import * as ftp from 'basic-ftp';
+import dotenv from 'dotenv';
+import {exec} from 'child_process'
+
+dotenv.config();
 
 /**
  * {@link BoarBotApp BoarBotApp.ts}
@@ -18,15 +24,108 @@ export class BoarBotApp {
         const boarBot: BoarBot = new BoarBot();
         this.bot = boarBot;
 
+        process.title = 'BoarBot - Process';
+        process.on('uncaughtException', async (e) => {
+            LogDebug.handleError(e);
+            process.exit();
+        });
+
+        if (process.argv[2] === 'deploy-prod') {
+            await this.deployProd();
+            return;
+        }
+
         await boarBot.create();
 
-        if (process.argv[2] === 'deploy') {
+        if (process.argv[2] === 'deploy-commands') {
             await boarBot.deployCommands();
         }
     }
 
     public static getBot(): Bot {
         return this.bot;
+    }
+
+    private static async deployProd(): Promise<void> {
+        this.bot.loadConfig();
+
+        const configData = JSON.parse(fs.readFileSync('config.json', 'utf-8'));
+        const origConfig = JSON.parse(JSON.stringify(configData));
+
+        configData.logChannel = process.env.LOG_CHANNEL as string;
+        configData.reportsChannel = process.env.REPORTS_CHANNEL as string;
+        configData.unlimitedBoars = false;
+        configData.maintenanceMode = true;
+
+        fs.writeFileSync('config.json', JSON.stringify(configData));
+
+        const client = new ftp.Client();
+
+        await client.access({
+            host: process.env.FTP_HOST,
+            user: process.env.FTP_USER,
+            password: process.env.FTP_PASS
+        });
+
+        await client.cd(this.bot.getConfig().pathConfig.prodRemotePath);
+        await client.uploadFrom('config.json', 'config.json');
+
+        fs.writeFileSync('config.json', JSON.stringify(origConfig));
+
+        await this.doFilePush(client);
+    }
+
+    private static async doFilePush(client: ftp.Client) {
+        const config = this.bot.getConfig();
+        const pathConfig = config.pathConfig;
+
+        const waitTime = 1000 * 60 * 5;
+        const endTime = Date.now() + waitTime;
+
+        let minsLeft = Math.floor((endTime - Date.now()) / 1000 / 60);
+        let secsLeft = Math.floor((endTime - Date.now() - minsLeft * 60 * 1000) / 1000);
+
+        setTimeout(async () => {
+            process.stdout.clearLine(0);
+            process.stdout.cursorTo(0);
+            process.stdout.write(`${LogDebug.Colors.Yellow}Pushing...${LogDebug.Colors.White}`);
+
+            await client.uploadFromDir('src/main/typescript', 'src/main/typescript');
+            await client.uploadFromDir('src/main/python', 'src/main/python');
+            await client.uploadFromDir(pathConfig.otherAssets, pathConfig.otherAssets);
+            await client.uploadFromDir(pathConfig.collAssets, pathConfig.collAssets);
+            await client.uploadFromDir(pathConfig.itemAssets, pathConfig.itemAssets);
+
+            exec(pathConfig.prodStartScript);
+
+            process.stdout.clearLine(0);
+            process.stdout.cursorTo(0);
+            process.stdout.write(
+                 `${LogDebug.Colors.Green}Successfully pushed changes to production.${LogDebug.Colors.White}`
+            );
+        }, waitTime);
+
+        process.stdout.write(
+            `Pushing to production in ${LogDebug.Colors.Red}${minsLeft}m${secsLeft.toString().padStart(2, '0')}s` +
+            `${LogDebug.Colors.White} (Ctrl+C to abort)`
+        );
+
+        const showTimeInterval = setInterval(() => {
+            minsLeft = Math.floor((endTime - Date.now()) / 1000 / 60);
+            secsLeft = Math.floor((endTime - Date.now() - minsLeft * 60 * 1000) / 1000);
+
+            if (Date.now() >= endTime) {
+                clearInterval(showTimeInterval);
+                return;
+            }
+
+            process.stdout.clearLine(0);
+            process.stdout.cursorTo(0);
+            process.stdout.write(
+                `Pushing to production in ${LogDebug.Colors.Red}${minsLeft}m${secsLeft.toString().padStart(2, '0')}s` +
+                `${LogDebug.Colors.White} (Ctrl+C to abort)`
+            );
+        }, 1000);
     }
 }
 

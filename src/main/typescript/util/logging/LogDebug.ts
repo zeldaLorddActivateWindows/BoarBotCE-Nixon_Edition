@@ -16,7 +16,8 @@ enum Colors {
     White = '\x1b[0m',
     Yellow = '\x1b[33m',
     Grey = '\x1b[90m',
-    Red = '\x1b[31m'
+    Red = '\x1b[31m',
+    Green = '\x1b[32m'
 }
 
 /**
@@ -29,6 +30,8 @@ enum Colors {
  * @copyright WeslayCodes 2023
  */
 export class LogDebug {
+    public static readonly Colors = Colors;
+
     /**
      * Sends messages to the console
      *

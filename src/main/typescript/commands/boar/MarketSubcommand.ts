@@ -426,7 +426,6 @@ export default class MarketSubcommand implements Subcommand {
                         foundOrder = true;
 
                         numToClaim = await this.returnOrderToUser(orderInfo, isSell, true);
-                        await DataHandlers.updateLeaderboardData(this.boarUser, this.compInter, this.config);
 
                         if (
                             orderInfo.data.num === orderInfo.data.filledAmount &&
@@ -457,7 +456,6 @@ export default class MarketSubcommand implements Subcommand {
                         foundOrder = true;
 
                         numToClaim = await this.returnOrderToUser(orderInfo, isSell, true);
-                        await DataHandlers.updateLeaderboardData(this.boarUser, this.compInter, this.config);
 
                         if (
                             orderInfo.data.num === orderInfo.data.filledAmount &&
@@ -486,6 +484,11 @@ export default class MarketSubcommand implements Subcommand {
         if (!foundOrder) return;
 
         if (numToClaim > 0) {
+            await Queue.addQueue(
+                async () => await DataHandlers.updateLeaderboardData(this.boarUser, this.compInter, this.config),
+                this.compInter.id + this.boarUser.user.id + 'global'
+            ).catch((err) => { throw err });
+
             await Replies.handleReply(
                 this.compInter, strConfig.marketClaimComplete, colorConfig.green, undefined, undefined, true
             );
@@ -537,7 +540,6 @@ export default class MarketSubcommand implements Subcommand {
 
                     if (isSameOrder && canCancel) {
                         const hasEnoughRoom: boolean = (await this.returnOrderToUser(orderInfo, isSell, false)) > 0;
-                        await DataHandlers.updateLeaderboardData(this.boarUser, this.compInter, this.config);
 
                         if (hasEnoughRoom) {
                             await Replies.handleReply(
@@ -591,7 +593,6 @@ export default class MarketSubcommand implements Subcommand {
 
                     if (isSameOrder && canCancel) {
                         const hasEnoughRoom: boolean = (await this.returnOrderToUser(orderInfo, isSell, false)) > 0;
-                        await DataHandlers.updateLeaderboardData(this.boarUser, this.compInter, this.config);
 
                         if (hasEnoughRoom) {
                             await Replies.handleReply(
@@ -644,6 +645,11 @@ export default class MarketSubcommand implements Subcommand {
                 await LogDebug.handleError(err, this.compInter);
             }
         }, this.compInter.id + 'global').catch((err) => { throw err });
+
+        await Queue.addQueue(
+            async () => await DataHandlers.updateLeaderboardData(this.boarUser, this.compInter, this.config),
+            this.compInter.id + this.boarUser.user.id + 'global'
+        ).catch((err) => { throw err });
     }
 
     /**
@@ -1027,8 +1033,8 @@ export default class MarketSubcommand implements Subcommand {
                         await this.boarUser.orderBoars(this.compInter, this.config);
                         this.boarUser.updateUserData();
 
-                        await Queue.addQueue(async () =>
-                            await DataHandlers.updateLeaderboardData(this.boarUser, inter, this.config),
+                        await Queue.addQueue(
+                            async () => await DataHandlers.updateLeaderboardData(this.boarUser, inter, this.config),
                             inter.id + this.boarUser.user.id + 'global'
                         ).catch((err) => { throw err });
 
@@ -1232,7 +1238,7 @@ export default class MarketSubcommand implements Subcommand {
                         this.boarUser.updateUserData();
 
                         await Queue.addQueue(async () =>
-                                await DataHandlers.updateLeaderboardData(this.boarUser, inter, this.config),
+                            await DataHandlers.updateLeaderboardData(this.boarUser, inter, this.config),
                             inter.id + this.boarUser.user.id + 'global'
                         ).catch((err) => { throw err });
 
