@@ -73,6 +73,13 @@ export class ConfigHandler {
         const collAssets: string = pathConfig.collAssets;
         const otherAssets: string = pathConfig.otherAssets;
 
+        const globalFileNames: string[] | undefined[] = [
+            pathConfig.itemDataFileName,
+            pathConfig.leaderboardsFileName,
+            pathConfig.bannedUsersFileName,
+            pathConfig.powerupDataFileName
+        ];
+
         const allPaths: string[] = [
             pathConfig.listeners,
             pathConfig.commands,
@@ -145,6 +152,13 @@ export class ConfigHandler {
             if (fs.existsSync(path)) continue;
 
             LogDebug.log(`Path '${path}' is invalid`, this.config);
+            passed = false;
+        }
+
+        for (const file of globalFileNames) {
+            if (file !== undefined) continue;
+
+            LogDebug.log(`Global file name '${file}' is invalid`, this.config);
             passed = false;
         }
 

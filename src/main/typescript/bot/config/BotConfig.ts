@@ -33,6 +33,11 @@ export class BotConfig {
     public readonly reportsChannel: string = '';
 
     /**
+     * The {@link TextChannel} ID the bot sends update messages to
+     */
+    public readonly updatesChannel: string = '';
+
+    /**
      * The {@link PathConfig paths} of all files/folders the bot accesses
      */
     public readonly pathConfig: PathConfig = new PathConfig;

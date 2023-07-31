@@ -45,7 +45,9 @@ export default class ReportSubcommand implements Subcommand {
         this.guildData = await InteractionUtils.handleStart(interaction, this.config);
         if (!this.guildData) return;
 
-        const unbanTime: number | undefined = DataHandlers.getGlobalData().bannedUsers[interaction.user.id];
+        const bannedUserData: Record<string, number | undefined> =
+            DataHandlers.getGlobalData(DataHandlers.GlobalFile.BannedUsers) as Record<string, number | undefined>;
+        const unbanTime: number | undefined = bannedUserData[interaction.user.id];
         if (unbanTime && unbanTime > Date.now()) {
             await Replies.handleReply(
                 interaction, this.config.stringConfig.bannedString.replace('%@', moment(unbanTime).fromNow()),
@@ -55,9 +57,11 @@ export default class ReportSubcommand implements Subcommand {
         } else if (unbanTime && unbanTime <= Date.now()) {
             await Queue.addQueue(async () => {
                 try {
-                    const globalData = DataHandlers.getGlobalData();
-                    globalData.bannedUsers[interaction.user.id] = undefined;
-                    DataHandlers.saveGlobalData(globalData);
+                    const bannedUserData: Record<string, number | undefined> = DataHandlers.getGlobalData(
+                        DataHandlers.GlobalFile.BannedUsers
+                    ) as Record<string, number | undefined>;
+                    bannedUserData[interaction.user.id] = undefined;
+                    DataHandlers.saveGlobalData(bannedUserData, DataHandlers.GlobalFile.BannedUsers);
                 } catch (err: unknown) {
                     await LogDebug.handleError(err, interaction);
                 }

@@ -19,9 +19,9 @@ import {CollectedItems} from '../data/userdata/collectibles/CollectedItems';
 import {UserStats} from '../data/userdata/stats/UserStats';
 import {CollectedBadge} from '../data/userdata/collectibles/CollectedBadge';
 import {CollectedPowerup} from '../data/userdata/collectibles/CollectedPowerup';
-import {GlobalData} from '../data/global/GlobalData';
 import {ItemData} from '../data/global/ItemData';
 import {GuildData} from '../data/global/GuildData';
+import {ItemsData} from '../data/global/ItemsData';
 
 /**
  * {@link BoarUser BoarUser.ts}
@@ -277,40 +277,40 @@ export class BoarUser {
         await Queue.addQueue(async () => {
             try {
                 LogDebug.log('Updating global edition info...', config, interaction);
-                const globalData: GlobalData = DataHandlers.getGlobalData();
+                const itemsData: ItemsData = DataHandlers.getGlobalData(DataHandlers.GlobalFile.Items) as ItemsData;
 
                 // Sets edition numbers
                 for (let i=0; i<boarIDs.length; i++) {
                     const boarID = boarIDs[i];
                     const rarityName = rarityInfos[i].name;
 
-                    if (!globalData.itemData.boars[boarID]) {
+                    if (!itemsData.boars[boarID]) {
                         LogDebug.log(`First edition of ${boarID}`, config, interaction, true);
 
-                        globalData.itemData.boars[boarID] = new ItemData;
-                        globalData.itemData.boars[boarID].curEdition = 0;
+                        itemsData.boars[boarID] = new ItemData;
+                        itemsData.boars[boarID].curEdition = 0;
                         const lastBuySell = rarityInfos[i].baseScore === 1
                             ? 4
                             : rarityInfos[i].baseScore;
-                        globalData.itemData.boars[boarID].lastBuys[1] = lastBuySell;
-                        globalData.itemData.boars[boarID].lastSells[1] = lastBuySell;
+                        itemsData.boars[boarID].lastBuys[1] = lastBuySell;
+                        itemsData.boars[boarID].lastSells[1] = lastBuySell;
 
                         if (rarityName !== 'Special') {
                             let specialEdition = 0;
-                            if (!globalData.itemData.boars['bacteria']) {
-                                globalData.itemData.boars['bacteria'] = new ItemData;
-                                globalData.itemData.boars['bacteria'].curEdition = 0;
+                            if (!itemsData.boars['bacteria']) {
+                                itemsData.boars['bacteria'] = new ItemData;
+                                itemsData.boars['bacteria'].curEdition = 0;
                             }
 
-                            specialEdition = ++(globalData.itemData.boars['bacteria'].curEdition as number);
+                            specialEdition = ++(itemsData.boars['bacteria'].curEdition as number);
                             bacteriaEditions.push(specialEdition);
                         }
                     }
-                    boarEditions.push(++(globalData.itemData.boars[boarID].curEdition as number));
+                    boarEditions.push(++(itemsData.boars[boarID].curEdition as number));
                 }
 
-                this.orderGlobalBoars(globalData, config);
-                DataHandlers.saveGlobalData(globalData);
+                this.orderGlobalBoars(itemsData, config);
+                DataHandlers.saveGlobalData(itemsData, DataHandlers.GlobalFile.Items);
             } catch (err: unknown) {
                 await LogDebug.handleError(err, interaction);
             }
@@ -547,8 +547,8 @@ export class BoarUser {
         }
     }
 
-    private orderGlobalBoars(globalData: GlobalData, config: BotConfig): void {
-        const globalBoars: string[] = Object.keys(globalData.itemData.boars);
+    private orderGlobalBoars(itemsData: ItemsData, config: BotConfig): void {
+        const globalBoars: string[] = Object.keys(itemsData.boars);
 
         const orderedRarities: RarityConfig[] = [...config.rarityConfigs]
             .sort((rarity1, rarity2) => { return rarity1.weight - rarity2.weight; });
@@ -561,14 +561,14 @@ export class BoarUser {
             // Looping through user's boar collection
             for (let j=0; j<globalBoars.length; j++) {
                 const curBoarID: string = globalBoars[j];                           // ID of current boar
-                const curBoarData: ItemData = globalData.itemData.boars[curBoarID]; // Data of current boar
+                const curBoarData: ItemData = itemsData.boars[curBoarID]; // Data of current boar
 
                 if (!boarsOfRarity.includes(curBoarID) || orderedBoars.includes(curBoarID))
                     continue;
 
                 // Removes boar from front and add it to the back of the list to refresh the order
-                delete globalData.itemData.boars[curBoarID];
-                globalData.itemData.boars[curBoarID] = curBoarData;
+                delete itemsData.boars[curBoarID];
+                itemsData.boars[curBoarID] = curBoarData;
 
                 orderedBoars.push(curBoarID);
                 j--;

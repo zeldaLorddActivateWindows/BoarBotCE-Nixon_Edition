@@ -25,6 +25,7 @@ import axios from 'axios';
 import {InteractionUtils} from '../util/interactions/InteractionUtils';
 import {GitHubData} from '../util/data/global/GitHubData';
 import * as crypto from 'crypto';
+import {PowerupData} from '../util/data/global/PowerupData';
 
 /**
  * {@link BoarBot BoarBot.ts}
@@ -157,19 +158,18 @@ export class BoarBot implements Bot {
 
 			this.startNotificationCron();
 
-			const githubData = DataHandlers.getGithubData();
 			let configHash = this.getConfigHash();
 
 			setInterval(async () => {
 				if (configHash !== this.getConfigHash()) {
 					configHash = this.getConfigHash();
-					this.loadConfig();
+					await this.loadConfig();
 				}
 
 				const config = this.getConfig();
 				LogDebug.log('Interaction Listeners: ' + this.client.listenerCount(Events.InteractionCreate), config);
-				await this.sendUpdateInfo(githubData);
-			}, 180000);
+				await this.sendUpdateInfo(DataHandlers.getGithubData());
+			}, 10000);
 
 			// Powerup spawning
 
@@ -177,8 +177,8 @@ export class BoarBot implements Bot {
 
 			await Queue.addQueue(async () => {
 				try {
-					const globalData = DataHandlers.getGlobalData();
-					timeUntilPow = globalData.nextPowerup;
+					const powerupData = DataHandlers.getGlobalData(DataHandlers.GlobalFile.Powerups) as PowerupData;
+					timeUntilPow = powerupData.nextPowerup;
 				} catch (err: unknown) {
 					await LogDebug.handleError(err);
 				}
@@ -272,7 +272,7 @@ export class BoarBot implements Bot {
 
 				const commitMsg = commitData.commit.message;
 				const commitName = commitMsg.substring(0, commitMsg.indexOf('\n'));
-				const commitChannel = await InteractionUtils.getTextChannel(config.logChannel);
+				const commitChannel = await InteractionUtils.getTextChannel(config.updatesChannel);
 				const commitEmbed = new EmbedBuilder()
 					.setColor(config.colorConfig.dark as ColorResolvable)
 					.setTitle(commitName)

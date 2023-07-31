@@ -34,13 +34,14 @@ import {ModalConfig} from '../../bot/config/modals/ModalConfig';
 import {BoarUtils} from '../../util/boar/BoarUtils';
 import {Queue} from '../../util/interactions/Queue';
 import {CollectedBoar} from '../../util/data/userdata/collectibles/CollectedBoar';
-import {GlobalData} from '../../util/data/global/GlobalData';
 import {StringConfig} from '../../bot/config/StringConfig';
 import {ColorConfig} from '../../bot/config/ColorConfig';
 import {NumberConfig} from '../../bot/config/NumberConfig';
 import {RarityConfig} from '../../bot/config/items/RarityConfig';
 import {ItemData} from '../../util/data/global/ItemData';
 import moment from 'moment';
+import {ItemsData} from '../../util/data/global/ItemsData';
+import {BoardData} from '../../util/data/global/BoardData';
 
 enum View {
     Overview,
@@ -114,7 +115,9 @@ export default class MarketSubcommand implements Subcommand {
 
         await interaction.deferReply({ ephemeral: true });
 
-        const unbanTime: number | undefined = DataHandlers.getGlobalData().bannedUsers[interaction.user.id];
+        const bannedUserData: Record<string, number | undefined> =
+            DataHandlers.getGlobalData(DataHandlers.GlobalFile.BannedUsers) as Record<string, number | undefined>;
+        const unbanTime: number | undefined = bannedUserData[interaction.user.id];
         if (unbanTime && unbanTime > Date.now()) {
             await Replies.handleReply(
                 interaction, this.config.stringConfig.bannedString.replace('%@', moment(unbanTime).fromNow()),
@@ -124,9 +127,11 @@ export default class MarketSubcommand implements Subcommand {
         } else if (unbanTime && unbanTime <= Date.now()) {
             await Queue.addQueue(async () => {
                 try {
-                    const globalData = DataHandlers.getGlobalData();
-                    globalData.bannedUsers[interaction.user.id] = undefined;
-                    DataHandlers.saveGlobalData(globalData);
+                    const bannedUserData: Record<string, number | undefined> = DataHandlers.getGlobalData(
+                        DataHandlers.GlobalFile.BannedUsers
+                    ) as Record<string, number | undefined>;
+                    bannedUserData[interaction.user.id] = undefined;
+                    DataHandlers.saveGlobalData(bannedUserData, DataHandlers.GlobalFile.BannedUsers);
                 } catch (err: unknown) {
                     await LogDebug.handleError(err, interaction);
                 }
@@ -411,10 +416,10 @@ export default class MarketSubcommand implements Subcommand {
 
         await Queue.addQueue(async () => {
             try {
-                const globalData: GlobalData = DataHandlers.getGlobalData();
+                const itemsData: ItemsData = DataHandlers.getGlobalData(DataHandlers.GlobalFile.Items) as ItemsData;
 
-                const buyOrders: BuySellData[] = globalData.itemData[orderInfo.type][orderInfo.id].buyers;
-                const sellOrders: BuySellData[] = globalData.itemData[orderInfo.type][orderInfo.id].sellers;
+                const buyOrders: BuySellData[] = itemsData[orderInfo.type][orderInfo.id].buyers;
+                const sellOrders: BuySellData[] = itemsData[orderInfo.type][orderInfo.id].sellers;
 
                 // Tries to find order in buy orders
                 for (let i=0; i<buyOrders.length && !isSell; i++) {
@@ -431,17 +436,13 @@ export default class MarketSubcommand implements Subcommand {
                             orderInfo.data.num === orderInfo.data.filledAmount &&
                             orderInfo.data.filledAmount === orderInfo.data.claimedAmount + numToClaim
                         ) {
-                            globalData.itemData[orderInfo.type][orderInfo.id].buyers.splice(i, 1);
+                            itemsData[orderInfo.type][orderInfo.id].buyers.splice(i, 1);
                             break;
                         }
 
-                        globalData.itemData[orderInfo.type][orderInfo.id].buyers[i].editions.splice(
-                            0, numToClaim
-                        );
-                        globalData.itemData[orderInfo.type][orderInfo.id].buyers[i].editionDates.splice(
-                            0, numToClaim
-                        );
-                        globalData.itemData[orderInfo.type][orderInfo.id].buyers[i].claimedAmount += numToClaim;
+                        itemsData[orderInfo.type][orderInfo.id].buyers[i].editions.splice(0, numToClaim);
+                        itemsData[orderInfo.type][orderInfo.id].buyers[i].editionDates.splice(0, numToClaim);
+                        itemsData[orderInfo.type][orderInfo.id].buyers[i].claimedAmount += numToClaim;
                         break;
                     }
                 }
@@ -461,17 +462,16 @@ export default class MarketSubcommand implements Subcommand {
                             orderInfo.data.num === orderInfo.data.filledAmount &&
                             orderInfo.data.filledAmount === orderInfo.data.claimedAmount + numToClaim
                         ) {
-                            globalData.itemData[orderInfo.type][orderInfo.id].sellers.splice(i, 1);
+                            itemsData[orderInfo.type][orderInfo.id].sellers.splice(i, 1);
                             break;
                         }
 
-                        globalData.itemData[orderInfo.type][orderInfo.id].sellers[i].claimedAmount +=
-                            numToClaim;
+                        itemsData[orderInfo.type][orderInfo.id].sellers[i].claimedAmount += numToClaim;
                         break;
                     }
                 }
 
-                DataHandlers.saveGlobalData(globalData);
+                DataHandlers.saveGlobalData(itemsData, DataHandlers.GlobalFile.Items);
                 this.getPricingData();
                 this.imageGen.updateInfo(
                     this.pricingData, this.userBuyOrders, this.userSellOrders, this.config
@@ -525,15 +525,15 @@ export default class MarketSubcommand implements Subcommand {
 
         await Queue.addQueue(async () => {
             try {
-                const globalData: GlobalData = DataHandlers.getGlobalData();
+                const itemsData: ItemsData = DataHandlers.getGlobalData(DataHandlers.GlobalFile.Items) as ItemsData;
 
-                const buyOrders: BuySellData[] = globalData.itemData[orderInfo.type][orderInfo.id].buyers;
-                const sellOrders: BuySellData[] = globalData.itemData[orderInfo.type][orderInfo.id].sellers;
+                const buyOrders: BuySellData[] = itemsData[orderInfo.type][orderInfo.id].buyers;
+                const sellOrders: BuySellData[] = itemsData[orderInfo.type][orderInfo.id].sellers;
 
                 for (let i=0; i<buyOrders.length && !isSell; i++) {
                     const buyOrder: BuySellData = buyOrders[i];
-                    const orderPrice = globalData.itemData[orderInfo.type][orderInfo.id].buyers[i].price;
-                    const itemLastBuy = globalData.itemData[orderInfo.type][orderInfo.id].lastBuys[0];
+                    const orderPrice = itemsData[orderInfo.type][orderInfo.id].buyers[i].price;
+                    const itemLastBuy = itemsData[orderInfo.type][orderInfo.id].lastBuys[0];
                     const isSameOrder: boolean = buyOrder.userID === orderInfo.data.userID &&
                         buyOrder.listTime === orderInfo.data.listTime;
                     canCancel = orderInfo.data.filledAmount === buyOrder.filledAmount;
@@ -547,21 +547,19 @@ export default class MarketSubcommand implements Subcommand {
                                 undefined, undefined, true
                             );
 
-                            globalData.itemData[orderInfo.type][orderInfo.id].buyers.splice(i, 1);
+                            itemsData[orderInfo.type][orderInfo.id].buyers.splice(i, 1);
 
                             if (!isSpecial && orderPrice === itemLastBuy) {
-                                globalData.itemData[orderInfo.type][orderInfo.id].lastBuys[0] = 0;
-                                globalData.itemData[orderInfo.type][orderInfo.id].lastBuys[2] = '';
-                                for (const possibleOrder of globalData.itemData[orderInfo.type][orderInfo.id].buyers) {
+                                itemsData[orderInfo.type][orderInfo.id].lastBuys[0] = 0;
+                                itemsData[orderInfo.type][orderInfo.id].lastBuys[2] = '';
+                                for (const possibleOrder of itemsData[orderInfo.type][orderInfo.id].buyers) {
                                     const isFilled = possibleOrder.num === possibleOrder.filledAmount;
                                     const isExpired = possibleOrder.listTime +
                                         this.config.numberConfig.orderExpire < Date.now();
 
                                     if (!isFilled && !isExpired) {
-                                        globalData.itemData[orderInfo.type][orderInfo.id].lastBuys[0] =
-                                            possibleOrder.price;
-                                        globalData.itemData[orderInfo.type][orderInfo.id].lastBuys[2] =
-                                            possibleOrder.userID;
+                                        itemsData[orderInfo.type][orderInfo.id].lastBuys[0] = possibleOrder.price;
+                                        itemsData[orderInfo.type][orderInfo.id].lastBuys[2] = possibleOrder.userID;
                                         break;
                                     }
                                 }
@@ -587,8 +585,8 @@ export default class MarketSubcommand implements Subcommand {
                     const sellOrder: BuySellData = sellOrders[i];
                     const isSameOrder: boolean = sellOrder.userID === orderInfo.data.userID &&
                         sellOrder.listTime === orderInfo.data.listTime;
-                    const orderPrice = globalData.itemData[orderInfo.type][orderInfo.id].sellers[i].price;
-                    const itemLastSell = globalData.itemData[orderInfo.type][orderInfo.id].lastSells[0];
+                    const orderPrice = itemsData[orderInfo.type][orderInfo.id].sellers[i].price;
+                    const itemLastSell = itemsData[orderInfo.type][orderInfo.id].lastSells[0];
                     canCancel = orderInfo.data.filledAmount === sellOrder.filledAmount;
 
                     if (isSameOrder && canCancel) {
@@ -600,21 +598,19 @@ export default class MarketSubcommand implements Subcommand {
                                 colorConfig.green, undefined, undefined, true
                             );
 
-                            globalData.itemData[orderInfo.type][orderInfo.id].sellers.splice(i, 1);
+                            itemsData[orderInfo.type][orderInfo.id].sellers.splice(i, 1);
 
                             if (!isSpecial && orderPrice === itemLastSell) {
-                                globalData.itemData[orderInfo.type][orderInfo.id].lastSells[0] = 0;
-                                globalData.itemData[orderInfo.type][orderInfo.id].lastSells[2] = '';
-                                for (const possibleOrder of globalData.itemData[orderInfo.type][orderInfo.id].sellers) {
+                                itemsData[orderInfo.type][orderInfo.id].lastSells[0] = 0;
+                                itemsData[orderInfo.type][orderInfo.id].lastSells[2] = '';
+                                for (const possibleOrder of itemsData[orderInfo.type][orderInfo.id].sellers) {
                                     const isFilled = possibleOrder.num === possibleOrder.filledAmount;
                                     const isExpired = possibleOrder.listTime +
                                         this.config.numberConfig.orderExpire < Date.now();
 
                                     if (!isFilled && !isExpired) {
-                                        globalData.itemData[orderInfo.type][orderInfo.id].lastSells[0] =
-                                            possibleOrder.price;
-                                        globalData.itemData[orderInfo.type][orderInfo.id].lastSells[2] =
-                                            possibleOrder.userID;
+                                        itemsData[orderInfo.type][orderInfo.id].lastSells[0] = possibleOrder.price;
+                                        itemsData[orderInfo.type][orderInfo.id].lastSells[2] = possibleOrder.userID;
                                         break;
                                     }
                                 }
@@ -636,7 +632,7 @@ export default class MarketSubcommand implements Subcommand {
                     }
                 }
 
-                DataHandlers.saveGlobalData(globalData);
+                DataHandlers.saveGlobalData(itemsData, DataHandlers.GlobalFile.Items);
                 this.getPricingData();
                 this.imageGen.updateInfo(
                     this.pricingData, this.userBuyOrders, this.userSellOrders, this.config
@@ -849,8 +845,9 @@ export default class MarketSubcommand implements Subcommand {
 
                     await Queue.addQueue(async () => {
                         try {
-                            const globalData: GlobalData = DataHandlers.getGlobalData();
-                            const newItemData: ItemData = globalData.itemData[itemData.type][itemData.id];
+                            const itemsData: ItemsData = 
+                                DataHandlers.getGlobalData(DataHandlers.GlobalFile.Items) as ItemsData;
+                            const newItemData: ItemData = itemsData[itemData.type][itemData.id];
 
                             let curPrice = 0;
 
@@ -939,24 +936,24 @@ export default class MarketSubcommand implements Subcommand {
                             }
 
                             if (!isSpecial) {
-                                globalData.itemData[itemData.type][itemData.id].lastSells[0] = 0;
-                                globalData.itemData[itemData.type][itemData.id].lastSells[2] = '';
-                                for (const possibleOrder of globalData.itemData[itemData.type][itemData.id].sellers) {
+                                itemsData[itemData.type][itemData.id].lastSells[0] = 0;
+                                itemsData[itemData.type][itemData.id].lastSells[2] = '';
+                                for (const possibleOrder of itemsData[itemData.type][itemData.id].sellers) {
                                     const isFilled = possibleOrder.num === possibleOrder.filledAmount;
                                     const isExpired = possibleOrder.listTime +
                                         this.config.numberConfig.orderExpire < Date.now();
 
                                     if (!isFilled && !isExpired) {
-                                        globalData.itemData[itemData.type][itemData.id].lastSells[0] =
+                                        itemsData[itemData.type][itemData.id].lastSells[0] =
                                             possibleOrder.price;
-                                        globalData.itemData[itemData.type][itemData.id].lastSells[2] =
+                                        itemsData[itemData.type][itemData.id].lastSells[2] =
                                             possibleOrder.userID;
                                         break;
                                     }
                                 }
                             }
 
-                            DataHandlers.saveGlobalData(globalData);
+                            DataHandlers.saveGlobalData(itemsData, DataHandlers.GlobalFile.Items);
                             this.getPricingData();
                             this.imageGen.updateInfo(
                                 this.pricingData, this.userBuyOrders, this.userSellOrders, this.config
@@ -1068,8 +1065,8 @@ export default class MarketSubcommand implements Subcommand {
 
                     await Queue.addQueue(async () => {
                         try {
-                            const globalData: GlobalData = DataHandlers.getGlobalData();
-                            const newItemData: ItemData = globalData.itemData[itemData.type][itemData.id];
+                            const itemsData: ItemsData = DataHandlers.getGlobalData(DataHandlers.GlobalFile.Items) as ItemsData;
+                            const newItemData: ItemData = itemsData[itemData.type][itemData.id];
 
                             let curPrice = 0;
 
@@ -1192,24 +1189,24 @@ export default class MarketSubcommand implements Subcommand {
                             }
 
                             if (!isSpecial) {
-                                globalData.itemData[itemData.type][itemData.id].lastBuys[0] = 0;
-                                globalData.itemData[itemData.type][itemData.id].lastBuys[2] = '';
-                                for (const possibleOrder of globalData.itemData[itemData.type][itemData.id].buyers) {
+                                itemsData[itemData.type][itemData.id].lastBuys[0] = 0;
+                                itemsData[itemData.type][itemData.id].lastBuys[2] = '';
+                                for (const possibleOrder of itemsData[itemData.type][itemData.id].buyers) {
                                     const isFilled = possibleOrder.num === possibleOrder.filledAmount;
                                     const isExpired = possibleOrder.listTime +
                                         this.config.numberConfig.orderExpire < Date.now();
 
                                     if (!isFilled && !isExpired) {
-                                        globalData.itemData[itemData.type][itemData.id].lastBuys[0] =
+                                        itemsData[itemData.type][itemData.id].lastBuys[0] =
                                             possibleOrder.price;
-                                        globalData.itemData[itemData.type][itemData.id].lastBuys[2] =
+                                        itemsData[itemData.type][itemData.id].lastBuys[2] =
                                             possibleOrder.userID;
                                         break;
                                     }
                                 }
                             }
 
-                            DataHandlers.saveGlobalData(globalData);
+                            DataHandlers.saveGlobalData(itemsData, DataHandlers.GlobalFile.Items);
                             this.getPricingData();
                             this.imageGen.updateInfo(
                                 this.pricingData, this.userBuyOrders, this.userSellOrders, this.config
@@ -1332,7 +1329,7 @@ export default class MarketSubcommand implements Subcommand {
                 if (this.boarUser.stats.general.boarScore >= this.modalData[0] * this.modalData[1]) {
                     await Queue.addQueue(async () => {
                         try {
-                            const globalData: GlobalData = DataHandlers.getGlobalData();
+                            const itemsData: ItemsData = DataHandlers.getGlobalData(DataHandlers.GlobalFile.Items) as ItemsData;
                             const order: BuySellData = {
                                 userID: inter.user.id,
                                 num: this.modalData[0],
@@ -1344,18 +1341,18 @@ export default class MarketSubcommand implements Subcommand {
                                 claimedAmount: 0
                             };
 
-                            globalData.itemData[itemData.type][itemData.id].buyers.push(order);
-                            globalData.itemData[itemData.type][itemData.id].buyers.sort((a, b) => b.price - a.price);
+                            itemsData[itemData.type][itemData.id].buyers.push(order);
+                            itemsData[itemData.type][itemData.id].buyers.sort((a, b) => b.price - a.price);
 
                             if (!isSpecial) {
                                 let highestBuyOrder: BuySellData = new BuySellData;
 
                                 for (
                                     let i=0;
-                                    i<globalData.itemData[itemData.type][itemData.id].buyers.length;
+                                    i<itemsData[itemData.type][itemData.id].buyers.length;
                                     i++
                                 ) {
-                                    const buyData = globalData.itemData[itemData.type][itemData.id].buyers[i];
+                                    const buyData = itemsData[itemData.type][itemData.id].buyers[i];
                                     const isExpired = buyData.listTime +
                                         this.config.numberConfig.orderExpire < Date.now();
                                     const isFilled = buyData.num === buyData.filledAmount;
@@ -1366,11 +1363,11 @@ export default class MarketSubcommand implements Subcommand {
                                     }
                                 }
 
-                                globalData.itemData[itemData.type][itemData.id].lastBuys[0] = highestBuyOrder.price;
-                                globalData.itemData[itemData.type][itemData.id].lastBuys[2] = highestBuyOrder.userID;
+                                itemsData[itemData.type][itemData.id].lastBuys[0] = highestBuyOrder.price;
+                                itemsData[itemData.type][itemData.id].lastBuys[2] = highestBuyOrder.userID;
                             }
 
-                            DataHandlers.saveGlobalData(globalData);
+                            DataHandlers.saveGlobalData(itemsData, DataHandlers.GlobalFile.Items);
                             this.getPricingData();
                             this.imageGen.updateInfo(
                                 this.pricingData, this.userBuyOrders, this.userSellOrders, this.config
@@ -1420,7 +1417,7 @@ export default class MarketSubcommand implements Subcommand {
 
                     await Queue.addQueue(async () => {
                         try {
-                            const globalData: GlobalData = DataHandlers.getGlobalData();
+                            const itemsData: ItemsData = DataHandlers.getGlobalData(DataHandlers.GlobalFile.Items) as ItemsData;
 
                             const editions: number[] = itemData.type === 'boars'
                                 ? this.boarUser.itemCollection.boars[itemData.id]
@@ -1442,14 +1439,14 @@ export default class MarketSubcommand implements Subcommand {
                                 claimedAmount: 0
                             };
 
-                            globalData.itemData[itemData.type][itemData.id].sellers.push(order);
-                            globalData.itemData[itemData.type][itemData.id].sellers.sort((a, b) => a.price - b.price);
+                            itemsData[itemData.type][itemData.id].sellers.push(order);
+                            itemsData[itemData.type][itemData.id].sellers.sort((a, b) => a.price - b.price);
 
                             if (!isSpecial) {
                                 let lowestSellOrder: BuySellData = new BuySellData;
 
-                                for (let i=0; i<globalData.itemData[itemData.type][itemData.id].sellers.length; i++) {
-                                    const sellData = globalData.itemData[itemData.type][itemData.id].sellers[i];
+                                for (let i=0; i<itemsData[itemData.type][itemData.id].sellers.length; i++) {
+                                    const sellData = itemsData[itemData.type][itemData.id].sellers[i];
                                     const isExpired = sellData.listTime +
                                         this.config.numberConfig.orderExpire < Date.now();
                                     const isFilled = sellData.num === sellData.filledAmount;
@@ -1460,11 +1457,11 @@ export default class MarketSubcommand implements Subcommand {
                                     }
                                 }
 
-                                globalData.itemData[itemData.type][itemData.id].lastSells[0] = lowestSellOrder.price;
-                                globalData.itemData[itemData.type][itemData.id].lastSells[2] = lowestSellOrder.userID;
+                                itemsData[itemData.type][itemData.id].lastSells[0] = lowestSellOrder.price;
+                                itemsData[itemData.type][itemData.id].lastSells[2] = lowestSellOrder.userID;
                             }
 
-                            DataHandlers.saveGlobalData(globalData);
+                            DataHandlers.saveGlobalData(itemsData, DataHandlers.GlobalFile.Items);
                             this.getPricingData();
                             this.imageGen.updateInfo(
                                 this.pricingData, this.userBuyOrders, this.userSellOrders, this.config
@@ -1548,10 +1545,10 @@ export default class MarketSubcommand implements Subcommand {
 
             await Queue.addQueue(async () => {
                 try {
-                    const globalData: GlobalData = DataHandlers.getGlobalData();
+                    const itemsData: ItemsData = DataHandlers.getGlobalData(DataHandlers.GlobalFile.Items) as ItemsData;
 
-                    const buyOrders = globalData.itemData[orderInfo.type][orderInfo.id].buyers;
-                    const sellOrders = globalData.itemData[orderInfo.type][orderInfo.id].sellers;
+                    const buyOrders = itemsData[orderInfo.type][orderInfo.id].buyers;
+                    const sellOrders = itemsData[orderInfo.type][orderInfo.id].sellers;
 
                     for (let i=0; i<buyOrders.length && !isSell; i++) {
                         const buyOrder = buyOrders[i];
@@ -1578,15 +1575,15 @@ export default class MarketSubcommand implements Subcommand {
                                     await this.boarUser.orderBoars(this.compInter, this.config);
                                     this.boarUser.updateUserData();
 
-                                    globalData.itemData[orderInfo.type][orderInfo.id].buyers[i].price =
+                                    itemsData[orderInfo.type][orderInfo.id].buyers[i].price =
                                         this.modalData[1];
-                                    globalData.itemData[orderInfo.type][orderInfo.id].buyers[i].listTime = Date.now();
+                                    itemsData[orderInfo.type][orderInfo.id].buyers[i].listTime = Date.now();
 
                                     const newOrderData: BuySellData =
-                                        globalData.itemData[orderInfo.type][orderInfo.id].buyers.splice(i, 1)[0];
-                                    globalData.itemData[orderInfo.type][orderInfo.id].buyers.push(newOrderData);
+                                        itemsData[orderInfo.type][orderInfo.id].buyers.splice(i, 1)[0];
+                                    itemsData[orderInfo.type][orderInfo.id].buyers.push(newOrderData);
 
-                                    globalData.itemData[orderInfo.type][orderInfo.id].buyers
+                                    itemsData[orderInfo.type][orderInfo.id].buyers
                                         .sort((a, b) => b.price - a.price);
 
                                     if (!isSpecial) {
@@ -1594,10 +1591,10 @@ export default class MarketSubcommand implements Subcommand {
 
                                         for (
                                             let i=0;
-                                            i<globalData.itemData[orderInfo.type][orderInfo.id].buyers.length;
+                                            i<itemsData[orderInfo.type][orderInfo.id].buyers.length;
                                             i++
                                         ) {
-                                            const buyData = globalData.itemData[orderInfo.type][orderInfo.id].buyers[i];
+                                            const buyData = itemsData[orderInfo.type][orderInfo.id].buyers[i];
                                             const isExpired = buyData.listTime +
                                                 this.config.numberConfig.orderExpire < Date.now();
                                             const isFilled = buyData.num === buyData.filledAmount;
@@ -1608,9 +1605,9 @@ export default class MarketSubcommand implements Subcommand {
                                             }
                                         }
 
-                                        globalData.itemData[orderInfo.type][orderInfo.id].lastBuys[0] =
+                                        itemsData[orderInfo.type][orderInfo.id].lastBuys[0] =
                                             highestBuyOrder.price;
-                                        globalData.itemData[orderInfo.type][orderInfo.id].lastBuys[2] =
+                                        itemsData[orderInfo.type][orderInfo.id].lastBuys[2] =
                                             highestBuyOrder.userID;
                                     }
 
@@ -1649,14 +1646,14 @@ export default class MarketSubcommand implements Subcommand {
                                 showModal = false;
                                 foundOrder = true;
 
-                                globalData.itemData[orderInfo.type][orderInfo.id].sellers[i].price = this.modalData[1];
-                                globalData.itemData[orderInfo.type][orderInfo.id].sellers[i].listTime = Date.now();
+                                itemsData[orderInfo.type][orderInfo.id].sellers[i].price = this.modalData[1];
+                                itemsData[orderInfo.type][orderInfo.id].sellers[i].listTime = Date.now();
 
                                 const newOrderData: BuySellData =
-                                    globalData.itemData[orderInfo.type][orderInfo.id].sellers.splice(i, 1)[0];
-                                globalData.itemData[orderInfo.type][orderInfo.id].sellers.push(newOrderData);
+                                    itemsData[orderInfo.type][orderInfo.id].sellers.splice(i, 1)[0];
+                                itemsData[orderInfo.type][orderInfo.id].sellers.push(newOrderData);
 
-                                globalData.itemData[orderInfo.type][orderInfo.id].sellers
+                                itemsData[orderInfo.type][orderInfo.id].sellers
                                     .sort((a, b) => a.price - b.price);
 
                                 if (!isSpecial) {
@@ -1664,10 +1661,10 @@ export default class MarketSubcommand implements Subcommand {
 
                                     for (
                                         let i=0;
-                                        i<globalData.itemData[orderInfo.type][orderInfo.id].sellers.length;
+                                        i<itemsData[orderInfo.type][orderInfo.id].sellers.length;
                                         i++
                                     ) {
-                                        const sellData = globalData.itemData[orderInfo.type][orderInfo.id].sellers[i];
+                                        const sellData = itemsData[orderInfo.type][orderInfo.id].sellers[i];
                                         const isExpired = sellData.listTime +
                                             this.config.numberConfig.orderExpire < Date.now();
                                         const isFilled = sellData.num === sellData.filledAmount;
@@ -1678,9 +1675,9 @@ export default class MarketSubcommand implements Subcommand {
                                         }
                                     }
 
-                                    globalData.itemData[orderInfo.type][orderInfo.id].lastSells[0] =
+                                    itemsData[orderInfo.type][orderInfo.id].lastSells[0] =
                                         lowestSellOrder.price;
-                                    globalData.itemData[orderInfo.type][orderInfo.id].lastSells[2] =
+                                    itemsData[orderInfo.type][orderInfo.id].lastSells[2] =
                                         lowestSellOrder.userID;
                                 }
 
@@ -1705,7 +1702,7 @@ export default class MarketSubcommand implements Subcommand {
                         }
                     }
 
-                    DataHandlers.saveGlobalData(globalData);
+                    DataHandlers.saveGlobalData(itemsData, DataHandlers.GlobalFile.Items);
                     this.getPricingData();
                     this.imageGen.updateInfo(
                         this.pricingData, this.userBuyOrders, this.userSellOrders, this.config
@@ -1750,7 +1747,7 @@ export default class MarketSubcommand implements Subcommand {
     }
 
     private getPricingData(): void {
-        const itemData = DataHandlers.getGlobalData().itemData;
+        const itemsData: ItemsData = DataHandlers.getGlobalData(DataHandlers.GlobalFile.Items) as ItemsData;
         const curItem = this.pricingData.length > 0
             ? this.pricingData[this.curPage]
             : undefined;
@@ -1760,15 +1757,15 @@ export default class MarketSubcommand implements Subcommand {
         this.userBuyOrders = [];
         this.userSellOrders = [];
 
-        for (const itemType of Object.keys(itemData)) {
-            for (const itemID of Object.keys(itemData[itemType])) {
+        for (const itemType of Object.keys(itemsData)) {
+            for (const itemID of Object.keys(itemsData[itemType])) {
                 this.pricingData.push({
                     id: itemID,
                     type: itemType,
-                    buyers: itemData[itemType][itemID].buyers,
-                    sellers: itemData[itemType][itemID].sellers,
-                    lastBuys: itemData[itemType][itemID].lastBuys,
-                    lastSells: itemData[itemType][itemID].lastSells
+                    buyers: itemsData[itemType][itemID].buyers,
+                    sellers: itemsData[itemType][itemID].sellers,
+                    lastBuys: itemsData[itemType][itemID].lastBuys,
+                    lastSells: itemsData[itemType][itemID].lastSells
                 });
 
                 this.pricingDataTree = this.pricingDataTree.insert(
@@ -2342,7 +2339,9 @@ export default class MarketSubcommand implements Subcommand {
 
             const price = priceVal * numVal;
 
-            const bucksBoardData = DataHandlers.getGlobalData().leaderboardData['bucks'];
+            const leaderboardsData: Record<string, BoardData> =
+                DataHandlers.getGlobalData(DataHandlers.GlobalFile.Leaderboards) as Record<string, BoardData>;
+            const bucksBoardData = leaderboardsData['bucks'];
             let maxBucks = this.config.numberConfig.marketMaxBucks;
             for (const userID of Object.keys(bucksBoardData.userData)) {
                 maxBucks = Math.max(maxBucks, bucksBoardData.userData[userID] as number * 10);
@@ -2459,7 +2458,8 @@ export default class MarketSubcommand implements Subcommand {
 
             const itemData = this.pricingData[this.curPage];
 
-            const curEdition = DataHandlers.getGlobalData().itemData[itemData.type][itemData.id].curEdition as number;
+            const itemsData: ItemsData = DataHandlers.getGlobalData(DataHandlers.GlobalFile.Items) as ItemsData;
+            const curEdition = itemsData[itemData.type][itemData.id].curEdition as number;
 
             if (editionVal > curEdition) {
                 await Replies.handleReply(
@@ -2499,7 +2499,9 @@ export default class MarketSubcommand implements Subcommand {
                 return;
             }
 
-            const bucksBoardData = DataHandlers.getGlobalData().leaderboardData['bucks'];
+            const leaderboardsData: Record<string, BoardData> =
+                DataHandlers.getGlobalData(DataHandlers.GlobalFile.Leaderboards) as Record<string, BoardData>;
+            const bucksBoardData = leaderboardsData['bucks'];
             let maxBucks = this.config.numberConfig.marketMaxBucks;
             for (const userID of Object.keys(bucksBoardData.userData)) {
                 maxBucks = Math.max(maxBucks, bucksBoardData.userData[userID] as number * 10);
@@ -2600,7 +2602,9 @@ export default class MarketSubcommand implements Subcommand {
                 ? strConfig.marketConfirmUpdateIncrease
                 : strConfig.marketConfirmUpdateDecrease;
 
-            const bucksBoardData = DataHandlers.getGlobalData().leaderboardData['bucks'];
+            const leaderboardsData: Record<string, BoardData> =
+                DataHandlers.getGlobalData(DataHandlers.GlobalFile.Leaderboards) as Record<string, BoardData>;
+            const bucksBoardData = leaderboardsData['bucks'];
             let maxBucks = this.config.numberConfig.marketMaxBucks;
             for (const userID of Object.keys(bucksBoardData.userData)) {
                 maxBucks = Math.max(maxBucks, bucksBoardData.userData[userID] as number * 10);

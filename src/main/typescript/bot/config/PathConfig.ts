@@ -19,7 +19,10 @@ export class PathConfig {
     public readonly guildDataFolder: string = '';
     public readonly userDataFolder: string = '';
     public readonly globalDataFolder: string = '';
-    public readonly globalFileName: string = '';
+    public readonly itemDataFileName: string = '';
+    public readonly leaderboardsFileName: string = '';
+    public readonly bannedUsersFileName: string = '';
+    public readonly powerupDataFileName: string = '';
     public readonly githubFileName: string = '';
     public readonly logsFolder: string = '';
     public readonly prodStartScript: string = '';

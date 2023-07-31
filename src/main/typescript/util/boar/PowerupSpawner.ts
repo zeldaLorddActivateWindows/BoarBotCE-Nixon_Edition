@@ -31,6 +31,7 @@ import {PromptTypeConfigs} from '../../bot/config/prompts/PromptTypeConfigs';
 import {StringConfig} from '../../bot/config/StringConfig';
 import {ItemConfig} from '../../bot/config/items/ItemConfig';
 import {PromptConfigs} from '../../bot/config/prompts/PromptConfigs';
+import {PowerupData} from '../data/global/PowerupData';
 
 export class PowerupSpawner {
     private readonly initIntervalVal: number = 0;
@@ -101,9 +102,9 @@ export class PowerupSpawner {
 
             await Queue.addQueue(async () => {
                 try {
-                    const globalData = DataHandlers.getGlobalData();
-                    globalData.nextPowerup = Date.now() + newInterval;
-                    DataHandlers.saveGlobalData(globalData);
+                    const powerupData = DataHandlers.getGlobalData(DataHandlers.GlobalFile.Powerups) as PowerupData;
+                    powerupData.nextPowerup = Date.now() + newInterval;
+                    DataHandlers.saveGlobalData(powerupData, DataHandlers.GlobalFile.Powerups);
                 } catch (err: unknown) {
                     await LogDebug.handleError(err);
                 }

@@ -7,10 +7,18 @@ import {GuildData} from './global/GuildData';
 import {BotConfig} from '../../bot/config/BotConfig';
 import {StringConfig} from '../../bot/config/StringConfig';
 import {BoarUser} from '../boar/BoarUser';
-import {GlobalData} from './global/GlobalData';
 import {ItemData} from './global/ItemData';
 import {BoardData} from './global/BoardData';
 import {GitHubData} from './global/GitHubData';
+import {ItemsData} from './global/ItemsData';
+import {PowerupData} from './global/PowerupData';
+
+enum GlobalFile {
+    Items,
+    Leaderboards,
+    BannedUsers,
+    Powerups
+}
 
 /**
  * {@link DataHandlers DataHandlers.ts}
@@ -22,57 +30,102 @@ import {GitHubData} from './global/GitHubData';
  * @copyright WeslayCodes 2023
  */
 export class DataHandlers {
+    public static GlobalFile = GlobalFile;
+
     /**
-     * Gets data from global JSON file
+     * Gets data from items data JSON file
      *
-     * @return globalData - Global data parsed from JSON
+     * @return itemsData - Items data parsed from JSON
      */
-    public static getGlobalData(): GlobalData {
+    public static getGlobalData(file: GlobalFile):
+        ItemsData | Record<string, BoardData> | Record<string, number | undefined> | PowerupData
+    {
         const config: BotConfig = BoarBotApp.getBot().getConfig();
 
-        const globalFile: string = config.pathConfig.globalDataFolder + config.pathConfig.globalFileName;
-        let globalData: GlobalData | undefined;
+        const fileName = this.getGlobalFilename(file);
+
+        const dataFile: string = config.pathConfig.globalDataFolder + fileName;
+        let data: ItemsData | Record<string, BoardData> | Record<string, number | undefined> | PowerupData | undefined;
 
         try {
-            globalData = JSON.parse(fs.readFileSync(globalFile, 'utf-8'));
+            data = JSON.parse(fs.readFileSync(dataFile, 'utf-8'));
         } catch {}
 
-        if (!globalData || globalData.nextPowerup === undefined) {
-            LogDebug.log('Creating global data file...', config);
-            globalData = new GlobalData;
+        if (!data || Object.keys(data).length === 0) {
+            LogDebug.log('Creating global data file \'' + fileName + '\'...', config);
+            switch (file) {
+                case GlobalFile.Items:
+                    data = new ItemsData();
 
-            for (const powerupID of Object.keys(config.itemConfigs.powerups)) {
-                globalData.itemData.powerups[powerupID] = new ItemData;
+                    for (const powerupID of Object.keys(config.itemConfigs.powerups)) {
+                        data.powerups[powerupID] = new ItemData;
+                    }
+
+                    break;
+                case GlobalFile.Leaderboards:
+                    data = {};
+
+                    for (let i=0; i<config.commandConfigs.boar.top.args[0].choices.length; i++) {
+                        const boardID = config.commandConfigs.boar.top.args[0].choices[i].value;
+                        data[boardID] = new BoardData;
+                    }
+
+                    break;
+                case GlobalFile.BannedUsers:
+                    data = {};
+                    break;
+                case GlobalFile.Powerups:
+                    data = new PowerupData();
+                    break;
             }
 
-            for (let i=0; i<config.commandConfigs.boar.top.args[0].choices.length; i++) {
-                const boardID = config.commandConfigs.boar.top.args[0].choices[i].value;
-                globalData.leaderboardData[boardID] = new BoardData;
-            }
-
-            DataHandlers.saveGlobalData(globalData);
+            DataHandlers.saveGlobalData(data, file);
         }
 
-        return globalData;
+        return data;
     }
 
-    public static saveGlobalData(data: GlobalData) {
+    public static saveGlobalData(
+        data: ItemsData | Record<string, BoardData> | Record<string, number | undefined> | PowerupData | undefined,
+        file: GlobalFile
+    ) {
         const config: BotConfig = BoarBotApp.getBot().getConfig();
+        fs.writeFileSync(config.pathConfig.globalDataFolder + this.getGlobalFilename(file), JSON.stringify(data));
+    }
 
-        fs.writeFileSync(config.pathConfig.globalDataFolder + config.pathConfig.globalFileName, JSON.stringify(data));
+    private static getGlobalFilename(file: GlobalFile): string {
+        const config: BotConfig = BoarBotApp.getBot().getConfig();
+        let fileName = '';
+
+        switch (file) {
+            case GlobalFile.Items:
+                fileName = config.pathConfig.itemDataFileName;
+                break;
+            case GlobalFile.Leaderboards:
+                fileName = config.pathConfig.leaderboardsFileName;
+                break;
+            case GlobalFile.BannedUsers:
+                fileName = config.pathConfig.bannedUsersFileName;
+                break;
+            case GlobalFile.Powerups:
+                fileName = config.pathConfig.powerupDataFileName;
+                break;
+        }
+
+        return fileName;
     }
 
     public static async updateLeaderboardData(
         boarUser: BoarUser, inter: MessageComponentInteraction | ChatInputCommandInteraction, config: BotConfig
     ): Promise<void> {
         try {
-            const globalData = DataHandlers.getGlobalData();
+            const boardsData = DataHandlers.getGlobalData(GlobalFile.Leaderboards) as Record<string, BoardData>;
             const userID = boarUser.user.id;
 
-            globalData.leaderboardData.bucks.userData[userID] = boarUser.stats.general.boarScore > 0
+            boardsData.bucks.userData[userID] = boarUser.stats.general.boarScore > 0
                 ? boarUser.stats.general.boarScore
                 : undefined;
-            globalData.leaderboardData.total.userData[userID] = boarUser.stats.general.totalBoars > 0
+            boardsData.total.userData[userID] = boarUser.stats.general.totalBoars > 0
                 ? boarUser.stats.general.totalBoars
                 : undefined;
 
@@ -89,30 +142,30 @@ export class DataHandlers {
                 }
             }
 
-            globalData.leaderboardData.uniques.userData[userID] = uniques > 0
+            boardsData.uniques.userData[userID] = uniques > 0
                 ? uniques
                 : undefined;
 
-            globalData.leaderboardData.uniquesSB.userData[userID] = Object.keys(boarUser.itemCollection.boars).length > 0
+            boardsData.uniquesSB.userData[userID] = Object.keys(boarUser.itemCollection.boars).length > 0
                 ? Object.keys(boarUser.itemCollection.boars).length
                 : undefined;
-            globalData.leaderboardData.streak.userData[userID] = boarUser.stats.general.boarStreak > 0
+            boardsData.streak.userData[userID] = boarUser.stats.general.boarStreak > 0
                 ? boarUser.stats.general.boarStreak
                 : undefined;
-            globalData.leaderboardData.attempts.userData[userID] = boarUser.stats.powerups.attempts > 0
+            boardsData.attempts.userData[userID] = boarUser.stats.powerups.attempts > 0
                 ? boarUser.stats.powerups.attempts
                 : undefined;
-            globalData.leaderboardData.topAttempts.userData[userID] = boarUser.stats.powerups.topAttempts > 0
+            boardsData.topAttempts.userData[userID] = boarUser.stats.powerups.topAttempts > 0
                 ? boarUser.stats.powerups.topAttempts
                 : undefined;
-            globalData.leaderboardData.giftsUsed.userData[userID] = boarUser.itemCollection.powerups.gift.numUsed > 0
+            boardsData.giftsUsed.userData[userID] = boarUser.itemCollection.powerups.gift.numUsed > 0
                 ? boarUser.itemCollection.powerups.gift.numUsed
                 : undefined;
-            globalData.leaderboardData.multiplier.userData[userID] = boarUser.stats.general.multiplier > 1
+            boardsData.multiplier.userData[userID] = boarUser.stats.general.multiplier > 1
                 ? boarUser.stats.general.multiplier
                 : undefined;
 
-            DataHandlers.saveGlobalData(globalData);
+            DataHandlers.saveGlobalData(boardsData, GlobalFile.Leaderboards);
         } catch (err: unknown) {
             await LogDebug.handleError(err, inter);
         }
@@ -120,43 +173,43 @@ export class DataHandlers {
 
     public static async removeLeaderboardUser(userID: string) {
         try {
-            const globalData = DataHandlers.getGlobalData();
+            const boardsData = DataHandlers.getGlobalData(GlobalFile.Leaderboards) as Record<string, BoardData>;
 
-            globalData.leaderboardData.bucks.userData[userID] = undefined;
-            globalData.leaderboardData.total.userData[userID] = undefined;
-            globalData.leaderboardData.uniques.userData[userID] = undefined;
-            globalData.leaderboardData.streak.userData[userID] = undefined;
-            globalData.leaderboardData.attempts.userData[userID] = undefined;
-            globalData.leaderboardData.topAttempts.userData[userID] = undefined;
-            globalData.leaderboardData.giftsUsed.userData[userID] = undefined;
-            globalData.leaderboardData.multiplier.userData[userID] = undefined;
+            boardsData.bucks.userData[userID] = undefined;
+            boardsData.total.userData[userID] = undefined;
+            boardsData.uniques.userData[userID] = undefined;
+            boardsData.streak.userData[userID] = undefined;
+            boardsData.attempts.userData[userID] = undefined;
+            boardsData.topAttempts.userData[userID] = undefined;
+            boardsData.giftsUsed.userData[userID] = undefined;
+            boardsData.multiplier.userData[userID] = undefined;
 
-            globalData.leaderboardData.bucks.topUser = globalData.leaderboardData.bucks.topUser === userID
+            boardsData.bucks.topUser = boardsData.bucks.topUser === userID
                 ? undefined
-                : globalData.leaderboardData.bucks.topUser;
-            globalData.leaderboardData.total.topUser = globalData.leaderboardData.total.topUser === userID
+                : boardsData.bucks.topUser;
+            boardsData.total.topUser = boardsData.total.topUser === userID
                 ? undefined
-                : globalData.leaderboardData.total.topUser;
-            globalData.leaderboardData.uniques.topUser = globalData.leaderboardData.uniques.topUser === userID
+                : boardsData.total.topUser;
+            boardsData.uniques.topUser = boardsData.uniques.topUser === userID
                 ? undefined
-                : globalData.leaderboardData.uniques.topUser;
-            globalData.leaderboardData.streak.topUser = globalData.leaderboardData.streak.topUser === userID
+                : boardsData.uniques.topUser;
+            boardsData.streak.topUser = boardsData.streak.topUser === userID
                 ? undefined
-                : globalData.leaderboardData.streak.topUser;
-            globalData.leaderboardData.attempts.topUser = globalData.leaderboardData.attempts.topUser === userID
+                : boardsData.streak.topUser;
+            boardsData.attempts.topUser = boardsData.attempts.topUser === userID
                 ? undefined
-                : globalData.leaderboardData.attempts.topUser;
-            globalData.leaderboardData.topAttempts.topUser = globalData.leaderboardData.topAttempts.topUser === userID
+                : boardsData.attempts.topUser;
+            boardsData.topAttempts.topUser = boardsData.topAttempts.topUser === userID
                 ? undefined
-                : globalData.leaderboardData.topAttempts.topUser;
-            globalData.leaderboardData.giftsUsed.topUser = globalData.leaderboardData.giftsUsed.topUser === userID
+                : boardsData.topAttempts.topUser;
+            boardsData.giftsUsed.topUser = boardsData.giftsUsed.topUser === userID
                 ? undefined
-                : globalData.leaderboardData.giftsUsed.topUser;
-            globalData.leaderboardData.multiplier.topUser = globalData.leaderboardData.multiplier.topUser === userID
+                : boardsData.giftsUsed.topUser;
+            boardsData.multiplier.topUser = boardsData.multiplier.topUser === userID
                 ? undefined
-                : globalData.leaderboardData.multiplier.topUser;
+                : boardsData.multiplier.topUser;
 
-            DataHandlers.saveGlobalData(globalData);
+            DataHandlers.saveGlobalData(boardsData, GlobalFile.Leaderboards);
         } catch (err: unknown) {
             await LogDebug.handleError(err);
         }
@@ -222,10 +275,12 @@ export class DataHandlers {
         try {
             githubData = JSON.parse(fs.readFileSync(githubFile, 'utf-8'));
         } catch {
-            try {
-                githubData = new GitHubData();
-                fs.writeFileSync(githubFile, JSON.stringify(githubData));
-            } catch {}
+            if (config.pathConfig.githubFileName) {
+                try {
+                    githubData = new GitHubData();
+                    fs.writeFileSync(githubFile, JSON.stringify(githubData));
+                } catch {}
+            }
         }
 
         return githubData;

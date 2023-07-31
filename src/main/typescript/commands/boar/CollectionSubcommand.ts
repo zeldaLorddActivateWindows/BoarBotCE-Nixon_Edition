@@ -120,7 +120,8 @@ export default class CollectionSubcommand implements Subcommand {
 
             if (!hasAthlete) return;
 
-            const leaderboardData: Record<string, BoardData> = DataHandlers.getGlobalData().leaderboardData;
+            const leaderboardData: Record<string, BoardData> =
+                DataHandlers.getGlobalData(DataHandlers.GlobalFile.Leaderboards) as Record<string, BoardData>;
 
             let removeAthlete = true;
             for (const boardID of Object.keys(leaderboardData)) {

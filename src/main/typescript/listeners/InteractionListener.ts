@@ -18,6 +18,7 @@ import {Queue} from '../util/interactions/Queue';
 import {BoarUser} from '../util/boar/BoarUser';
 import fs from 'fs';
 import {DataHandlers} from '../util/data/DataHandlers';
+import {ItemsData} from '../util/data/global/ItemsData';
 
 /**
  * {@link InteractionListener InteractionListener.ts}
@@ -70,17 +71,18 @@ export default class InteractionListener implements Listener {
                             fs.rmSync(this.config.pathConfig.userDataFolder + interaction.user.id + '.json');
                         } catch {}
                         await Queue.addQueue(() => {
-                            const globalData = DataHandlers.getGlobalData();
+                            const itemsData: ItemsData =
+                                DataHandlers.getGlobalData(DataHandlers.GlobalFile.Items) as ItemsData;
 
-                            for (const itemTypeID of Object.keys(globalData.itemData)) {
-                                for (const itemID of Object.keys(globalData.itemData[itemTypeID])) {
-                                    const itemData = globalData.itemData[itemTypeID][itemID];
+                            for (const itemTypeID of Object.keys(itemsData)) {
+                                for (const itemID of Object.keys(itemsData[itemTypeID])) {
+                                    const itemData = itemsData[itemTypeID][itemID];
 
                                     for (let i=0; i<itemData.buyers.length; i++) {
                                         const buyOrder = itemData.buyers[i];
 
                                         if (buyOrder.userID === boarUser.user.id) {
-                                            globalData.itemData[itemTypeID][itemID].buyers.splice(i, 1);
+                                            itemsData[itemTypeID][itemID].buyers.splice(i, 1);
                                         }
                                     }
 
@@ -88,13 +90,13 @@ export default class InteractionListener implements Listener {
                                         const sellOrder = itemData.sellers[i];
 
                                         if (sellOrder.userID === boarUser.user.id) {
-                                            globalData.itemData[itemTypeID][itemID].sellers.splice(i, 1);
+                                            itemsData[itemTypeID][itemID].sellers.splice(i, 1);
                                         }
                                     }
                                 }
                             }
 
-                            DataHandlers.saveGlobalData(globalData);
+                            DataHandlers.saveGlobalData(itemsData, DataHandlers.GlobalFile.Items);
                         }, interaction.id + 'global');
                     } else if (boarUser.stats.general.deletionTime !== undefined) {
                         boarUser.stats.general.deletionTime = undefined;

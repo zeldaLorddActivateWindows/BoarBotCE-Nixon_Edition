@@ -27,7 +27,6 @@ import {ModalConfig} from '../../bot/config/modals/ModalConfig';
 import {BoardData} from '../../util/data/global/BoardData';
 import {BoarUser} from '../../util/boar/BoarUser';
 import {Queue} from '../../util/interactions/Queue';
-import {GlobalData} from '../../util/data/global/GlobalData';
 
 enum Board {
     Bucks = 'bucks',
@@ -97,7 +96,8 @@ export default class TopSubcommand implements Subcommand {
             ? interaction.options.getInteger(this.subcommandInfo.args[2].name) as number
             : 1;
 
-        this.leaderboardData = DataHandlers.getGlobalData().leaderboardData;
+        this.leaderboardData =
+            DataHandlers.getGlobalData(DataHandlers.GlobalFile.Leaderboards) as Record<string, BoardData>;
 
         this.curBoardData = (Object.entries(this.leaderboardData[this.curBoard].userData) as [string, number][])
             .sort((a, b) => b[1] - a[1]);
@@ -436,9 +436,10 @@ export default class TopSubcommand implements Subcommand {
                 await newTopBoarUser.addBadge('athlete', this.firstInter);
 
                 await Queue.addQueue(async () => {
-                    const globalData: GlobalData = DataHandlers.getGlobalData();
-                    globalData.leaderboardData[this.curBoard].topUser = newTopUserID;
-                    DataHandlers.saveGlobalData(globalData);
+                    const boardsData: Record<string, BoardData> =
+                        DataHandlers.getGlobalData(DataHandlers.GlobalFile.Leaderboards) as Record<string, BoardData>;
+                    boardsData[this.curBoard].topUser = newTopUserID;
+                    DataHandlers.saveGlobalData(boardsData, DataHandlers.GlobalFile.Leaderboards);
                 }, newTopUserID + 'global').catch((err) => { throw err });
             } catch {}
         }

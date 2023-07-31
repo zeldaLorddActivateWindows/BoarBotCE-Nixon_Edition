@@ -56,9 +56,11 @@ export default class BanSubcommand implements Subcommand {
 
         await Queue.addQueue(async () => {
             try {
-                const globalData = DataHandlers.getGlobalData();
-                globalData.bannedUsers[userInput.id] = Date.now() + timeInput * 60 * 60 * 1000;
-                DataHandlers.saveGlobalData(globalData);
+                const bannedUserData: Record<string, number | undefined> = DataHandlers.getGlobalData(
+                    DataHandlers.GlobalFile.BannedUsers
+                ) as Record<string, number | undefined>;
+                bannedUserData[userInput.id] = Date.now() + timeInput * 60 * 60 * 1000;
+                DataHandlers.saveGlobalData(bannedUserData, DataHandlers.GlobalFile.BannedUsers);
 
                 await Replies.handleReply(
                     interaction, this.config.stringConfig.banSuccess
