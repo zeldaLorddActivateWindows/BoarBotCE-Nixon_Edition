@@ -76,13 +76,11 @@ export default class HelpSubcommand implements Subcommand {
 
         // The help area to start out in
         this.curArea = interaction.options.getInteger(this.subcommandInfo.args[0].name)
-            ? interaction.options.getInteger(this.subcommandInfo.args[0].name) as Area
-            : Area.General;
+            ?? Area.General;
 
         // The page to start out on
         this.curPage = interaction.options.getInteger(this.subcommandInfo.args[1].name)
-            ? interaction.options.getInteger(this.subcommandInfo.args[1].name) as number - 1
-            : 0;
+            ?? 0;
 
         this.curPage = Math.max(0, this.curPage);
         this.curPage = Math.min(this.helpImages[this.curArea].length-1, this.curPage);

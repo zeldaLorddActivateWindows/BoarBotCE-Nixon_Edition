@@ -46,8 +46,7 @@ export default class BanSubcommand implements Subcommand {
 
         const userInput: User | null = interaction.options.getUser(this.subcommandInfo.args[0].name);
         const timeInput: number = interaction.options.getInteger(this.subcommandInfo.args[1].name)
-            ? interaction.options.getInteger(this.subcommandInfo.args[1].name) as number
-            : 24;
+            ?? 24;
 
         if (!userInput) {
             await Replies.handleReply(interaction, strConfig.nullFound);

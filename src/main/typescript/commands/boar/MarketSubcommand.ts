@@ -156,14 +156,11 @@ export default class MarketSubcommand implements Subcommand {
 
         // View to start out in
         this.curView = interaction.options.getInteger(this.subcommandInfo.args[0].name)
-            ? interaction.options.getInteger(this.subcommandInfo.args[0].name) as View
-            : View.Overview;
+            ?? View.Overview;
 
         // Page to start out on
-        const pageInput: string = interaction.options.getString(this.subcommandInfo.args[1].name)
-            ? (interaction.options.getString(this.subcommandInfo.args[1].name) as string)
-                .toLowerCase().replace(/\s+/g, '')
-            : '1';
+        const pageInput: string = interaction.options.getString(this.subcommandInfo.args[1].name)?.toLowerCase()
+            .replace(/\s+/g, '') ?? '1';
 
         this.getPricingData();
         this.boarUser = new BoarUser(interaction.user);

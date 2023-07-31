@@ -84,17 +84,15 @@ export default class TopSubcommand implements Subcommand {
         this.firstInter = interaction;
 
         // Leaderboard to start out in
-        this.curBoard = interaction.options.getString(this.subcommandInfo.args[0].name)
-            ? interaction.options.getString(this.subcommandInfo.args[0].name) as Board
-            : Board.Bucks;
+        this.curBoard = interaction.options.getString(this.subcommandInfo.args[0].name) as Board.Bucks | null
+            ?? Board.Bucks;
 
         // Used to get the page of the board a user is on
         const userInput: User | null = interaction.options.getUser(this.subcommandInfo.args[1].name);
 
         // Used to get the page to start out on
         const pageInput: number = interaction.options.getInteger(this.subcommandInfo.args[2].name)
-            ? interaction.options.getInteger(this.subcommandInfo.args[2].name) as number
-            : 1;
+            ?? 1;
 
         this.leaderboardData =
             DataHandlers.getGlobalData(DataHandlers.GlobalFile.Leaderboards) as Record<string, BoardData>;

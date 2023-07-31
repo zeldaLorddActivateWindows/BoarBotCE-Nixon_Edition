@@ -85,13 +85,11 @@ export default class DailySubcommand implements Subcommand {
 
                 // Gets whether to try to use boost
                 const boostInput: boolean = this.interaction.options.getBoolean(this.subcommandInfo.args[0].name)
-                    ? this.interaction.options.getBoolean(this.subcommandInfo.args[0].name) as boolean
-                    : false;
+                    ?? false;
 
                 // Gets whether to try to use extra chance
                 const extraInput: boolean = this.interaction.options.getBoolean(this.subcommandInfo.args[1].name)
-                    ? this.interaction.options.getBoolean(this.subcommandInfo.args[1].name) as boolean
-                    : false;
+                    ?? false;
 
                 // Map of rarity index keys and weight values
                 let rarityWeights: Map<number, number> = BoarUtils.getBaseRarityWeights(this.config);
