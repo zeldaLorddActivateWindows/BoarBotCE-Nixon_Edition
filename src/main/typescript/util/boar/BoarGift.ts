@@ -115,8 +115,8 @@ export class BoarGift {
 
             await inter.deferUpdate();
 
-            const bannedUserData: Record<string, number | undefined> =
-                DataHandlers.getGlobalData(DataHandlers.GlobalFile.BannedUsers) as Record<string, number | undefined>;
+            const bannedUserData: Record<string, number> =
+                DataHandlers.getGlobalData(DataHandlers.GlobalFile.BannedUsers) as Record<string, number>;
             const unbanTime: number | undefined = bannedUserData[inter.user.id];
             if (unbanTime && unbanTime > Date.now()) {
                 await Replies.handleReply(
@@ -129,8 +129,8 @@ export class BoarGift {
                     try {
                         const bannedUsersData = DataHandlers.getGlobalData(
                             DataHandlers.GlobalFile.BannedUsers
-                        ) as Record<string, number | undefined>;
-                        bannedUsersData[inter.user.id] = undefined;
+                        ) as Record<string, number>;
+                        delete bannedUsersData[inter.user.id];
                         DataHandlers.saveGlobalData(bannedUsersData, DataHandlers.GlobalFile.BannedUsers);
                     } catch (err: unknown) {
                         await LogDebug.handleError(err, inter);

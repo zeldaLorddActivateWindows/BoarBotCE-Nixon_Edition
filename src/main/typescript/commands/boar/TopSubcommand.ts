@@ -253,8 +253,9 @@ export default class TopSubcommand implements Subcommand {
         this.modalShowing = new ModalBuilder(modals[0]);
         this.modalShowing.setCustomId(modals[0].customId + '|' + inter.id);
         await inter.showModal(this.modalShowing);
+        this.curModalListener = this.modalListener;
 
-        inter.client.on(Events.InteractionCreate, this.modalListener);
+        inter.client.on(Events.InteractionCreate, this.curModalListener);
     }
 
     /**

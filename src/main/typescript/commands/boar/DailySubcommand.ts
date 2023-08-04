@@ -289,10 +289,7 @@ export default class DailySubcommand implements Subcommand {
                             );
                         } catch {
                             try {
-                                await Replies.handleReply(
-                                    inter, 'Failed to enable notifications! BoarBot is unable to send you DMs.',
-                                    colorConfig.error
-                                );
+                                await Replies.handleReply(inter, strConfig.notificationFailed, colorConfig.error);
                             } catch (err: unknown) {
                                 await LogDebug.handleError(err, this.interaction);
                             }

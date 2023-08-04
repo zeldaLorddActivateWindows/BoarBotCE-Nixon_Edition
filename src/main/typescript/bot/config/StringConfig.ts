@@ -181,6 +181,7 @@ export class StringConfig {
     public readonly boardFooter: string = ' ';
     public readonly deletedUsername: string = ' ';
     public readonly notificationSuccess: string = ' ';
+    public readonly notificationFailed: string = ' ';
     public readonly notificationSuccessReply: string = ' ';
     public readonly notificationDailyReady: string = ' ';
     public readonly notificationStopStr: string = ' ';

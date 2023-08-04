@@ -115,8 +115,8 @@ export default class MarketSubcommand implements Subcommand {
 
         await interaction.deferReply({ ephemeral: true });
 
-        const bannedUserData: Record<string, number | undefined> =
-            DataHandlers.getGlobalData(DataHandlers.GlobalFile.BannedUsers) as Record<string, number | undefined>;
+        const bannedUserData: Record<string, number> =
+            DataHandlers.getGlobalData(DataHandlers.GlobalFile.BannedUsers) as Record<string, number>;
         const unbanTime: number | undefined = bannedUserData[interaction.user.id];
         if (unbanTime && unbanTime > Date.now()) {
             await Replies.handleReply(
@@ -127,10 +127,10 @@ export default class MarketSubcommand implements Subcommand {
         } else if (unbanTime && unbanTime <= Date.now()) {
             await Queue.addQueue(async () => {
                 try {
-                    const bannedUserData: Record<string, number | undefined> = DataHandlers.getGlobalData(
+                    const bannedUserData: Record<string, number> = DataHandlers.getGlobalData(
                         DataHandlers.GlobalFile.BannedUsers
-                    ) as Record<string, number | undefined>;
-                    bannedUserData[interaction.user.id] = undefined;
+                    ) as Record<string, number>;
+                    delete bannedUserData[interaction.user.id];
                     DataHandlers.saveGlobalData(bannedUserData, DataHandlers.GlobalFile.BannedUsers);
                 } catch (err: unknown) {
                     await LogDebug.handleError(err, interaction);

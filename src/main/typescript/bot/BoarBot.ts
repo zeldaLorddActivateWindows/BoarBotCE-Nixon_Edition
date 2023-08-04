@@ -3,7 +3,7 @@ import {
 	Client, ColorResolvable, EmbedBuilder,
 	Events,
 	GatewayIntentBits,
-	Partials,
+	Partials, TextChannel,
 	User
 } from 'discord.js';
 import {Bot} from '../api/bot/Bot';
@@ -54,7 +54,7 @@ export class BoarBot implements Bot {
 		this.registerCommands();
 		this.registerListeners();
 		this.fixGuildData();
-		// this.updateAllData();
+		await this.updateAllData();
 
 		await this.login();
 		await this.onStart();
@@ -243,12 +243,25 @@ export class BoarBot implements Bot {
 					const notificationChannelID = boarUser.stats.general.notificationChannel
 						? boarUser.stats.general.notificationChannel
 						: '1124209789518483566';
+
 					await user.send(
 						randMsgStr + dailyReadyStr + '\n# ' +
 						FormatStrings.toBasicChannel(notificationChannelID) + stopStr
 					).catch(() => {});
 				}
 			});
+
+			const pingChannel = await this.client.channels.fetch('1042602119003389962') as TextChannel;
+			try {
+				pingChannel.send(
+					this.getConfig().stringConfig.notificationDailyReady + ' <@&1001233916620972082> \n' +
+					'*Note: This ping role will be deleted <t:1693526400:R>. To continue to be pinged, run /boar ' +
+					'daily a second time, then click "Enable Notifications". To disable this ping, un-react to the ' +
+					'boar emoji in <#996887892737667204>*'
+				);
+			} catch (err) {
+				LogDebug.handleError(err);
+			}
 		}, null, true, 'UTC');
 	}
 
@@ -285,6 +298,31 @@ export class BoarBot implements Bot {
 		} catch {
 			LogDebug.log('Failed to get latest GitHub commit', config);
 		}
+	}
+
+	private async updateAllData(): Promise<void> {
+		try {
+			const oldGlobalData = JSON.parse(
+				fs.readFileSync(this.getConfig().pathConfig.globalDataFolder + 'global.json', 'utf-8')
+			);
+			const itemsData = oldGlobalData.itemData;
+			const boardsData = oldGlobalData.leaderboardData;
+			const bannedData = oldGlobalData.bannedUsers;
+			const powerupsData = new PowerupData();
+			powerupsData.nextPowerup = oldGlobalData.nextPowerup;
+
+			DataHandlers.saveGlobalData(itemsData, DataHandlers.GlobalFile.Items);
+			DataHandlers.saveGlobalData(boardsData, DataHandlers.GlobalFile.Leaderboards);
+			DataHandlers.saveGlobalData(bannedData, DataHandlers.GlobalFile.BannedUsers);
+			DataHandlers.saveGlobalData(powerupsData, DataHandlers.GlobalFile.Powerups);
+
+			fs.rmSync(this.getConfig().pathConfig.globalDataFolder + 'global.json');
+		} catch {}
+
+		DataHandlers.getGlobalData(DataHandlers.GlobalFile.Items, true);
+		DataHandlers.getGlobalData(DataHandlers.GlobalFile.Leaderboards, true);
+		DataHandlers.getGlobalData(DataHandlers.GlobalFile.BannedUsers, true);
+		DataHandlers.getGlobalData(DataHandlers.GlobalFile.Powerups, true);
 	}
 
 	/**

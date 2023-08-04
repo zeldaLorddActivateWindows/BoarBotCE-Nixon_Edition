@@ -37,21 +37,21 @@ export class DataHandlers {
      *
      * @return itemsData - Items data parsed from JSON
      */
-    public static getGlobalData(file: GlobalFile):
-        ItemsData | Record<string, BoardData> | Record<string, number | undefined> | PowerupData
+    public static getGlobalData(file: GlobalFile, updating = false):
+        ItemsData | Record<string, BoardData> | Record<string, number> | PowerupData
     {
         const config: BotConfig = BoarBotApp.getBot().getConfig();
 
         const fileName = this.getGlobalFilename(file);
 
         const dataFile: string = config.pathConfig.globalDataFolder + fileName;
-        let data: ItemsData | Record<string, BoardData> | Record<string, number | undefined> | PowerupData | undefined;
+        let data: ItemsData | Record<string, BoardData> | Record<string, number> | PowerupData | undefined;
 
         try {
             data = JSON.parse(fs.readFileSync(dataFile, 'utf-8'));
         } catch {}
 
-        if (!data || Object.keys(data).length === 0) {
+        if (!data) {
             LogDebug.log('Creating global data file \'' + fileName + '\'...', config);
             switch (file) {
                 case GlobalFile.Items:
@@ -82,11 +82,53 @@ export class DataHandlers {
             DataHandlers.saveGlobalData(data, file);
         }
 
+        if (updating) {
+            switch (file) {
+                case GlobalFile.Items:
+                    data = data as ItemsData;
+                    for (const powerupID of Object.keys(config.itemConfigs.powerups)) {
+                        if (!data.powerups[powerupID]) {
+                            data.powerups[powerupID] = new ItemData;
+                        }
+                    }
+
+                    for (const powerupID of Object.keys(data.powerups)) {
+                        if (!Object.keys(config.itemConfigs.powerups).includes(powerupID)) {
+                            delete data.powerups[powerupID];
+                        }
+                    }
+
+                    break;
+                case GlobalFile.Leaderboards:
+                    data = data as Record<string, BoardData>;
+                    for (let i=0; i<config.commandConfigs.boar.top.args[0].choices.length; i++) {
+                        const boardID = config.commandConfigs.boar.top.args[0].choices[i].value;
+
+                        if (!data[boardID]) {
+                            data[boardID] = new BoardData;
+                        }
+                    }
+
+                    for (const boardID of Object.keys(data)) {
+                        const boardChoices = config.commandConfigs.boar.top.args[0].choices;
+                        const boardValues = boardChoices.map((choice) => { return choice.value; });
+
+                        if (!boardValues.includes(boardID)) {
+                            delete data[boardID];
+                        }
+                    }
+
+                    break;
+            }
+
+            DataHandlers.saveGlobalData(data, file);
+        }
+
         return data;
     }
 
     public static saveGlobalData(
-        data: ItemsData | Record<string, BoardData> | Record<string, number | undefined> | PowerupData | undefined,
+        data: ItemsData | Record<string, BoardData> | Record<string, number> | PowerupData | undefined,
         file: GlobalFile
     ) {
         const config: BotConfig = BoarBotApp.getBot().getConfig();
