@@ -218,7 +218,7 @@ export class ItemImageGenerator {
         CanvasUtils.drawText(ctx, this.title, nums.itemTitlePos, mediumFont, 'center', colorConfig.font);
         CanvasUtils.drawText(
             ctx, this.itemName, nums.itemNamePos, mediumFont, 'center', colorConfig.font,
-            undefined, false, this.itemNameColored, colorConfig[this.colorKey]
+            undefined, false, [this.itemNameColored], [colorConfig[this.colorKey]]
         );
 
         this.buffer = canvas.toBuffer();
@@ -364,7 +364,7 @@ export class ItemImageGenerator {
 
             CanvasUtils.drawText(
                 ctx, '+%@' + score.toLocaleString(), [nums.itemTextX, nums.itemBoxTwoY + nums.itemTextYOffset],
-                smallMediumFont, 'left', colorConfig.font, undefined, false, '$', colorConfig.bucks
+                smallMediumFont, 'left', colorConfig.font, undefined, false, ['$'], [colorConfig.bucks]
             );
         }
 

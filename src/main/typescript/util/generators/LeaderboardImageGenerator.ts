@@ -166,7 +166,7 @@ export class LeaderboardImageGenerator {
             CanvasUtils.drawText(
                 ctx, '%@ ' + username + ' - ' + userVal, userPos,
                 mediumFont, 'center', colorConfig.font, nums.leaderboardEntryWidth, false,
-                '#' + position, positionColor
+                ['#' + position], [positionColor]
             );
         }
 

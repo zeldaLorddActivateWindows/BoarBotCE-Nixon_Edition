@@ -191,7 +191,7 @@ export default class DailySubcommand implements Subcommand {
         if (firstDaily) {
             await Replies.handleReply(
                 this.interaction, strConfig.dailyFirstTime, colorConfig.font,
-                strConfig.dailyBonus, colorConfig.powerup, true, true
+                [strConfig.dailyBonus], [colorConfig.powerup], true, true
             );
         }
 
@@ -220,7 +220,7 @@ export default class DailySubcommand implements Subcommand {
 
         if (coloredText !== '') {
             await Replies.handleReply(
-                this.interaction, strConfig.dailyPowUsed, colorConfig.font, coloredText, colorConfig.powerup, true
+                this.interaction, strConfig.dailyPowUsed, colorConfig.font, [coloredText], [colorConfig.powerup], true
             );
         }
 
@@ -270,7 +270,7 @@ export default class DailySubcommand implements Subcommand {
                                 files: [
                                     await CustomEmbedGenerator.makeEmbed(
                                         strConfig.dailyUsed, colorConfig.font, this.config,
-                                        moment(nextBoarTime).fromNow().substring(3), colorConfig.silver
+                                        [moment(nextBoarTime).fromNow().substring(3)], [colorConfig.silver]
                                     )
                                 ],
                                 components: []
@@ -310,7 +310,7 @@ export default class DailySubcommand implements Subcommand {
                     files: [
                         await CustomEmbedGenerator.makeEmbed(
                             strConfig.dailyUsedNotify, colorConfig.font, this.config,
-                            moment(nextBoarTime).fromNow().substring(3), colorConfig.silver
+                            [moment(nextBoarTime).fromNow().substring(3)], [colorConfig.silver]
                         )
                     ],
                     components: dailyComponentRows
@@ -320,7 +320,7 @@ export default class DailySubcommand implements Subcommand {
                     files: [
                         CustomEmbedGenerator.makeEmbed(
                             this.config.stringConfig.dailyUsed, this.config.colorConfig.font, this.config,
-                            moment(nextBoarTime).fromNow().substring(3), this.config.colorConfig.silver
+                            [moment(nextBoarTime).fromNow().substring(3)], [this.config.colorConfig.silver]
                         )
                     ]
                 });

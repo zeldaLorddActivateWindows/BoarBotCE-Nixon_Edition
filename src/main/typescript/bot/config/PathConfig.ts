@@ -69,7 +69,6 @@ export class PathConfig {
     public readonly marketBuySellUnderlay: string = '';
     public readonly marketBuySellOverlay: string = '';
     public readonly marketOrdersUnderlay: string = '';
-    public readonly thankYouImage: string = '';
     public readonly mainFont: string = '';
     public readonly helpGeneral1: string = '';
     public readonly helpPowerup1: string = '';

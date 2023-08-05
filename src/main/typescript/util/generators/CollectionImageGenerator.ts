@@ -111,7 +111,7 @@ export class CollectionImageGenerator {
         );
         CanvasUtils.drawText(
             ctx, '%@' + scoreString, nums.collScorePos, smallFont, 'center',
-            colorConfig.font, undefined, false, '$', colorConfig.bucks
+            colorConfig.font, undefined, false, ['$'], [colorConfig.bucks]
         );
 
         CanvasUtils.drawText(
@@ -379,7 +379,7 @@ export class CollectionImageGenerator {
         CanvasUtils.drawText(
             ctx, curBoar.description + '%@', nums.collDescriptionPos, smallestFont,
             'center', colorConfig.font, nums.collDescriptionWidth, true,
-            curBoar.isSB ? strConfig.collDescriptionSB : '', colorConfig.silver
+            [curBoar.isSB ? strConfig.collDescriptionSB : ''], [colorConfig.silver]
         );
 
         ctx.drawImage(await Canvas.loadImage(collectionOverlay), ...nums.originPos, ...nums.collImageSize);
@@ -510,7 +510,7 @@ export class CollectionImageGenerator {
         if (powerupItemsData.multiBoost.numTotal > 0) {
             CanvasUtils.drawText(
                 ctx, multiplier + ' (%@)', nums.collMultiPos, smallMedium,
-                'center', colorConfig.font, undefined, false, multiBoost, colorConfig.powerup
+                'center', colorConfig.font, undefined, false, [multiBoost], [colorConfig.powerup]
             );
         } else {
             CanvasUtils.drawText(ctx, multiplier, nums.collMultiPos, smallMedium, 'center', colorConfig.font);
@@ -718,7 +718,7 @@ export class CollectionImageGenerator {
             if (i < 3) {
                 CanvasUtils.drawText(
                     ctx, strConfig.collEnhancedLabel, nums.collEnhancedLabelPositions[i], mediumFont, 'center',
-                    colorConfig.font, undefined, false, rarityConfig[i].pluralName, colorConfig['rarity' + (i+1)]
+                    colorConfig.font, undefined, false, [rarityConfig[i].pluralName], [colorConfig['rarity' + (i+1)]]
                 );
             } else {
                 CanvasUtils.drawText(
@@ -856,17 +856,17 @@ export class CollectionImageGenerator {
 
         CanvasUtils.drawText(
             ctx, strConfig.collEnhanceBoarGain, nums.collEnhanceBoarGainPos, bigFont, 'center', colorConfig.font,
-            nums.collEnhanceResultWidth, false, nextRarityName, nextRarityColor
+            nums.collEnhanceResultWidth, false, [nextRarityName], [nextRarityColor]
         );
 
         CanvasUtils.drawText(
             ctx, '-' + enhancersLost + 'x %@', nums.collEnhanceLosePos, bigFont, 'center', colorConfig.font,
-            nums.collEnhanceResultWidth, false, powItemConfigs.enhancer.pluralName, colorConfig.powerup
+            nums.collEnhanceResultWidth, false, [powItemConfigs.enhancer.pluralName], [colorConfig.powerup]
         );
 
         CanvasUtils.drawText(
             ctx, '+' + scoreGained + ' %@', nums.collEnhanceScoreGainPos, bigFont, 'center', colorConfig.font,
-            nums.collEnhanceResultWidth, false, strConfig.collScoreLabel, colorConfig.bucks
+            nums.collEnhanceResultWidth, false, [strConfig.collScoreLabel], [colorConfig.bucks]
         );
 
         CanvasUtils.drawText(
@@ -901,7 +901,7 @@ export class CollectionImageGenerator {
 
         CanvasUtils.drawText(
             ctx, userTag + strConfig.collGiftDetails, nums.responseDetailsPos, mediumFont, 'center', colorConfig.font,
-            nums.responseDetailsWidth, true, powItemConfigs.gift.name, colorConfig.powerup
+            nums.responseDetailsWidth, true, [powItemConfigs.gift.name], [colorConfig.powerup]
         );
 
         return new AttachmentBuilder(canvas.toBuffer(), { name:`${this.config.stringConfig.imageName}.png` });

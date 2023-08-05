@@ -93,7 +93,6 @@ export class ConfigHandler {
             collAssets + pathConfig.collUnderlay,
             collAssets + pathConfig.clanNone,
             collAssets + pathConfig.enhancerOff,
-            otherAssets + pathConfig.thankYouImage,
             otherAssets + pathConfig.mainFont,
             otherAssets + pathConfig.helpGeneral1,
             otherAssets + pathConfig.helpPowerup1,

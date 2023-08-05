@@ -178,7 +178,7 @@ export class PowerupImageGenerator {
 
         CanvasUtils.drawText(
             ctx, strConfig.powReward, nums.powSpawnRewardPos, font, 'center', colorConfig.font,
-            nums.powSpawnDescriptionWidth, false, powRewardStr, colorConfig.powerup
+            nums.powSpawnDescriptionWidth, false, [powRewardStr], [colorConfig.powerup]
         );
     }
 }

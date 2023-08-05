@@ -250,6 +250,10 @@ export class PowerupSpawner {
                 );
 
                 let correctString: string = config.stringConfig.powRightFull;
+                const rewardString: string = this.powerupType.rewardAmt + ' ' +
+                    (this.powerupType.rewardAmt as number > 1
+                        ? this.powerupType.pluralName
+                        : this.powerupType.name);
                 const timeToClaim: number = inter.createdTimestamp - powMsg.createdTimestamp;
 
                 this.claimers.set(inter.user.id, timeToClaim);
@@ -262,7 +266,8 @@ export class PowerupSpawner {
 
                 await Replies.handleReply(
                     inter, correctString, config.colorConfig.font,
-                    config.stringConfig.powRight, config.colorConfig.green, true
+                    [config.stringConfig.powRight, rewardString],
+                    [config.colorConfig.green, config.colorConfig.powerup], true
                 );
             } else if (!this.claimers.has(inter.user.id)) {
                 LogDebug.log(
@@ -272,7 +277,7 @@ export class PowerupSpawner {
 
                 await Replies.handleReply(
                     inter, config.stringConfig.powWrongFull, config.colorConfig.font,
-                    config.stringConfig.powWrong, config.colorConfig.error, true
+                    [config.stringConfig.powWrong], [config.colorConfig.error], true
                 );
             } else {
                 await Replies.handleReply(

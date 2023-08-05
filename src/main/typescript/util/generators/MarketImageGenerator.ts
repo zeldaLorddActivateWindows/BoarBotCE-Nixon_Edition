@@ -182,11 +182,11 @@ export class MarketImageGenerator {
 
             CanvasUtils.drawText(
                 ctx, 'B: %@' + buyNowVal, buyPos, font, 'center', colorConfig.font, nums.marketOverTextWidth, false,
-                buyNowVal !== 'N/A' ? '$' : '', colorConfig.bucks
+                [buyNowVal !== 'N/A' ? '$' : ''], [colorConfig.bucks]
             );
             CanvasUtils.drawText(
                 ctx, 'S: %@' + sellNowVal, sellPos, font, 'center', colorConfig.font, nums.marketOverTextWidth, false,
-                sellNowVal !== 'N/A' ? '$' : '', colorConfig.bucks
+                [sellNowVal !== 'N/A' ? '$' : ''], [colorConfig.bucks]
             );
         }
 
@@ -302,7 +302,7 @@ export class MarketImageGenerator {
         );
         CanvasUtils.drawText(
             ctx, buyNowVal, nums.marketBSBuyNowPos, smallMediumFont, 'center', colorConfig.font,
-            undefined, false, '$', colorConfig.bucks
+            undefined, false, ['$'], [colorConfig.bucks]
         );
 
         CanvasUtils.drawText(
@@ -310,7 +310,7 @@ export class MarketImageGenerator {
         );
         CanvasUtils.drawText(
             ctx, sellNowVal, nums.marketBSSellNowPos, smallMediumFont, 'center', colorConfig.font,
-            undefined, false, '$', colorConfig.bucks
+            undefined, false, ['$'], [colorConfig.bucks]
         );
 
         CanvasUtils.drawText(
@@ -391,19 +391,19 @@ export class MarketImageGenerator {
         CanvasUtils.drawText(
             ctx, isSell ? strConfig.marketOrdSell : strConfig.marketOrdBuy, nums.marketOrdNamePos, mediumFont, 'center',
             colorConfig.font, nums.marketOrdNameWidth, true,
-            this.config.itemConfigs[orderInfo.type][orderInfo.id].name + (isSpecial
+            [this.config.itemConfigs[orderInfo.type][orderInfo.id].name + (isSpecial
                 ? ' #' + orderInfo.data.editions[0]
-                : ''),
-            rarityColor
+                : '')],
+            [rarityColor]
         );
 
         CanvasUtils.drawText(
             ctx, strConfig.marketOrdList.replace('%@',moment(orderInfo.data.listTime).fromNow()), nums.marketOrdListPos,
             mediumFont, 'center', colorConfig.font, nums.marketOrdNameWidth, true,
-            (Date.now() > orderInfo.data.listTime + nums.oneDay * 7)
+            [(Date.now() > orderInfo.data.listTime + nums.oneDay * 7)
                 ? strConfig.marketOrdExpire
-                : '',
-            colorConfig.error
+                : ''],
+            [colorConfig.error]
         );
 
         CanvasUtils.drawText(
@@ -411,7 +411,7 @@ export class MarketImageGenerator {
         );
         CanvasUtils.drawText(
             ctx, '%@' + orderInfo.data.price.toLocaleString(), nums.marketOrdPricePos, smallMediumFont, 'center',
-            colorConfig.font, undefined, false, '$', colorConfig.bucks
+            colorConfig.font, undefined, false, ['$'], [colorConfig.bucks]
         );
 
         CanvasUtils.drawText(
@@ -427,9 +427,9 @@ export class MarketImageGenerator {
         );
         CanvasUtils.drawText(
             ctx, claimText, nums.marketOrdClaimPos, smallMediumFont, 'center', colorConfig.font,
-            nums.marketOrdClaimWidth, false, coloredClaimText, coloredClaimText === '$'
+            nums.marketOrdClaimWidth, false, [coloredClaimText], [coloredClaimText === '$'
                 ? colorConfig.bucks
-                : rarityColor
+                : rarityColor]
         );
 
         return new AttachmentBuilder(canvas.toBuffer(), { name: `${strConfig.imageName}.png` });

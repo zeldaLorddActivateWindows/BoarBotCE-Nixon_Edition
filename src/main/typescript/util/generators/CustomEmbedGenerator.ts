@@ -22,10 +22,12 @@ export class CustomEmbedGenerator {
      * @param str - The string to put in the embed
      * @param color - Color of the string
      * @param config - Used to get position and other config info
-     * @param coloredText - A portion of text to color differently
-     * @param color2 - The secondary color
+     * @param coloredContents - A portion of text to color differently
+     * @param secondaryColors - The secondary colors
      */
-    public static makeEmbed(str: string, color: string, config: BotConfig, coloredText?: string, color2?: string) {
+    public static makeEmbed(
+        str: string, color: string, config: BotConfig, coloredContents?: string[], secondaryColors?: string[]
+    ) {
         const strConfig: StringConfig = config.stringConfig;
         const nums: NumberConfig = config.numberConfig;
         const colorConfig: ColorConfig = config.colorConfig;
@@ -35,15 +37,21 @@ export class CustomEmbedGenerator {
         const canvas: Canvas.Canvas = Canvas.createCanvas(0, nums.embedMinHeight);
         const ctx: Canvas.CanvasRenderingContext2D = canvas.getContext('2d');
 
+        let fullString = str;
+
+        if (coloredContents) {
+            for (const content of coloredContents) {
+                fullString = fullString.replace('%@', content);
+            }
+        }
+
         ctx.font = font;
-        canvas.width = Math.min(
-            ctx.measureText(str.replace('%@', coloredText ? coloredText : '%@')).width + nums.border * 4,
-            nums.embedMaxWidth
-        );
+        canvas.width = Math.min(ctx.measureText(fullString).width + nums.border * 4, nums.embedMaxWidth);
 
         canvas.height += CanvasUtils.drawText(
-            ctx, str.replace('%@', coloredText ? coloredText : '%@'), nums.originPos, font, 'center', colorConfig.font,
-            canvas.width === nums.embedMaxWidth ? nums.embedMaxWidth - nums.border * 4 : undefined,
+            ctx, fullString, nums.originPos, font, 'center', colorConfig.font, canvas.width === nums.embedMaxWidth
+                ? nums.embedMaxWidth - nums.border * 4
+                : undefined,
             true
         );
         ctx.clearRect(nums.originPos[0], nums.originPos[1], canvas.width, canvas.height);
@@ -66,7 +74,7 @@ export class CustomEmbedGenerator {
         CanvasUtils.drawText(
             ctx, str, [canvas.width / 2, canvas.height / 2 + nums.fontSmallMedium / 2 + 7], font, 'center', color,
             canvas.width === nums.embedMaxWidth ? nums.embedMaxWidth - nums.border * 4 : undefined,
-            true, coloredText, color2
+            true, coloredContents, secondaryColors
         );
 
         return new AttachmentBuilder(canvas.toBuffer(), { name: `${strConfig.imageName}.png` });
