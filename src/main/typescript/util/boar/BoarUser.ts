@@ -188,6 +188,7 @@ export class BoarUser {
         if (this.stats.general.lastDaily < twoDailiesAgo) {
             this.stats.general.boarStreak = 0;
         }
+        this.stats.general.highestStreak = Math.max(this.stats.general.boarStreak, this.stats.general.highestStreak);
 
         if (this.stats.general.unbanTime !== undefined) {
             this.stats.general.unbanTime = undefined;
@@ -201,7 +202,7 @@ export class BoarUser {
             }
         }
 
-        this.stats.general.multiplier = 1 + uniques + this.stats.general.boarStreak;
+        this.stats.general.multiplier = 1 + uniques + this.stats.general.highestStreak;
         this.stats.general.multiplier = Math.min(this.stats.general.multiplier, nums.maxMulti);
         this.stats.general.highestMulti = Math.max(this.stats.general.multiplier, this.stats.general.highestMulti);
 

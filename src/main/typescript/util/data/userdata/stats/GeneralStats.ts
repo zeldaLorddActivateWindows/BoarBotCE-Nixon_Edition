@@ -16,6 +16,7 @@ export class GeneralStats {
     public lastBoar = '';
     public firstDaily = 0;
     public boarStreak = 0;
+    public highestStreak = 0;
     public multiplier = 1;
     public highestMulti = 0;
     public notificationsOn = false;

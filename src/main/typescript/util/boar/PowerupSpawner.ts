@@ -32,6 +32,7 @@ import {StringConfig} from '../../bot/config/StringConfig';
 import {ItemConfig} from '../../bot/config/items/ItemConfig';
 import {PromptConfigs} from '../../bot/config/prompts/PromptConfigs';
 import {PowerupData} from '../data/global/PowerupData';
+import {InteractionUtils} from '../interactions/InteractionUtils';
 
 export class PowerupSpawner {
     private readonly initIntervalVal: number = 0;
@@ -60,6 +61,20 @@ export class PowerupSpawner {
      * Sets a timeout for when the next powerup should spawn
      */
     public startSpawning(): void {
+        const powerupData = DataHandlers.getGlobalData(DataHandlers.GlobalFile.Powerups);
+
+        Object.keys((powerupData as PowerupData).messagesInfo).forEach(async channelID => {
+            try {
+                const channel = await BoarBotApp.getBot().getClient().channels.fetch(channelID) as TextChannel;
+                (powerupData as PowerupData).messagesInfo[channelID].forEach(async msgID => {
+                    try {
+                        this.msgsToDelete.push(await channel.messages.fetch(msgID));
+                    } catch {}
+                });
+            } catch {}
+        });
+
+        setTimeout(() => this.removeMsgs(), this.initIntervalVal);
         setTimeout(() => this.doSpawn(), this.initIntervalVal);
     }
 
@@ -69,6 +84,16 @@ export class PowerupSpawner {
     public async removeMsgs(): Promise<void> {
         const arrCopy = [...this.msgsToDelete];
         this.msgsToDelete = [];
+
+        await Queue.addQueue(async () => {
+            try {
+                const powerupData = DataHandlers.getGlobalData(DataHandlers.GlobalFile.Powerups) as PowerupData;
+                (powerupData as PowerupData).messagesInfo = {};
+                DataHandlers.saveGlobalData(powerupData, DataHandlers.GlobalFile.Powerups);
+            } catch (err: unknown) {
+                await LogDebug.handleError(err);
+            }
+        }, 'powDelMsgs' + 'global').catch((err) => { throw err });
 
         arrCopy.forEach(async (msg, i) => {
             try {
@@ -108,7 +133,7 @@ export class PowerupSpawner {
                 } catch (err: unknown) {
                     await LogDebug.handleError(err);
                 }
-            }, 'pow' + 'global').catch((err) => { throw err });
+            }, 'powUpdateTimer' + 'global').catch((err) => { throw err });
 
             if (config.maintenanceMode) return;
 
@@ -223,6 +248,21 @@ export class PowerupSpawner {
                     this.numNotFinished++;
 
                     this.msgsToDelete.push(powMsg.msg);
+                    await Queue.addQueue(async () => {
+                        try {
+                            const powerupData =
+                                DataHandlers.getGlobalData(DataHandlers.GlobalFile.Powerups) as PowerupData;
+
+                            if (!(powerupData as PowerupData).messagesInfo[channel.id]) {
+                                (powerupData as PowerupData).messagesInfo[channel.id] = [];
+                            }
+                            (powerupData as PowerupData).messagesInfo[channel.id].push(powMsg.msg.id);
+
+                            DataHandlers.saveGlobalData(powerupData, DataHandlers.GlobalFile.Powerups);
+                        } catch (err: unknown) {
+                            await LogDebug.handleError(err);
+                        }
+                    }, 'powAddMsg' + 'global').catch((err) => { throw err });
                 } catch {}
             });
         } catch (err: unknown) {
@@ -244,6 +284,9 @@ export class PowerupSpawner {
             await inter.deferUpdate();
 
             if (!this.claimers.has(inter.user.id) && inter.customId.toLowerCase().includes('correct')) {
+                const isBanned = await InteractionUtils.handleBanned(inter, config, true);
+                if (isBanned) return;
+
                 LogDebug.log(
                     `${inter.user.username} (${inter.user.id}) guessed CORRECT in Powerup Event`,
                     config, undefined, true
@@ -571,7 +614,7 @@ export class PowerupSpawner {
             if (--this.numNotFinished === 0) {
                 LogDebug.log('Attempting to conclude Powerup Event', config);
 
-                for (const interaction of this.interactions) {
+                this.interactions.forEach(async interaction => {
                     const strConfig: StringConfig = config.stringConfig;
 
                     const userTime: number | undefined = this.claimers.get(interaction.user.id);
@@ -582,12 +625,11 @@ export class PowerupSpawner {
 
                     if (!userTime) {
                         await LogDebug.handleError('Failed to find user\'s powerup data.', interaction);
-                        continue;
+                        return;
                     }
 
                     await Replies.handleReply(
-                        interaction, strConfig.powResponse
-                            .replace('%@', userTime.toLocaleString()),
+                        interaction, strConfig.powResponse.replace('%@', userTime.toLocaleString()),
                         config.colorConfig.font, undefined, undefined, true
                     );
 
@@ -634,7 +676,7 @@ export class PowerupSpawner {
                             await LogDebug.handleError(err, interaction);
                         }
                     }, interaction.id + interaction.user.id).catch((err) => { throw err });
-                }
+                });
 
                 this.claimers = new Map<string, number>();
                 this.interactions = [];

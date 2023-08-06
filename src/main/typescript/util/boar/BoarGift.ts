@@ -19,7 +19,7 @@ import {ItemImageGenerator} from '../generators/ItemImageGenerator';
 import {LogDebug} from '../logging/LogDebug';
 import {Replies} from '../interactions/Replies';
 import {RowConfig} from '../../bot/config/components/RowConfig';
-import moment from 'moment';
+import {InteractionUtils} from '../interactions/InteractionUtils';
 
 /**
  * {@link BoarGift BoarGift.ts}
@@ -115,28 +115,8 @@ export class BoarGift {
 
             await inter.deferUpdate();
 
-            const bannedUserData: Record<string, number> =
-                DataHandlers.getGlobalData(DataHandlers.GlobalFile.BannedUsers) as Record<string, number>;
-            const unbanTime: number | undefined = bannedUserData[inter.user.id];
-            if (unbanTime && unbanTime > Date.now()) {
-                await Replies.handleReply(
-                    inter, this.config.stringConfig.bannedString.replace('%@', moment(unbanTime).fromNow()),
-                    this.config.colorConfig.error
-                );
-                return;
-            } else if (unbanTime && unbanTime <= Date.now()) {
-                await Queue.addQueue(async () => {
-                    try {
-                        const bannedUsersData = DataHandlers.getGlobalData(
-                            DataHandlers.GlobalFile.BannedUsers
-                        ) as Record<string, number>;
-                        delete bannedUsersData[inter.user.id];
-                        DataHandlers.saveGlobalData(bannedUsersData, DataHandlers.GlobalFile.BannedUsers);
-                    } catch (err: unknown) {
-                        await LogDebug.handleError(err, inter);
-                    }
-                }, inter.id + 'global');
-            }
+            const isBanned = await InteractionUtils.handleBanned(inter, this.config, true);
+            if (isBanned) return;
 
             this.compInters.push(inter);
             this.collector.stop();

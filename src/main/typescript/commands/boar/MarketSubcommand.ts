@@ -39,7 +39,6 @@ import {ColorConfig} from '../../bot/config/ColorConfig';
 import {NumberConfig} from '../../bot/config/NumberConfig';
 import {RarityConfig} from '../../bot/config/items/RarityConfig';
 import {ItemData} from '../../util/data/global/ItemData';
-import moment from 'moment';
 import {ItemsData} from '../../util/data/global/ItemsData';
 import {BoardData} from '../../util/data/global/BoardData';
 
@@ -115,28 +114,8 @@ export default class MarketSubcommand implements Subcommand {
 
         await interaction.deferReply({ ephemeral: true });
 
-        const bannedUserData: Record<string, number> =
-            DataHandlers.getGlobalData(DataHandlers.GlobalFile.BannedUsers) as Record<string, number>;
-        const unbanTime: number | undefined = bannedUserData[interaction.user.id];
-        if (unbanTime && unbanTime > Date.now()) {
-            await Replies.handleReply(
-                interaction, this.config.stringConfig.bannedString.replace('%@', moment(unbanTime).fromNow()),
-                this.config.colorConfig.error
-            );
-            return;
-        } else if (unbanTime && unbanTime <= Date.now()) {
-            await Queue.addQueue(async () => {
-                try {
-                    const bannedUserData: Record<string, number> = DataHandlers.getGlobalData(
-                        DataHandlers.GlobalFile.BannedUsers
-                    ) as Record<string, number>;
-                    delete bannedUserData[interaction.user.id];
-                    DataHandlers.saveGlobalData(bannedUserData, DataHandlers.GlobalFile.BannedUsers);
-                } catch (err: unknown) {
-                    await LogDebug.handleError(err, interaction);
-                }
-            }, interaction.id + 'global');
-        }
+        const isBanned = await InteractionUtils.handleBanned(interaction, this.config);
+        if (isBanned) return;
 
         if (!this.config.marketOpen && !this.config.devs.includes(interaction.user.id)) {
             await Replies.handleReply(

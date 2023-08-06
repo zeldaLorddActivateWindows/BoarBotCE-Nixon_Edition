@@ -158,13 +158,18 @@ export class BoarUtils {
         return rarityWeights;
     }
 
-    public static getClosestName(input: string, root: Node<string, number>): number {
+    public static getClosestName(input: string, root: Node<string, number>, firstLoop = false): number {
+        if (firstLoop) {
+            // do includes search
+        }
+
         if (root.key.startsWith(input))
             return root.value;
         if (input > root.key && root.right !== null)
             return this.getClosestName(input, root.right);
         if (input < root.key && root.left !== null)
             return this.getClosestName(input, root.left);
+
         return root.value;
     }
 }

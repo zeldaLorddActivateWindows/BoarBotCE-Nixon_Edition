@@ -217,14 +217,14 @@ export class DataHandlers {
         try {
             const boardsData = DataHandlers.getGlobalData(GlobalFile.Leaderboards) as Record<string, BoardData>;
 
-            boardsData.bucks.userData[userID] = undefined;
-            boardsData.total.userData[userID] = undefined;
-            boardsData.uniques.userData[userID] = undefined;
-            boardsData.streak.userData[userID] = undefined;
-            boardsData.attempts.userData[userID] = undefined;
-            boardsData.topAttempts.userData[userID] = undefined;
-            boardsData.giftsUsed.userData[userID] = undefined;
-            boardsData.multiplier.userData[userID] = undefined;
+            delete boardsData.bucks.userData[userID];
+            delete boardsData.total.userData[userID];
+            delete boardsData.uniques.userData[userID];
+            delete boardsData.streak.userData[userID];
+            delete boardsData.attempts.userData[userID];
+            delete boardsData.topAttempts.userData[userID];
+            delete boardsData.giftsUsed.userData[userID];
+            delete boardsData.multiplier.userData[userID];
 
             boardsData.bucks.topUser = boardsData.bucks.topUser === userID
                 ? undefined

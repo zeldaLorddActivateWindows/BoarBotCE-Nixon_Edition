@@ -137,12 +137,15 @@ export class LeaderboardImageGenerator {
             const userID = curShowing[i][0];
             const userVal = curShowing[i][1].toLocaleString();
             const position: number = (page*nums.leaderboardNumPlayers)+1+i;
+            const bannedUserIDs = Object.keys(
+                DataHandlers.getGlobalData(DataHandlers.GlobalFile.BannedUsers) as Record<string, number>
+            );
             let username: string | undefined;
             let positionColor: string;
 
             username = BoarBotApp.getBot().getClient().users.cache.get(userID)?.username;
 
-            if (!username) {
+            if (!username || bannedUserIDs.includes(userID)) {
                 username = strConfig.deletedUsername;
                 await Queue.addQueue(async () => await DataHandlers.removeLeaderboardUser(userID),
                     userID + 'global'
