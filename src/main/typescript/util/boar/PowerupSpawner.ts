@@ -33,6 +33,7 @@ import {ItemConfig} from '../../bot/config/items/ItemConfig';
 import {PromptConfigs} from '../../bot/config/prompts/PromptConfigs';
 import {PowerupData} from '../data/global/PowerupData';
 import {InteractionUtils} from '../interactions/InteractionUtils';
+import {ColorConfig} from '../../bot/config/ColorConfig';
 
 export class PowerupSpawner {
     private readonly initIntervalVal: number = 0;
@@ -616,6 +617,7 @@ export class PowerupSpawner {
 
                 this.interactions.forEach(async interaction => {
                     const strConfig: StringConfig = config.stringConfig;
+                    const colorConfig: ColorConfig = config.colorConfig;
 
                     const userTime: number | undefined = this.claimers.get(interaction.user.id);
                     const userPercent: number = (
@@ -630,7 +632,8 @@ export class PowerupSpawner {
 
                     await Replies.handleReply(
                         interaction, strConfig.powResponse.replace('%@', userTime.toLocaleString()),
-                        config.colorConfig.font, undefined, undefined, true
+                        config.colorConfig.font, ['/boar collection', 'Powerups'],
+                        [colorConfig.silver, colorConfig.powerup], true
                     );
 
                     await Queue.addQueue(async () => {

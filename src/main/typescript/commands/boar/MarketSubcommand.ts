@@ -27,7 +27,6 @@ import {ComponentUtils} from '../../util/discord/ComponentUtils';
 import {LogDebug} from '../../util/logging/LogDebug';
 import {DataHandlers} from '../../util/data/DataHandlers';
 import {BuySellData} from '../../util/data/global/BuySellData';
-import createRBTree, {Tree} from 'functional-red-black-tree';
 import {MarketImageGenerator} from '../../util/generators/MarketImageGenerator';
 import {BoarUser} from '../../util/boar/BoarUser';
 import {ModalConfig} from '../../bot/config/modals/ModalConfig';
@@ -70,7 +69,7 @@ export default class MarketSubcommand implements Subcommand {
         lastBuys: [number, number, string],
         lastSells: [number, number, string]
     }[] = [];
-    private pricingDataTree: Tree<string, number> = createRBTree();
+    private pricingDataSearchArr: [string, number][] = [];
     private boarUser: BoarUser = {} as BoarUser;
     private userBuyOrders: {
         data: BuySellData,
@@ -154,8 +153,13 @@ export default class MarketSubcommand implements Subcommand {
         let pageVal = 1;
         if (!Number.isNaN(parseInt(pageInput))) {
             pageVal = parseInt(pageInput);
+        } else if (this.curView === View.Overview) {
+            const overviewSearchArr = this.pricingDataSearchArr.map(val =>
+                [val[0], Math.ceil(val[1] / this.config.numberConfig.marketPerPage)] as [string, number]
+            );
+            pageVal = BoarUtils.getClosestName(pageInput.toLowerCase().replace(/\s+/g, ''), overviewSearchArr);
         } else if (this.curView === View.BuySell) {
-            pageVal = BoarUtils.getClosestName(pageInput.toLowerCase().replace(/\s+/g, ''), this.pricingDataTree.root);
+            pageVal = BoarUtils.getClosestName(pageInput.toLowerCase().replace(/\s+/g, ''), this.pricingDataSearchArr);
         }
 
         this.setPage(pageVal);
@@ -1729,7 +1733,7 @@ export default class MarketSubcommand implements Subcommand {
             : undefined;
 
         this.pricingData = [];
-        this.pricingDataTree = createRBTree();
+        this.pricingDataSearchArr = [];
         this.userBuyOrders = [];
         this.userSellOrders = [];
 
@@ -1744,10 +1748,10 @@ export default class MarketSubcommand implements Subcommand {
                     lastSells: itemsData[itemType][itemID].lastSells
                 });
 
-                this.pricingDataTree = this.pricingDataTree.insert(
+                this.pricingDataSearchArr.push([
                     this.config.itemConfigs[itemType][itemID].name.toLowerCase().replace(/\s+/g, ''),
                     this.pricingData.length
-                );
+                ]);
             }
         }
 
@@ -1892,9 +1896,14 @@ export default class MarketSubcommand implements Subcommand {
             let pageVal = 1;
             if (!Number.isNaN(parseInt(submittedPage))) {
                 pageVal = parseInt(submittedPage);
+            } else if (this.curView === View.Overview) {
+                const overviewSearchArr = this.pricingDataSearchArr.map(val =>
+                    [val[0], Math.ceil(val[1] / this.config.numberConfig.marketPerPage)] as [string, number]
+                );
+                pageVal = BoarUtils.getClosestName(submittedPage.toLowerCase().replace(/\s+/g, ''), overviewSearchArr);
             } else if (this.curView === View.BuySell) {
                 pageVal = BoarUtils.getClosestName(
-                    submittedPage.toLowerCase().replace(/\s+/g, ''), this.pricingDataTree.root
+                    submittedPage.toLowerCase().replace(/\s+/g, ''), this.pricingDataSearchArr
                 )
             }
 

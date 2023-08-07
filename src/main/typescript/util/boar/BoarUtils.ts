@@ -3,7 +3,6 @@ import {BotConfig} from '../../bot/config/BotConfig';
 import {ChatInputCommandInteraction, MessageComponentInteraction} from 'discord.js';
 import {GuildData} from '../data/global/GuildData';
 import {ItemConfigs} from '../../bot/config/items/ItemConfigs';
-import {Node} from 'functional-red-black-tree';
 
 /**
  * {@link BoarUtils BoarUtils.ts}
@@ -158,18 +157,29 @@ export class BoarUtils {
         return rarityWeights;
     }
 
-    public static getClosestName(input: string, root: Node<string, number>, firstLoop = false): number {
-        if (firstLoop) {
-            // do includes search
+    public static getClosestName(input: string, searchArr: [string, number][]): number {
+        let posToReturn;
+
+        searchArr.every(val => {
+            if (!val[0].includes(input)) return true;
+            posToReturn = val[1];
+        });
+
+        if (posToReturn !== undefined) {
+            return posToReturn;
         }
 
-        if (root.key.startsWith(input))
-            return root.value;
-        if (input > root.key && root.right !== null)
-            return this.getClosestName(input, root.right);
-        if (input < root.key && root.left !== null)
-            return this.getClosestName(input, root.left);
+        const sortedSearchArr = searchArr.sort((a, b) => a[0].localeCompare(b[0]));
 
-        return root.value;
+        sortedSearchArr.every((val, index) => {
+            if (index !== searchArr.length-1 && input > val[0]) return true;
+            posToReturn = val[1];
+        });
+
+        if (posToReturn !== undefined) {
+            return posToReturn;
+        } else {
+            return 0;
+        }
     }
 }

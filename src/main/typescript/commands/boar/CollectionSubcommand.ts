@@ -24,7 +24,6 @@ import {CollectionImageGenerator} from '../../util/generators/CollectionImageGen
 import {Replies} from '../../util/interactions/Replies';
 import {FormatStrings} from '../../util/discord/FormatStrings';
 import {RarityConfig} from '../../bot/config/items/RarityConfig';
-import createRBTree, {Tree} from 'functional-red-black-tree';
 import {BoarGift} from '../../util/boar/BoarGift';
 import {GuildData} from '../../util/data/global/GuildData';
 import {RowConfig} from '../../bot/config/components/RowConfig';
@@ -59,7 +58,7 @@ export default class CollectionSubcommand implements Subcommand {
     private compInter: ButtonInteraction = {} as ButtonInteraction;
     private collectionImage = {} as CollectionImageGenerator;
     private allBoars: any[] = [];
-    private allBoarsTree: Tree<string, number> = createRBTree();
+    private allBoarsSearchArr: [string, number][] = [];
     private boarUser: BoarUser = {} as BoarUser;
     private baseRows: ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>[] = [];
     private optionalButtons: ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder> =
@@ -152,9 +151,14 @@ export default class CollectionSubcommand implements Subcommand {
         let pageVal = 1;
         if (!Number.isNaN(parseInt(pageInput))) {
             pageVal = parseInt(pageInput);
+        } else if (this.curView === View.Normal) {
+            const normalSearchArr = this.allBoarsSearchArr.map(val =>
+                [val[0], Math.ceil(val[1] / this.config.numberConfig.collBoarsPerPage)] as [string, number]
+            );
+            pageVal = BoarUtils.getClosestName(pageInput.toLowerCase().replace(/\s+/g, ''), normalSearchArr);
         } else if (this.curView === View.Detailed) {
             pageVal = BoarUtils.getClosestName(
-                pageInput.toLowerCase().replace(/\s+/g, ''), this.allBoarsTree.root
+                pageInput.toLowerCase().replace(/\s+/g, ''), this.allBoarsSearchArr
             );
         }
 
@@ -410,7 +414,7 @@ export default class CollectionSubcommand implements Subcommand {
         await this.getUserInfo();
 
         this.curPage = BoarUtils.getClosestName(
-            this.config.itemConfigs.boars[enhancedBoar].name.toLowerCase().replace(/\s+/g, ''), this.allBoarsTree.root
+            this.config.itemConfigs.boars[enhancedBoar].name.toLowerCase().replace(/\s+/g, ''), this.allBoarsSearchArr
         ) - 1;
 
         await Replies.handleReply(
@@ -499,9 +503,14 @@ export default class CollectionSubcommand implements Subcommand {
             let pageVal = 1;
             if (!Number.isNaN(parseInt(submittedPage))) {
                 pageVal = parseInt(submittedPage);
+            } else if (this.curView === View.Normal) {
+                const normalSearchArr = this.allBoarsSearchArr.map(val =>
+                    [val[0], Math.ceil(val[1] / this.config.numberConfig.collBoarsPerPage)] as [string, number]
+                );
+                pageVal = BoarUtils.getClosestName(submittedPage.toLowerCase().replace(/\s+/g, ''), normalSearchArr);
             } else if (this.curView === View.Detailed) {
                 pageVal = BoarUtils.getClosestName(
-                    submittedPage.toLowerCase().replace(/\s+/g, ''), this.allBoarsTree.root
+                    submittedPage.toLowerCase().replace(/\s+/g, ''), this.allBoarsSearchArr
                 )
             }
 
@@ -568,7 +577,7 @@ export default class CollectionSubcommand implements Subcommand {
 
         this.boarUser.refreshUserData();
         this.allBoars = [];
-        this.allBoarsTree = createRBTree();
+        this.allBoarsSearchArr = [];
 
         // Adds information about each boar in user's boar collection to an array
         for (const boarID of Object.keys(this.boarUser.itemCollection.boars)) {
@@ -598,9 +607,7 @@ export default class CollectionSubcommand implements Subcommand {
                 isSB: boarDetails.isSB
             });
 
-            this.allBoarsTree = this.allBoarsTree.insert(
-                boarDetails.name.toLowerCase().replace(/\s+/g, ''), this.allBoars.length
-            );
+            this.allBoarsSearchArr.push([boarDetails.name.toLowerCase().replace(/\s+/g, ''), this.allBoars.length]);
         }
     }
 

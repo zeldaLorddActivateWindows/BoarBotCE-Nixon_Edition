@@ -191,7 +191,7 @@ export default class DailySubcommand implements Subcommand {
         if (firstDaily) {
             await Replies.handleReply(
                 this.interaction, strConfig.dailyFirstTime, colorConfig.font,
-                [strConfig.dailyBonus], [colorConfig.powerup], true, true
+                [strConfig.dailyBonus, '/boar help'], [colorConfig.powerup, colorConfig.silver], true, true
             );
         }
 

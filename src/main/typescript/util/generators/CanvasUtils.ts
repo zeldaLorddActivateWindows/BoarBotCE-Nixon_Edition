@@ -194,6 +194,9 @@ export class CanvasUtils {
                         : 0),
                     pos[1]
                 );
+
+                if (replaceIndexes[i] === -1) break;
+
                 ctx.fillStyle = secondaryColors[i];
                 ctx.fillText(
                     coloredContents[i],
@@ -218,6 +221,9 @@ export class CanvasUtils {
             for (let i=0; i<replaceIndexes.length; i++) {
                 ctx.fillStyle = color;
                 ctx.fillText(priorNormText[i], pos[0], pos[1]);
+
+                if (replaceIndexes[i] === -1) break;
+
                 ctx.fillStyle = secondaryColors[i];
                 ctx.fillText(
                     coloredContents[i], pos[0] + ctx.measureText(text.substring(0, replaceIndexes[i])).width, pos[1]
