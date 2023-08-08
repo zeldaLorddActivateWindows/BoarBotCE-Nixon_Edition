@@ -13,6 +13,7 @@ export class CollectedPowerup {
     public numUsed = 0;
     public firstUsed = 0;
     public lastUsed = 0;
+    public numActive?: number;
     public numOpened?: number;
     public raritiesUsed?: number[];
 }

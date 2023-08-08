@@ -392,30 +392,19 @@ export class BoarGift {
 
                 if (suboutcome === 0) {
                     LogDebug.log(
-                        `Received Multi Boost from ${this.boarUser.user.username} (${this.boarUser.user.id}) in gift`,
-                        this.config, inter, true
+                        `Received Miracle Charm(s) from ${this.boarUser.user.username} (${this.boarUser.user.id}) ` +
+                        `in gift`, this.config, inter, true
                     );
 
-                    this.giftedUser.itemCollection.powerups.multiBoost.numTotal += 15;
-                    this.giftedUser.itemCollection.powerups.multiBoost.highestTotal = Math.max(
-                        this.giftedUser.itemCollection.powerups.multiBoost.numTotal,
-                        this.giftedUser.itemCollection.powerups.multiBoost.highestTotal
-                    )
-                } else if (suboutcome === 1) {
-                    LogDebug.log(
-                        `Received Extra Chance from ${this.boarUser.user.username} (${this.boarUser.user.id}) in gift`,
-                        this.config, inter, true
-                    );
-
-                    this.giftedUser.itemCollection.powerups.extraChance.numTotal += 3;
-                    this.giftedUser.itemCollection.powerups.extraChance.highestTotal = Math.max(
-                        this.giftedUser.itemCollection.powerups.extraChance.numTotal,
-                        this.giftedUser.itemCollection.powerups.extraChance.highestTotal
+                    this.giftedUser.itemCollection.powerups.miracle.numTotal += 1;
+                    this.giftedUser.itemCollection.powerups.miracle.highestTotal = Math.max(
+                        this.giftedUser.itemCollection.powerups.miracle.numTotal,
+                        this.giftedUser.itemCollection.powerups.miracle.highestTotal
                     )
                 } else {
                     LogDebug.log(
-                        `Received Enhancer from ${this.boarUser.user.username} (${this.boarUser.user.id}) in gift`,
-                        this.config, inter, true
+                        `Received Transmutation Charges from ${this.boarUser.user.username} ` +
+                        `(${this.boarUser.user.id}) in gift`, this.config, inter, true
                     );
 
                     this.giftedUser.itemCollection.powerups.enhancer.numTotal++;
@@ -436,16 +425,10 @@ export class BoarGift {
                 this.boarUser.refreshUserData();
 
                 if (suboutcome === 0) {
-                    this.boarUser.itemCollection.powerups.multiBoost.numTotal += 15;
-                    this.boarUser.itemCollection.powerups.multiBoost.highestTotal = Math.max(
-                        this.boarUser.itemCollection.powerups.multiBoost.numTotal,
-                        this.boarUser.itemCollection.powerups.multiBoost.highestTotal
-                    )
-                } else if (suboutcome === 1) {
-                    this.boarUser.itemCollection.powerups.extraChance.numTotal += 3;
-                    this.boarUser.itemCollection.powerups.extraChance.highestTotal = Math.max(
-                        this.boarUser.itemCollection.powerups.extraChance.numTotal,
-                        this.boarUser.itemCollection.powerups.extraChance.highestTotal
+                    this.boarUser.itemCollection.powerups.miracle.numTotal += 1;
+                    this.boarUser.itemCollection.powerups.miracle.highestTotal = Math.max(
+                        this.boarUser.itemCollection.powerups.miracle.numTotal,
+                        this.boarUser.itemCollection.powerups.miracle.highestTotal
                     )
                 } else {
                     this.boarUser.itemCollection.powerups.enhancer.numTotal++;
@@ -490,7 +473,7 @@ export class BoarGift {
         const rarityWeights: Map<number, number> = BoarUtils.getBaseRarityWeights(this.config);
 
         const boarIDs: string[] = BoarUtils.getRandBoars(
-            await DataHandlers.getGuildData(inter.guild?.id, inter), inter, rarityWeights, false, 0, this.config
+            await DataHandlers.getGuildData(inter.guild?.id, inter), inter, rarityWeights, this.config
         );
 
         LogDebug.log(

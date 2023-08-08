@@ -675,28 +675,17 @@ export default class MarketSubcommand implements Subcommand {
                     this.boarUser.stats.general.totalBoars += numToReturn;
                     this.boarUser.itemCollection.boars[orderInfo.id].num += numToReturn;
                 } else if (!isSell && orderInfo.type === 'powerups') {
-                    if (orderInfo.id === 'extraChance') {
-                        hasEnoughRoom = this.boarUser.itemCollection.powerups[orderInfo.id].numTotal + numToReturn <=
-                            this.config.numberConfig.maxExtraChance;
+                    const maxValue = orderInfo.id === 'enhancer'
+                        ? this.config.numberConfig.maxEnhancers
+                        : this.config.numberConfig.maxPowBase;
 
-                        if (isClaim) {
-                            numToReturn = Math.min(
-                                numToReturn,
-                                this.config.numberConfig.maxExtraChance -
-                                this.boarUser.itemCollection.powerups[orderInfo.id].numTotal
-                            );
-                        }
-                    } else if (orderInfo.id === 'enhancer') {
-                        hasEnoughRoom = this.boarUser.itemCollection.powerups[orderInfo.id].numTotal + numToReturn <=
-                            this.config.numberConfig.maxEnhancers;
+                    hasEnoughRoom = this.boarUser.itemCollection.powerups[orderInfo.id].numTotal + numToReturn <=
+                        maxValue;
 
-                        if (isClaim) {
-                            numToReturn = Math.min(
-                                numToReturn,
-                                this.config.numberConfig.maxEnhancers -
-                                this.boarUser.itemCollection.powerups[orderInfo.id].numTotal
-                            );
-                        }
+                    if (isClaim) {
+                        numToReturn = Math.min(
+                            numToReturn, maxValue - this.boarUser.itemCollection.powerups[orderInfo.id].numTotal
+                        );
                     }
 
                     if (hasEnoughRoom || isClaim) {
@@ -811,9 +800,7 @@ export default class MarketSubcommand implements Subcommand {
 
                 if (
                     itemData.id === 'enhancer' &&
-                    this.modalData[0] + this.boarUser.itemCollection.powerups.enhancer.numTotal > nums.maxEnhancers ||
-                    itemData.id === 'extraChance' &&
-                    this.modalData[0] + this.boarUser.itemCollection.powerups.extraChance.numTotal > nums.maxExtraChance
+                    this.modalData[0] + this.boarUser.itemCollection.powerups.enhancer.numTotal > nums.maxEnhancers
                 ) {
                     await Replies.handleReply(
                         inter, strConfig.marketNoRoom, colorConfig.error, undefined, undefined, true

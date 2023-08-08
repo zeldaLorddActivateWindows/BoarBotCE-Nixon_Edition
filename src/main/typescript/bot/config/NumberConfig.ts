@@ -28,9 +28,6 @@ export class NumberConfig {
     public readonly maxStreak: number = 0;
     public readonly maxIndivBoars: number = 0;
     public readonly maxPowBase: number = 0;
-    public readonly maxMulti: number = 0;
-    public readonly maxMultiBoost: number = 0;
-    public readonly maxExtraChance: number = 0;
     public readonly maxEnhancers: number = 0;
     public readonly maxSmallEnhanced: number = 0;
     public readonly maxPowPages: number = 0;
@@ -114,21 +111,18 @@ export class NumberConfig {
     public readonly collFastestTimePos: [number, number] = [0, 0];
     public readonly collBestPromptLabelPos: [number, number] = [0, 0];
     public readonly collBestPromptPos: [number, number] = [0, 0];
-    public readonly collMultiLabelPos: [number, number] = [0, 0];
-    public readonly collMultiPos: [number, number] = [0, 0];
+    public readonly collBlessLabelPos: [number, number] = [0, 0];
+    public readonly collBlessPos: [number, number] = [0, 0];
+    public readonly collMiraclesLabelPos: [number, number] = [0, 0];
+    public readonly collMiraclesPos: [number, number] = [0, 0];
     public readonly collGiftsLabelPos: [number, number] = [0, 0];
     public readonly collGiftsPos: [number, number] = [0, 0];
-    public readonly collExtraChanceLabelPos: [number, number] = [0, 0];
-    public readonly collExtraChancePos: [number, number] = [0, 0];
-    public readonly collEnhancerLabelPos: [number, number] = [0, 0];
-    public readonly collBoostClaimedLabelPos: [number, number] = [0, 0];
-    public readonly collBoostClaimedPos: [number, number] = [0, 0];
-    public readonly collBoostUsedLabelPos: [number, number] = [0, 0];
-    public readonly collBoostUsedPos: [number, number] = [0, 0];
+    public readonly collCellLabelPos: [number, number] = [0, 0];
+    public readonly collCellPos: [number, number] = [0, 0];
+    public readonly collCellSize: [number, number] = [0, 0];
+    public readonly collChargePos: [number, number] = [0, 0];
     public readonly collHighestMultiLabelPos: [number, number] = [0, 0];
     public readonly collHighestMultiPos: [number, number] = [0, 0];
-    public readonly collHighestBoostLabelPos: [number, number] = [0, 0];
-    public readonly collHighestBoostPos: [number, number] = [0, 0];
     public readonly collGiftsClaimedLabelPos: [number, number] = [0, 0];
     public readonly collGiftsClaimedPos: [number, number] = [0, 0];
     public readonly collGiftsUsedLabelPos: [number, number] = [0, 0];
@@ -137,12 +131,6 @@ export class NumberConfig {
     public readonly collGiftsOpenedPos: [number, number] = [0, 0];
     public readonly collMostGiftsLabelPos: [number, number] = [0, 0];
     public readonly collMostGiftsPos: [number, number] = [0, 0];
-    public readonly collChancesClaimedLabelPos: [number, number] = [0, 0];
-    public readonly collChancesClaimedPos: [number, number] = [0, 0];
-    public readonly collChancesUsedLabelPos: [number, number] = [0, 0];
-    public readonly collChancesUsedPos: [number, number] = [0, 0];
-    public readonly collChanceHighestLabelPos: [number, number] = [0, 0];
-    public readonly collChanceHighestPos: [number, number] = [0, 0];
     public readonly collEnhancersClaimedLabelPos: [number, number] = [0, 0];
     public readonly collEnhancersClaimedPos: [number, number] = [0, 0];
     public readonly collEnhancedLabelPositions: [number, number][] = [];
@@ -171,12 +159,6 @@ export class NumberConfig {
     public readonly collFavLabelPos: [number, number] = [0, 0];
     public readonly collIndivBoarPos: [number, number] = [0, 0];
     public readonly collIndivBoarSize: [number, number] = [0, 0];
-    public readonly collEnhancerStartX: number = 0;
-    public readonly collEnhancerStartY: number = 0;
-    public readonly collEnhancerSpacingX: number = 0;
-    public readonly collEnhancerSpacingY: number = 0;
-    public readonly collEnhancerCols: number = 0;
-    public readonly collEnhancerSize: [number, number] = [0, 0];
 
     // Event image positions, sizes, and values
 

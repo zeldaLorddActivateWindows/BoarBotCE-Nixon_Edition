@@ -74,17 +74,15 @@ export class BoarUtils {
      * @param guildData - Used to see if a boar should be ignored
      * @param inter - Used for debugging
      * @param rarityWeights - Map of weights and their indexes
-     * @param extra - Whether to apply extra boar chance
-     * @param extraVal - User's chance of extra boar
+     * @param extraVals - User's chances of extra boars
      * @private
      */
     public static getRandBoars(
         guildData: GuildData | undefined,
         inter: ChatInputCommandInteraction | MessageComponentInteraction,
         rarityWeights: Map<number, number>,
-        extra: boolean,
-        extraVal: number,
-        config: BotConfig
+        config: BotConfig,
+        extraVals: number[] = [],
     ): string[] {
         const boarIDs: string[] = [];
         let numBoars = 1;
@@ -102,14 +100,11 @@ export class BoarUtils {
             return prob;
         }));
 
-        if (extra) {
-            numBoars += Math.floor(extraVal / 100);
-            extraVal -= (numBoars-1) * 100;
-
-            if (Math.random() < extraVal / 100) {
+        extraVals.forEach(percentage => {
+            if (Math.random() * 100 < percentage) {
                 numBoars++;
             }
-        }
+        });
 
         for (let i=0; i<numBoars; i++) {
             const randomRarity: number = Math.random();

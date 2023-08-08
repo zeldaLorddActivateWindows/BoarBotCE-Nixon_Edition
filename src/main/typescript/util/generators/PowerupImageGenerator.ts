@@ -144,15 +144,9 @@ export class PowerupImageGenerator {
         const font = `${nums.fontBig}px ${strConfig.fontName}`;
 
         const powerupType: ItemConfig = config.itemConfigs.powerups[powerupTypeID];
-        let powRewardStr: string = '+' + powerupType.rewardAmt + ' ' + (powerupType.rewardAmt as number > 1
+        const powRewardStr: string = '+' + powerupType.rewardAmt + ' ' + (powerupType.rewardAmt as number > 1
             ? powerupType.pluralName
             : powerupType.name);
-
-        if (powerupTypeID === 'extraChance') {
-            powRewardStr = '+' + powerupType.rewardAmt + '% ' + powerupType.name;
-        } else if (powerupTypeID === 'multiBoost') {
-            powRewardStr = '+' + powerupType.rewardAmt + ' ' + powerupType.name;
-        }
 
         ctx.drawImage(await Canvas.loadImage(pathConfig.otherAssets + pathConfig.eventUnderlay), ...nums.originPos);
 

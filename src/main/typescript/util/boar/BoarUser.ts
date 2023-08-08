@@ -158,8 +158,9 @@ export class BoarUser {
             }
         }
 
-        if (!this.itemCollection.powerups.multiBoost) {
-            this.itemCollection.powerups.multiBoost = new CollectedPowerup;
+        if (!this.itemCollection.powerups.miracle) {
+            this.itemCollection.powerups.miracle = new CollectedPowerup;
+            this.itemCollection.powerups.miracle.numActive = 0;
         }
 
         if (!this.itemCollection.powerups.gift) {
@@ -167,21 +168,15 @@ export class BoarUser {
             this.itemCollection.powerups.gift.numOpened = 0;
         }
 
-        if (!this.itemCollection.powerups.extraChance) {
-            this.itemCollection.powerups.extraChance = new CollectedPowerup;
-        }
-
         if (!this.itemCollection.powerups.enhancer) {
             this.itemCollection.powerups.enhancer = new CollectedPowerup;
             this.itemCollection.powerups.enhancer.raritiesUsed = [0,0,0,0,0,0,0];
         }
 
-        this.itemCollection.powerups.multiBoost.numTotal =
-            Math.max(0, Math.min(this.itemCollection.powerups.multiBoost.numTotal, nums.maxMultiBoost));
+        this.itemCollection.powerups.miracle.numTotal =
+            Math.max(0, Math.min(this.itemCollection.powerups.miracle.numTotal, nums.maxPowBase));
         this.itemCollection.powerups.gift.numTotal =
             Math.max(0, Math.min(this.itemCollection.powerups.gift.numTotal, nums.maxPowBase));
-        this.itemCollection.powerups.extraChance.numTotal =
-            Math.max(0, Math.min(this.itemCollection.powerups.extraChance.numTotal, nums.maxExtraChance));
         this.itemCollection.powerups.enhancer.numTotal =
             Math.max(0, Math.min(this.itemCollection.powerups.enhancer.numTotal, nums.maxEnhancers));
 
@@ -202,8 +197,8 @@ export class BoarUser {
             }
         }
 
-        this.stats.general.multiplier = 1 + uniques + this.stats.general.highestStreak;
-        this.stats.general.multiplier = Math.min(this.stats.general.multiplier, nums.maxMulti);
+        this.stats.general.multiplier = uniques + this.stats.general.highestStreak;
+        this.stats.general.multiplier = Math.min(this.stats.general.multiplier, nums.maxPowBase);
         this.stats.general.highestMulti = Math.max(this.stats.general.multiplier, this.stats.general.highestMulti);
 
         this.stats.general.boarScore = Math.max(this.stats.general.boarScore, 0);

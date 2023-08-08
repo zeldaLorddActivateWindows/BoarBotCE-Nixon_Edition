@@ -57,7 +57,14 @@ export class PathConfig {
     public readonly collEnhanceUnderlay: string = '';
     public readonly collGiftUnderlay: string = '';
     public readonly clanNone: string = '';
-    public readonly enhancerOff: string = '';
+    public readonly cellNone: string = '';
+    public readonly cellCommon: string = '';
+    public readonly cellUncommon: string = '';
+    public readonly cellRare: string = '';
+    public readonly cellEpic: string = '';
+    public readonly cellLegendary: string = '';
+    public readonly cellMythic: string = '';
+    public readonly cellDivine: string = '';
     public readonly favorite: string = '';
 
     // Other image/asset file names

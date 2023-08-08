@@ -71,9 +71,8 @@ export default class DailySubcommand implements Subcommand {
         let boarUser: BoarUser = {} as BoarUser;
         let boarIDs: string[] = [''];
 
-        let usedBoost = false;
-        let usedExtra = false;
         let firstDaily = false;
+        let powCanUse = false;
 
         await Queue.addQueue(async () => {
             try {
@@ -83,30 +82,34 @@ export default class DailySubcommand implements Subcommand {
                 const canUseDaily: boolean = await this.canUseDaily(boarUser);
                 if (!canUseDaily) return;
 
-                // Gets whether to try to use boost
-                const boostInput: boolean = this.interaction.options.getBoolean(this.subcommandInfo.args[0].name)
-                    ?? false;
-
-                // Gets whether to try to use extra chance
-                const extraInput: boolean = this.interaction.options.getBoolean(this.subcommandInfo.args[1].name)
-                    ?? false;
+                // Gets powerup to be used
+                const powInput: string | null = this.interaction.options.getString(this.subcommandInfo.args[0].name);
+                powCanUse = powInput !== null && boarUser.itemCollection.powerups.miracle.numTotal > 0;
 
                 // Map of rarity index keys and weight values
                 let rarityWeights: Map<number, number> = BoarUtils.getBaseRarityWeights(this.config);
-                let userMultiplier: number = boarUser.stats.general.multiplier;
+                let userMultiplier: number = boarUser.stats.general.multiplier + 1;
 
-                if (boostInput) {
-                    userMultiplier += boarUser.itemCollection.powerups.multiBoost.numTotal;
+                if (powCanUse) {
+                    (boarUser.itemCollection.powerups.miracle.numActive as number) +=
+                        boarUser.itemCollection.powerups.miracle.numTotal;
                 }
 
-                usedBoost = boostInput && boarUser.itemCollection.powerups.multiBoost.numTotal > 0;
-                usedExtra = extraInput && boarUser.itemCollection.powerups.extraChance.numTotal > 0;
+                for (let i=0; i<(boarUser.itemCollection.powerups.miracle.numActive as number); i++) {
+                    userMultiplier += Math.ceil(userMultiplier * 0.05);
+                }
 
                 rarityWeights = this.applyMultiplier(userMultiplier, rarityWeights);
+                const extraVals = [
+                    Math.min(userMultiplier / 10, 100),
+                    Math.min(userMultiplier / 100, 100),
+                    Math.min(userMultiplier / 1000, 100)
+                ];
+
+                LogDebug.log(userMultiplier + ' ' + extraVals, this.config);
 
                 boarIDs = BoarUtils.getRandBoars(
-                    this.guildData, this.interaction, rarityWeights,
-                    extraInput, boarUser.itemCollection.powerups.extraChance.numTotal, this.config
+                    this.guildData, this.interaction, rarityWeights, this.config, extraVals
                 );
 
                 if (boarIDs.includes('')) {
@@ -114,25 +117,19 @@ export default class DailySubcommand implements Subcommand {
                     return;
                 }
 
-                if (boostInput && boarUser.itemCollection.powerups.multiBoost.numTotal > 0) {
+                if (boarUser.itemCollection.powerups.miracle.numActive as number > 0) {
                     LogDebug.log(
-                        `Used up all ${boarUser.itemCollection.powerups.multiBoost.numTotal}x Multiplier Boost`,
+                        `Used ${boarUser.itemCollection.powerups.miracle.numActive} Miracle Charm(s)`,
                         this.config, this.interaction, true
                     );
 
-                    boarUser.itemCollection.powerups.multiBoost.numTotal = 0;
-                    boarUser.itemCollection.powerups.multiBoost.numUsed++;
+                    boarUser.itemCollection.powerups.miracle.numTotal = 0;
+                    boarUser.itemCollection.powerups.miracle.numUsed +=
+                        (boarUser.itemCollection.powerups.miracle.numActive as number);
+                    boarUser.itemCollection.powerups.miracle.numActive = 0;
                 }
 
-                if (usedExtra && boarUser.itemCollection.powerups.extraChance.numTotal > 0) {
-                    LogDebug.log(
-                        `Used up all +${boarUser.itemCollection.powerups.extraChance.numTotal}% Extra Chance`,
-                        this.config, this.interaction, true
-                    );
-
-                    boarUser.itemCollection.powerups.extraChance.numTotal = 0;
-                    boarUser.itemCollection.powerups.extraChance.numUsed++;
-                }
+                boarUser.stats.general.highestMulti = Math.max(userMultiplier, boarUser.stats.general.highestMulti);
 
                 boarUser.stats.general.boarStreak++;
 
@@ -145,7 +142,7 @@ export default class DailySubcommand implements Subcommand {
                 if (boarUser.stats.general.firstDaily === 0) {
                     firstDaily = true;
                     boarUser.stats.general.firstDaily = Date.now();
-                    boarUser.itemCollection.powerups.multiBoost.numTotal += 50;
+                    boarUser.itemCollection.powerups.miracle.numTotal += 5;
                 }
 
                 boarUser.updateUserData();
@@ -206,24 +203,12 @@ export default class DailySubcommand implements Subcommand {
             });
         }
 
-        let coloredText = '';
-
-        if (usedBoost) {
-            coloredText += powItemConfigs.multiBoost.name;
-        }
-
-        if (usedExtra) {
-            coloredText += coloredText === ''
-                ? powItemConfigs.extraChance.name
-                : ' and ' + powItemConfigs.extraChance.name
-        }
-
-        if (coloredText !== '') {
+        if (powCanUse) {
             await Replies.handleReply(
-                this.interaction, strConfig.dailyPowUsed, colorConfig.font, [coloredText], [colorConfig.powerup], true
+                this.interaction, strConfig.dailyPowUsed, colorConfig.font,
+                [powItemConfigs.miracle.name], [colorConfig.powerup], true
             );
         }
-
     }
 
     /**

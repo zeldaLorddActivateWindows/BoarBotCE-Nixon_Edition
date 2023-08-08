@@ -668,8 +668,7 @@ export default class CollectionSubcommand implements Subcommand {
             // Enables manual input button if there's more than one page
             this.baseRows[0].components[1].setDisabled(
                 this.curView === View.Normal && this.maxPageNormal <= 0 ||
-                this.curView === View.Detailed && this.allBoars.length <= 1 ||
-                this.curView === View.Powerups
+                this.curView === View.Detailed && this.allBoars.length <= 1
             );
 
             // Allows pressing Normal view if not currently on it
