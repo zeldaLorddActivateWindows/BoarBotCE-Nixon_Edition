@@ -123,7 +123,5 @@ export class Replies {
                 ephemeral: ephemeral
             });
         }
-
-
     }
 }

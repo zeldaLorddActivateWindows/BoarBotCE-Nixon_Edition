@@ -15,5 +15,6 @@ export class CollectedPowerup {
     public lastUsed = 0;
     public numActive?: number;
     public numOpened?: number;
+    public curOut?: number;
     public raritiesUsed?: number[];
 }

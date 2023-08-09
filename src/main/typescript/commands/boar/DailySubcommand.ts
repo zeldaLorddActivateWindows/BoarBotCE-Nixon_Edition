@@ -96,7 +96,9 @@ export default class DailySubcommand implements Subcommand {
                 }
 
                 for (let i=0; i<(boarUser.itemCollection.powerups.miracle.numActive as number); i++) {
-                    userMultiplier += Math.ceil(userMultiplier * 0.05);
+                    userMultiplier += Math.min(
+                        Math.ceil(userMultiplier * 0.05), this.config.numberConfig.miracleIncreaseMax
+                    );
                 }
 
                 rarityWeights = this.applyMultiplier(userMultiplier, rarityWeights);

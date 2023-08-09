@@ -45,4 +45,9 @@ export class BoarCommandConfig extends CommandConfig {
      * {@link SubcommandConfig Subcommand information} for {@link SelfWipeSubcommand}
      */
     public readonly selfWipe: SubcommandConfig = new SubcommandConfig;
+
+    /**
+     * {@link SubcommandConfig Subcommand information} for {@link GiftSubcommand}
+     */
+    public readonly gift: SubcommandConfig = new SubcommandConfig;
 }

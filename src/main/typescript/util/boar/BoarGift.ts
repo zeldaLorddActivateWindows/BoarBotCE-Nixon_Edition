@@ -1,7 +1,7 @@
 import {BoarUser} from './BoarUser';
 import {
     ActionRowBuilder, ButtonBuilder,
-    ButtonInteraction,
+    ButtonInteraction, ChatInputCommandInteraction,
     Collection,
     InteractionCollector, Message, MessageComponentInteraction, StringSelectMenuBuilder,
     StringSelectMenuInteraction, TextChannel
@@ -36,10 +36,10 @@ export class BoarGift {
     public boarUser: BoarUser;
     public giftedUser: BoarUser = {} as BoarUser;
     private imageGen: CollectionImageGenerator;
-    private firstInter: MessageComponentInteraction = {} as MessageComponentInteraction;
+    private firstInter: MessageComponentInteraction | ChatInputCommandInteraction =
+        {} as MessageComponentInteraction | ChatInputCommandInteraction;
     private compInters: ButtonInteraction[] = [];
     private giftMessage: Message = {} as Message;
-    private completedGift = false;
     private collector: InteractionCollector<ButtonInteraction | StringSelectMenuInteraction> =
         {} as InteractionCollector<ButtonInteraction | StringSelectMenuInteraction>;
 
@@ -50,10 +50,12 @@ export class BoarGift {
      * @param imageGen - The image generator used to send attachments
      * @param config - Used to get several configurations
      */
-    constructor(boarUser: BoarUser, imageGen: CollectionImageGenerator, config: BotConfig) {
+    constructor(boarUser: BoarUser, config: BotConfig, imageGen?: CollectionImageGenerator) {
         this.boarUser = boarUser;
         this.config = config;
-        this.imageGen = imageGen;
+        this.imageGen = imageGen
+            ? imageGen
+            : new CollectionImageGenerator(boarUser, [], config);
     }
 
     /**
@@ -61,7 +63,7 @@ export class BoarGift {
      *
      * @param interaction - The interaction to follow up
      */
-    public async sendMessage(interaction: MessageComponentInteraction): Promise<void> {
+    public async sendMessage(interaction: MessageComponentInteraction | ChatInputCommandInteraction): Promise<void> {
         if (!interaction.channel) return;
 
         this.collector = await CollectorUtils.createCollector(
@@ -88,17 +90,23 @@ export class BoarGift {
                 components: [claimRows[0]]
             });
         } catch {
-            this.completedGift = true;
+            Queue.addQueue(async () => {
+                try {
+                    this.boarUser.refreshUserData();
+                    delete this.boarUser.itemCollection.powerups.gift.curOut;
+                    this.boarUser.updateUserData();
+                } catch (err) {
+                    LogDebug.handleError(err, this.firstInter);
+                }
+            }, this.firstInter + this.firstInter.user.id);
+
             await Replies.handleReply(
                 interaction, this.config.stringConfig.giftFail, this.config.colorConfig.error,
                 undefined, undefined, true
             ).catch(() => {});
+
             return;
         }
-    }
-
-    public isCompleted(): boolean {
-        return this.completedGift;
     }
 
     /**
@@ -140,9 +148,18 @@ export class BoarGift {
         reason: string
     ): Promise<void> {
         try {
+            Queue.addQueue(async () => {
+                try {
+                    this.boarUser.refreshUserData();
+                    delete this.boarUser.itemCollection.powerups.gift.curOut;
+                    this.boarUser.updateUserData();
+                } catch (err) {
+                    LogDebug.handleError(err, this.firstInter);
+                }
+            }, this.firstInter + this.firstInter.user.id);
+
             if (this.compInters.length === 0 || reason === CollectorUtils.Reasons.Error) {
                 LogDebug.log(`Gift expired`, this.config, this.firstInter, true);
-                this.completedGift = true;
                 await this.giftMessage.delete().catch(() => {});
                 return;
             }
@@ -184,6 +201,7 @@ export class BoarGift {
                     return;
                 }
 
+                delete this.boarUser.itemCollection.powerups.gift.curOut;
                 this.boarUser.itemCollection.powerups.gift.numTotal--;
                 this.boarUser.itemCollection.powerups.gift.numUsed++;
                 this.boarUser.updateUserData();
@@ -191,8 +209,6 @@ export class BoarGift {
                 await LogDebug.handleError(err, this.firstInter);
             }
         }, this.firstInter.id + this.boarUser.user.id).catch((err) => { throw err });
-
-        this.completedGift = true;
 
         if (!canGift) {
             await this.giftMessage.delete().catch(() => {});
@@ -366,7 +382,7 @@ export class BoarGift {
                     outcomeName.substring(outcomeName.indexOf(' ')),
                     {
                         name: outcomeName,
-                        file: this.config.pathConfig.bucks,
+                        file: this.config.pathConfig.otherAssets + this.config.pathConfig.bucks,
                         colorKey: 'bucks'
                     }
                 )
@@ -386,6 +402,17 @@ export class BoarGift {
         const outcomeConfig: OutcomeConfig = (this.config.itemConfigs.powerups.gift.outcomes as OutcomeConfig[])[2];
         const outcomeName: string = outcomeConfig.suboutcomes[suboutcome].name;
 
+        let powImgPath = '';
+
+        switch (suboutcome) {
+            case 0:
+                powImgPath = this.config.pathConfig.powerups + this.config.itemConfigs.powerups.miracle.file;
+                break;
+            case 1:
+                powImgPath = this.config.pathConfig.powerups + this.config.itemConfigs.powerups.enhancer.file;
+                break;
+        }
+
         await Queue.addQueue(async () => {
             try {
                 this.giftedUser.refreshUserData();
@@ -396,7 +423,8 @@ export class BoarGift {
                         `in gift`, this.config, inter, true
                     );
 
-                    this.giftedUser.itemCollection.powerups.miracle.numTotal += 1;
+                    this.giftedUser.itemCollection.powerups.miracle.numTotal++;
+                    this.giftedUser.itemCollection.powerups.miracle.numClaimed++;
                     this.giftedUser.itemCollection.powerups.miracle.highestTotal = Math.max(
                         this.giftedUser.itemCollection.powerups.miracle.numTotal,
                         this.giftedUser.itemCollection.powerups.miracle.highestTotal
@@ -408,6 +436,7 @@ export class BoarGift {
                     );
 
                     this.giftedUser.itemCollection.powerups.enhancer.numTotal++;
+                    this.giftedUser.itemCollection.powerups.enhancer.numClaimed++;
                     this.giftedUser.itemCollection.powerups.enhancer.highestTotal = Math.max(
                         this.giftedUser.itemCollection.powerups.enhancer.numTotal,
                         this.giftedUser.itemCollection.powerups.enhancer.highestTotal
@@ -425,13 +454,15 @@ export class BoarGift {
                 this.boarUser.refreshUserData();
 
                 if (suboutcome === 0) {
-                    this.boarUser.itemCollection.powerups.miracle.numTotal += 1;
+                    this.boarUser.itemCollection.powerups.miracle.numTotal++;
+                    this.boarUser.itemCollection.powerups.miracle.numClaimed++;
                     this.boarUser.itemCollection.powerups.miracle.highestTotal = Math.max(
                         this.boarUser.itemCollection.powerups.miracle.numTotal,
                         this.boarUser.itemCollection.powerups.miracle.highestTotal
                     )
                 } else {
                     this.boarUser.itemCollection.powerups.enhancer.numTotal++;
+                    this.boarUser.itemCollection.powerups.enhancer.numClaimed++;
                     this.boarUser.itemCollection.powerups.enhancer.highestTotal = Math.max(
                         this.boarUser.itemCollection.powerups.enhancer.numTotal,
                         this.boarUser.itemCollection.powerups.enhancer.highestTotal
@@ -454,7 +485,7 @@ export class BoarGift {
                     outcomeName.substring(outcomeName.indexOf(' ')),
                     {
                         name: outcomeConfig.suboutcomes[suboutcome].name,
-                        file: this.config.pathConfig.powerup,
+                        file: powImgPath,
                         colorKey: 'powerup'
                     }
                 )

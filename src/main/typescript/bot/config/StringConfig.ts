@@ -78,6 +78,9 @@ export class StringConfig {
     public readonly collBestPromptLabel: string = ' ';
     public readonly collBlessLabel: string = ' ';
     public readonly collCellLabel: string = ' ';
+    public readonly collMiraclesClaimedLabel: string = ' ';
+    public readonly collMiraclesUsedLabel: string = ' ';
+    public readonly collMostMiraclesLabel: string = ' ';
     public readonly collHighestMultiLabel: string = ' ';
     public readonly collGiftsClaimedLabel: string = ' ';
     public readonly collGiftsUsedLabel: string = ' ';
@@ -85,10 +88,9 @@ export class StringConfig {
     public readonly collMostGiftsLabel: string = ' ';
     public readonly collEnhancersClaimedLabel: string = ' ';
     public readonly collEnhancedLabel: string = ' ';
+    public readonly collEnhanceDataChange: string = ' ';
+    public readonly collEnhanceNoBucks: string = ' ';
     public readonly collEnhanceDetails: string = ' ';
-    public readonly collEnhanceBoarLose: string = ' ';
-    public readonly collEnhanceBoarGain: string = ' ';
-    public readonly collGiftDetails: string = ' ';
     public readonly collEditionTitle: string = ' ';
     public readonly collEditionLine: string = ' ';
     public readonly collDescriptionSB: string = ' ';
@@ -165,6 +167,9 @@ export class StringConfig {
     // Miscellaneous strings
 
     public readonly giftFail: string = ' ';
+    public readonly giftOut: string = ' ';
+    public readonly giftSent: string = ' ';
+    public readonly giftNone: string = ' ';
     public readonly enhanceGotten: string = ' ';
     public readonly notInBoard: string = ' ';
     public readonly boardHeader: string = ' ';

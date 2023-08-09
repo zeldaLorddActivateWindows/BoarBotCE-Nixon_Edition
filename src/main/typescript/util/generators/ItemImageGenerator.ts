@@ -73,7 +73,7 @@ export class ItemImageGenerator {
         const strConfig: StringConfig = this.config.stringConfig;
         const pathConfig: PathConfig = this.config.pathConfig;
 
-        let folderPath: string;
+        let folderPath: string | undefined;
 
         if (isBadge && manualInput === undefined) {
             const badgeInfo: ItemConfig = this.config.itemConfigs.badges[this.id];
@@ -90,14 +90,15 @@ export class ItemImageGenerator {
         } else {
             this.itemName = manualInput.name;
             this.itemFile = manualInput.file;
-            folderPath = pathConfig.otherAssets;
             this.colorKey = manualInput.colorKey;
         }
 
         this.itemNameColored = coloredText ? coloredText : this.itemName;
         this.itemName = this.itemName.replace(this.itemNameColored, '%@');
 
-        this.imageFilePath = folderPath + this.itemFile;
+        this.imageFilePath = folderPath
+            ? folderPath + this.itemFile
+            : this.itemFile;
         const imageExtension: string = this.imageFilePath.split('.')[1];
         const isAnimated: boolean = imageExtension === 'gif';
 

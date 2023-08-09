@@ -96,14 +96,10 @@ export class PowerupSpawner {
             }
         }, 'powDelMsgs' + 'global').catch((err) => { throw err });
 
-        arrCopy.forEach(async (msg, i) => {
+        arrCopy.forEach(async msg => {
             try {
                 await msg.delete().catch(() => {});
             } catch {}
-
-            if (i === this.msgsToDelete.length - 1) {
-                this.msgsToDelete = [];
-            }
         });
     }
 
@@ -293,7 +289,7 @@ export class PowerupSpawner {
                     config, undefined, true
                 );
 
-                let correctString: string = config.stringConfig.powRightFull;
+                const correctString: string = config.stringConfig.powRightFull;
                 const rewardString: string = this.powerupType.rewardAmt + ' ' +
                     (this.powerupType.rewardAmt as number > 1
                         ? this.powerupType.pluralName
@@ -303,15 +299,10 @@ export class PowerupSpawner {
                 this.claimers.set(inter.user.id, timeToClaim);
                 this.interactions.push(inter);
 
-                // Modify the 2nd modifiable value
-                let occur = 0;
-                correctString = correctString
-                    .replace(/%@/g, match => ++occur === 2 ? timeToClaim.toLocaleString() : match);
-
                 await Replies.handleReply(
                     inter, correctString, config.colorConfig.font,
-                    [config.stringConfig.powRight, rewardString],
-                    [config.colorConfig.green, config.colorConfig.powerup], true
+                    [config.stringConfig.powRight, timeToClaim.toLocaleString() + 'ms', rewardString],
+                    [config.colorConfig.green, config.colorConfig.silver, config.colorConfig.powerup], true
                 );
             } else if (!this.claimers.has(inter.user.id)) {
                 LogDebug.log(
@@ -615,6 +606,8 @@ export class PowerupSpawner {
             if (--this.numNotFinished === 0) {
                 LogDebug.log('Attempting to conclude Powerup Event', config);
 
+                const topUserID = [...this.claimers][0][0];
+
                 this.interactions.forEach(async interaction => {
                     const strConfig: StringConfig = config.stringConfig;
                     const colorConfig: ColorConfig = config.colorConfig;
@@ -631,8 +624,7 @@ export class PowerupSpawner {
                     }
 
                     await Replies.handleReply(
-                        interaction, strConfig.powResponse.replace('%@', userTime.toLocaleString()),
-                        config.colorConfig.font, ['/boar collection', 'Powerups'],
+                        interaction, strConfig.powResponse, config.colorConfig.font, ['/boar collection', 'Powerups'],
                         [colorConfig.silver, colorConfig.powerup], true
                     );
 
@@ -642,6 +634,10 @@ export class PowerupSpawner {
 
                             if (boarUser.stats.general.firstDaily === 0) {
                                 boarUser.stats.general.firstDaily = Date.now();
+                            }
+
+                            if (boarUser.user.id === topUserID) {
+                                boarUser.stats.powerups.topAttempts++;
                             }
 
                             if (
@@ -664,7 +660,8 @@ export class PowerupSpawner {
 
                             boarUser.itemCollection.powerups[this.powerupTypeID].numTotal +=
                                 this.powerupType.rewardAmt as number;
-                            boarUser.itemCollection.powerups[this.powerupTypeID].numClaimed++;
+                            boarUser.itemCollection.powerups[this.powerupTypeID].numClaimed +=
+                                this.powerupType.rewardAmt as number;
                             boarUser.itemCollection.powerups[this.powerupTypeID].highestTotal = Math.max(
                                 boarUser.itemCollection.powerups[this.powerupTypeID].highestTotal,
                                 boarUser.itemCollection.powerups[this.powerupTypeID].numTotal

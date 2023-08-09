@@ -67,7 +67,6 @@ export default class CollectionSubcommand implements Subcommand {
     private curPage = 0;
     private maxPageNormal = 0;
     private enhanceStage = 0;
-    private curGift: BoarGift | undefined;
     private timerVars = {
         timeUntilNextCollect: 0,
         updateTime: setTimeout(() => {})
@@ -214,7 +213,8 @@ export default class CollectionSubcommand implements Subcommand {
                 favorite: collRowConfig[1][0].components[0],
                 gift: collRowConfig[1][0].components[1],
                 editions: collRowConfig[1][0].components[2],
-                enhance: collRowConfig[1][0].components[3]
+                enhance: collRowConfig[1][0].components[3],
+                miracle: collRowConfig[1][0].components[4]
             };
 
             // User wants to input a page manually
@@ -291,15 +291,46 @@ export default class CollectionSubcommand implements Subcommand {
 
                 // User wants to send a gift in powerup view
                 case collComponents.gift.customId:
-                    if (!this.curGift || this.curGift.isCompleted()) {
-                        this.curGift = await new BoarGift(this.boarUser, this.collectionImage, this.config);
-                        await this.curGift.sendMessage(inter);
-                    } else {
-                        await Replies.handleReply(
-                            inter, 'You already have a gift that\'s sent out!', this.config.colorConfig.error,
-                            undefined, undefined, true
-                        );
-                    }
+                    Queue.addQueue(async () => {
+                        try {
+                            this.boarUser.refreshUserData();
+                            if (this.boarUser.itemCollection.powerups.gift.numTotal > 0) {
+                                const curOutVal = this.boarUser.itemCollection.powerups.gift.curOut;
+                                if (!curOutVal || curOutVal + 30000 < Date.now()) {
+                                    this.boarUser.itemCollection.powerups.gift.curOut = Date.now();
+                                    this.boarUser.updateUserData();
+                                    await new BoarGift(this.boarUser, this.config).sendMessage(inter);
+                                } else {
+                                    await Replies.handleReply(
+                                        inter, this.config.stringConfig.giftOut, this.config.colorConfig.error,
+                                        undefined, undefined, true
+                                    );
+                                }
+                            } else {
+                                await Replies.handleReply(
+                                    inter, this.config.stringConfig.giftNone, this.config.colorConfig.error,
+                                    undefined, undefined, true
+                                );
+                            }
+                        } catch (err) {
+                            LogDebug.handleError(err, inter);
+                        }
+                    }, inter.id + inter.user.id);
+                    break;
+
+                // User wants to activate miracles in powerup view
+                case collComponents.miracle.customId:
+                    Queue.addQueue(async () => {
+                        try {
+                            this.boarUser.refreshUserData();
+                            (this.boarUser.itemCollection.powerups.miracle.numActive as number) +=
+                                this.boarUser.itemCollection.powerups.miracle.numTotal;
+                            this.boarUser.itemCollection.powerups.miracle.numTotal = 0;
+                            this.boarUser.updateUserData();
+                        } catch (err) {
+                            LogDebug.handleError(err, inter);
+                        }
+                    }, inter.id + inter.user.id);
                     break;
             }
 
@@ -360,11 +391,12 @@ export default class CollectionSubcommand implements Subcommand {
         }
 
         LogDebug.log(
-            `Attempting to enhance ${this.allBoars[this.curPage].id} to '${enhancedBoar}'`,
+            `Attempting to enhance '${this.allBoars[this.curPage].id}' to '${enhancedBoar}'`,
             this.config, this.firstInter, true
         );
 
-        let canEnhance = true;
+        let dataChanged = false;
+        let noMoney = false;
         await Queue.addQueue(async () => {
             try {
                 const enhancersUsed: number = this.allBoars[this.curPage].rarity[1].enhancersNeeded;
@@ -374,14 +406,19 @@ export default class CollectionSubcommand implements Subcommand {
                     this.boarUser.itemCollection.powerups.enhancer.numTotal - enhancersUsed < 0 ||
                     this.boarUser.itemCollection.boars[this.allBoars[this.curPage].id].num === 0
                 ) {
-                    canEnhance = false;
+                    dataChanged = true;
+                    return;
+                }
+
+                if (this.boarUser.stats.general.boarScore - enhancersUsed * 5 < 0) {
+                    noMoney = true;
                     return;
                 }
 
                 this.boarUser.itemCollection.boars[this.allBoars[this.curPage].id].num--;
                 this.boarUser.itemCollection.boars[this.allBoars[this.curPage].id].editions.pop();
                 this.boarUser.itemCollection.boars[this.allBoars[this.curPage].id].editionDates.pop();
-                this.boarUser.stats.general.boarScore += enhancersUsed * 5;
+                this.boarUser.stats.general.boarScore -= enhancersUsed * 5;
                 this.boarUser.stats.general.totalBoars--;
                 this.boarUser.itemCollection.powerups.enhancer.numTotal -= enhancersUsed;
                 (this.boarUser.itemCollection.powerups.enhancer.raritiesUsed as number[])[
@@ -393,14 +430,16 @@ export default class CollectionSubcommand implements Subcommand {
             }
         }, this.compInter.id + this.boarUser.user.id).catch((err) => { throw err });
 
-        if (!canEnhance) {
+        if (dataChanged || noMoney) {
             LogDebug.log(
-                `Failed to enhance ${this.allBoars[this.curPage].id} to '${enhancedBoar}'`,
+                `Failed to enhance '${this.allBoars[this.curPage].id}' to '${enhancedBoar}'`,
                 this.config, this.firstInter, true
             );
 
             await Replies.handleReply(
-                this.compInter, 'Unable to enhance! Try again!',
+                this.compInter, dataChanged
+                    ? this.config.stringConfig.collEnhanceDataChange
+                    : this.config.stringConfig.collEnhanceNoBucks,
                 this.config.colorConfig.error, undefined, undefined, true
             );
 
@@ -419,7 +458,7 @@ export default class CollectionSubcommand implements Subcommand {
 
         await Replies.handleReply(
             this.compInter, this.config.stringConfig.enhanceGotten, this.config.colorConfig.font,
-            this.allBoars[this.curPage].name, this.allBoars[this.curPage].color, true
+            [this.allBoars[this.curPage].name], [this.allBoars[this.curPage].color], true
         );
 
         for (const edition of editions) {
@@ -701,11 +740,17 @@ export default class CollectionSubcommand implements Subcommand {
                 );
             }
 
-            // Gift button enabling
+            // Gift & Miracle Activation button enabling
             if (this.curView === View.Powerups) {
                 optionalRow.addComponents(
                     this.optionalButtons.components[1].setDisabled(
                         this.boarUser.itemCollection.powerups.gift.numTotal === 0 ||
+                        this.firstInter.user.id !== this.boarUser.user.id
+                    )
+                );
+                optionalRow.addComponents(
+                    this.optionalButtons.components[4].setDisabled(
+                        this.boarUser.itemCollection.powerups.miracle.numTotal === 0 ||
                         this.firstInter.user.id !== this.boarUser.user.id
                     )
                 );

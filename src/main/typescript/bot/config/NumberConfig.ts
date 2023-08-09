@@ -34,10 +34,19 @@ export class NumberConfig {
 
     // A constant used to determine how quickly to increase rarity
     public readonly rarityIncreaseConst: number = 0;
-    public readonly responseDetailsPos: [number, number] = [0, 0];
-    public readonly responseDetailsWidth: number = 0;
 
-    public readonly responseImageSize: [number, number] = [0, 0];
+    // A constant to prevent compounding miracles to go too high
+    public readonly miracleIncreaseMax: number = 0;
+
+    public readonly enhanceDetailsPos: [number, number] = [0, 0];
+    public readonly enhanceDetailsWidth: number = 0;
+    public readonly enhanceImageSize: [number, number] = [0, 0];
+    public readonly enhanceCellPos: [number, number] = [0, 0];
+    public readonly enhanceCellSize: [number, number] = [0, 0];
+    public readonly enhanceBoarPos: [number, number] = [0, 0];
+    public readonly enhanceBoarSize: [number, number] = [0, 0];
+    public readonly enhanceRarityPos: [number, number] = [0, 0];
+    public readonly giftImageSize: [number, number] = [0, 0];
 
     // Item image positions, sizes, and values
 
@@ -121,6 +130,12 @@ export class NumberConfig {
     public readonly collCellPos: [number, number] = [0, 0];
     public readonly collCellSize: [number, number] = [0, 0];
     public readonly collChargePos: [number, number] = [0, 0];
+    public readonly collLifetimeMiraclesLabelPos: [number, number] = [0, 0];
+    public readonly collLifetimeMiraclesPos: [number, number] = [0, 0];
+    public readonly collMiraclesUsedLabelPos: [number, number] = [0, 0];
+    public readonly collMiraclesUsedPos: [number, number] = [0, 0];
+    public readonly collMostMiraclesLabelPos: [number, number] = [0, 0];
+    public readonly collMostMiraclesPos: [number, number] = [0, 0];
     public readonly collHighestMultiLabelPos: [number, number] = [0, 0];
     public readonly collHighestMultiPos: [number, number] = [0, 0];
     public readonly collGiftsClaimedLabelPos: [number, number] = [0, 0];
@@ -135,11 +150,6 @@ export class NumberConfig {
     public readonly collEnhancersClaimedPos: [number, number] = [0, 0];
     public readonly collEnhancedLabelPositions: [number, number][] = [];
     public readonly collEnhancedPositions: [number, number][] = [];
-    public readonly collEnhanceBoarLosePos: [number, number] = [0, 0];
-    public readonly collEnhanceBoarGainPos: [number, number] = [0, 0];
-    public readonly collEnhanceLosePos: [number, number] = [0, 0];
-    public readonly collEnhanceScoreGainPos: [number, number] = [0, 0];
-    public readonly collEnhanceResultWidth: number = 0;
     public readonly collPowDataWidth: number = 0;
     public readonly collBoarStartX: number = 0;
     public readonly collBoarStartY: number = 0;

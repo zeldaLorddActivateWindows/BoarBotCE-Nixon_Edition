@@ -190,7 +190,7 @@ export class CanvasUtils {
                 ctx.fillText(
                     priorNormText[i],
                     pos[0] - ctx.measureText(text.substring(replaceIndexes[i])).width / 2 + (i > 0
-                        ? ctx.measureText(text.substring(0, replaceIndexes[i-1] + 1)).width / 2
+                        ? ctx.measureText(text.substring(0, replaceIndexes[i-1]) + coloredContents[i-1]).width / 2
                         : 0),
                     pos[1]
                 );

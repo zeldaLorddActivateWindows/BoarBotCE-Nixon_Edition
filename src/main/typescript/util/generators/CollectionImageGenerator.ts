@@ -459,7 +459,7 @@ export class CollectionImageGenerator {
             }
         }
 
-        const multiplier: string = Math.min(this.boarUser.stats.general.multiplier, nums.maxPowBase).toLocaleString();
+        let multiplier: number = Math.min(this.boarUser.stats.general.multiplier, nums.maxPowBase);
         const miracles: string = Math.min(powerupItemsData.miracle.numTotal, nums.maxPowBase).toLocaleString();
         const gifts: string = Math.min(powerupItemsData.gift.numTotal, nums.maxPowBase).toLocaleString();
 
@@ -497,12 +497,21 @@ export class CollectionImageGenerator {
         CanvasUtils.drawText(
             ctx, strConfig.collBlessLabel, nums.collBlessLabelPos, mediumFont, 'center', colorConfig.font
         );
+
         if (powerupItemsData.miracle.numActive as number > 0) {
+            for (let i=0; i<(powerupItemsData.miracle.numActive as number); i++) {
+                multiplier += Math.min(
+                    Math.ceil(multiplier * 0.05), this.config.numberConfig.miracleIncreaseMax
+                );
+            }
+
             CanvasUtils.drawText(
                 ctx, multiplier + '\u2738', nums.collBlessPos, smallMedium, 'center', colorConfig.powerup
             );
         } else {
-            CanvasUtils.drawText(ctx, multiplier, nums.collBlessPos, smallMedium, 'center', colorConfig.font);
+            CanvasUtils.drawText(
+                ctx, multiplier.toLocaleString(), nums.collBlessPos, smallMedium, 'center', colorConfig.font
+            );
         }
 
         CanvasUtils.drawText(
@@ -564,7 +573,7 @@ export class CollectionImageGenerator {
         const miraclesUsed: string = Math.min(powerupItemsData.miracle.numUsed, nums.maxPowBase).toLocaleString();
         const highestBless: string = Math.min(this.boarUser.stats.general.highestMulti, nums.maxPowBase)
             .toLocaleString();
-        const highestMiracles: string = '+' + Math.min(powerupItemsData.miracle.highestTotal, nums.maxPowBase)
+        const highestMiracles: string = Math.min(powerupItemsData.miracle.highestTotal, nums.maxPowBase)
             .toLocaleString();
         const giftsClaimed: string = Math.min(powerupItemsData.gift.numClaimed, nums.maxPowBase).toLocaleString();
         const giftsUsed: string = Math.min(powerupItemsData.gift.numUsed, nums.maxPowBase).toLocaleString();
@@ -579,6 +588,24 @@ export class CollectionImageGenerator {
         await this.drawTopBar(ctx);
 
         // Draws stats info
+
+        CanvasUtils.drawText(
+            ctx, strConfig.collMiraclesClaimedLabel, nums.collLifetimeMiraclesLabelPos,
+            mediumFont, 'center', colorConfig.font
+        );
+        CanvasUtils.drawText(
+            ctx, miraclesClaimed, nums.collLifetimeMiraclesPos, smallMedium, 'center', colorConfig.font
+        );
+
+        CanvasUtils.drawText(
+            ctx, strConfig.collMiraclesUsedLabel, nums.collMiraclesUsedLabelPos, mediumFont, 'center', colorConfig.font
+        );
+        CanvasUtils.drawText(ctx, miraclesUsed, nums.collMiraclesUsedPos, smallMedium, 'center', colorConfig.font);
+
+        CanvasUtils.drawText(
+            ctx, strConfig.collMostMiraclesLabel, nums.collMostMiraclesLabelPos, mediumFont, 'center', colorConfig.font
+        );
+        CanvasUtils.drawText(ctx, highestMiracles, nums.collMostMiraclesPos, smallMedium, 'center', colorConfig.font);
 
         CanvasUtils.drawText(
             ctx, strConfig.collHighestMultiLabel, nums.collHighestMultiLabelPos, mediumFont, 'center', colorConfig.font
@@ -776,47 +803,38 @@ export class CollectionImageGenerator {
         const pathConfig: PathConfig = this.config.pathConfig;
         const colorConfig: ColorConfig = this.config.colorConfig;
         const rarityConfig: RarityConfig[] = this.config.rarityConfigs;
-        const powItemConfigs: ItemConfigs = this.config.itemConfigs.powerups;
 
-        const bigFont = `${nums.fontBig}px ${strConfig.fontName}`;
         const mediumFont = `${nums.fontMedium}px ${strConfig.fontName}`;
 
         const confirmUnderlay: string = pathConfig.collAssets + pathConfig.collEnhanceUnderlay;
+        const cellImagePath: string = pathConfig.collAssets + pathConfig['cell' + this.allBoars[page].rarity[1].name];
+        const boarImagePath: string = pathConfig.boars + (this.allBoars[page].staticFile
+            ? this.allBoars[page].staticFile
+            : this.allBoars[page].file);
 
         const nextRarityIndex: number = this.allBoars[page].rarity[0];
         const nextRarityName: string = rarityConfig[nextRarityIndex].name;
         const nextRarityColor: string = colorConfig['rarity' + (nextRarityIndex + 1)];
-        const enhancersLost: number = this.allBoars[page].rarity[1].enhancersNeeded;
-        const scoreGained: number = enhancersLost * 5;
+        const scoreLost: string = (this.allBoars[page].rarity[1].enhancersNeeded * 5).toLocaleString();
 
-        const canvas: Canvas.Canvas = Canvas.createCanvas(...nums.responseImageSize);
+        const canvas: Canvas.Canvas = Canvas.createCanvas(...nums.enhanceImageSize);
         const ctx: Canvas.CanvasRenderingContext2D = canvas.getContext('2d');
 
-        ctx.drawImage(await Canvas.loadImage(confirmUnderlay), ...nums.originPos, ...nums.responseImageSize);
+        ctx.drawImage(await Canvas.loadImage(confirmUnderlay), ...nums.originPos, ...nums.enhanceImageSize);
+
+        ctx.drawImage(await Canvas.loadImage(cellImagePath), ...nums.enhanceCellPos, ...nums.enhanceCellSize);
+
+        ctx.drawImage(await Canvas.loadImage(boarImagePath), ...nums.enhanceBoarPos, ...nums.enhanceBoarSize);
 
         CanvasUtils.drawText(
-            ctx, strConfig.collEnhanceBoarLose, nums.collEnhanceBoarLosePos, bigFont, 'center', colorConfig.font,
-            nums.collEnhanceResultWidth, false, this.allBoars[page].name, this.allBoars[page].color
+            ctx, nextRarityName.toUpperCase(), nums.enhanceRarityPos, mediumFont, 'center', nextRarityColor
         );
 
         CanvasUtils.drawText(
-            ctx, strConfig.collEnhanceBoarGain, nums.collEnhanceBoarGainPos, bigFont, 'center', colorConfig.font,
-            nums.collEnhanceResultWidth, false, [nextRarityName], [nextRarityColor]
-        );
-
-        CanvasUtils.drawText(
-            ctx, '-' + enhancersLost + 'x %@', nums.collEnhanceLosePos, bigFont, 'center', colorConfig.font,
-            nums.collEnhanceResultWidth, false, [powItemConfigs.enhancer.pluralName], [colorConfig.powerup]
-        );
-
-        CanvasUtils.drawText(
-            ctx, '+' + scoreGained + ' %@', nums.collEnhanceScoreGainPos, bigFont, 'center', colorConfig.font,
-            nums.collEnhanceResultWidth, false, [strConfig.collScoreLabel], [colorConfig.bucks]
-        );
-
-        CanvasUtils.drawText(
-            ctx, strConfig.collEnhanceDetails, nums.responseDetailsPos, mediumFont, 'center', colorConfig.font,
-            nums.responseDetailsWidth, true, this.allBoars[page].name, this.allBoars[page].color
+            ctx, strConfig.collEnhanceDetails, nums.enhanceDetailsPos, mediumFont, 'center', colorConfig.font,
+            nums.enhanceDetailsWidth, true,
+            [this.allBoars[page].name, nextRarityName + ' Boar', '$', scoreLost, strConfig.collCellLabel],
+            [this.allBoars[page].color, nextRarityColor, colorConfig.bucks, colorConfig.font, colorConfig.powerup]
         );
 
         return new AttachmentBuilder(canvas.toBuffer(), { name:`${this.config.stringConfig.imageName}.png` });
@@ -828,26 +846,15 @@ export class CollectionImageGenerator {
     public async finalizeGift(): Promise<AttachmentBuilder> {
         // Config aliases
 
-        const strConfig: StringConfig = this.config.stringConfig;
         const nums: NumberConfig = this.config.numberConfig;
         const pathConfig: PathConfig = this.config.pathConfig;
-        const colorConfig: ColorConfig = this.config.colorConfig;
-        const powItemConfigs: ItemConfigs = this.config.itemConfigs.powerups;
 
-        const mediumFont = `${nums.fontMedium}px ${strConfig.fontName}`;
+        const giftUnderlay: string = pathConfig.collAssets + pathConfig.collGiftUnderlay;
 
-        const confirmUnderlay: string = pathConfig.collAssets + pathConfig.collGiftUnderlay;
-        const userTag: string = this.boarUser.user.username.substring(0, nums.maxUsernameLength);
-
-        const canvas: Canvas.Canvas = Canvas.createCanvas(...nums.responseImageSize);
+        const canvas: Canvas.Canvas = Canvas.createCanvas(...nums.giftImageSize);
         const ctx: Canvas.CanvasRenderingContext2D = canvas.getContext('2d');
 
-        ctx.drawImage(await Canvas.loadImage(confirmUnderlay), ...nums.originPos, ...nums.responseImageSize);
-
-        CanvasUtils.drawText(
-            ctx, userTag + strConfig.collGiftDetails, nums.responseDetailsPos, mediumFont, 'center', colorConfig.font,
-            nums.responseDetailsWidth, true, [powItemConfigs.gift.name], [colorConfig.powerup]
-        );
+        ctx.drawImage(await Canvas.loadImage(giftUnderlay), ...nums.originPos, ...nums.giftImageSize);
 
         return new AttachmentBuilder(canvas.toBuffer(), { name:`${this.config.stringConfig.imageName}.png` });
     }
