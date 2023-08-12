@@ -41,15 +41,20 @@ export class PowerupImageGenerator {
         const font = `${nums.fontBig}px ${strConfig.fontName}`;
 
         const promptDescription: string = promptType.description ? promptType.description : prompt.description;
+        const coloredContent = [];
+
+        if (prompt.rightClock) {
+            coloredContent.push(prompt.name);
+        }
 
         const canvas: Canvas.Canvas = Canvas.createCanvas(...nums.eventSpawnSize);
         const ctx: Canvas.CanvasRenderingContext2D = canvas.getContext('2d');
 
         await this.makeBaseHeaderFooter(ctx, powerupTypeID, strConfig.eventTitle.replace('%@', 'POWERUP'), config);
 
-        CanvasUtils.drawText(
+        await CanvasUtils.drawText(
             ctx, promptDescription, nums.powSpawnDescriptionPos, font, 'center',
-            colorConfig.font, nums.powSpawnDescriptionWidth, true
+            colorConfig.font, nums.powSpawnDescriptionWidth, true, coloredContent, [config.colorConfig.silver]
         );
 
         return new AttachmentBuilder(canvas.toBuffer(), { name: `${config.stringConfig.imageName}.png` });
@@ -96,16 +101,16 @@ export class PowerupImageGenerator {
                 topClaimerUsername = user.username.substring(0, nums.maxUsernameLength);
             } catch {}
 
-            CanvasUtils.drawText(ctx, strConfig.powTop, nums.powTopLabelPos, font, 'center', colorConfig.font);
-            CanvasUtils.drawText(
+            await CanvasUtils.drawText(ctx, strConfig.powTop, nums.powTopLabelPos, font, 'center', colorConfig.font);
+            await CanvasUtils.drawText(
                 ctx, strConfig.powTopResult
                     .replace('%@', topClaimer[1].toLocaleString())
                     .replace('%@', topClaimerUsername),
                 nums.powTopPos, font, 'center', colorConfig.silver, nums.powDataWidth
             );
 
-            CanvasUtils.drawText(ctx, strConfig.powAvg, nums.powAvgLabelPos, font, 'center', colorConfig.font);
-            CanvasUtils.drawText(
+            await CanvasUtils.drawText(ctx, strConfig.powAvg, nums.powAvgLabelPos, font, 'center', colorConfig.font);
+            await CanvasUtils.drawText(
                 ctx, numUsers > 1
                     ? strConfig.powAvgResultPlural
                         .replace('%@', avgTime.toLocaleString())
@@ -116,14 +121,14 @@ export class PowerupImageGenerator {
                 nums.powAvgPos, font, 'center', colorConfig.silver, nums.powDataWidth
             );
 
-            CanvasUtils.drawText(ctx, strConfig.powPrompt, nums.powPromptLabelPos, font, 'center', colorConfig.font);
-            CanvasUtils.drawText(
+            await CanvasUtils.drawText(ctx, strConfig.powPrompt, nums.powPromptLabelPos, font, 'center', colorConfig.font);
+            await CanvasUtils.drawText(
                 ctx, config.promptConfigs.types[promptTypeID].name + ' - ' +
                 (config.promptConfigs.types[promptTypeID][promptID] as PromptConfig).name,
                 nums.powPromptPos, font, 'center', colorConfig.silver, nums.powDataWidth
             );
         } else {
-            CanvasUtils.drawText(
+            await CanvasUtils.drawText(
                 ctx, strConfig.eventNobody, nums.powSpawnDescriptionPos, font, 'center', colorConfig.font,
                 nums.powSpawnDescriptionWidth, true
             );
@@ -150,7 +155,7 @@ export class PowerupImageGenerator {
 
         ctx.drawImage(await Canvas.loadImage(pathConfig.otherAssets + pathConfig.eventUnderlay), ...nums.originPos);
 
-        CanvasUtils.drawText(
+        await CanvasUtils.drawText(
             ctx, title, nums.eventTitlePos, fontTitle, 'center', colorConfig.powerup, nums.eventTitleWidth, true
         );
 
@@ -170,7 +175,7 @@ export class PowerupImageGenerator {
         ctx.scale(1, 1);
         ctx.restore();
 
-        CanvasUtils.drawText(
+        await CanvasUtils.drawText(
             ctx, strConfig.powReward, nums.powSpawnRewardPos, font, 'center', colorConfig.font,
             nums.powSpawnDescriptionWidth, false, [powRewardStr], [colorConfig.powerup]
         );

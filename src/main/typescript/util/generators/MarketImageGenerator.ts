@@ -180,11 +180,11 @@ export class MarketImageGenerator {
                 break;
             }
 
-            CanvasUtils.drawText(
+            await CanvasUtils.drawText(
                 ctx, 'B: %@' + buyNowVal, buyPos, font, 'center', colorConfig.font, nums.marketOverTextWidth, false,
                 [buyNowVal !== 'N/A' ? '$' : ''], [colorConfig.bucks]
             );
-            CanvasUtils.drawText(
+            await CanvasUtils.drawText(
                 ctx, 'S: %@' + sellNowVal, sellPos, font, 'center', colorConfig.font, nums.marketOverTextWidth, false,
                 [sellNowVal !== 'N/A' ? '$' : ''], [colorConfig.bucks]
             );
@@ -292,38 +292,38 @@ export class MarketImageGenerator {
 
         ctx.drawImage(await Canvas.loadImage(file), ...nums.marketBSImgPos, ...nums.marketBSImgSize);
 
-        CanvasUtils.drawText(ctx, rarityName.toUpperCase(), nums.marketBSRarityPos, mediumFont, 'center', rarityColor);
-        CanvasUtils.drawText(
+        await CanvasUtils.drawText(ctx, rarityName.toUpperCase(), nums.marketBSRarityPos, mediumFont, 'center', rarityColor);
+        await CanvasUtils.drawText(
             ctx, itemName, nums.marketBSNamePos, bigFont, 'center', colorConfig.font, nums.marketBSNameWidth
         );
 
-        CanvasUtils.drawText(
+        await CanvasUtils.drawText(
             ctx, strConfig.marketBSBuyNowLabel, nums.marketBSBuyNowLabelPos, mediumFont, 'center', colorConfig.font
         );
-        CanvasUtils.drawText(
+        await CanvasUtils.drawText(
             ctx, buyNowVal, nums.marketBSBuyNowPos, smallMediumFont, 'center', colorConfig.font,
             undefined, false, ['$'], [colorConfig.bucks]
         );
 
-        CanvasUtils.drawText(
+        await CanvasUtils.drawText(
             ctx, strConfig.marketBSSellNowLabel, nums.marketBSSellNowLabelPos, mediumFont, 'center', colorConfig.font
         );
-        CanvasUtils.drawText(
+        await CanvasUtils.drawText(
             ctx, sellNowVal, nums.marketBSSellNowPos, smallMediumFont, 'center', colorConfig.font,
             undefined, false, ['$'], [colorConfig.bucks]
         );
 
-        CanvasUtils.drawText(
+        await CanvasUtils.drawText(
             ctx, strConfig.marketBSBuyOrdLabel, nums.marketBSBuyOrdLabelPos, mediumFont, 'center', colorConfig.font
         );
-        CanvasUtils.drawText(
+        await CanvasUtils.drawText(
             ctx, buyOrderVolume.toLocaleString(), nums.marketBSBuyOrdPos, smallMediumFont, 'center', colorConfig.font
         );
 
-        CanvasUtils.drawText(
+        await CanvasUtils.drawText(
             ctx, strConfig.marketBSSellOrdLabel, nums.marketBSSellOrdLabelPos, mediumFont, 'center', colorConfig.font
         );
-        CanvasUtils.drawText(
+        await CanvasUtils.drawText(
             ctx, sellOrderVolume.toLocaleString(), nums.marketBSSellOrdPos, smallMediumFont, 'center', colorConfig.font
         );
 
@@ -388,7 +388,7 @@ export class MarketImageGenerator {
 
         ctx.drawImage(await Canvas.loadImage(file), ...nums.marketOrdImgPos, ...nums.marketOrdImgSize);
 
-        CanvasUtils.drawText(
+        await CanvasUtils.drawText(
             ctx, isSell ? strConfig.marketOrdSell : strConfig.marketOrdBuy, nums.marketOrdNamePos, mediumFont, 'center',
             colorConfig.font, nums.marketOrdNameWidth, true,
             [this.config.itemConfigs[orderInfo.type][orderInfo.id].name + (isSpecial
@@ -397,7 +397,7 @@ export class MarketImageGenerator {
             [rarityColor]
         );
 
-        CanvasUtils.drawText(
+        await CanvasUtils.drawText(
             ctx, strConfig.marketOrdList.replace('%@',moment(orderInfo.data.listTime).fromNow()), nums.marketOrdListPos,
             mediumFont, 'center', colorConfig.font, nums.marketOrdNameWidth, true,
             [(Date.now() > orderInfo.data.listTime + nums.oneDay * 7)
@@ -406,26 +406,26 @@ export class MarketImageGenerator {
             [colorConfig.error]
         );
 
-        CanvasUtils.drawText(
+        await CanvasUtils.drawText(
             ctx, strConfig.marketOrdPriceLabel, nums.marketOrdPriceLabelPos, mediumFont, 'center', colorConfig.font
         );
-        CanvasUtils.drawText(
+        await CanvasUtils.drawText(
             ctx, '%@' + orderInfo.data.price.toLocaleString(), nums.marketOrdPricePos, smallMediumFont, 'center',
             colorConfig.font, undefined, false, ['$'], [colorConfig.bucks]
         );
 
-        CanvasUtils.drawText(
+        await CanvasUtils.drawText(
             ctx, strConfig.marketOrdFillLabel, nums.marketOrdFillLabelPos, mediumFont, 'center', colorConfig.font
         );
-        CanvasUtils.drawText(
+        await CanvasUtils.drawText(
             ctx, orderInfo.data.filledAmount.toLocaleString() + '/' + orderInfo.data.num.toLocaleString(),
             nums.marketOrdFillPos, smallMediumFont, 'center', colorConfig.font
         );
 
-        CanvasUtils.drawText(
+        await CanvasUtils.drawText(
             ctx, strConfig.marketOrdClaimLabel, nums.marketOrdClaimLabelPos, mediumFont, 'center', colorConfig.font
         );
-        CanvasUtils.drawText(
+        await CanvasUtils.drawText(
             ctx, claimText, nums.marketOrdClaimPos, smallMediumFont, 'center', colorConfig.font,
             nums.marketOrdClaimWidth, false, [coloredClaimText], [coloredClaimText === '$'
                 ? colorConfig.bucks

@@ -29,7 +29,7 @@ export class NumberConfig {
     public readonly maxIndivBoars: number = 0;
     public readonly maxPowBase: number = 0;
     public readonly maxEnhancers: number = 0;
-    public readonly maxSmallEnhanced: number = 0;
+    public readonly maxSmallPow: number = 0;
     public readonly maxPowPages: number = 0;
 
     // A constant used to determine how quickly to increase rarity
@@ -126,6 +126,8 @@ export class NumberConfig {
     public readonly collMiraclesPos: [number, number] = [0, 0];
     public readonly collGiftsLabelPos: [number, number] = [0, 0];
     public readonly collGiftsPos: [number, number] = [0, 0];
+    public readonly collClonesLabelPos: [number, number] = [0, 0];
+    public readonly collClonesPos: [number, number] = [0, 0];
     public readonly collCellLabelPos: [number, number] = [0, 0];
     public readonly collCellPos: [number, number] = [0, 0];
     public readonly collCellSize: [number, number] = [0, 0];
@@ -146,6 +148,12 @@ export class NumberConfig {
     public readonly collGiftsOpenedPos: [number, number] = [0, 0];
     public readonly collMostGiftsLabelPos: [number, number] = [0, 0];
     public readonly collMostGiftsPos: [number, number] = [0, 0];
+    public readonly collClonesClaimedLabelPos: [number, number] = [0, 0];
+    public readonly collClonesClaimedPos: [number, number] = [0, 0];
+    public readonly collClonesUsedLabelPos: [number, number] = [0, 0];
+    public readonly collClonesUsedPos: [number, number] = [0, 0];
+    public readonly collMostClonesLabelPos: [number, number] = [0, 0];
+    public readonly collMostClonesPos: [number, number] = [0, 0];
     public readonly collEnhancersClaimedLabelPos: [number, number] = [0, 0];
     public readonly collEnhancersClaimedPos: [number, number] = [0, 0];
     public readonly collEnhancedLabelPositions: [number, number][] = [];

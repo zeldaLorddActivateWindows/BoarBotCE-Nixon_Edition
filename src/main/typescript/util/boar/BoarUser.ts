@@ -173,12 +173,18 @@ export class BoarUser {
             this.itemCollection.powerups.enhancer.raritiesUsed = [0,0,0,0,0,0,0];
         }
 
+        if (!this.itemCollection.powerups.clone) {
+            this.itemCollection.powerups.clone = new CollectedPowerup;
+        }
+
         this.itemCollection.powerups.miracle.numTotal =
             Math.max(0, Math.min(this.itemCollection.powerups.miracle.numTotal, nums.maxPowBase));
         this.itemCollection.powerups.gift.numTotal =
-            Math.max(0, Math.min(this.itemCollection.powerups.gift.numTotal, nums.maxPowBase));
+            Math.max(0, Math.min(this.itemCollection.powerups.gift.numTotal, nums.maxSmallPow));
         this.itemCollection.powerups.enhancer.numTotal =
             Math.max(0, Math.min(this.itemCollection.powerups.enhancer.numTotal, nums.maxEnhancers));
+        this.itemCollection.powerups.clone.numTotal =
+            Math.max(0, Math.min(this.itemCollection.powerups.clone.numTotal, nums.maxSmallPow));
 
         if (this.stats.general.lastDaily < twoDailiesAgo) {
             this.stats.general.boarStreak = 0;
@@ -478,8 +484,7 @@ export class BoarUser {
      * @param interaction - Used to give badge if user has max uniques
      */
     public async orderBoars(
-        interaction: ChatInputCommandInteraction | MessageComponentInteraction,
-        config: BotConfig
+        interaction: ChatInputCommandInteraction | MessageComponentInteraction, config: BotConfig
     ): Promise<void> {
         const obtainedBoars: string[] = Object.keys(this.itemCollection.boars);
 
@@ -546,8 +551,9 @@ export class BoarUser {
     private orderGlobalBoars(itemsData: ItemsData, config: BotConfig): void {
         const globalBoars: string[] = Object.keys(itemsData.boars);
 
-        const orderedRarities: RarityConfig[] = [...config.rarityConfigs]
+        const orderedRarities: RarityConfig[] = [...config.rarityConfigs.slice(0,config.rarityConfigs.length-1)]
             .sort((rarity1, rarity2) => { return rarity1.weight - rarity2.weight; });
+        orderedRarities.unshift(config.rarityConfigs[config.rarityConfigs.length-1]);
 
         // Looping through all boar classes (Common -> Special)
         for (const rarity of orderedRarities) {

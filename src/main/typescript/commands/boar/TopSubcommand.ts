@@ -127,7 +127,7 @@ export default class TopSubcommand implements Subcommand {
         this.collector.once('end', async (collected, reason) => await this.handleEndCollect(reason));
 
         this.imageGen = new LeaderboardImageGenerator(this.curBoardData, this.curBoard, this.config);
-        await this.showLeaderboard();
+        await this.showLeaderboard(true);
 
         if (userInput && this.getUserIndex(userInput.id) === -1) {
             await Replies.handleReply(
@@ -166,6 +166,7 @@ export default class TopSubcommand implements Subcommand {
                 leftPage: leaderRowConfig[0][0].components[0],
                 inputPage: leaderRowConfig[0][0].components[1],
                 rightPage: leaderRowConfig[0][0].components[2],
+                refresh: leaderRowConfig[0][0].components[3],
                 boardSelect: leaderRowConfig[0][1].components[0]
             };
 
@@ -188,6 +189,20 @@ export default class TopSubcommand implements Subcommand {
                 // User wants to go to the next page
                 case leaderComponents.rightPage.customId:
                     this.curPage++;
+                    break;
+
+                // User wants to go to refresh data
+                case leaderComponents.refresh.customId:
+                    this.leaderboardData =
+                        DataHandlers.getGlobalData(DataHandlers.GlobalFile.Leaderboards) as Record<string, BoardData>;
+                    this.curBoardData = (Object.entries(
+                        this.leaderboardData[this.curBoard].userData
+                    ) as [string, number][]).sort((a, b) => b[1] - a[1]);
+                    await this.doAthleteBadge();
+                    this.maxPage = Math.ceil(
+                        this.curBoardData.length / this.config.numberConfig.leaderboardNumPlayers
+                    ) - 1;
+                    this.imageGen.updateInfo(this.curBoardData, this.curBoard, this.config);
                     break;
 
                 // User wants to change the boars they're viewing
@@ -340,9 +355,9 @@ export default class TopSubcommand implements Subcommand {
      *
      * @private
      */
-    private async showLeaderboard(): Promise<void> {
+    private async showLeaderboard(firstRun = false): Promise<void> {
         try {
-            if (!this.imageGen.hasMadeImage()) {
+            if (firstRun) {
                 this.initButtons();
             }
 
@@ -355,6 +370,7 @@ export default class TopSubcommand implements Subcommand {
             this.rows[0].components[0].setDisabled(this.curPage === 0);
             this.rows[0].components[1].setDisabled(this.maxPage === 0);
             this.rows[0].components[2].setDisabled(this.curPage === this.maxPage);
+            this.rows[0].components[3].setDisabled(false);
             this.rows[1].components[0].setDisabled(false);
 
             await this.firstInter.editReply({

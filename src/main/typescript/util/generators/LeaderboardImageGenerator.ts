@@ -30,7 +30,6 @@ export class LeaderboardImageGenerator {
     private config: BotConfig = {} as BotConfig;
     private curBoard: Board = Board.Bucks;
     private boardData: [string, number][] = [];
-    private madeImage = false;
 
     /**
      * Creates a new leaderboard image generator
@@ -112,12 +111,12 @@ export class LeaderboardImageGenerator {
 
         ctx.drawImage(await Canvas.loadImage(underlay), ...nums.originPos);
 
-        CanvasUtils.drawText(
+        await CanvasUtils.drawText(
             ctx, strConfig.boardHeader.replace('%@', leaderboardTypeStr.toUpperCase()),
             nums.leaderboardHeaderPos, bigFont, 'left', colorConfig.font, nums.leaderboardTopBotWidth
         );
 
-        CanvasUtils.drawText(
+        await CanvasUtils.drawText(
             ctx,
             strConfig.boardFooter
                 .replace('%@', numUsers.toLocaleString())
@@ -166,7 +165,7 @@ export class LeaderboardImageGenerator {
                     positionColor = colorConfig.font;
             }
 
-            CanvasUtils.drawText(
+            await CanvasUtils.drawText(
                 ctx, '%@ ' + username + ' - ' + userVal, userPos,
                 mediumFont, 'center', colorConfig.font, nums.leaderboardEntryWidth, false,
                 ['#' + position], [positionColor]
@@ -175,6 +174,4 @@ export class LeaderboardImageGenerator {
 
         return new AttachmentBuilder(canvas.toBuffer(), { name: `${strConfig.imageName}.png` })
     }
-
-    public hasMadeImage(): boolean { return this.madeImage }
 }

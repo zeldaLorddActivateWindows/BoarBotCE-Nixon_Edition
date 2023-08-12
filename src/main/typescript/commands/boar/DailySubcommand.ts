@@ -305,7 +305,7 @@ export default class DailySubcommand implements Subcommand {
             } else {
                 const msg = await this.interaction.editReply({
                     files: [
-                        CustomEmbedGenerator.makeEmbed(
+                        await CustomEmbedGenerator.makeEmbed(
                             this.config.stringConfig.dailyUsed, this.config.colorConfig.font, this.config,
                             [moment(nextBoarTime).fromNow().substring(3)], [this.config.colorConfig.silver]
                         )

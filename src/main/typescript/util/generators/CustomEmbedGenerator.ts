@@ -25,7 +25,7 @@ export class CustomEmbedGenerator {
      * @param coloredContents - A portion of text to color differently
      * @param secondaryColors - The secondary colors
      */
-    public static makeEmbed(
+    public static async makeEmbed(
         str: string, color: string, config: BotConfig, coloredContents?: string[], secondaryColors?: string[]
     ) {
         const strConfig: StringConfig = config.stringConfig;
@@ -48,7 +48,7 @@ export class CustomEmbedGenerator {
         ctx.font = font;
         canvas.width = Math.min(ctx.measureText(fullString).width + nums.border * 4, nums.embedMaxWidth);
 
-        canvas.height += CanvasUtils.drawText(
+        canvas.height += await CanvasUtils.drawText(
             ctx, fullString, nums.originPos, font, 'center', colorConfig.font, canvas.width === nums.embedMaxWidth
                 ? nums.embedMaxWidth - nums.border * 4
                 : undefined,
@@ -71,7 +71,7 @@ export class CustomEmbedGenerator {
         );
         ctx.fill();
 
-        CanvasUtils.drawText(
+        await CanvasUtils.drawText(
             ctx, str, [canvas.width / 2, canvas.height / 2 + nums.fontSmallMedium / 2 + 7], font, 'center', color,
             canvas.width === nums.embedMaxWidth ? nums.embedMaxWidth - nums.border * 4 : undefined,
             true, coloredContents, secondaryColors

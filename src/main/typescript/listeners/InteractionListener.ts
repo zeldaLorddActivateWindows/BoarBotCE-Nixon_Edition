@@ -125,10 +125,8 @@ export default class InteractionListener implements Listener {
                 ) {
                     await interaction.followUp({
                         files: [
-                            CustomEmbedGenerator.makeEmbed(
-                                'This server is missing out on powerups! To allow them to spawn, make sure View ' +
-                                'Channels, Send Messages, and Attach Files permissions are all enabled for BoarBot!',
-                                this.config.colorConfig.error, this.config
+                            await CustomEmbedGenerator.makeEmbed(
+                                this.config.stringConfig.eventsDisabled, this.config.colorConfig.error, this.config
                             )
                         ]
                     });

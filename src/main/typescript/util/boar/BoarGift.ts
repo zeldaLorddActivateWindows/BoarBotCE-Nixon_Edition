@@ -1,13 +1,9 @@
 import {BoarUser} from './BoarUser';
 import {
-    ActionRowBuilder, ButtonBuilder,
-    ButtonInteraction, ChatInputCommandInteraction,
-    Collection,
-    InteractionCollector, Message, MessageComponentInteraction, StringSelectMenuBuilder,
-    StringSelectMenuInteraction, TextChannel
+    ActionRowBuilder, ButtonBuilder, ButtonInteraction, ChatInputCommandInteraction, Collection, InteractionCollector,
+    Message, MessageComponentInteraction, StringSelectMenuInteraction, TextChannel
 } from 'discord.js';
 import {CollectorUtils} from '../discord/CollectorUtils';
-import {ComponentUtils} from '../discord/ComponentUtils';
 import {BotConfig} from '../../bot/config/BotConfig';
 import {CollectionImageGenerator} from '../generators/CollectionImageGenerator';
 import {OutcomeConfig} from '../../bot/config/items/OutcomeConfig';
@@ -20,6 +16,7 @@ import {LogDebug} from '../logging/LogDebug';
 import {Replies} from '../interactions/Replies';
 import {RowConfig} from '../../bot/config/components/RowConfig';
 import {InteractionUtils} from '../interactions/InteractionUtils';
+import {ComponentConfig} from '../../bot/config/components/ComponentConfig';
 
 /**
  * {@link BoarGift BoarGift.ts}
@@ -74,23 +71,51 @@ export class BoarGift {
 
         const giftFieldConfig: RowConfig[] = this.config.commandConfigs.boar.collection.componentFields[2];
 
-        const claimRows: ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>[] =
-            ComponentUtils.makeRows(giftFieldConfig);
-
-        ComponentUtils.addToIDs(giftFieldConfig, claimRows, interaction.id, interaction.user.id);
-
-        claimRows[0].components[0].setDisabled(false);
-
         this.collector.on('collect', async (inter: ButtonInteraction) => await this.handleCollect(inter));
         this.collector.once('end', async (collected, reason) => await this.handleEndCollect(collected, reason));
 
         try {
+            const rows: ActionRowBuilder<ButtonBuilder>[] = [];
+
+            const rightButton = giftFieldConfig[0].components[0] as ComponentConfig;
+            const fillerButton = giftFieldConfig[0].components[1] as ComponentConfig;
+
+            const numRows = 3;
+            const numCols = 3;
+            const randCorrectIndex = Math.floor(Math.random() * numRows * numCols);
+            const randTimeoutDuration = Math.floor(Math.random() * (6000 - 3000)) + 3000;
+
+            let curIndex = 0;
+
+            for (let i=0; i<numRows; i++) {
+                const row: ActionRowBuilder<ButtonBuilder> = new ActionRowBuilder<ButtonBuilder>();
+                for (let j=0; j<numCols; j++) {
+                    row.addComponents(new ButtonBuilder(fillerButton).setCustomId(
+                        fillerButton.customId + curIndex++ + '|' + interaction.id + '|' + interaction.user.id
+                    ));
+                }
+                rows.push(row);
+            }
+
             this.giftMessage = await interaction.channel.send({
                 files: [await this.imageGen.finalizeGift()],
-                components: [claimRows[0]]
+                components: rows
             });
-        } catch {
-            Queue.addQueue(async () => {
+
+            setTimeout(() => {
+                const randRow = Math.floor(randCorrectIndex / numRows);
+                const randCol = randCorrectIndex - (randRow * numRows);
+
+                rows[randRow].components[randCol] = new ButtonBuilder(rightButton)
+                    .setCustomId((rightButton.customId + '|' + interaction.id + '|' + interaction.user.id))
+                    .setDisabled(false);
+
+                this.giftMessage.edit({
+                    components: rows
+                });
+            }, randTimeoutDuration);
+        } catch (err) {
+            await Queue.addQueue(async () => {
                 try {
                     this.boarUser.refreshUserData();
                     delete this.boarUser.itemCollection.powerups.gift.curOut;
@@ -148,7 +173,7 @@ export class BoarGift {
         reason: string
     ): Promise<void> {
         try {
-            Queue.addQueue(async () => {
+            await Queue.addQueue(async () => {
                 try {
                     this.boarUser.refreshUserData();
                     delete this.boarUser.itemCollection.powerups.gift.curOut;
@@ -334,11 +359,11 @@ export class BoarGift {
         let numBucks = 0;
 
         if (suboutcome === 0) {
-            numBucks = Math.round(Math.random() * (3 - 1) + 1)
+            numBucks = Math.round(Math.random() * (5 - 1) + 1)
         } else if (suboutcome === 1) {
-            numBucks = Math.round(Math.random() * (40 - 10) + 10)
+            numBucks = Math.round(Math.random() * (50 - 10) + 10)
         } else {
-            numBucks = Math.round(Math.random() * (400 - 100) + 100)
+            numBucks = Math.round(Math.random() * (500 - 100) + 100)
         }
 
         LogDebug.log(

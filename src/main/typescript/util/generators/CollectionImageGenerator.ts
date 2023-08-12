@@ -57,6 +57,9 @@ export class CollectionImageGenerator {
         this.boarUser = boarUser;
         this.config = config;
         this.allBoars = boars;
+        this.normalBase = {} as Buffer;
+        this.detailedBase = {} as Buffer;
+        this.powerupsBase = {} as Buffer;
     }
 
     /**
@@ -106,38 +109,38 @@ export class CollectionImageGenerator {
 
         // Draws stats information
 
-        CanvasUtils.drawText(
+        await CanvasUtils.drawText(
             ctx, strConfig.collScoreLabel, nums.collScoreLabelPos, mediumFont, 'center', colorConfig.font
         );
-        CanvasUtils.drawText(
+        await CanvasUtils.drawText(
             ctx, '%@' + scoreString, nums.collScorePos, smallFont, 'center',
             colorConfig.font, undefined, false, ['$'], [colorConfig.bucks]
         );
 
-        CanvasUtils.drawText(
+        await CanvasUtils.drawText(
             ctx, strConfig.collTotalLabel, nums.collTotalLabelPos, mediumFont, 'center', colorConfig.font
         );
-        CanvasUtils.drawText(ctx, totalString, nums.collTotalPos, smallFont, 'center', colorConfig.font);
+        await CanvasUtils.drawText(ctx, totalString, nums.collTotalPos, smallFont, 'center', colorConfig.font);
 
-        CanvasUtils.drawText(
+        await CanvasUtils.drawText(
             ctx, strConfig.collUniquesLabel, nums.collUniquesLabelPos, mediumFont, 'center', colorConfig.font
         );
-        CanvasUtils.drawText(ctx, uniqueString, nums.collUniquePos, smallFont, 'center', colorConfig.font);
+        await CanvasUtils.drawText(ctx, uniqueString, nums.collUniquePos, smallFont, 'center', colorConfig.font);
 
-        CanvasUtils.drawText(
+        await CanvasUtils.drawText(
             ctx, strConfig.collDailiesLabel, nums.collDailiesLabelPos, mediumFont, 'center', colorConfig.font
         );
-        CanvasUtils.drawText(ctx, dailiesString, nums.collDailiesPos, smallFont, 'center', colorConfig.font);
+        await CanvasUtils.drawText(ctx, dailiesString, nums.collDailiesPos, smallFont, 'center', colorConfig.font);
 
-        CanvasUtils.drawText(
+        await CanvasUtils.drawText(
             ctx, strConfig.collStreakLabel, nums.collStreakLabelPos, mediumFont, 'center', colorConfig.font
         );
-        CanvasUtils.drawText(ctx, streakString, nums.collStreakPos, smallFont, 'center', colorConfig.font);
+        await CanvasUtils.drawText(ctx, streakString, nums.collStreakPos, smallFont, 'center', colorConfig.font);
 
-        CanvasUtils.drawText(
+        await CanvasUtils.drawText(
             ctx, strConfig.collLastDailyLabel, nums.collLastDailyLabelPos, bigFont, 'center', colorConfig.font
         );
-        CanvasUtils.drawText(ctx, lastDailyString, nums.collLastDailyPos, bigFont, 'center', colorConfig.font);
+        await CanvasUtils.drawText(ctx, lastDailyString, nums.collLastDailyPos, bigFont, 'center', colorConfig.font);
 
         this.normalBase = canvas.toBuffer();
     }
@@ -235,11 +238,11 @@ export class CollectionImageGenerator {
         // Draws overlay
 
         ctx.drawImage(await Canvas.loadImage(collectionOverlay), ...nums.originPos, ...nums.collImageSize);
-        CanvasUtils.drawText(
+        await CanvasUtils.drawText(
             ctx, strConfig.collFavLabel, nums.collFavLabelPos, smallestFont,
             'center', favBoarRarity[0] === 0 ? colorConfig.font : colorConfig['rarity' + favBoarRarity[0]]
         );
-        CanvasUtils.drawText(
+        await CanvasUtils.drawText(
             ctx, strConfig.collRecentLabel, nums.collRecentLabelPos, smallestFont,
             'center', lastBoarRarity[0] === 0 ? colorConfig.font : colorConfig['rarity' + lastBoarRarity[0]]
         );
@@ -270,20 +273,20 @@ export class CollectionImageGenerator {
 
         // Draws labels
 
-        CanvasUtils.drawText(
+        await CanvasUtils.drawText(
             ctx, strConfig.collIndivTotalLabel, nums.collIndivTotalLabelPos, mediumFont, 'center', colorConfig.font
         );
 
-        CanvasUtils.drawText(
+        await CanvasUtils.drawText(
             ctx, strConfig.collFirstObtainedLabel, nums.collFirstObtainedLabelPos,
             mediumFont, 'center', colorConfig.font
         );
 
-        CanvasUtils.drawText(
+        await CanvasUtils.drawText(
             ctx, strConfig.collLastObtainedLabel, nums.collLastObtainedLabelPos, mediumFont, 'center', colorConfig.font
         );
 
-        CanvasUtils.drawText(
+        await CanvasUtils.drawText(
             ctx, strConfig.collDescriptionLabel, nums.collDescriptionLabelPos, mediumFont, 'center', colorConfig.font
         );
 
@@ -356,27 +359,27 @@ export class CollectionImageGenerator {
 
         // Draws stats
 
-        CanvasUtils.drawText(
+        await CanvasUtils.drawText(
             ctx, curBoar.rarity[1].name.toUpperCase(), indivRarityPos, mediumFont, 'center', curBoar.color
         );
 
-        CanvasUtils.drawText(
+        await CanvasUtils.drawText(
             ctx, curBoar.name, nums.collBoarNamePos, bigFont, 'center', colorConfig.font, nums.collBoarNameWidth
         );
 
-        CanvasUtils.drawText(
+        await CanvasUtils.drawText(
             ctx, numCollectedString, nums.collIndivTotalPos, smallMediumFont, 'center', colorConfig.font
         );
 
-        CanvasUtils.drawText(
+        await CanvasUtils.drawText(
             ctx, firstObtainedDate, nums.collFirstObtainedPos, smallMediumFont, 'center', colorConfig.font
         );
 
-        CanvasUtils.drawText(
+        await CanvasUtils.drawText(
             ctx, lastObtainedDate, nums.collLastObtainedPos, smallMediumFont, 'center', colorConfig.font
         );
 
-        CanvasUtils.drawText(
+        await CanvasUtils.drawText(
             ctx, curBoar.description + '%@', nums.collDescriptionPos, smallestFont,
             'center', colorConfig.font, nums.collDescriptionWidth, true,
             [curBoar.isSB ? strConfig.collDescriptionSB : ''], [colorConfig.silver]
@@ -461,7 +464,8 @@ export class CollectionImageGenerator {
 
         let multiplier: number = Math.min(this.boarUser.stats.general.multiplier, nums.maxPowBase);
         const miracles: string = Math.min(powerupItemsData.miracle.numTotal, nums.maxPowBase).toLocaleString();
-        const gifts: string = Math.min(powerupItemsData.gift.numTotal, nums.maxPowBase).toLocaleString();
+        const gifts: string = Math.min(powerupItemsData.gift.numTotal, nums.maxSmallPow).toLocaleString();
+        const clones: string = Math.min(powerupItemsData.clone.numTotal, nums.maxSmallPow).toLocaleString();
 
         const canvas: Canvas.Canvas = Canvas.createCanvas(nums.collImageSize[0], nums.collImageSize[1]);
         const ctx: Canvas.CanvasRenderingContext2D = canvas.getContext('2d');
@@ -471,30 +475,30 @@ export class CollectionImageGenerator {
 
         // Draws stats info
 
-        CanvasUtils.drawText(
+        await CanvasUtils.drawText(
             ctx, strConfig.collClaimsLabel, nums.collAttemptsLabelPos, mediumFont, 'center', colorConfig.font
         );
-        CanvasUtils.drawText(ctx, totalAttempts, nums.collAttemptsPos, smallMedium, 'center', colorConfig.font);
+        await CanvasUtils.drawText(ctx, totalAttempts, nums.collAttemptsPos, smallMedium, 'center', colorConfig.font);
 
-        CanvasUtils.drawText(
+        await CanvasUtils.drawText(
             ctx, strConfig.collFastestClaimsLabel, nums.collAttemptsTopLabelPos, mediumFont, 'center', colorConfig.font
         );
-        CanvasUtils.drawText(ctx, topAttempts, nums.collAttemptsTopPos, smallMedium, 'center', colorConfig.font);
+        await CanvasUtils.drawText(ctx, topAttempts, nums.collAttemptsTopPos, smallMedium, 'center', colorConfig.font);
 
-        CanvasUtils.drawText(
+        await CanvasUtils.drawText(
             ctx, strConfig.collFastestTimeLabel, nums.collFastestTimeLabelPos, mediumFont, 'center', colorConfig.font
         );
-        CanvasUtils.drawText(ctx, fastestTime, nums.collFastestTimePos, smallMedium, 'center', colorConfig.font);
+        await CanvasUtils.drawText(ctx, fastestTime, nums.collFastestTimePos, smallMedium, 'center', colorConfig.font);
 
 
-        CanvasUtils.drawText(
+        await CanvasUtils.drawText(
             ctx, strConfig.collBestPromptLabel, nums.collBestPromptLabelPos, mediumFont, 'center', colorConfig.font
         );
-        CanvasUtils.drawText(
+        await CanvasUtils.drawText(
             ctx, bestPrompt[0], nums.collBestPromptPos, smallMedium, 'center', colorConfig.font, nums.collPowDataWidth
         );
 
-        CanvasUtils.drawText(
+        await CanvasUtils.drawText(
             ctx, strConfig.collBlessLabel, nums.collBlessLabelPos, mediumFont, 'center', colorConfig.font
         );
 
@@ -505,26 +509,32 @@ export class CollectionImageGenerator {
                 );
             }
 
-            CanvasUtils.drawText(
-                ctx, multiplier + '\u2738', nums.collBlessPos, smallMedium, 'center', colorConfig.powerup
+            await CanvasUtils.drawText(
+                ctx, multiplier.toLocaleString() + '\u2738', nums.collBlessPos,
+                smallMedium, 'center', colorConfig.powerup
             );
         } else {
-            CanvasUtils.drawText(
+            await CanvasUtils.drawText(
                 ctx, multiplier.toLocaleString(), nums.collBlessPos, smallMedium, 'center', colorConfig.font
             );
         }
 
-        CanvasUtils.drawText(
+        await CanvasUtils.drawText(
             ctx, powItemConfigs.miracle.pluralName, nums.collMiraclesLabelPos, mediumFont, 'center', colorConfig.font
         );
-        CanvasUtils.drawText(ctx, miracles, nums.collMiraclesPos, smallMedium, 'center', colorConfig.font);
+        await CanvasUtils.drawText(ctx, miracles, nums.collMiraclesPos, smallMedium, 'center', colorConfig.font);
 
-        CanvasUtils.drawText(
-            ctx, powItemConfigs.gift.pluralName, nums.collGiftsLabelPos, mediumFont, 'center', colorConfig.font
+        await CanvasUtils.drawText(
+            ctx, strConfig.collGiftsLabel, nums.collGiftsLabelPos, mediumFont, 'center', colorConfig.font
         );
-        CanvasUtils.drawText(ctx, gifts, nums.collGiftsPos, smallMedium, 'center', colorConfig.font);
+        await CanvasUtils.drawText(ctx, gifts, nums.collGiftsPos, smallMedium, 'center', colorConfig.font);
 
-        CanvasUtils.drawText(
+        await CanvasUtils.drawText(
+            ctx, strConfig.collClonesLabel, nums.collClonesLabelPos, mediumFont, 'center', colorConfig.font
+        );
+        await CanvasUtils.drawText(ctx, clones, nums.collClonesPos, smallMedium, 'center', colorConfig.font);
+
+        await CanvasUtils.drawText(
             ctx, strConfig.collCellLabel, nums.collCellLabelPos, mediumFont, 'center', colorConfig.font
         );
 
@@ -543,7 +553,7 @@ export class CollectionImageGenerator {
 
         chargeStr += ` Charge! (${powerupItemsData.enhancer.numTotal}/${nums.maxEnhancers})`;
         ctx.drawImage(await Canvas.loadImage(cellImagePath), ...nums.collCellPos, ...nums.collCellSize);
-        CanvasUtils.drawText(ctx, chargeStr, nums.collChargePos, mediumFont, 'center', chargeColor);
+        await await CanvasUtils.drawText(ctx, chargeStr, nums.collChargePos, mediumFont, 'center', chargeColor);
 
         this.powerupsBase = canvas.toBuffer();
     }
@@ -589,48 +599,48 @@ export class CollectionImageGenerator {
 
         // Draws stats info
 
-        CanvasUtils.drawText(
+        await CanvasUtils.drawText(
             ctx, strConfig.collMiraclesClaimedLabel, nums.collLifetimeMiraclesLabelPos,
             mediumFont, 'center', colorConfig.font
         );
-        CanvasUtils.drawText(
+        await CanvasUtils.drawText(
             ctx, miraclesClaimed, nums.collLifetimeMiraclesPos, smallMedium, 'center', colorConfig.font
         );
 
-        CanvasUtils.drawText(
+        await CanvasUtils.drawText(
             ctx, strConfig.collMiraclesUsedLabel, nums.collMiraclesUsedLabelPos, mediumFont, 'center', colorConfig.font
         );
-        CanvasUtils.drawText(ctx, miraclesUsed, nums.collMiraclesUsedPos, smallMedium, 'center', colorConfig.font);
+        await CanvasUtils.drawText(ctx, miraclesUsed, nums.collMiraclesUsedPos, smallMedium, 'center', colorConfig.font);
 
-        CanvasUtils.drawText(
+        await CanvasUtils.drawText(
             ctx, strConfig.collMostMiraclesLabel, nums.collMostMiraclesLabelPos, mediumFont, 'center', colorConfig.font
         );
-        CanvasUtils.drawText(ctx, highestMiracles, nums.collMostMiraclesPos, smallMedium, 'center', colorConfig.font);
+        await CanvasUtils.drawText(ctx, highestMiracles, nums.collMostMiraclesPos, smallMedium, 'center', colorConfig.font);
 
-        CanvasUtils.drawText(
+        await CanvasUtils.drawText(
             ctx, strConfig.collHighestMultiLabel, nums.collHighestMultiLabelPos, mediumFont, 'center', colorConfig.font
         );
-        CanvasUtils.drawText(ctx, highestBless, nums.collHighestMultiPos, smallMedium, 'center', colorConfig.font);
+        await CanvasUtils.drawText(ctx, highestBless, nums.collHighestMultiPos, smallMedium, 'center', colorConfig.font);
 
-        CanvasUtils.drawText(
+        await CanvasUtils.drawText(
             ctx, strConfig.collGiftsClaimedLabel, nums.collGiftsClaimedLabelPos, mediumFont, 'center', colorConfig.font
         );
-        CanvasUtils.drawText(ctx, giftsClaimed, nums.collGiftsClaimedPos, smallMedium, 'center', colorConfig.font);
+        await CanvasUtils.drawText(ctx, giftsClaimed, nums.collGiftsClaimedPos, smallMedium, 'center', colorConfig.font);
 
-        CanvasUtils.drawText(
+        await CanvasUtils.drawText(
             ctx, strConfig.collGiftsUsedLabel, nums.collGiftsUsedLabelPos, mediumFont, 'center', colorConfig.font
         );
-        CanvasUtils.drawText(ctx, giftsUsed, nums.collGiftsUsedPos, smallMedium, 'center', colorConfig.font);
+        await CanvasUtils.drawText(ctx, giftsUsed, nums.collGiftsUsedPos, smallMedium, 'center', colorConfig.font);
 
-        CanvasUtils.drawText(
+        await CanvasUtils.drawText(
             ctx, strConfig.collGiftsOpenedLabel, nums.collGiftsOpenedLabelPos, mediumFont, 'center', colorConfig.font
         );
-        CanvasUtils.drawText(ctx, giftsOpened, nums.collGiftsOpenedPos, smallMedium, 'center', colorConfig.font);
+        await CanvasUtils.drawText(ctx, giftsOpened, nums.collGiftsOpenedPos, smallMedium, 'center', colorConfig.font);
 
-        CanvasUtils.drawText(
+        await CanvasUtils.drawText(
             ctx, strConfig.collMostGiftsLabel, nums.collMostGiftsLabelPos, mediumFont, 'center', colorConfig.font
         );
-        CanvasUtils.drawText(ctx, giftsMost, nums.collMostGiftsPos, smallMedium, 'center', colorConfig.font);
+        await CanvasUtils.drawText(ctx, giftsMost, nums.collMostGiftsPos, smallMedium, 'center', colorConfig.font);
 
         this.powerupsBase = canvas.toBuffer();
     }
@@ -656,6 +666,10 @@ export class CollectionImageGenerator {
 
         const powerupItemsData: Record<string, CollectedPowerup> = this.boarUser.itemCollection.powerups;
 
+        const clonesClaimed: string = Math.min(powerupItemsData.clone.numClaimed, nums.maxPowBase).toLocaleString();
+        const clonesUsed: string = Math.min(powerupItemsData.clone.numUsed, nums.maxPowBase).toLocaleString();
+        const clonesMost: string = Math.min(powerupItemsData.clone.highestTotal, nums.maxPowBase).toLocaleString();
+
         const enhancersClaimed: string = Math.min(powerupItemsData.enhancer.numClaimed, nums.maxPowBase)
             .toLocaleString();
 
@@ -665,7 +679,7 @@ export class CollectionImageGenerator {
                 enhanced.push(Math.min((powerupItemsData.enhancer.raritiesUsed as number[])[i], nums.maxPowBase)
                     .toLocaleString())
             } else {
-                enhanced.push(Math.min((powerupItemsData.enhancer.raritiesUsed as number[])[i], nums.maxSmallEnhanced)
+                enhanced.push(Math.min((powerupItemsData.enhancer.raritiesUsed as number[])[i], nums.maxSmallPow)
                     .toLocaleString())
             }
         }
@@ -678,28 +692,46 @@ export class CollectionImageGenerator {
 
         // Draws stats info
 
-        CanvasUtils.drawText(
+        await CanvasUtils.drawText(
+            ctx, strConfig.collClonesClaimedLabel, nums.collClonesClaimedLabelPos,
+            mediumFont, 'center', colorConfig.font
+        );
+        await CanvasUtils.drawText(
+            ctx, clonesClaimed, nums.collClonesClaimedPos, smallMedium, 'center', colorConfig.font
+        );
+
+        await CanvasUtils.drawText(
+            ctx, strConfig.collClonesUsedLabel, nums.collClonesUsedLabelPos, mediumFont, 'center', colorConfig.font
+        );
+        await CanvasUtils.drawText(ctx, clonesUsed, nums.collClonesUsedPos, smallMedium, 'center', colorConfig.font);
+
+        await CanvasUtils.drawText(
+            ctx, strConfig.collMostClonesLabel, nums.collMostClonesLabelPos, mediumFont, 'center', colorConfig.font
+        );
+        await CanvasUtils.drawText(ctx, clonesMost, nums.collMostClonesPos, smallMedium, 'center', colorConfig.font);
+
+        await CanvasUtils.drawText(
             ctx, strConfig.collEnhancersClaimedLabel, nums.collEnhancersClaimedLabelPos,
             mediumFont, 'center', colorConfig.font
         );
-        CanvasUtils.drawText(
+        await CanvasUtils.drawText(
             ctx, enhancersClaimed, nums.collEnhancersClaimedPos, smallMedium, 'center', colorConfig.font
         );
 
         for (let i=0; i<7; i++) {
             if (i < 3) {
-                CanvasUtils.drawText(
+                await CanvasUtils.drawText(
                     ctx, strConfig.collEnhancedLabel, nums.collEnhancedLabelPositions[i], mediumFont, 'center',
                     colorConfig.font, undefined, false, [rarityConfig[i].pluralName], [colorConfig['rarity' + (i+1)]]
                 );
             } else {
-                CanvasUtils.drawText(
+                await CanvasUtils.drawText(
                     ctx, rarityConfig[i].pluralName, nums.collEnhancedLabelPositions[i],
                     mediumFont, 'center', colorConfig['rarity' + (i+1)]
                 );
             }
 
-            CanvasUtils.drawText(
+            await CanvasUtils.drawText(
                 ctx, enhanced[i], nums.collEnhancedPositions[i], smallMedium, 'center', colorConfig.font
             );
         }
@@ -760,9 +792,9 @@ export class CollectionImageGenerator {
         const mediumFont = `${nums.fontMedium}px ${strConfig.fontName}`;
 
         ctx.drawImage(await Canvas.loadImage(userAvatar), ...nums.collUserAvatarPos, ...nums.collUserAvatarSize);
-        CanvasUtils.drawText(ctx, userTag, nums.collUserTagPos, mediumFont, 'left', colorConfig.font);
-        CanvasUtils.drawText(ctx, strConfig.collDateLabel, nums.collDateLabelPos, mediumFont, 'left', colorConfig.font);
-        CanvasUtils.drawText(ctx, firstDate, nums.collDatePos, mediumFont, 'left', colorConfig.font);
+        await CanvasUtils.drawText(ctx, userTag, nums.collUserTagPos, mediumFont, 'left', colorConfig.font);
+        await CanvasUtils.drawText(ctx, strConfig.collDateLabel, nums.collDateLabelPos, mediumFont, 'left', colorConfig.font);
+        await CanvasUtils.drawText(ctx, firstDate, nums.collDatePos, mediumFont, 'left', colorConfig.font);
         ctx.drawImage(await Canvas.loadImage(noClan), ...nums.collClanPos, ...nums.collClanSize);
 
         // Draws badge information if the user has badges
@@ -784,7 +816,7 @@ export class CollectionImageGenerator {
         }
 
         if (numBadges === 0) {
-            CanvasUtils.drawText(
+            await CanvasUtils.drawText(
                 ctx, strConfig.collNoBadges, nums.collNoBadgePos, mediumFont, 'left', colorConfig.font
             );
         }
@@ -826,11 +858,11 @@ export class CollectionImageGenerator {
 
         ctx.drawImage(await Canvas.loadImage(boarImagePath), ...nums.enhanceBoarPos, ...nums.enhanceBoarSize);
 
-        CanvasUtils.drawText(
+        await CanvasUtils.drawText(
             ctx, nextRarityName.toUpperCase(), nums.enhanceRarityPos, mediumFont, 'center', nextRarityColor
         );
 
-        CanvasUtils.drawText(
+        await CanvasUtils.drawText(
             ctx, strConfig.collEnhanceDetails, nums.enhanceDetailsPos, mediumFont, 'center', colorConfig.font,
             nums.enhanceDetailsWidth, true,
             [this.allBoars[page].name, nextRarityName + ' Boar', '$', scoreLost, strConfig.collCellLabel],

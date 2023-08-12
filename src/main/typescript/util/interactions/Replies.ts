@@ -98,7 +98,7 @@ export class Replies {
         forceFollowup = false,
         ephemeral = true
     ): Promise<void> {
-        const embedImage: AttachmentBuilder = CustomEmbedGenerator.makeEmbed(
+        const embedImage: AttachmentBuilder = await CustomEmbedGenerator.makeEmbed(
             content, color, BoarBotApp.getBot().getConfig(), coloredContents, secondaryColors
         );
 

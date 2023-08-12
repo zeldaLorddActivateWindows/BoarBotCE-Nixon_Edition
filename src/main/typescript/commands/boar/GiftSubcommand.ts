@@ -47,7 +47,7 @@ export default class GiftSubcommand implements Subcommand {
     }
 
     private async sendGift() {
-        Queue.addQueue(async () => {
+        await Queue.addQueue(async () => {
             try {
                 const boarUser = new BoarUser(this.interaction.user);
                 if (boarUser.itemCollection.powerups.gift.numTotal > 0) {

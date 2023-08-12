@@ -43,40 +43,40 @@ bucks_color = color_config['bucks']
 
 # Setting font size from configurations
 
-small_medium_font = num_config['fontSmallMedium'] // 3
+small_medium_font = num_config['fontSmallMedium']
 text_small_medium = ImageFont.truetype(font_path, small_medium_font)
 
 # Setting image positioning and sizes from configurations
 
-avatar_size = (num_config['itemUserAvatarWidth'] // 3, num_config['itemUserAvatarWidth'] // 3)
-user_box_y = num_config['itemBoxOneY'] // 3
+avatar_size = (num_config['itemUserAvatarWidth'], num_config['itemUserAvatarWidth'])
+user_box_y = num_config['itemBoxOneY']
 
 if gifter_user_tag != '' and gifter_avatar_url != '':
-    user_box_y = num_config['itemBoxTwoY'] // 3
+    user_box_y = num_config['itemBoxTwoY']
 
-text_box_extra = num_config['itemTextBoxExtra'] // 3
-box_x = num_config['itemBoxX'] // 3 + 1
-box_height = num_config['itemBoxHeight'] // 3
-user_box_extra = num_config['itemUserBoxExtra'] // 3
+text_box_extra = num_config['itemTextBoxExtra']
+box_x = num_config['itemBoxX']
+box_height = num_config['itemBoxHeight']
+user_box_extra = num_config['itemUserBoxExtra']
 
-to_pos = (num_config['itemTextX'] // 3, (num_config['itemBoxOneY'] + num_config['itemTextYOffset']) // 3)
-to_box_y = num_config['itemBoxOneY'] // 3
+to_pos = (num_config['itemTextX'], (num_config['itemBoxOneY'] + num_config['itemTextYOffset']))
+to_box_y = num_config['itemBoxOneY']
 
-from_pos = (num_config['itemTextX'] // 3, (num_config['itemBoxThreeY'] + num_config['itemTextYOffset']) // 3)
-from_box_y = num_config['itemBoxThreeY'] // 3
+from_pos = (num_config['itemTextX'], (num_config['itemBoxThreeY'] + num_config['itemTextYOffset']))
+from_box_y = num_config['itemBoxThreeY']
 
-user_avatar_pos = (num_config['itemUserAvatarX'] // 3, user_box_y + num_config['itemUserAvatarYOffset'] // 3)
-user_tag_pos = (num_config['itemUserTagX'] // 3, user_box_y + num_config['itemTextYOffset'] // 3)
+user_avatar_pos = (num_config['itemUserAvatarX'], user_box_y + num_config['itemUserAvatarYOffset'])
+user_tag_pos = (num_config['itemUserTagX'], user_box_y + num_config['itemTextYOffset'])
 
 gifter_avatar_pos = (
-    num_config['itemUserAvatarX'] // 3,
-    (num_config['itemBoxFourY'] + num_config['itemUserAvatarYOffset']) // 3
+    num_config['itemUserAvatarX'],
+    (num_config['itemBoxFourY'] + num_config['itemUserAvatarYOffset'])
 )
-gifter_tag_pos = (num_config['itemUserTagX'] // 3, (num_config['itemBoxFourY'] + num_config['itemTextYOffset']) // 3)
-gifter_box_y = num_config['itemBoxFourY'] // 3
+gifter_tag_pos = (num_config['itemUserTagX'], (num_config['itemBoxFourY'] + num_config['itemTextYOffset']))
+gifter_box_y = num_config['itemBoxFourY']
 
-bucks_pos = (num_config['itemTextX'] // 3, (num_config['itemBoxTwoY'] + num_config['itemTextYOffset']) // 3)
-bucks_box_y = num_config['itemBoxTwoY'] // 3
+bucks_pos = (num_config['itemTextX'], (num_config['itemBoxTwoY'] + num_config['itemTextYOffset']))
+bucks_box_y = num_config['itemBoxTwoY']
 
 # Opening, converting, and resizing asset files
 
@@ -107,7 +107,7 @@ for frame in ImageSequence.Iterator(item_image):
                 box_x, to_box_y,
                 box_x+text_small_medium.getlength('To')+text_box_extra,
                 to_box_y+box_height
-            ), radius=25/3, fill='#151518'
+            ), radius=num_config['border'], fill=color_config['dark']
         )
         new_frame_draw.text(
             to_pos, 'To', font_color, font=text_small_medium, anchor='ls'
@@ -118,7 +118,7 @@ for frame in ImageSequence.Iterator(item_image):
                 box_x, from_box_y,
                 box_x+text_small_medium.getlength('From')+text_box_extra,
                 from_box_y+box_height
-            ), radius=25/3, fill='#151518'
+            ), radius=num_config['border'], fill=color_config['dark']
         )
         new_frame_draw.text(
             from_pos, 'From', font_color, font=text_small_medium, anchor='ls'
@@ -129,7 +129,7 @@ for frame in ImageSequence.Iterator(item_image):
                 box_x, gifter_box_y,
                 box_x+text_small_medium.getlength(gifter_user_tag)+user_box_extra,
                 gifter_box_y+box_height
-            ), radius=25/3, fill='#151518'
+            ), radius=num_config['border'], fill=color_config['dark']
         )
         new_frame_draw.text(
             gifter_tag_pos, gifter_user_tag.encode('utf-16').decode('utf-16'),
@@ -143,7 +143,7 @@ for frame in ImageSequence.Iterator(item_image):
             box_x, user_box_y,
             box_x+text_small_medium.getlength(user_tag)+user_box_extra,
             user_box_y+box_height
-        ), radius=25/3, fill='#151518'
+        ), radius=num_config['border'], fill=color_config['dark']
     )
     new_frame_draw.text(
         user_tag_pos, user_tag.encode('utf-16').decode('utf-16'), font_color, font=text_small_medium, anchor='ls'
@@ -155,7 +155,7 @@ for frame in ImageSequence.Iterator(item_image):
                 box_x, bucks_box_y,
                 box_x+text_small_medium.getlength('+$' + score)+text_box_extra,
                 bucks_box_y+box_height
-            ), radius=25/3, fill='#151518'
+            ), radius=num_config['border'], fill=color_config['dark']
         )
         new_frame_draw.text(
             bucks_pos, '+', font_color, font=text_small_medium, anchor='ls'

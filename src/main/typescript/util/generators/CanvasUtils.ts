@@ -95,7 +95,6 @@ export class CanvasUtils {
 
                 for (let i=0; i<replaceIndexes.length; i++) {
                     if (replaceIndexes[i] >= charIndex) {
-                        lastIndex = i-1;
                         break;
                     }
 
@@ -186,61 +185,117 @@ export class CanvasUtils {
 
         if (align === 'center') {
             for (let i=0; i<replaceIndexes.length; i++) {
-                ctx.fillStyle = color;
-                ctx.fillText(
-                    priorNormText[i],
-                    pos[0] - ctx.measureText(text.substring(replaceIndexes[i])).width / 2 + (i > 0
-                        ? ctx.measureText(text.substring(0, replaceIndexes[i-1]) + coloredContents[i-1]).width / 2
-                        : 0),
-                    pos[1]
+                this.applyTextGradient(
+                    ctx, priorNormText[i], [
+                        pos[0] - ctx.measureText(text.substring(replaceIndexes[i])).width / 2 + (i > 0
+                            ? ctx.measureText(text.substring(0, replaceIndexes[i-1]) + coloredContents[i-1]).width / 2
+                            : 0),
+                        pos[1]
+                    ], color
                 );
 
                 if (replaceIndexes[i] === -1) break;
 
-                ctx.fillStyle = secondaryColors[i];
-                ctx.fillText(
-                    coloredContents[i],
-                    pos[0] + ctx.measureText(text.substring(0, replaceIndexes[i])).width / 2 - ctx.measureText(
-                        text.substring(replaceIndexes[i] + coloredContents[i].length)
-                    ).width / 2,
-                    pos[1]
+                this.applyTextGradient(
+                    ctx, coloredContents[i], [
+                        pos[0] + ctx.measureText(text.substring(0, replaceIndexes[i])).width / 2 - ctx.measureText(
+                            text.substring(replaceIndexes[i] + coloredContents[i].length)
+                        ).width / 2,
+                        pos[1]
+                    ], secondaryColors[i]
                 );
             }
 
-            ctx.fillStyle = color;
-            ctx.fillText(
-                textEnd,
-                pos[0] + ctx.measureText(
-                    text.substring(
-                        0, replaceIndexes[replaceIndexes.length-1] + coloredContents[coloredContents.length-1].length
-                    )
-                ).width / 2,
-                pos[1]
+            this.applyTextGradient(
+                ctx, textEnd, [
+                    pos[0] + ctx.measureText(
+                        text.substring(
+                            0, replaceIndexes[replaceIndexes.length-1] +
+                            coloredContents[coloredContents.length-1].length
+                        )
+                    ).width / 2,
+                    pos[1]
+                ], color
             );
         } else if (align === 'left') {
             for (let i=0; i<replaceIndexes.length; i++) {
-                ctx.fillStyle = color;
-                ctx.fillText(priorNormText[i], pos[0], pos[1]);
+                this.applyTextGradient(ctx, priorNormText[i], pos, color);
 
                 if (replaceIndexes[i] === -1) break;
 
-                ctx.fillStyle = secondaryColors[i];
-                ctx.fillText(
-                    coloredContents[i], pos[0] + ctx.measureText(text.substring(0, replaceIndexes[i])).width, pos[1]
+                this.applyTextGradient(
+                    ctx, coloredContents[i], [
+                        pos[0] + ctx.measureText(text.substring(0, replaceIndexes[i])).width, pos[1]
+                    ], secondaryColors[i]
                 );
             }
 
-            ctx.fillStyle = color;
-            ctx.fillText(
-                textEnd,
-                pos[0] + ctx.measureText(
-                    text.substring(
-                        0, replaceIndexes[replaceIndexes.length-1] + coloredContents[coloredContents.length-1].length
-                    )
-                ).width,
-                pos[1]
+            this.applyTextGradient(
+                ctx, textEnd, [
+                    pos[0] + ctx.measureText(
+                        text.substring(
+                            0, replaceIndexes[replaceIndexes.length-1] +
+                            coloredContents[coloredContents.length-1].length
+                        )
+                    ).width,
+                    pos[1]
+                ], color
             );
         }
+    }
+
+    private static applyTextGradient(
+        ctx: Canvas.CanvasRenderingContext2D, text: string, pos: [number, number], color: string
+    ) {
+        if (text.length === 0) return;
+
+        if (!color.includes(',')) {
+            ctx.fillStyle = color;
+            ctx.fillText(text, ...pos);
+            return;
+        }
+
+        const canvas: Canvas.Canvas = Canvas.createCanvas(ctx.canvas.width, ctx.canvas.height);
+        const newCtx = canvas.getContext('2d');
+
+        newCtx.font = ctx.font;
+        newCtx.textAlign = ctx.textAlign;
+        newCtx.textBaseline = ctx.textBaseline;
+
+        newCtx.fillText(text, ...pos);
+
+        newCtx.globalCompositeOperation = 'source-in';
+
+        const gradStartPos: [number, number] = [
+            newCtx.textAlign === 'center'
+                ? pos[0] - newCtx.measureText(text).width / 2
+                : pos[0],
+            newCtx.textBaseline === 'middle'
+                ? pos[1] - (newCtx.measureText('Sp').actualBoundingBoxAscent +
+                    newCtx.measureText('Sp').actualBoundingBoxDescent) / 2
+                : pos[1] - (newCtx.measureText('Sp').actualBoundingBoxAscent)
+        ];
+        const gradEndPos: [number, number] = [
+            gradStartPos[0] + newCtx.measureText(text).width,
+            gradStartPos[1] + (newCtx.measureText('Sp').actualBoundingBoxAscent +
+                newCtx.measureText('Sp').actualBoundingBoxDescent)
+        ];
+        const gradColors: string[] = color.split(',');
+
+        const gradient = newCtx.createLinearGradient(...gradStartPos, ...gradEndPos);
+        gradColors.forEach((gradColor, index) => {
+            gradient.addColorStop(index / (gradColors.length-1), gradColor);
+        });
+
+        newCtx.fillStyle = gradient;
+        newCtx.fillRect(
+            gradStartPos[0], gradStartPos[1], ctx.measureText(text).width,
+            (ctx.measureText('Sp').actualBoundingBoxAscent + ctx.measureText('Sp').actualBoundingBoxDescent)
+        );
+
+        Canvas.loadImage(canvas.toBuffer()).then((img) => {
+            ctx.drawImage(img, 0, 0);
+        });
     }
 
     /**
@@ -279,15 +334,22 @@ export class CanvasUtils {
      */
     public static drawLine(
         ctx: Canvas.CanvasRenderingContext2D,
-        pos1: number[],
-        pos2: number[],
+        pos1: [number, number],
+        pos2: [number, number],
         width: number,
         color: string
     ): void {
         ctx.lineWidth = width;
 
         ctx.beginPath();
-        ctx.strokeStyle = color;
+
+        const gradColors: string[] = color.split(',');
+        const gradient = ctx.createLinearGradient(...pos1, ...pos2);
+        gradColors.forEach((gradColor, index) => {
+            gradient.addColorStop(index / (gradColors.length-1), gradColor);
+        });
+
+        ctx.strokeStyle = gradient;
 
         ctx.moveTo(pos1[0], pos1[1]);
         ctx.lineTo(pos2[0], pos2[1]);
@@ -305,11 +367,17 @@ export class CanvasUtils {
      */
     public static drawRect(
         ctx: Canvas.CanvasRenderingContext2D,
-        pos: number[],
-        size: number[],
+        pos: [number, number],
+        size: [number, number],
         color: string
     ): void {
-        ctx.fillStyle = color;
-        ctx.fillRect(pos[0], pos[1], size[0], size[1]);
+        const gradColors: string[] = color.split(',');
+        const gradient = ctx.createLinearGradient(...pos, pos[0] + size[0], pos[1] + size[1]);
+        gradColors.forEach((gradColor, index) => {
+            gradient.addColorStop(index / (gradColors.length-1), gradColor);
+        });
+
+        ctx.fillStyle = gradient;
+        ctx.fillRect(...pos, ...size);
     }
 }

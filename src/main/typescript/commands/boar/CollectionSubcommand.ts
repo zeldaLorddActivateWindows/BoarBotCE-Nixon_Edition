@@ -67,6 +67,9 @@ export default class CollectionSubcommand implements Subcommand {
     private curPage = 0;
     private maxPageNormal = 0;
     private enhanceStage = 0;
+    private giftStage = 0;
+    private miracleStage = 0;
+    private cloneStage = 0;
     private timerVars = {
         timeUntilNextCollect: 0,
         updateTime: setTimeout(() => {})
@@ -207,6 +210,7 @@ export default class CollectionSubcommand implements Subcommand {
                 leftPage: collRowConfig[0][0].components[0],
                 inputPage: collRowConfig[0][0].components[1],
                 rightPage: collRowConfig[0][0].components[2],
+                refresh: collRowConfig[0][0].components[3],
                 normalView: collRowConfig[0][1].components[0],
                 detailedView: collRowConfig[0][1].components[1],
                 powerupView: collRowConfig[0][1].components[2],
@@ -214,7 +218,8 @@ export default class CollectionSubcommand implements Subcommand {
                 gift: collRowConfig[1][0].components[1],
                 editions: collRowConfig[1][0].components[2],
                 enhance: collRowConfig[1][0].components[3],
-                miracle: collRowConfig[1][0].components[4]
+                miracle: collRowConfig[1][0].components[4],
+                clone: collRowConfig[1][0].components[5]
             };
 
             // User wants to input a page manually
@@ -222,6 +227,9 @@ export default class CollectionSubcommand implements Subcommand {
                 await this.modalHandle(inter);
 
                 this.enhanceStage--;
+                this.giftStage--;
+                this.miracleStage--;
+                this.cloneStage--;
 
                 clearInterval(this.timerVars.updateTime);
                 return;
@@ -244,6 +252,12 @@ export default class CollectionSubcommand implements Subcommand {
                 case collComponents.normalView.customId:
                     this.curView = View.Normal;
                     this.curPage = 0;
+                    break;
+
+                // User wants to refresh data
+                case collComponents.refresh.customId:
+                    await this.getUserInfo();
+                    this.collectionImage.updateInfo(this.boarUser, this.allBoars, this.config);
                     break;
 
                 // User wants to view detailed view
@@ -278,63 +292,29 @@ export default class CollectionSubcommand implements Subcommand {
 
                 // User wants to enhance a boar in detailed view
                 case collComponents.enhance.customId:
-                    if (this.enhanceStage !== 1) {
-                        this.enhanceStage = 2;
-                        await this.firstInter.followUp({
-                            files: [await this.collectionImage.finalizeEnhanceConfirm(this.curPage)],
-                            ephemeral: true
-                        });
-                    } else {
-                        await this.doEnhance();
-                    }
+                    await this.doEnhance();
                     break;
 
                 // User wants to send a gift in powerup view
                 case collComponents.gift.customId:
-                    Queue.addQueue(async () => {
-                        try {
-                            this.boarUser.refreshUserData();
-                            if (this.boarUser.itemCollection.powerups.gift.numTotal > 0) {
-                                const curOutVal = this.boarUser.itemCollection.powerups.gift.curOut;
-                                if (!curOutVal || curOutVal + 30000 < Date.now()) {
-                                    this.boarUser.itemCollection.powerups.gift.curOut = Date.now();
-                                    this.boarUser.updateUserData();
-                                    await new BoarGift(this.boarUser, this.config).sendMessage(inter);
-                                } else {
-                                    await Replies.handleReply(
-                                        inter, this.config.stringConfig.giftOut, this.config.colorConfig.error,
-                                        undefined, undefined, true
-                                    );
-                                }
-                            } else {
-                                await Replies.handleReply(
-                                    inter, this.config.stringConfig.giftNone, this.config.colorConfig.error,
-                                    undefined, undefined, true
-                                );
-                            }
-                        } catch (err) {
-                            LogDebug.handleError(err, inter);
-                        }
-                    }, inter.id + inter.user.id);
+                    await this.doGift();
                     break;
 
                 // User wants to activate miracles in powerup view
                 case collComponents.miracle.customId:
-                    Queue.addQueue(async () => {
-                        try {
-                            this.boarUser.refreshUserData();
-                            (this.boarUser.itemCollection.powerups.miracle.numActive as number) +=
-                                this.boarUser.itemCollection.powerups.miracle.numTotal;
-                            this.boarUser.itemCollection.powerups.miracle.numTotal = 0;
-                            this.boarUser.updateUserData();
-                        } catch (err) {
-                            LogDebug.handleError(err, inter);
-                        }
-                    }, inter.id + inter.user.id);
+                    await this.doMiracles();
+                    break;
+
+                // User wants to clone a boar in detailed view
+                case collComponents.clone.customId:
+                    await this.doClone();
                     break;
             }
 
             this.enhanceStage--;
+            this.giftStage--;
+            this.miracleStage--;
+            this.cloneStage--;
             await this.showCollection();
         } catch (err: unknown) {
             const canStop: boolean = await LogDebug.handleError(err, this.firstInter);
@@ -382,6 +362,15 @@ export default class CollectionSubcommand implements Subcommand {
      * @private
      */
     private async doEnhance(): Promise<void> {
+        if (this.enhanceStage !== 1) {
+            this.enhanceStage = 2;
+            await this.compInter.followUp({
+                files: [await this.collectionImage.finalizeEnhanceConfirm(this.curPage)],
+                ephemeral: true
+            });
+            return;
+        }
+
         const enhancedBoar: string =
             BoarUtils.findValid(this.allBoars[this.curPage].rarity[0], this.guildData, this.config);
 
@@ -420,7 +409,7 @@ export default class CollectionSubcommand implements Subcommand {
                 this.boarUser.itemCollection.boars[this.allBoars[this.curPage].id].editionDates.pop();
                 this.boarUser.stats.general.boarScore -= enhancersUsed * 5;
                 this.boarUser.stats.general.totalBoars--;
-                this.boarUser.itemCollection.powerups.enhancer.numTotal -= enhancersUsed;
+                this.boarUser.itemCollection.powerups.enhancer.numTotal = 0;
                 (this.boarUser.itemCollection.powerups.enhancer.raritiesUsed as number[])[
                     this.allBoars[this.curPage].rarity[0]-1
                 ]++;
@@ -443,8 +432,8 @@ export default class CollectionSubcommand implements Subcommand {
                 this.config.colorConfig.error, undefined, undefined, true
             );
 
+            await this.getUserInfo();
             this.collectionImage.updateInfo(this.boarUser, this.allBoars, this.config);
-            await this.collectionImage.createNormalBase();
             return;
         }
 
@@ -456,10 +445,13 @@ export default class CollectionSubcommand implements Subcommand {
             this.config.itemConfigs.boars[enhancedBoar].name.toLowerCase().replace(/\s+/g, ''), this.allBoarsSearchArr
         ) - 1;
 
-        await Replies.handleReply(
-            this.compInter, this.config.stringConfig.enhanceGotten, this.config.colorConfig.font,
-            [this.allBoars[this.curPage].name], [this.allBoars[this.curPage].color], true
-        );
+        await this.compInter.followUp({
+            files: [
+                await new ItemImageGenerator(
+                    this.compInter.user, enhancedBoar, this.config.stringConfig.enhanceTitle, this.config
+                ).handleImageCreate()
+            ]
+        });
 
         for (const edition of editions) {
             if (edition !== 1) continue;
@@ -472,8 +464,157 @@ export default class CollectionSubcommand implements Subcommand {
             });
         }
 
+        await this.getUserInfo();
         this.collectionImage.updateInfo(this.boarUser, this.allBoars, this.config);
-        await this.collectionImage.createNormalBase();
+    }
+
+    private async doGift(): Promise<void> {
+        const strConfig = this.config.stringConfig;
+        const colorConfig = this.config.colorConfig;
+
+        if (this.giftStage !== 1) {
+            this.giftStage = 2;
+            await Replies.handleReply(
+                this.compInter, strConfig.giftConfirm, colorConfig.font, [this.config.itemConfigs.powerups.gift.name],
+                [colorConfig.powerup], true
+            );
+            return;
+        }
+
+        await Queue.addQueue(async () => {
+            try {
+                this.boarUser.refreshUserData();
+                if (this.boarUser.itemCollection.powerups.gift.numTotal > 0) {
+                    const curOutVal = this.boarUser.itemCollection.powerups.gift.curOut;
+                    if (!curOutVal || curOutVal + 30000 < Date.now()) {
+                        this.boarUser.itemCollection.powerups.gift.curOut = Date.now();
+                        this.boarUser.updateUserData();
+                        await new BoarGift(this.boarUser, this.config).sendMessage(this.compInter);
+                    } else {
+                        await Replies.handleReply(
+                            this.compInter, strConfig.giftOut, colorConfig.error, undefined, undefined, true
+                        );
+                    }
+                } else {
+                    await Replies.handleReply(
+                        this.compInter, strConfig.giftNone, colorConfig.error, undefined, undefined, true
+                    );
+                }
+            } catch (err) {
+                LogDebug.handleError(err, this.compInter);
+            }
+        }, this.compInter.id + this.compInter.user.id);
+    }
+
+    private async doMiracles(): Promise<void> {
+        const strConfig = this.config.stringConfig;
+        const colorConfig = this.config.colorConfig;
+        const powerupConfigs = this.config.itemConfigs.powerups;
+
+        if (this.miracleStage !== 1) {
+            this.miracleStage = 2;
+
+            let multiplier = this.boarUser.stats.general.multiplier;
+            for (
+                let i=0;
+                i<this.boarUser.itemCollection.powerups.miracle.numTotal +
+                    (this.boarUser.itemCollection.powerups.miracle.numActive as number);
+                i++
+            ) {
+                multiplier += Math.min(Math.ceil(multiplier * 0.05), this.config.numberConfig.miracleIncreaseMax);
+            }
+
+            await Replies.handleReply(
+                this.compInter, strConfig.miracleConfirm, colorConfig.font, [
+                    powerupConfigs.miracle.pluralName,
+                    multiplier.toLocaleString() + '\u2738 Boar Blessings', '/boar daily'
+                ],
+                [colorConfig.powerup, colorConfig.powerup, colorConfig.silver], true
+            );
+
+            return;
+        }
+
+        LogDebug.log(
+            `Activating ${this.boarUser.itemCollection.powerups.miracle.numTotal} miracles`,
+            this.config, this.firstInter, true
+        );
+
+        await Queue.addQueue(async () => {
+            try {
+                this.boarUser.refreshUserData();
+                (this.boarUser.itemCollection.powerups.miracle.numActive as number) +=
+                    this.boarUser.itemCollection.powerups.miracle.numTotal;
+                this.boarUser.itemCollection.powerups.miracle.numTotal = 0;
+                this.boarUser.updateUserData();
+            } catch (err) {
+                LogDebug.handleError(err, this.compInter);
+            }
+        }, this.compInter.id + this.compInter.user.id);
+
+        await Replies.handleReply(
+            this.compInter, strConfig.miracleSuccess, colorConfig.font,
+            [powerupConfigs.miracle.pluralName], [colorConfig.powerup], true
+        );
+
+        await this.getUserInfo();
+        this.collectionImage.updateInfo(this.boarUser, this.allBoars, this.config);
+    }
+
+    private async doClone(): Promise<void> {
+        const strConfig = this.config.stringConfig;
+        const colorConfig = this.config.colorConfig;
+
+        if (this.cloneStage !== 1) {
+            this.cloneStage = 2;
+            const rarityInfo = this.allBoars[this.curPage].rarity;
+
+            await Replies.handleReply(
+                this.compInter, strConfig.cloneConfirm, colorConfig.font, [
+                    this.config.itemConfigs.powerups.clone.name, this.allBoars[this.curPage].name,
+                    (1 / rarityInfo[1].avgClones * 100).toLocaleString() + '%',
+                ],
+                [colorConfig.powerup, colorConfig['rarity' + rarityInfo[0]], colorConfig.silver], true
+            );
+
+            return;
+        }
+
+        const randVal = Math.random();
+        const cloneSuccess = randVal < 1 / this.allBoars[this.curPage].rarity[1].avgClones;
+
+        await Queue.addQueue(async () => {
+            try {
+                this.boarUser.refreshUserData();
+                this.boarUser.itemCollection.powerups.clone.numTotal--;
+
+                if (cloneSuccess) {
+                    this.boarUser.addBoars([this.allBoars[this.curPage].id], this.compInter, this.config);
+                }
+
+                this.boarUser.updateUserData();
+            } catch (err) {
+                LogDebug.handleError(err, this.compInter);
+            }
+        }, this.compInter.id + this.compInter.user.id);
+
+        if (cloneSuccess) {
+            await this.compInter.followUp({
+                files: [
+                    await new ItemImageGenerator(
+                        this.compInter.user, this.allBoars[this.curPage].id, strConfig.cloneTitle, this.config
+                    ).handleImageCreate()
+                ]
+            });
+        } else {
+            await Replies.handleReply(
+                this.compInter, strConfig.cloneFail, colorConfig.font, [this.allBoars[this.curPage].name],
+                [colorConfig['rarity' + this.allBoars[this.curPage].rarity[0]]], true
+            );
+        }
+
+        await this.getUserInfo();
+        this.collectionImage.updateInfo(this.boarUser, this.allBoars, this.config);
     }
 
     /**
@@ -710,6 +851,9 @@ export default class CollectionSubcommand implements Subcommand {
                 this.curView === View.Detailed && this.allBoars.length <= 1
             );
 
+            // Enables refresh button
+            this.baseRows[0].components[3].setDisabled(false);
+
             // Allows pressing Normal view if not currently on it
             this.baseRows[1].components[0].setDisabled(this.curView === View.Normal);
 
@@ -740,19 +884,36 @@ export default class CollectionSubcommand implements Subcommand {
                 );
             }
 
+            // Enables clone button for viable boars
+            if (
+                this.curView === View.Detailed && this.allBoars[this.curPage].rarity[1].avgClones > 0
+            ) {
+                optionalRow.addComponents((this.optionalButtons.components[5] as ButtonBuilder)
+                    .setDisabled(
+                        this.boarUser.itemCollection.powerups.clone.numTotal === 0 ||
+                        this.firstInter.user.id !== this.boarUser.user.id
+                    )
+                    .setStyle(this.cloneStage === 1 ? 4 : 3)
+                );
+            }
+
             // Gift & Miracle Activation button enabling
             if (this.curView === View.Powerups) {
                 optionalRow.addComponents(
-                    this.optionalButtons.components[1].setDisabled(
-                        this.boarUser.itemCollection.powerups.gift.numTotal === 0 ||
-                        this.firstInter.user.id !== this.boarUser.user.id
-                    )
+                    (this.optionalButtons.components[1] as ButtonBuilder)
+                        .setDisabled(
+                            this.boarUser.itemCollection.powerups.gift.numTotal === 0 ||
+                            this.firstInter.user.id !== this.boarUser.user.id
+                        )
+                        .setStyle(this.giftStage === 1 ? 4 : 3)
                 );
                 optionalRow.addComponents(
-                    this.optionalButtons.components[4].setDisabled(
-                        this.boarUser.itemCollection.powerups.miracle.numTotal === 0 ||
-                        this.firstInter.user.id !== this.boarUser.user.id
-                    )
+                    (this.optionalButtons.components[4] as ButtonBuilder)
+                        .setDisabled(
+                            this.boarUser.itemCollection.powerups.miracle.numTotal === 0 ||
+                            this.firstInter.user.id !== this.boarUser.user.id
+                        )
+                        .setStyle(this.miracleStage === 1 ? 4 : 3)
                 );
             }
 

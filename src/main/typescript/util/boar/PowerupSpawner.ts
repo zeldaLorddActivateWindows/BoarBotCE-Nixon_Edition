@@ -38,6 +38,7 @@ import {ColorConfig} from '../../bot/config/ColorConfig';
 export class PowerupSpawner {
     private readonly initIntervalVal: number = 0;
     private claimers: Map<string, number> = new Map<string, number>();
+    private failers: Map<string, number> = new Map<string, number>();
     private powerupType: ItemConfig = {} as ItemConfig;
     private powerupTypeID = '';
     private promptTypeID = '';
@@ -192,7 +193,9 @@ export class PowerupSpawner {
             this.powerupTypeID = this.getRandPowerup(config);
             this.powerupType = config.itemConfigs.powerups[this.powerupTypeID];
 
-            LogDebug.log(`Powerup Event spawning for ${this.powerupType.pluralName}`, config);
+            LogDebug.log(
+                `Powerup Event spawning for ${this.powerupType.pluralName}, Prompt: ${chosenPrompt.name}`, config
+            );
 
             const rightStyle: number = promptTypes[this.promptTypeID].rightStyle;
             const wrongStyle: number = promptTypes[this.promptTypeID].wrongStyle;
@@ -221,6 +224,11 @@ export class PowerupSpawner {
                             break;
                         case 'fast':
                             rows = this.makeFastRows(chosenPrompt, rightStyle, wrongStyle, rowsConfig, curTime, nums);
+                            break;
+                        case 'time':
+                            rows = this.makeClockRows(
+                                chosenPrompt, rightStyle, wrongStyle, rowsConfig, curTime, nums, config
+                            );
                             break;
                     }
 
@@ -280,7 +288,12 @@ export class PowerupSpawner {
         try {
             await inter.deferUpdate();
 
-            if (!this.claimers.has(inter.user.id) && inter.customId.toLowerCase().includes('correct')) {
+            const hasClaimed = this.claimers.has(inter.user.id);
+            const fullyFailed = this.failers.has(inter.user.id)
+                ? (this.failers.get(inter.user.id) as number) > 1
+                : false;
+
+            if (!hasClaimed && !fullyFailed &&inter.customId.toLowerCase().includes('correct')) {
                 const isBanned = await InteractionUtils.handleBanned(inter, config, true);
                 if (isBanned) return;
 
@@ -304,15 +317,23 @@ export class PowerupSpawner {
                     [config.stringConfig.powRight, timeToClaim.toLocaleString() + 'ms', rewardString],
                     [config.colorConfig.green, config.colorConfig.silver, config.colorConfig.powerup], true
                 );
-            } else if (!this.claimers.has(inter.user.id)) {
+            } else if (!hasClaimed && !fullyFailed) {
                 LogDebug.log(
                     `${inter.user.username} (${inter.user.id}) guessed INCORRECT in Powerup Event`,
                     config, undefined, true
                 );
 
+                this.failers.has(inter.user.id)
+                    ? this.failers.set(inter.user.id, 2)
+                    : this.failers.set(inter.user.id, 1);
+
                 await Replies.handleReply(
                     inter, config.stringConfig.powWrongFull, config.colorConfig.font,
                     [config.stringConfig.powWrong], [config.colorConfig.error], true
+                );
+            } else if (fullyFailed) {
+                await Replies.handleReply(
+                    inter, config.stringConfig.powNoMore, config.colorConfig.error, undefined, undefined, true
                 );
             } else {
                 await Replies.handleReply(
@@ -586,6 +607,55 @@ export class PowerupSpawner {
         return rows;
     }
 
+    private makeClockRows(
+        prompt: PromptConfig,
+        rightStyle: number,
+        wrongStyle: number,
+        rowsConfig: RowConfig[],
+        id: number,
+        nums: NumberConfig,
+        config: BotConfig
+    ) {
+        const rows: ActionRowBuilder<ButtonBuilder>[] = [];
+
+        const clocks = [];
+        const rightClock = prompt.rightClock;
+
+        for (const clockPrompt of Object.values(config.promptConfigs.types.time)) {
+            if (typeof clockPrompt === 'string' || typeof clockPrompt === 'number') continue;
+            clocks.push(clockPrompt.rightClock);
+        }
+
+        let curIndex = 0;
+
+        for (let i=0; i<nums.emojiRows; i++) {
+            const row: ActionRowBuilder<ButtonBuilder> = new ActionRowBuilder<ButtonBuilder>();
+            for (let j=0; j<nums.emojiCols; j++) {
+                const randChoice: string = clocks[Math.floor(Math.random() * clocks.length)];
+                let button: ButtonBuilder;
+
+                if (randChoice === rightClock) {
+                    button = new ButtonBuilder(rowsConfig[0].components[0]);
+                    button.setEmoji(randChoice).setStyle(rightStyle).setCustomId(
+                        rowsConfig[0].components[0].customId + '|' + id
+                    );
+                } else {
+                    button = new ButtonBuilder(rowsConfig[0].components[1]);
+                    button.setEmoji(randChoice).setStyle(wrongStyle).setCustomId(
+                        rowsConfig[0].components[1].customId + curIndex + '|' + id
+                    );
+                }
+
+                clocks.splice(clocks.indexOf(randChoice), 1);
+                row.addComponents(button);
+                curIndex++;
+            }
+            rows.push(row);
+        }
+
+        return rows;
+    }
+
     /**
      * Handles when the powerup ends. Edits the spawn message and updates all user info
      *
@@ -606,7 +676,9 @@ export class PowerupSpawner {
             if (--this.numNotFinished === 0) {
                 LogDebug.log('Attempting to conclude Powerup Event', config);
 
-                const topUserID = [...this.claimers][0][0];
+                const topUserID: string | undefined = this.claimers.size > 0
+                    ? [...this.claimers][0][0]
+                    : undefined;
 
                 this.interactions.forEach(async interaction => {
                     const strConfig: StringConfig = config.stringConfig;
@@ -624,8 +696,9 @@ export class PowerupSpawner {
                     }
 
                     await Replies.handleReply(
-                        interaction, strConfig.powResponse, config.colorConfig.font, ['/boar collection', 'Powerups'],
-                        [colorConfig.silver, colorConfig.powerup], true
+                        interaction, strConfig.powResponse, config.colorConfig.font,
+                        ['/boar collection', 'Powerups', '/boar help', 'Powerups'],
+                        [colorConfig.silver, colorConfig.powerup, colorConfig.silver, colorConfig.powerup], true
                     );
 
                     await Queue.addQueue(async () => {

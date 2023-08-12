@@ -42,6 +42,8 @@ export class StringConfig {
     public readonly dailyUsedNotify: string = ' ';
     public readonly dailyTitle: string = ' ';
     public readonly extraTitle: string = ' ';
+    public readonly enhanceTitle: string = ' ';
+    public readonly cloneTitle: string = ' ';
     public readonly dailyNoBoarFound: string = ' ';
 
     // Give command messages/strings (also badges)
@@ -77,6 +79,8 @@ export class StringConfig {
     public readonly collFastestTimeLabel: string = ' ';
     public readonly collBestPromptLabel: string = ' ';
     public readonly collBlessLabel: string = ' ';
+    public readonly collGiftsLabel: string = ' ';
+    public readonly collClonesLabel: string = ' ';
     public readonly collCellLabel: string = ' ';
     public readonly collMiraclesClaimedLabel: string = ' ';
     public readonly collMiraclesUsedLabel: string = ' ';
@@ -86,6 +90,9 @@ export class StringConfig {
     public readonly collGiftsUsedLabel: string = ' ';
     public readonly collGiftsOpenedLabel: string = ' ';
     public readonly collMostGiftsLabel: string = ' ';
+    public readonly collClonesClaimedLabel: string = ' ';
+    public readonly collClonesUsedLabel: string = ' ';
+    public readonly collMostClonesLabel: string = ' ';
     public readonly collEnhancersClaimedLabel: string = ' ';
     public readonly collEnhancedLabel: string = ' ';
     public readonly collEnhanceDataChange: string = ' ';
@@ -99,6 +106,7 @@ export class StringConfig {
 
     public readonly eventTitle: string = ' ';
     public readonly eventEndedTitle: string = ' ';
+    public readonly eventsDisabled: string = ' ';
     public readonly eventParticipated: string = ' ';
     public readonly eventNobody: string = ' ';
 
@@ -108,6 +116,7 @@ export class StringConfig {
     public readonly powRight: string = ' ';
     public readonly powWrongFull: string = ' ';
     public readonly powWrong: string = ' ';
+    public readonly powNoMore: string = ' ';
     public readonly powTop: string = ' ';
     public readonly powTopResult: string = ' ';
     public readonly powAvg: string = ' ';
@@ -166,11 +175,15 @@ export class StringConfig {
 
     // Miscellaneous strings
 
+    public readonly giftConfirm: string = ' ';
     public readonly giftFail: string = ' ';
     public readonly giftOut: string = ' ';
     public readonly giftSent: string = ' ';
     public readonly giftNone: string = ' ';
-    public readonly enhanceGotten: string = ' ';
+    public readonly miracleConfirm: string = ' ';
+    public readonly miracleSuccess: string = ' ';
+    public readonly cloneConfirm: string = ' ';
+    public readonly cloneFail: string = ' ';
     public readonly notInBoard: string = ' ';
     public readonly boardHeader: string = ' ';
     public readonly boardFooter: string = ' ';
