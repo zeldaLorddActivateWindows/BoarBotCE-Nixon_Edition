@@ -114,7 +114,8 @@ export class StringConfig {
 
     public readonly powRightFull: string = ' ';
     public readonly powRight: string = ' ';
-    public readonly powWrongFull: string = ' ';
+    public readonly powWrongFirst: string = ' ';
+    public readonly powWrongSecond: string = ' ';
     public readonly powWrong: string = ' ';
     public readonly powNoMore: string = ' ';
     public readonly powTop: string = ' ';

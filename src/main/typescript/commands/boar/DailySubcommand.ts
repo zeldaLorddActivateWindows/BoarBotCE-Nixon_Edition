@@ -222,7 +222,7 @@ export default class DailySubcommand implements Subcommand {
      */
     private async canUseDaily(boarUser: BoarUser): Promise<boolean> {
         // Midnight of next day (UTC)
-        const nextBoarTime: number = Math.floor(new Date().setUTCHours(24,0,0,0));
+        const nextBoarTime: number = new Date().setUTCHours(24,0,0,0);
 
         const strConfig = this.config.stringConfig;
         const nums = this.config.numberConfig;

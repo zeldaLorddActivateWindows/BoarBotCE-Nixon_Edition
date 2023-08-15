@@ -323,6 +323,7 @@ export class BoarBot implements Bot {
 		DataHandlers.getGlobalData(DataHandlers.GlobalFile.Leaderboards, true);
 		DataHandlers.getGlobalData(DataHandlers.GlobalFile.BannedUsers, true);
 		DataHandlers.getGlobalData(DataHandlers.GlobalFile.Powerups, true);
+		DataHandlers.getGlobalData(DataHandlers.GlobalFile.Quest, true);
 	}
 
 	/**

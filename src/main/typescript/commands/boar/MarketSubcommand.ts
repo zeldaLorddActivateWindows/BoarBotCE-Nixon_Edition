@@ -40,6 +40,7 @@ import {RarityConfig} from '../../bot/config/items/RarityConfig';
 import {ItemData} from '../../util/data/global/ItemData';
 import {ItemsData} from '../../util/data/global/ItemsData';
 import {BoardData} from '../../util/data/global/BoardData';
+import {QuestData} from '../../util/data/global/QuestData';
 
 enum View {
     Overview,
@@ -140,7 +141,7 @@ export default class MarketSubcommand implements Subcommand {
         const pageInput: string = interaction.options.getString(this.subcommandInfo.args[1].name)?.toLowerCase()
             .replace(/\s+/g, '') ?? '1';
 
-        this.getPricingData();
+        await this.getPricingData();
         this.boarUser = new BoarUser(interaction.user);
 
         // Only allow orders to be viewed if there's something to show
@@ -310,7 +311,7 @@ export default class MarketSubcommand implements Subcommand {
 
                 // User wants to refresh the market data
                 case marketComponents.refresh.customId:
-                    this.getPricingData();
+                    await this.getPricingData();
                     this.imageGen.updateInfo(this.pricingData, this.userBuyOrders, this.userSellOrders, this.config);
                     this.boarUser.refreshUserData();
                     this.curEdition = 0;
@@ -396,7 +397,8 @@ export default class MarketSubcommand implements Subcommand {
 
         await Queue.addQueue(async () => {
             try {
-                const itemsData: ItemsData = DataHandlers.getGlobalData(DataHandlers.GlobalFile.Items) as ItemsData;
+                const itemsData: ItemsData =
+                    DataHandlers.getGlobalData(DataHandlers.GlobalFile.Items) as ItemsData;
 
                 const buyOrders: BuySellData[] = itemsData[orderInfo.type][orderInfo.id].buyers;
                 const sellOrders: BuySellData[] = itemsData[orderInfo.type][orderInfo.id].sellers;
@@ -452,7 +454,7 @@ export default class MarketSubcommand implements Subcommand {
                 }
 
                 DataHandlers.saveGlobalData(itemsData, DataHandlers.GlobalFile.Items);
-                this.getPricingData();
+                await this.getPricingData();
                 this.imageGen.updateInfo(
                     this.pricingData, this.userBuyOrders, this.userSellOrders, this.config
                 );
@@ -505,7 +507,8 @@ export default class MarketSubcommand implements Subcommand {
 
         await Queue.addQueue(async () => {
             try {
-                const itemsData: ItemsData = DataHandlers.getGlobalData(DataHandlers.GlobalFile.Items) as ItemsData;
+                const itemsData: ItemsData =
+                    DataHandlers.getGlobalData(DataHandlers.GlobalFile.Items) as ItemsData;
 
                 const buyOrders: BuySellData[] = itemsData[orderInfo.type][orderInfo.id].buyers;
                 const sellOrders: BuySellData[] = itemsData[orderInfo.type][orderInfo.id].sellers;
@@ -613,7 +616,7 @@ export default class MarketSubcommand implements Subcommand {
                 }
 
                 DataHandlers.saveGlobalData(itemsData, DataHandlers.GlobalFile.Items);
-                this.getPricingData();
+                await this.getPricingData();
                 this.imageGen.updateInfo(
                     this.pricingData, this.userBuyOrders, this.userSellOrders, this.config
                 );
@@ -642,6 +645,8 @@ export default class MarketSubcommand implements Subcommand {
         let numToReturn = 0;
         let hasEnoughRoom = true;
 
+        const questData = DataHandlers.getGlobalData(DataHandlers.GlobalFile.Quest) as QuestData;
+
         if (!isClaim) {
             isSell = !isSell;
         }
@@ -656,7 +661,14 @@ export default class MarketSubcommand implements Subcommand {
                     numToReturn = orderInfo.data.num - orderInfo.data.filledAmount;
                 }
 
+                if (!isSell) {
+                    const spendBucksIndex = questData.curQuestIDs.indexOf('spendBucks');
+                    this.boarUser.stats.quests.progress[spendBucksIndex] += numToReturn * orderInfo.data.price;
+                }
+
                 if (!isSell && orderInfo.type === 'boars') {
+                    const collectBoarIndex = questData.curQuestIDs.indexOf('collectBoar');
+
                     if (!this.boarUser.itemCollection.boars[orderInfo.id]) {
                         this.boarUser.itemCollection.boars[orderInfo.id] = new CollectedBoar;
                         this.boarUser.itemCollection.boars[orderInfo.id].firstObtained = Date.now();
@@ -674,6 +686,13 @@ export default class MarketSubcommand implements Subcommand {
                     this.boarUser.stats.general.lastBoar = orderInfo.id;
                     this.boarUser.stats.general.totalBoars += numToReturn;
                     this.boarUser.itemCollection.boars[orderInfo.id].num += numToReturn;
+
+                    if (
+                        collectBoarIndex >= 0 &&
+                        Math.floor(collectBoarIndex / 2) === BoarUtils.findRarity(orderInfo.id, this.config)[0]
+                    ) {
+                        this.boarUser.stats.quests.progress[collectBoarIndex] += numToReturn;
+                    }
                 } else if (!isSell && orderInfo.type === 'powerups') {
                     const maxValue = orderInfo.id === 'enhancer'
                         ? this.config.numberConfig.maxEnhancers
@@ -696,6 +715,9 @@ export default class MarketSubcommand implements Subcommand {
                         );
                     }
                 } else {
+                    const collectBucksIndex = questData.curQuestIDs.indexOf('collectBucks');
+
+                    this.boarUser.stats.quests.progress[collectBucksIndex] += numToReturn * orderInfo.data.price;
                     this.boarUser.stats.general.boarScore += numToReturn * orderInfo.data.price;
                 }
 
@@ -737,6 +759,8 @@ export default class MarketSubcommand implements Subcommand {
             const strConfig: StringConfig = this.config.stringConfig;
             const nums: NumberConfig = this.config.numberConfig;
             const colorConfig: ColorConfig = this.config.colorConfig;
+
+            const questData = DataHandlers.getGlobalData(DataHandlers.GlobalFile.Quest) as QuestData;
 
             let specialSellOrder: BuySellData | undefined;
             const itemRarity: [number, RarityConfig] = BoarUtils.findRarity(itemData.id, this.config);
@@ -921,7 +945,7 @@ export default class MarketSubcommand implements Subcommand {
                             }
 
                             DataHandlers.saveGlobalData(itemsData, DataHandlers.GlobalFile.Items);
-                            this.getPricingData();
+                            await this.getPricingData();
                             this.imageGen.updateInfo(
                                 this.pricingData, this.userBuyOrders, this.userSellOrders, this.config
                             );
@@ -932,6 +956,8 @@ export default class MarketSubcommand implements Subcommand {
                     }, inter.id + 'global').catch((err) => { throw err });
 
                     if (!failedBuy && itemData.type === 'boars') {
+                        const collectBoarIndex = questData.curQuestIDs.indexOf('collectBoar');
+
                         itemData = this.pricingData[this.curPage];
 
                         if (!this.boarUser.itemCollection.boars[itemData.id]) {
@@ -979,6 +1005,13 @@ export default class MarketSubcommand implements Subcommand {
 
                             this.curEdition = 0;
                         }
+
+                        if (
+                            collectBoarIndex >= 0 &&
+                            Math.floor(collectBoarIndex / 2) === BoarUtils.findRarity(itemData.id, this.config)[0]
+                        ) {
+                            this.boarUser.stats.quests.progress[collectBoarIndex] += this.modalData[0];
+                        }
                     } else if (!failedBuy && itemData.type === 'powerups') {
                         this.boarUser.itemCollection.powerups[itemData.id].numTotal += this.modalData[0];
                         this.boarUser.itemCollection.powerups[itemData.id].highestTotal = Math.max(
@@ -988,12 +1021,17 @@ export default class MarketSubcommand implements Subcommand {
                     }
 
                     if (!failedBuy) {
+                        const spendBucksIndex = questData.curQuestIDs.indexOf('spendBucks');
+
                         LogDebug.log(
                             `Bought ${this.modalData[0]} of ${itemData.id} for ${prices.trim()} from ${userIDs.trim()}`,
                             this.config, inter, true
                         );
 
                         this.boarUser.stats.general.boarScore -= this.modalData[1];
+
+                        this.boarUser.stats.quests.progress[spendBucksIndex] += this.modalData[1];
+
                         await this.boarUser.orderBoars(this.compInter, this.config);
                         this.boarUser.updateUserData();
 
@@ -1032,7 +1070,8 @@ export default class MarketSubcommand implements Subcommand {
 
                     await Queue.addQueue(async () => {
                         try {
-                            const itemsData: ItemsData = DataHandlers.getGlobalData(DataHandlers.GlobalFile.Items) as ItemsData;
+                            const itemsData: ItemsData =
+                                DataHandlers.getGlobalData(DataHandlers.GlobalFile.Items) as ItemsData;
                             const newItemData: ItemData = itemsData[itemData.type][itemData.id];
 
                             let curPrice = 0;
@@ -1174,7 +1213,7 @@ export default class MarketSubcommand implements Subcommand {
                             }
 
                             DataHandlers.saveGlobalData(itemsData, DataHandlers.GlobalFile.Items);
-                            this.getPricingData();
+                            await this.getPricingData();
                             this.imageGen.updateInfo(
                                 this.pricingData, this.userBuyOrders, this.userSellOrders, this.config
                             );
@@ -1185,6 +1224,8 @@ export default class MarketSubcommand implements Subcommand {
                     }, inter.id + 'global').catch((err) => { throw err });
 
                     if (!failedSale) {
+                        const collectBucksIndex = questData.curQuestIDs.indexOf('collectBucks');
+
                         LogDebug.log(
                             `Sold ${this.modalData[0]} of ${itemData.id} for ${prices} from ${userIDs}`,
                             this.config, inter, true
@@ -1197,6 +1238,7 @@ export default class MarketSubcommand implements Subcommand {
                             this.boarUser.itemCollection.powerups[itemData.id].numTotal -= this.modalData[0];
                         }
 
+                        this.boarUser.stats.quests.progress[collectBucksIndex] += this.modalData[1];
                         this.boarUser.stats.general.boarScore += this.modalData[1];
                         await this.boarUser.orderBoars(this.compInter, this.config);
                         this.boarUser.updateUserData();
@@ -1296,7 +1338,8 @@ export default class MarketSubcommand implements Subcommand {
                 if (this.boarUser.stats.general.boarScore >= this.modalData[0] * this.modalData[1]) {
                     await Queue.addQueue(async () => {
                         try {
-                            const itemsData: ItemsData = DataHandlers.getGlobalData(DataHandlers.GlobalFile.Items) as ItemsData;
+                            const itemsData: ItemsData =
+                                DataHandlers.getGlobalData(DataHandlers.GlobalFile.Items) as ItemsData;
                             const order: BuySellData = {
                                 userID: inter.user.id,
                                 num: this.modalData[0],
@@ -1335,7 +1378,7 @@ export default class MarketSubcommand implements Subcommand {
                             }
 
                             DataHandlers.saveGlobalData(itemsData, DataHandlers.GlobalFile.Items);
-                            this.getPricingData();
+                            await this.getPricingData();
                             this.imageGen.updateInfo(
                                 this.pricingData, this.userBuyOrders, this.userSellOrders, this.config
                             );
@@ -1384,7 +1427,8 @@ export default class MarketSubcommand implements Subcommand {
 
                     await Queue.addQueue(async () => {
                         try {
-                            const itemsData: ItemsData = DataHandlers.getGlobalData(DataHandlers.GlobalFile.Items) as ItemsData;
+                            const itemsData: ItemsData =
+                                DataHandlers.getGlobalData(DataHandlers.GlobalFile.Items) as ItemsData;
 
                             const editions: number[] = itemData.type === 'boars'
                                 ? this.boarUser.itemCollection.boars[itemData.id]
@@ -1429,7 +1473,7 @@ export default class MarketSubcommand implements Subcommand {
                             }
 
                             DataHandlers.saveGlobalData(itemsData, DataHandlers.GlobalFile.Items);
-                            this.getPricingData();
+                            await this.getPricingData();
                             this.imageGen.updateInfo(
                                 this.pricingData, this.userBuyOrders, this.userSellOrders, this.config
                             );
@@ -1512,7 +1556,8 @@ export default class MarketSubcommand implements Subcommand {
 
             await Queue.addQueue(async () => {
                 try {
-                    const itemsData: ItemsData = DataHandlers.getGlobalData(DataHandlers.GlobalFile.Items) as ItemsData;
+                    const itemsData: ItemsData =
+                        DataHandlers.getGlobalData(DataHandlers.GlobalFile.Items) as ItemsData;
 
                     const buyOrders = itemsData[orderInfo.type][orderInfo.id].buyers;
                     const sellOrders = itemsData[orderInfo.type][orderInfo.id].sellers;
@@ -1670,7 +1715,7 @@ export default class MarketSubcommand implements Subcommand {
                     }
 
                     DataHandlers.saveGlobalData(itemsData, DataHandlers.GlobalFile.Items);
-                    this.getPricingData();
+                    await this.getPricingData();
                     this.imageGen.updateInfo(
                         this.pricingData, this.userBuyOrders, this.userSellOrders, this.config
                     );
@@ -1713,7 +1758,7 @@ export default class MarketSubcommand implements Subcommand {
         }
     }
 
-    private getPricingData(): void {
+    private async getPricingData(): Promise<void> {
         const itemsData: ItemsData = DataHandlers.getGlobalData(DataHandlers.GlobalFile.Items) as ItemsData;
         const curItem = this.pricingData.length > 0
             ? this.pricingData[this.curPage]
@@ -1949,7 +1994,7 @@ export default class MarketSubcommand implements Subcommand {
 
             this.boarUser.refreshUserData();
 
-            this.getPricingData();
+            await this.getPricingData();
             this.imageGen.updateInfo(this.pricingData, this.userBuyOrders, this.userSellOrders, this.config);
 
             const itemData = this.pricingData[this.curPage];
@@ -2076,7 +2121,7 @@ export default class MarketSubcommand implements Subcommand {
 
             this.boarUser.refreshUserData();
 
-            this.getPricingData();
+            await this.getPricingData();
             this.imageGen.updateInfo(this.pricingData, this.userBuyOrders, this.userSellOrders, this.config);
 
             const itemData = this.pricingData[this.curPage];
@@ -2228,7 +2273,7 @@ export default class MarketSubcommand implements Subcommand {
                 return;
             }
 
-            this.getPricingData();
+            await this.getPricingData();
             this.imageGen.updateInfo(this.pricingData, this.userBuyOrders, this.userSellOrders, this.config);
 
             const itemData = this.pricingData[this.curPage];
@@ -2425,7 +2470,7 @@ export default class MarketSubcommand implements Subcommand {
                 return;
             }
 
-            this.getPricingData();
+            await this.getPricingData();
             this.imageGen.updateInfo(this.pricingData, this.userBuyOrders, this.userSellOrders, this.config);
 
             const itemData = this.pricingData[this.curPage];
@@ -2561,7 +2606,7 @@ export default class MarketSubcommand implements Subcommand {
 
             this.boarUser.refreshUserData();
 
-            this.getPricingData();
+            await this.getPricingData();
             this.imageGen.updateInfo(this.pricingData, this.userBuyOrders, this.userSellOrders, this.config);
 
             const itemData = this.userBuyOrders.concat(this.userSellOrders)[this.curPage];

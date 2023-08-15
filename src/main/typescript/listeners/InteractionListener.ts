@@ -70,7 +70,7 @@ export default class InteractionListener implements Listener {
                         try {
                             fs.rmSync(this.config.pathConfig.userDataFolder + interaction.user.id + '.json');
                         } catch {}
-                        await Queue.addQueue(() => {
+                        await Queue.addQueue(async () => {
                             const itemsData: ItemsData =
                                 DataHandlers.getGlobalData(DataHandlers.GlobalFile.Items) as ItemsData;
 

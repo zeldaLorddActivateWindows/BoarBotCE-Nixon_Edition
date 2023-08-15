@@ -34,6 +34,7 @@ import {PromptConfigs} from '../../bot/config/prompts/PromptConfigs';
 import {PowerupData} from '../data/global/PowerupData';
 import {InteractionUtils} from '../interactions/InteractionUtils';
 import {ColorConfig} from '../../bot/config/ColorConfig';
+import {QuestData} from '../data/global/QuestData';
 
 export class PowerupSpawner {
     private readonly initIntervalVal: number = 0;
@@ -62,10 +63,10 @@ export class PowerupSpawner {
     /**
      * Sets a timeout for when the next powerup should spawn
      */
-    public startSpawning(): void {
+    public async startSpawning(): Promise<void> {
         const powerupData = DataHandlers.getGlobalData(DataHandlers.GlobalFile.Powerups);
 
-        Object.keys((powerupData as PowerupData).messagesInfo).forEach(async channelID => {
+        await Object.keys((powerupData as PowerupData).messagesInfo).forEach(async channelID => {
             try {
                 const channel = await BoarBotApp.getBot().getClient().channels.fetch(channelID) as TextChannel;
                 (powerupData as PowerupData).messagesInfo[channelID].forEach(async msgID => {
@@ -125,7 +126,9 @@ export class PowerupSpawner {
 
             await Queue.addQueue(async () => {
                 try {
-                    const powerupData = DataHandlers.getGlobalData(DataHandlers.GlobalFile.Powerups) as PowerupData;
+                    const powerupData = DataHandlers.getGlobalData(
+                        DataHandlers.GlobalFile.Powerups
+                    ) as PowerupData;
                     powerupData.nextPowerup = Date.now() + newInterval;
                     DataHandlers.saveGlobalData(powerupData, DataHandlers.GlobalFile.Powerups);
                 } catch (err: unknown) {
@@ -323,14 +326,30 @@ export class PowerupSpawner {
                     config, undefined, true
                 );
 
-                this.failers.has(inter.user.id)
-                    ? this.failers.set(inter.user.id, 2)
-                    : this.failers.set(inter.user.id, 1);
+                if (this.failers.has(inter.user.id)) {
+                    this.failers.set(inter.user.id, 2);
 
-                await Replies.handleReply(
-                    inter, config.stringConfig.powWrongFull, config.colorConfig.font,
-                    [config.stringConfig.powWrong], [config.colorConfig.error], true
-                );
+                    await Queue.addQueue(async () => {
+                        const questData = DataHandlers.getGlobalData(DataHandlers.GlobalFile.Quest) as QuestData;
+                        const powFailIndex = questData.curQuestIDs.indexOf('powFail');
+                        const boarUser = new BoarUser(inter.user, true);
+
+                        boarUser.stats.quests.progress[powFailIndex]++;
+                        boarUser.updateUserData();
+                    }, inter.id + inter.user.id);
+
+                    await Replies.handleReply(
+                        inter, config.stringConfig.powWrongSecond, config.colorConfig.font,
+                        [config.stringConfig.powWrong], [config.colorConfig.error], true
+                    );
+                } else {
+                    this.failers.set(inter.user.id, 1);
+
+                    await Replies.handleReply(
+                        inter, config.stringConfig.powWrongFirst, config.colorConfig.font,
+                        [config.stringConfig.powWrong], [config.colorConfig.error], true
+                    );
+                }
             } else if (fullyFailed) {
                 await Replies.handleReply(
                     inter, config.stringConfig.powNoMore, config.colorConfig.error, undefined, undefined, true
@@ -752,6 +771,7 @@ export class PowerupSpawner {
                 });
 
                 this.claimers = new Map<string, number>();
+                this.failers = new Map<string, number>();
                 this.interactions = [];
                 this.readyToEnd = false;
 

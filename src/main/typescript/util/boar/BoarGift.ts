@@ -17,6 +17,7 @@ import {Replies} from '../interactions/Replies';
 import {RowConfig} from '../../bot/config/components/RowConfig';
 import {InteractionUtils} from '../interactions/InteractionUtils';
 import {ComponentConfig} from '../../bot/config/components/ComponentConfig';
+import {QuestData} from '../data/global/QuestData';
 
 /**
  * {@link BoarGift BoarGift.ts}
@@ -358,6 +359,9 @@ export class BoarGift {
         let outcomeName: string = outcomeConfig.suboutcomes[suboutcome].name;
         let numBucks = 0;
 
+        const questData = DataHandlers.getGlobalData(DataHandlers.GlobalFile.Quest) as QuestData;
+        const collectBucksIndex = questData.curQuestIDs.indexOf('collectBucks');
+
         if (suboutcome === 0) {
             numBucks = Math.round(Math.random() * (5 - 1) + 1)
         } else if (suboutcome === 1) {
@@ -379,6 +383,7 @@ export class BoarGift {
         await Queue.addQueue(async () => {
             try {
                 this.giftedUser.refreshUserData();
+                this.boarUser.stats.quests.progress[collectBucksIndex] += numBucks;
                 this.giftedUser.stats.general.boarScore += numBucks;
                 this.giftedUser.updateUserData();
             } catch (err: unknown) {
@@ -389,6 +394,7 @@ export class BoarGift {
         await Queue.addQueue(async () => {
             try {
                 this.boarUser.refreshUserData();
+                this.boarUser.stats.quests.progress[collectBucksIndex] += numBucks;
                 this.boarUser.stats.general.boarScore += numBucks;
                 this.boarUser.updateUserData();
             } catch (err: unknown) {

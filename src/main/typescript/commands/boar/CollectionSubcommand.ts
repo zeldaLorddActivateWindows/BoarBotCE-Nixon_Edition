@@ -34,6 +34,7 @@ import {ItemImageGenerator} from '../../util/generators/ItemImageGenerator';
 import {ItemConfig} from '../../bot/config/items/ItemConfig';
 import {DataHandlers} from '../../util/data/DataHandlers';
 import {BoardData} from '../../util/data/global/BoardData';
+import {QuestData} from '../../util/data/global/QuestData';
 
 enum View {
     Normal,
@@ -371,6 +372,8 @@ export default class CollectionSubcommand implements Subcommand {
             return;
         }
 
+        const questData = DataHandlers.getGlobalData(DataHandlers.GlobalFile.Quest) as QuestData;
+
         const enhancedBoar: string =
             BoarUtils.findValid(this.allBoars[this.curPage].rarity[0], this.guildData, this.config);
 
@@ -388,6 +391,7 @@ export default class CollectionSubcommand implements Subcommand {
         let noMoney = false;
         await Queue.addQueue(async () => {
             try {
+                const spendBucksIndex = questData.curQuestIDs.indexOf('spendBucks');
                 const enhancersUsed: number = this.allBoars[this.curPage].rarity[1].enhancersNeeded;
                 this.boarUser.refreshUserData();
 
@@ -413,6 +417,9 @@ export default class CollectionSubcommand implements Subcommand {
                 (this.boarUser.itemCollection.powerups.enhancer.raritiesUsed as number[])[
                     this.allBoars[this.curPage].rarity[0]-1
                 ]++;
+
+                this.boarUser.stats.quests.progress[spendBucksIndex] += enhancersUsed * 5;
+
                 this.boarUser.updateUserData();
             } catch (err: unknown) {
                 await LogDebug.handleError(err, this.compInter);
@@ -589,7 +596,10 @@ export default class CollectionSubcommand implements Subcommand {
                 this.boarUser.itemCollection.powerups.clone.numTotal--;
 
                 if (cloneSuccess) {
-                    this.boarUser.addBoars([this.allBoars[this.curPage].id], this.compInter, this.config);
+                    this.boarUser.itemCollection.powerups.clone.numUsed++;
+                    (this.boarUser.itemCollection.powerups.clone.raritiesUsed as number[])[
+                        this.allBoars[this.curPage].rarity[0]-1
+                    ]++;
                 }
 
                 this.boarUser.updateUserData();
@@ -599,6 +609,7 @@ export default class CollectionSubcommand implements Subcommand {
         }, this.compInter.id + this.compInter.user.id);
 
         if (cloneSuccess) {
+            await this.boarUser.addBoars([this.allBoars[this.curPage].id], this.compInter, this.config);
             await this.compInter.followUp({
                 files: [
                     await new ItemImageGenerator(

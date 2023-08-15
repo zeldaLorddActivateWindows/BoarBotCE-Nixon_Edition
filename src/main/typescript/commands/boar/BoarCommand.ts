@@ -92,6 +92,9 @@ export default class BoarCommand implements Command {
         )
         .addSubcommand(sub => sub.setName(this.commandInfo.gift.name)
             .setDescription(this.commandInfo.gift.description)
+        )
+        .addSubcommand(sub => sub.setName(this.commandInfo.quests.name)
+            .setDescription(this.commandInfo.quests.description)
         );
 
     /**

@@ -1,5 +1,6 @@
 import {GeneralStats} from './GeneralStats';
 import {PowerupStats} from './PowerupStats';
+import {QuestStats} from './QuestStats';
 
 /**
  * {@link UserStats UserStats.ts}
@@ -13,4 +14,5 @@ import {PowerupStats} from './PowerupStats';
 export class UserStats {
     public general: GeneralStats = new GeneralStats;
     public powerups: PowerupStats = new PowerupStats;
+    public quests: QuestStats = new QuestStats;
 }

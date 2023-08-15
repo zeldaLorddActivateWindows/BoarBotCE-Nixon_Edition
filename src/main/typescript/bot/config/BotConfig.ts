@@ -7,6 +7,7 @@ import {RarityConfig} from './items/RarityConfig';
 import {ColorConfig} from './ColorConfig';
 import {PromptConfigs} from './prompts/PromptConfigs';
 import {AllItemConfigs} from './items/AllItemConfigs';
+import {QuestConfigs} from './quests/QuestConfigs';
 
 /**
  * {@link BotConfig BotConfig.ts}
@@ -56,6 +57,11 @@ export class BotConfig {
      * Collection of information about powerups
      */
     public readonly promptConfigs: PromptConfigs = new PromptConfigs;
+
+    /**
+     * Collection of information about quests
+     */
+    public readonly questConfigs: QuestConfigs = new QuestConfigs;
 
     /**
      * Collection of {@link CommandConfig command configurations} the bot uses

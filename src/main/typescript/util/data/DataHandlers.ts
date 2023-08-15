@@ -12,12 +12,14 @@ import {BoardData} from './global/BoardData';
 import {GitHubData} from './global/GitHubData';
 import {ItemsData} from './global/ItemsData';
 import {PowerupData} from './global/PowerupData';
+import {QuestData} from './global/QuestData';
 
 enum GlobalFile {
     Items,
     Leaderboards,
     BannedUsers,
-    Powerups
+    Powerups,
+    Quest
 }
 
 /**
@@ -38,14 +40,14 @@ export class DataHandlers {
      * @return itemsData - Items data parsed from JSON
      */
     public static getGlobalData(file: GlobalFile, updating = false):
-        ItemsData | Record<string, BoardData> | Record<string, number> | PowerupData
+        ItemsData | Record<string, BoardData> | Record<string, number> | PowerupData | QuestData
     {
         const config: BotConfig = BoarBotApp.getBot().getConfig();
 
         const fileName = this.getGlobalFilename(file);
 
         const dataFile: string = config.pathConfig.globalDataFolder + fileName;
-        let data: ItemsData | Record<string, BoardData> | Record<string, number> | PowerupData | undefined;
+        let data: ItemsData | Record<string, BoardData> | Record<string, number> | PowerupData | QuestData | undefined;
 
         try {
             data = JSON.parse(fs.readFileSync(dataFile, 'utf-8'));
@@ -77,9 +79,12 @@ export class DataHandlers {
                 case GlobalFile.Powerups:
                     data = new PowerupData();
                     break;
+                case GlobalFile.Quest:
+                    data = new QuestData();
+                    break;
             }
 
-            DataHandlers.saveGlobalData(data, file);
+            this.saveGlobalData(data, file);
         }
 
         if (updating) {
@@ -119,16 +124,24 @@ export class DataHandlers {
                     }
 
                     break;
+                case GlobalFile.Quest:
+                    data = data as QuestData;
+
+                    if (data.questsStartTimestamp + config.numberConfig.oneDay * 7 < Date.now()) {
+                        data = this.updateQuestData(config);
+                    }
+
+                    break;
             }
 
-            DataHandlers.saveGlobalData(data, file);
+            this.saveGlobalData(data, file);
         }
 
         return data;
     }
 
     public static saveGlobalData(
-        data: ItemsData | Record<string, BoardData> | Record<string, number> | PowerupData | undefined,
+        data: ItemsData | Record<string, BoardData> | Record<string, number> | PowerupData | QuestData | undefined,
         file: GlobalFile
     ) {
         const config: BotConfig = BoarBotApp.getBot().getConfig();
@@ -152,6 +165,9 @@ export class DataHandlers {
             case GlobalFile.Powerups:
                 fileName = config.pathConfig.powerupDataFileName;
                 break;
+            case GlobalFile.Quest:
+                fileName = config.pathConfig.questDataFileName;
+                break;
         }
 
         return fileName;
@@ -161,7 +177,7 @@ export class DataHandlers {
         boarUser: BoarUser, inter: MessageComponentInteraction | ChatInputCommandInteraction, config: BotConfig
     ): Promise<void> {
         try {
-            const boardsData = DataHandlers.getGlobalData(GlobalFile.Leaderboards) as Record<string, BoardData>;
+            const boardsData = this.getGlobalData(GlobalFile.Leaderboards) as Record<string, BoardData>;
             const userID = boarUser.user.id;
 
             boardsData.bucks.userData[userID] = boarUser.stats.general.boarScore > 0
@@ -207,7 +223,7 @@ export class DataHandlers {
                 ? boarUser.stats.general.multiplier
                 : undefined;
 
-            DataHandlers.saveGlobalData(boardsData, GlobalFile.Leaderboards);
+            this.saveGlobalData(boardsData, GlobalFile.Leaderboards);
         } catch (err: unknown) {
             await LogDebug.handleError(err, inter);
         }
@@ -215,7 +231,7 @@ export class DataHandlers {
 
     public static async removeLeaderboardUser(userID: string) {
         try {
-            const boardsData = DataHandlers.getGlobalData(GlobalFile.Leaderboards) as Record<string, BoardData>;
+            const boardsData = this.getGlobalData(GlobalFile.Leaderboards) as Record<string, BoardData>;
 
             delete boardsData.bucks.userData[userID];
             delete boardsData.total.userData[userID];
@@ -251,10 +267,26 @@ export class DataHandlers {
                 ? undefined
                 : boardsData.multiplier.topUser;
 
-            DataHandlers.saveGlobalData(boardsData, GlobalFile.Leaderboards);
+            this.saveGlobalData(boardsData, GlobalFile.Leaderboards);
         } catch (err: unknown) {
             await LogDebug.handleError(err);
         }
+    }
+
+    public static updateQuestData(config: BotConfig) {
+        const data = this.getGlobalData(GlobalFile.Quest) as QuestData;
+        const questIDs = Object.keys(config.questConfigs);
+
+        data.questsStartTimestamp = new Date().setUTCHours(0,0,0,0) -
+            new Date().getUTCDay() * config.numberConfig.oneDay;
+
+        for (let i=0; i<data.curQuestIDs.length; i++) {
+            data.curQuestIDs[i] = questIDs.splice(Math.floor(Math.random() * questIDs.length), 1)[0];
+        }
+
+        this.saveGlobalData(data, GlobalFile.Quest);
+
+        return data;
     }
 
     /**

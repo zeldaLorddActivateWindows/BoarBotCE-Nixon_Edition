@@ -22,6 +22,8 @@ import {CollectedPowerup} from '../data/userdata/collectibles/CollectedPowerup';
 import {ItemData} from '../data/global/ItemData';
 import {GuildData} from '../data/global/GuildData';
 import {ItemsData} from '../data/global/ItemsData';
+import {QuestStats} from '../data/userdata/stats/QuestStats';
+import {QuestData} from '../data/global/QuestData';
 
 /**
  * {@link BoarUser BoarUser.ts}
@@ -90,6 +92,31 @@ export class BoarUser {
     public updateUserData(): void {
         const userData: any = this.getUserData();
 
+        const questData = DataHandlers.getGlobalData(DataHandlers.GlobalFile.Quest) as QuestData;
+        const dailyQuestIndex = questData.curQuestIDs.indexOf('daily');
+        const cloneBoarsIndex = questData.curQuestIDs.indexOf('cloneBoars');
+        const cloneRarityIndex = questData.curQuestIDs.indexOf('cloneRarity');
+        const sendGiftsIndex = questData.curQuestIDs.indexOf('sendGifts');
+        const openGiftsIndex = questData.curQuestIDs.indexOf('openGifts');
+        const powParticipateIndex = questData.curQuestIDs.indexOf('powParticipate');
+        const powFirstIndex = questData.curQuestIDs.indexOf('powFirst');
+
+        this.stats.quests.progress[dailyQuestIndex] += this.stats.general.numDailies -
+            userData.stats.general.numDailies;
+        this.stats.quests.progress[cloneBoarsIndex] += this.itemCollection.powerups.clone.numUsed -
+            userData.itemCollection.powerups.clone.numUsed;
+        this.stats.quests.progress[cloneRarityIndex] += (this.itemCollection.powerups.clone.raritiesUsed as number[])[
+                Math.floor(cloneRarityIndex / 2) + 1
+            ] - userData.itemCollection.powerups.clone.raritiesUsed[Math.floor(cloneRarityIndex / 2) + 1];
+        this.stats.quests.progress[sendGiftsIndex] += this.itemCollection.powerups.gift.numUsed -
+            userData.itemCollection.powerups.gift.numUsed;
+        this.stats.quests.progress[openGiftsIndex] += (this.itemCollection.powerups.gift.numOpened as number) -
+            userData.itemCollection.powerups.gift.numOpened;
+        this.stats.quests.progress[powParticipateIndex] += this.stats.powerups.attempts -
+            userData.stats.powerups.attempts;
+        this.stats.quests.progress[powFirstIndex] += this.stats.powerups.topAttempts -
+            userData.stats.powerups.topAttempts;
+
         userData.itemCollection = this.itemCollection;
         userData.stats = this.stats;
 
@@ -122,7 +149,7 @@ export class BoarUser {
         const userFile: string = config.pathConfig.userDataFolder + this.user.id + '.json';
 
         const boarsGottenIDs: string[] = Object.keys(this.itemCollection.boars);
-        const twoDailiesAgo: number = Math.floor(new Date().setUTCHours(24,0,0,0)) - config.numberConfig.oneDay * 2;
+        const twoDailiesAgo: number = new Date().setUTCHours(24,0,0,0) - config.numberConfig.oneDay * 2;
 
         const nums: NumberConfig = BoarBotApp.getBot().getConfig().numberConfig;
 
@@ -158,6 +185,16 @@ export class BoarUser {
             }
         }
 
+        if (!this.stats.quests) {
+            this.stats.quests = new QuestStats;
+        }
+
+        const questData = DataHandlers.getGlobalData(DataHandlers.GlobalFile.Quest) as QuestData;
+        if (this.stats.quests.questWeekStart !== questData.questsStartTimestamp) {
+            this.stats.quests.questWeekStart = questData.questsStartTimestamp;
+            this.stats.quests.progress = [0,0,0,0,0,0,0];
+        }
+
         if (!this.itemCollection.powerups.miracle) {
             this.itemCollection.powerups.miracle = new CollectedPowerup;
             this.itemCollection.powerups.miracle.numActive = 0;
@@ -175,6 +212,7 @@ export class BoarUser {
 
         if (!this.itemCollection.powerups.clone) {
             this.itemCollection.powerups.clone = new CollectedPowerup;
+            this.itemCollection.powerups.clone.raritiesUsed = [0,0,0,0,0,0,0];
         }
 
         this.itemCollection.powerups.miracle.numTotal =
@@ -250,23 +288,23 @@ export class BoarUser {
         // Config aliases
         const strConfig: StringConfig = config.stringConfig;
         const numConfig: NumberConfig = config.numberConfig;
+        const questData = DataHandlers.getGlobalData(DataHandlers.GlobalFile.Quest) as QuestData;
 
         // Rarity information
         const rarities: RarityConfig[] = config.rarityConfigs;
-        const rarityInfos: RarityConfig[] = [];
+        const rarityInfos: [number, RarityConfig][] = [];
 
         for (let i=0; i<boarIDs.length; i++) {
-            rarityInfos.push({} as RarityConfig);
             for (const rarity of rarities) {
                 if (rarity.boars.includes(boarIDs[i])) {
-                    rarityInfos[i] = BoarUtils.findRarity(boarIDs[i], config)[1];
+                    rarityInfos[i] = BoarUtils.findRarity(boarIDs[i], config);
                     break;
                 }
             }
         }
 
-        for (const info of rarityInfos) {
-            if (Object.keys(info).length === 0 || boarIDs.length === 0) {
+        for (const [index] of rarityInfos) {
+            if (index === 0 || boarIDs.length === 0) {
                 await LogDebug.handleError(strConfig.dailyNoBoarFound, interaction);
                 return [];
             }
@@ -279,21 +317,22 @@ export class BoarUser {
         await Queue.addQueue(async () => {
             try {
                 LogDebug.log('Updating global edition info...', config, interaction);
-                const itemsData: ItemsData = DataHandlers.getGlobalData(DataHandlers.GlobalFile.Items) as ItemsData;
+                const itemsData: ItemsData =
+                    DataHandlers.getGlobalData(DataHandlers.GlobalFile.Items) as ItemsData;
 
                 // Sets edition numbers
                 for (let i=0; i<boarIDs.length; i++) {
                     const boarID = boarIDs[i];
-                    const rarityName = rarityInfos[i].name;
+                    const rarityName = rarityInfos[i][1].name;
 
                     if (!itemsData.boars[boarID]) {
                         LogDebug.log(`First edition of ${boarID}`, config, interaction, true);
 
                         itemsData.boars[boarID] = new ItemData;
                         itemsData.boars[boarID].curEdition = 0;
-                        const lastBuySell = rarityInfos[i].baseScore === 1
+                        const lastBuySell = rarityInfos[i][1].baseScore === 1
                             ? 4
-                            : rarityInfos[i].baseScore;
+                            : rarityInfos[i][1].baseScore;
                         itemsData.boars[boarID].lastBuys[1] = lastBuySell;
                         itemsData.boars[boarID].lastSells[1] = lastBuySell;
 
@@ -324,9 +363,19 @@ export class BoarUser {
                 this.refreshUserData();
 
                 for (let i=0; i<boarIDs.length; i++) {
+                    const collectBoarIndex = questData.curQuestIDs.indexOf('collectBoar');
+                    const collectBucksIndex = questData.curQuestIDs.indexOf('collectBucks');
                     const boarID: string = boarIDs[i];
 
                     LogDebug.log(`Adding ${boarID} to collection`, config, interaction, true);
+
+                    this.stats.quests.progress[collectBucksIndex] += scores[i]
+                        ? scores[i]
+                        : 0;
+
+                    if (collectBoarIndex >= 0 && Math.floor(collectBoarIndex / 2) + 1 === rarityInfos[i][0]) {
+                        this.stats.quests.progress[collectBoarIndex]++;
+                    }
 
                     if (!this.itemCollection.boars[boarID]) {
                         this.itemCollection.boars[boarID] = new CollectedBoar;
@@ -336,7 +385,7 @@ export class BoarUser {
                     this.itemCollection.boars[boarID].num++;
                     this.itemCollection.boars[boarID].lastObtained = Date.now();
 
-                    if (boarEditions[i] <= numConfig.maxTrackedEditions || rarityInfos[i].name === 'Special') {
+                    if (boarEditions[i] <= numConfig.maxTrackedEditions || rarityInfos[i][1].name === 'Special') {
                         this.itemCollection.boars[boarID].editions.push(boarEditions[i]);
                         this.itemCollection.boars[boarID].editions.sort((a, b) => a-b);
                         this.itemCollection.boars[boarID].editionDates.push(Date.now());

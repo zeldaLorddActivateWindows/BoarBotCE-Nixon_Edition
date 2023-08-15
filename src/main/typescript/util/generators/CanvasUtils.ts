@@ -217,7 +217,7 @@ export class CanvasUtils {
                     pos[1]
                 ], color
             );
-        } else if (align === 'left') {
+        } else {
             for (let i=0; i<replaceIndexes.length; i++) {
                 this.applyTextGradient(ctx, priorNormText[i], pos, color);
 
@@ -269,7 +269,9 @@ export class CanvasUtils {
         const gradStartPos: [number, number] = [
             newCtx.textAlign === 'center'
                 ? pos[0] - newCtx.measureText(text).width / 2
-                : pos[0],
+                : newCtx.textAlign === 'left'
+                    ? pos[0]
+                    : pos[0] - newCtx.measureText(text).width,
             newCtx.textBaseline === 'middle'
                 ? pos[1] - (newCtx.measureText('Sp').actualBoundingBoxAscent +
                     newCtx.measureText('Sp').actualBoundingBoxDescent) / 2
