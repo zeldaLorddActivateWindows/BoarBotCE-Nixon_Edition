@@ -146,7 +146,7 @@ export class LogDebug {
      *
      * @param time - Time in ms to sleep
      */
-    public static async sleep(time: number): Promise<unknown> {
+    public static async sleep(time: number): Promise<void> {
         return new Promise(r => setTimeout(r, time));
     }
 

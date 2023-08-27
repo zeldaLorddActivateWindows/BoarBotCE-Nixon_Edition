@@ -354,9 +354,16 @@ export class ItemImageGenerator {
             smallMediumFont, 'left', colorConfig.font
         );
 
+        let userAvatar;
+
+        try {
+            userAvatar = await Canvas.loadImage(this.userAvatar);
+        } catch {
+            userAvatar = await Canvas.loadImage(this.config.pathConfig.otherAssets + this.config.pathConfig.noAvatar);
+        }
+
         CanvasUtils.drawCircleImage(
-            ctx, await Canvas.loadImage(this.userAvatar),
-            [nums.itemUserAvatarX, userBoxY + nums.itemUserAvatarYOffset], nums.itemUserAvatarWidth
+            ctx, userAvatar, [nums.itemUserAvatarX, userBoxY + nums.itemUserAvatarYOffset], nums.itemUserAvatarWidth
         );
 
         if (score && this.giftingUserTag === undefined) {

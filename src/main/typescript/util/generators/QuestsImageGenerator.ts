@@ -37,7 +37,9 @@ export class QuestsImageGenerator {
         const powConfigs: ItemConfigs = config.itemConfigs.powerups;
 
         const questsUnderlay = pathConfig.otherAssets + pathConfig.questsUnderlay;
+        const checkImgPath = pathConfig.otherAssets + pathConfig.check;
 
+        const fontBig = `${nums.fontBig}px ${strConfig.fontName}`;
         const fontMedium = `${nums.fontMedium}px ${strConfig.fontName}`;
         const fontSmallest = `${nums.fontSmallest}px ${strConfig.fontName}`;
 
@@ -50,30 +52,56 @@ export class QuestsImageGenerator {
         const startDayStr = months[startDay.getUTCMonth()] + ' ' + startDay.getUTCDate();
         const endDayStr = months[endDay.getUTCMonth()] + ' ' + endDay.getUTCDate();
 
-        const canvas: Canvas.Canvas = Canvas.createCanvas(1127, 1500);
+        const fullCompleteRewardLeft = boarUser.stats.quests
+            ? nums.questFullAmt - boarUser.stats.quests.claimed[boarUser.stats.quests.claimed.length-1]
+            : nums.questFullAmt;
+
+        const canvas: Canvas.Canvas = Canvas.createCanvas(...nums.questImgSize);
         const ctx: Canvas.CanvasRenderingContext2D = canvas.getContext('2d');
 
-        ctx.drawImage(await Canvas.loadImage(questsUnderlay), 0, 0);
+        ctx.drawImage(await Canvas.loadImage(questsUnderlay), ...nums.originPos);
 
         await CanvasUtils.drawText(
-            ctx, `${startDayStr} - ${endDayStr}`, [563, 143], fontMedium, 'center', colorConfig.font
+            ctx, `${startDayStr} - ${endDayStr}`, nums.questDatesPos, fontMedium, 'center', colorConfig.font
         );
 
-        const startPos = [76, 244];
+        const startPos = nums.questStrStartPos;
         let index = 0;
+        let fullComplete = true;
         for (const id of questData.curQuestIDs) {
             const questConfig = questConfigs[id];
             const valIndex = Math.floor(index / 2);
             let isAltStr = false;
             let numToComplete = 1;
             let dynamicPart = '';
-            const rewardAmt = questConfig.questVals[valIndex][1];
 
-            const questStrPos: [number, number] = [startPos[0], startPos[1] + index * 166];
-            const progressStrPos: [number, number] = [startPos[0], startPos[1] + index * 166 + 75];
-            const bucksRewardPos: [number, number] = [startPos[0] + 972, startPos[1] + index * 166 + 46];
-            const powRewardAmtPos: [number, number] = [startPos[0] + 867, startPos[1] + index * 166 + 41];
-            const powRewardImgPos: [number, number] = [startPos[0] + 865, startPos[1] + index * 166 - 45];
+            const questStrPos: [number, number] = [
+                startPos[0],
+                startPos[1] + index * nums.questSpacingY
+            ];
+            const progressStrPos: [number, number] = [
+                startPos[0],
+                startPos[1] + index * nums.questSpacingY + nums.questProgressYOffset
+            ];
+            const bucksRewardPos: [number, number] = [
+                startPos[0] + nums.questBucksOffsets[0],
+                startPos[1] + index * nums.questSpacingY + nums.questBucksOffsets[1]
+            ];
+            const powRewardAmtPos: [number, number] = [
+                startPos[0] + nums.questPowAmtOffsets[0],
+                startPos[1] + index * nums.questSpacingY + nums.questPowAmtOffsets[1]
+            ];
+            const powRewardImgPos: [number, number] = [
+                startPos[0] + nums.questPowImgOffsets[0],
+                startPos[1] + index * nums.questSpacingY - nums.questPowImgOffsets[1]
+            ];
+
+            const questProgress = boarUser.stats.quests
+                ? boarUser.stats.quests.progress[index]
+                : 0;
+            const questRewardLeft = boarUser.stats.quests
+                ? questConfig.questVals[valIndex][1] - boarUser.stats.quests.claimed[index]
+                : questConfig.questVals[valIndex][1];
 
             switch(questConfig.valType) {
                 case 'number':
@@ -96,43 +124,64 @@ export class QuestsImageGenerator {
 
             await CanvasUtils.drawText(
                 ctx, isAltStr ? questConfig.descriptionAlt : questConfig.description, questStrPos, fontMedium, 'left',
-                colorConfig.font, 800, false, [dynamicPart], [colorConfig.green]
+                colorConfig.font, nums.questStrWidth, false, [dynamicPart], [colorConfig.green]
             );
 
             await CanvasUtils.drawText(
-                ctx, boarUser.stats.quests.progress[index] + '/' + numToComplete, progressStrPos, fontMedium, 'left',
-                boarUser.stats.quests.progress[index] >= numToComplete
+                ctx, questProgress + '/' + numToComplete, progressStrPos, fontMedium, 'left',
+                questProgress >= numToComplete
                     ? colorConfig.green
                     : colorConfig.silver
             );
 
-            if (valIndex < 2 && questConfig.lowerReward === 'bucks') {
+            if (questRewardLeft > 0 && valIndex < 2 && questConfig.lowerReward === 'bucks') {
                 await CanvasUtils.drawText(
-                    ctx, '+$' + rewardAmt, bucksRewardPos, fontMedium, 'right', colorConfig.bucks
+                    ctx, '+$' + questRewardLeft, bucksRewardPos, fontMedium, 'right', colorConfig.bucks
                 );
-            } else if (valIndex < 2) {
+                fullComplete = false;
+            } else if (questRewardLeft > 0 && valIndex < 2) {
                 const powRewardImgPath = pathConfig.powerups + powConfigs[questConfig.lowerReward].file;
 
                 await CanvasUtils.drawText(
-                    ctx, '+' + rewardAmt, powRewardAmtPos, fontSmallest, 'right', colorConfig.powerup
+                    ctx, '+' + questRewardLeft, powRewardAmtPos, fontSmallest, 'right', colorConfig.powerup
                 );
-                ctx.drawImage(await Canvas.loadImage(powRewardImgPath), ...powRewardImgPos, 142, 142);
-            } else {
+                ctx.drawImage(await Canvas.loadImage(powRewardImgPath), ...powRewardImgPos, ...nums.questRewardImgSize);
+                fullComplete = false;
+            } else if (questRewardLeft > 0) {
                 const powRewardImgPath = pathConfig.powerups + powConfigs[questConfig.higherReward].file;
 
                 await CanvasUtils.drawText(
-                    ctx, '+' + rewardAmt, powRewardAmtPos, fontSmallest, 'right', colorConfig.powerup
+                    ctx, '+' + questRewardLeft, powRewardAmtPos, fontSmallest, 'right', colorConfig.powerup
                 );
-                ctx.drawImage(await Canvas.loadImage(powRewardImgPath), ...powRewardImgPos, 142, 142);
+                ctx.drawImage(await Canvas.loadImage(powRewardImgPath), ...powRewardImgPos, ...nums.questRewardImgSize);
+                fullComplete = false;
+            } else {
+                ctx.drawImage(await Canvas.loadImage(checkImgPath), ...powRewardImgPos, ...nums.questRewardImgSize);
             }
 
             index++;
         }
 
-        await CanvasUtils.drawText(
-            ctx, '3 ' + config.itemConfigs.powerups.enhancer.pluralName, [563, 1477],
-            fontMedium, 'center', colorConfig.powerup
-        );
+        if (fullCompleteRewardLeft > 0) {
+            await CanvasUtils.drawText(
+                ctx, strConfig.questCompletionBonus, nums.questCompletionLabelPos,
+                fontMedium, 'center', fullComplete
+                    ? colorConfig.green
+                    : colorConfig.font
+            );
+
+            await CanvasUtils.drawText(
+                ctx, fullCompleteRewardLeft + ' ' + config.itemConfigs.powerups.enhancer.pluralName,
+                nums.questCompletionPos, fontMedium, 'center', colorConfig.powerup
+            );
+        } else {
+            ctx.drawImage(
+                await Canvas.loadImage(checkImgPath), ...nums.questCompleteCheckPos, ...nums.questRewardImgSize
+            );
+            await CanvasUtils.drawText(
+                ctx, strConfig.questFullyComplete, nums.questCompleteStrPos, fontBig, 'center', colorConfig.green
+            );
+        }
 
         return new AttachmentBuilder(canvas.toBuffer(), { name: `${strConfig.imageName}.png` });
     }

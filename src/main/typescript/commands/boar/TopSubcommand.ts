@@ -56,7 +56,7 @@ export default class TopSubcommand implements Subcommand {
     private imageGen: LeaderboardImageGenerator = {} as LeaderboardImageGenerator;
     private leaderboardData: Record<string, BoardData> = {};
     private curBoard: Board = Board.Bucks;
-    private curBoardData: [string, number][] = [];
+    private curBoardData: [string, [string, number]][] = [];
     private curPage = 0;
     private maxPage = 0;
     private rows: ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>[] = [];
@@ -97,8 +97,9 @@ export default class TopSubcommand implements Subcommand {
         this.leaderboardData =
             DataHandlers.getGlobalData(DataHandlers.GlobalFile.Leaderboards) as Record<string, BoardData>;
 
-        this.curBoardData = (Object.entries(this.leaderboardData[this.curBoard].userData) as [string, number][])
-            .sort((a, b) => b[1] - a[1]);
+        this.curBoardData =
+            (Object.entries(this.leaderboardData[this.curBoard].userData) as [string, [string, number]][])
+                .sort((a, b) => b[1][1] - a[1][1]);
         await this.doAthleteBadge();
 
         this.maxPage = Math.ceil(this.curBoardData.length / this.config.numberConfig.leaderboardNumPlayers) - 1;
@@ -195,9 +196,9 @@ export default class TopSubcommand implements Subcommand {
                 case leaderComponents.refresh.customId:
                     this.leaderboardData =
                         DataHandlers.getGlobalData(DataHandlers.GlobalFile.Leaderboards) as Record<string, BoardData>;
-                    this.curBoardData = (Object.entries(
-                        this.leaderboardData[this.curBoard].userData
-                    ) as [string, number][]).sort((a, b) => b[1] - a[1]);
+                    this.curBoardData =
+                        (Object.entries(this.leaderboardData[this.curBoard].userData) as [string, [string, number]][])
+                            .sort((a, b) => b[1][1] - a[1][1]);
                     await this.doAthleteBadge();
                     this.maxPage = Math.ceil(
                         this.curBoardData.length / this.config.numberConfig.leaderboardNumPlayers
@@ -208,9 +209,9 @@ export default class TopSubcommand implements Subcommand {
                 // User wants to change the boars they're viewing
                 case leaderComponents.boardSelect.customId:
                     this.curBoard = (this.compInter as StringSelectMenuInteraction).values[0] as Board;
-                    this.curBoardData = (Object.entries(
-                        this.leaderboardData[this.curBoard].userData
-                    ) as [string, number][]).sort((a, b) => b[1] - a[1]);
+                    this.curBoardData =
+                        (Object.entries(this.leaderboardData[this.curBoard].userData) as [string, [string, number]][])
+                            .sort((a, b) => b[1][1] - a[1][1]);
                     await this.doAthleteBadge();
                     this.maxPage = Math.ceil(
                         this.curBoardData.length / this.config.numberConfig.leaderboardNumPlayers

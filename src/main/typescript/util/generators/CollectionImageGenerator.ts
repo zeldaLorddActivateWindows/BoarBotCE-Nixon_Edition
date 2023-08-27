@@ -433,7 +433,7 @@ export class CollectionImageGenerator {
         const powerupData: PowerupStats = this.boarUser.stats.powerups;
 
         const totalAttempts: string = Math.min(powerupData.attempts, nums.maxPowBase).toLocaleString();
-        const topAttempts: string = Math.min(powerupData.topAttempts, nums.maxPowBase).toLocaleString();
+        const topAttempts: string = Math.min(powerupData.oneAttempts, nums.maxPowBase).toLocaleString();
         const fastestTime: string = powerupData.fastestTime
             ? powerupData.fastestTime.toLocaleString() + 'ms'
             : 'N/A';
@@ -780,7 +780,13 @@ export class CollectionImageGenerator {
         // Non-trivial user information
 
         const userTag: string = this.boarUser.user.username.substring(0, nums.maxUsernameLength);
-        const userAvatar: string = this.boarUser.user.displayAvatarURL({ extension: 'png' });
+        let userAvatar;
+
+        try {
+            userAvatar = await Canvas.loadImage(this.boarUser.user.displayAvatarURL({ extension: 'png' }));
+        } catch {
+            userAvatar = await Canvas.loadImage(pathConfig.otherAssets + pathConfig.noAvatar);
+        }
 
         // Fixes stats through flooring/alternate values
 
@@ -791,7 +797,7 @@ export class CollectionImageGenerator {
 
         const mediumFont = `${nums.fontMedium}px ${strConfig.fontName}`;
 
-        ctx.drawImage(await Canvas.loadImage(userAvatar), ...nums.collUserAvatarPos, ...nums.collUserAvatarSize);
+        ctx.drawImage(userAvatar, ...nums.collUserAvatarPos, ...nums.collUserAvatarSize);
         await CanvasUtils.drawText(ctx, userTag, nums.collUserTagPos, mediumFont, 'left', colorConfig.font);
         await CanvasUtils.drawText(ctx, strConfig.collDateLabel, nums.collDateLabelPos, mediumFont, 'left', colorConfig.font);
         await CanvasUtils.drawText(ctx, firstDate, nums.collDatePos, mediumFont, 'left', colorConfig.font);

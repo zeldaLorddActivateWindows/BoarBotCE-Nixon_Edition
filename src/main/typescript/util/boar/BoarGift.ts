@@ -271,11 +271,11 @@ export class BoarGift {
             }
         }, inter.id + this.giftedUser.user.id).catch((err) => { throw err });
 
-        await Queue.addQueue(async () => await DataHandlers.updateLeaderboardData(this.boarUser, inter, this.config),
+        await Queue.addQueue(async () => DataHandlers.updateLeaderboardData(this.boarUser, this.config, inter),
             inter.id + this.boarUser.user.id + 'global'
         ).catch((err) => { throw err });
 
-        await Queue.addQueue(async () => await DataHandlers.updateLeaderboardData(this.giftedUser, inter, this.config),
+        await Queue.addQueue(async () => DataHandlers.updateLeaderboardData(this.giftedUser, this.config, inter),
             inter.id + this.giftedUser.user.id + 'global'
         ).catch((err) => { throw err });
     }
@@ -455,11 +455,6 @@ export class BoarGift {
                     );
 
                     this.giftedUser.itemCollection.powerups.miracle.numTotal++;
-                    this.giftedUser.itemCollection.powerups.miracle.numClaimed++;
-                    this.giftedUser.itemCollection.powerups.miracle.highestTotal = Math.max(
-                        this.giftedUser.itemCollection.powerups.miracle.numTotal,
-                        this.giftedUser.itemCollection.powerups.miracle.highestTotal
-                    )
                 } else {
                     LogDebug.log(
                         `Received Transmutation Charges from ${this.boarUser.user.username} ` +
@@ -467,11 +462,6 @@ export class BoarGift {
                     );
 
                     this.giftedUser.itemCollection.powerups.enhancer.numTotal++;
-                    this.giftedUser.itemCollection.powerups.enhancer.numClaimed++;
-                    this.giftedUser.itemCollection.powerups.enhancer.highestTotal = Math.max(
-                        this.giftedUser.itemCollection.powerups.enhancer.numTotal,
-                        this.giftedUser.itemCollection.powerups.enhancer.highestTotal
-                    )
                 }
 
                 this.giftedUser.updateUserData();
@@ -486,18 +476,8 @@ export class BoarGift {
 
                 if (suboutcome === 0) {
                     this.boarUser.itemCollection.powerups.miracle.numTotal++;
-                    this.boarUser.itemCollection.powerups.miracle.numClaimed++;
-                    this.boarUser.itemCollection.powerups.miracle.highestTotal = Math.max(
-                        this.boarUser.itemCollection.powerups.miracle.numTotal,
-                        this.boarUser.itemCollection.powerups.miracle.highestTotal
-                    )
                 } else {
                     this.boarUser.itemCollection.powerups.enhancer.numTotal++;
-                    this.boarUser.itemCollection.powerups.enhancer.numClaimed++;
-                    this.boarUser.itemCollection.powerups.enhancer.highestTotal = Math.max(
-                        this.boarUser.itemCollection.powerups.enhancer.numTotal,
-                        this.boarUser.itemCollection.powerups.enhancer.highestTotal
-                    )
                 }
 
                 this.boarUser.updateUserData();

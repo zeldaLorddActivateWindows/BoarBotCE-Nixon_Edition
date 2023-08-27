@@ -43,6 +43,7 @@ export class BoarBot implements Bot {
 	private commandHandler: CommandHandler = new CommandHandler();
 	private eventHandler: EventHandler = new EventHandler();
 	private powSpawner: PowerupSpawner = {} as PowerupSpawner;
+	private fixedGlobal = false;
 
 	/**
 	 * Creates the bot by loading and registering global information
@@ -50,13 +51,13 @@ export class BoarBot implements Bot {
 	public async create(): Promise<void> {
 		this.buildClient();
 
-		await this.loadConfig();
+		await this.loadConfig(true);
 		this.registerCommands();
 		this.registerListeners();
 		this.fixGuildData();
-		await this.updateAllData();
 
 		await this.login();
+		await this.updateAllData();
 		await this.onStart();
 	}
 
@@ -83,7 +84,7 @@ export class BoarBot implements Bot {
 	/**
 	 * Finds config file and pulls it into the code
 	 */
-	public async loadConfig(): Promise<void> { await this.configHandler.loadConfig(); }
+	public async loadConfig(firstLoad = false): Promise<void> { await this.configHandler.loadConfig(firstLoad); }
 
 	/**
 	 * Returns config information that was gathered from config file
@@ -148,13 +149,24 @@ export class BoarBot implements Bot {
 		try {
 			LogDebug.log('Successfully logged in! Bot online!', this.getConfig());
 
-			fs.readdirSync(this.getConfig().pathConfig.userDataFolder).forEach(async userFile => {
-				try {
-					await this.getClient().users.fetch(userFile.split('.')[0]);
-				} catch {
-					LogDebug.handleError('Failed to find user ' + userFile.split('.')[0]);
-				}
-			});
+			this.client.rest.on(
+				'rateLimited',
+				() => LogDebug.log(
+					'Hit Limit! Cached Users: ' + this.client.users.cache.size + '/' +
+						fs.readdirSync(this.getConfig().pathConfig.userDataFolder).length,
+					this.getConfig(), undefined, true
+				)
+			);
+
+			if (!this.fixedGlobal) {
+				fs.readdirSync(this.getConfig().pathConfig.userDataFolder).forEach(async (userFile) => {
+					try {
+						this.getClient().users.fetch(userFile.split('.')[0]);
+					} catch {
+						LogDebug.handleError('Failed to find user ' + userFile.split('.')[0]);
+					}
+				});
+			}
 
 			this.startNotificationCron();
 
@@ -242,7 +254,7 @@ export class BoarBot implements Bot {
 
 					const notificationChannelID = boarUser.stats.general.notificationChannel
 						? boarUser.stats.general.notificationChannel
-						: '1124209789518483566';
+						: process.env.LEGACY_CHANNEL as string;
 
 					await user.send(
 						randMsgStr + dailyReadyStr + '\n# ' +
@@ -251,13 +263,12 @@ export class BoarBot implements Bot {
 				}
 			});
 
-			const pingChannel = await this.client.channels.fetch('1042602119003389962') as TextChannel;
 			try {
+				const pingChannel =
+					await this.client.channels.fetch(process.env.LEGACY_CHANNEL as string) as TextChannel;
 				pingChannel.send(
-					this.getConfig().stringConfig.notificationDailyReady + ' <@&1001233916620972082> \n' +
-					'*Note: This ping role will be deleted <t:1693526400:R>. To continue to be pinged, run /boar ' +
-					'daily a second time, then click "Enable Notifications". To disable this ping, un-react to the ' +
-					'boar emoji in <#996887892737667204>*'
+					this.getConfig().stringConfig.notificationDailyReady + ' ' +
+					this.getConfig().stringConfig.notificationServerPing
 				);
 			} catch (err) {
 				LogDebug.handleError(err);
@@ -300,7 +311,7 @@ export class BoarBot implements Bot {
 		}
 	}
 
-	private async updateAllData(): Promise<void> {
+	private updateAllData(): void {
 		try {
 			const oldGlobalData = JSON.parse(
 				fs.readFileSync(this.getConfig().pathConfig.globalDataFolder + 'global.json', 'utf-8')
@@ -317,6 +328,7 @@ export class BoarBot implements Bot {
 			DataHandlers.saveGlobalData(powerupsData, DataHandlers.GlobalFile.Powerups);
 
 			fs.rmSync(this.getConfig().pathConfig.globalDataFolder + 'global.json');
+			this.fixedGlobal = true;
 		} catch {}
 
 		DataHandlers.getGlobalData(DataHandlers.GlobalFile.Items, true);
@@ -324,6 +336,31 @@ export class BoarBot implements Bot {
 		DataHandlers.getGlobalData(DataHandlers.GlobalFile.BannedUsers, true);
 		DataHandlers.getGlobalData(DataHandlers.GlobalFile.Powerups, true);
 		DataHandlers.getGlobalData(DataHandlers.GlobalFile.Quest, true);
+
+		if (this.fixedGlobal) {
+			fs.readdirSync(this.getConfig().pathConfig.userDataFolder).forEach(async (fileName) => {
+				try {
+					const user: User = await this.client.users.fetch(fileName.split('.')[0]);
+
+					const boarUser = new BoarUser(user);
+					boarUser.itemCollection.powerups.miracle.numTotal +=
+						Math.floor(boarUser.itemCollection.powerups.multiBoost.numTotal / 100) +
+						Math.floor(boarUser.itemCollection.powerups.extraChance.numTotal / 100);
+					delete boarUser.itemCollection.powerups.multiBoost;
+					delete boarUser.itemCollection.powerups.extraChance;
+					(boarUser.stats.powerups as any).tenAttempts = undefined;
+					(boarUser.stats.powerups as any).fiftyAttempts = undefined;
+					boarUser.stats.general.highestMulti--;
+					boarUser.updateUserData();
+					await Queue.addQueue(() => {
+						DataHandlers.updateLeaderboardData(boarUser, this.getConfig())
+					}, 'fixleaderglobal');
+
+				} catch {
+					LogDebug.handleError('Failed to fetch user ' + fileName.split('.')[0]);
+				}
+			});
+		}
 	}
 
 	/**

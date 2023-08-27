@@ -195,6 +195,10 @@ export class StringConfig {
     public readonly notificationDailyReady: string = ' ';
     public readonly notificationStopStr: string = ' ';
     public readonly notificationExtras: string[] = [];
+    public readonly notificationServerPing: string = ' ';
+    public readonly questCompletionBonus: string = ' ';
+    public readonly questFullyComplete: string = ' ';
+    public readonly questInvFull: string = ' ';
     public readonly noParentChannel: string = ' ';
     public readonly notValidChannel: string = ' ';
     public readonly sentReport: string = ' ';

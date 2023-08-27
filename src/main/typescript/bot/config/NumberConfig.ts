@@ -260,6 +260,22 @@ export class NumberConfig {
     public readonly marketOrdClaimWidth: number = 0;
     public readonly marketRange: number = 0;
 
+    public readonly questFullAmt: number = 0;
+    public readonly questImgSize: [number, number] = [0, 0];
+    public readonly questDatesPos: [number, number] = [0, 0];
+    public readonly questStrStartPos: [number, number] = [0, 0];
+    public readonly questSpacingY: number = 0;
+    public readonly questProgressYOffset: number = 0;
+    public readonly questBucksOffsets: [number, number] = [0, 0];
+    public readonly questPowAmtOffsets: [number, number] = [0, 0];
+    public readonly questPowImgOffsets: [number, number] = [0, 0];
+    public readonly questStrWidth: number = 0;
+    public readonly questRewardImgSize: [number, number] = [0, 0];
+    public readonly questCompletionLabelPos: [number, number] = [0, 0];
+    public readonly questCompletionPos: [number, number] = [0, 0];
+    public readonly questCompleteCheckPos: [number, number] = [0, 0];
+    public readonly questCompleteStrPos: [number, number] = [0, 0];
+
     public readonly border: number = 0;
     public readonly embedMaxWidth: number = 0;
     public readonly embedMinHeight: number = 0;

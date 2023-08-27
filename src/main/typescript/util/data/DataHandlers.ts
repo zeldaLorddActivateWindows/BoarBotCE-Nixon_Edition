@@ -1,5 +1,5 @@
 import fs from 'fs';
-import {ChatInputCommandInteraction, MessageComponentInteraction} from 'discord.js';
+import {ChatInputCommandInteraction, MessageComponentInteraction, User} from 'discord.js';
 import {BoarBotApp} from '../../BoarBotApp';
 import {LogDebug} from '../logging/LogDebug';
 import {Replies} from '../interactions/Replies';
@@ -99,6 +99,23 @@ export class DataHandlers {
 
                     for (const powerupID of Object.keys(data.powerups)) {
                         if (!Object.keys(config.itemConfigs.powerups).includes(powerupID)) {
+                            const powItemData = data.powerups[powerupID];
+                            for (const buyOrder of powItemData.buyers) {
+                                const boarUser = new BoarUser({id: buyOrder.userID} as User);
+                                boarUser.itemCollection.powerups[powerupID].numTotal +=
+                                    buyOrder.filledAmount - buyOrder.claimedAmount;
+                                boarUser.stats.general.boarScore +=
+                                    (buyOrder.num - buyOrder.filledAmount) * buyOrder.price;
+                                boarUser.updateUserData();
+                            }
+                            for (const sellOrder of data.powerups[powerupID].sellers) {
+                                const boarUser = new BoarUser({id: sellOrder.userID} as User);
+                                boarUser.itemCollection.powerups[powerupID].numTotal +=
+                                    sellOrder.num - sellOrder.filledAmount;
+                                boarUser.stats.general.boarScore +=
+                                    (sellOrder.filledAmount - sellOrder.claimedAmount) * sellOrder.price;
+                                boarUser.updateUserData();
+                            }
                             delete data.powerups[powerupID];
                         }
                     }
@@ -173,18 +190,19 @@ export class DataHandlers {
         return fileName;
     }
 
-    public static async updateLeaderboardData(
-        boarUser: BoarUser, inter: MessageComponentInteraction | ChatInputCommandInteraction, config: BotConfig
-    ): Promise<void> {
+    public static updateLeaderboardData(
+        boarUser: BoarUser, config: BotConfig, inter?: MessageComponentInteraction | ChatInputCommandInteraction
+    ): void {
         try {
             const boardsData = this.getGlobalData(GlobalFile.Leaderboards) as Record<string, BoardData>;
             const userID = boarUser.user.id;
+            const username = boarUser.user.username;
 
             boardsData.bucks.userData[userID] = boarUser.stats.general.boarScore > 0
-                ? boarUser.stats.general.boarScore
+                ? [username, boarUser.stats.general.boarScore]
                 : undefined;
             boardsData.total.userData[userID] = boarUser.stats.general.totalBoars > 0
-                ? boarUser.stats.general.totalBoars
+                ? [username, boarUser.stats.general.totalBoars]
                 : undefined;
 
             let uniques = 0;
@@ -201,31 +219,31 @@ export class DataHandlers {
             }
 
             boardsData.uniques.userData[userID] = uniques > 0
-                ? uniques
+                ? [username, uniques]
                 : undefined;
 
             boardsData.uniquesSB.userData[userID] = Object.keys(boarUser.itemCollection.boars).length > 0
-                ? Object.keys(boarUser.itemCollection.boars).length
+                ? [username, Object.keys(boarUser.itemCollection.boars).length]
                 : undefined;
             boardsData.streak.userData[userID] = boarUser.stats.general.boarStreak > 0
-                ? boarUser.stats.general.boarStreak
+                ? [username, boarUser.stats.general.boarStreak]
                 : undefined;
             boardsData.attempts.userData[userID] = boarUser.stats.powerups.attempts > 0
-                ? boarUser.stats.powerups.attempts
+                ? [username, boarUser.stats.powerups.attempts]
                 : undefined;
-            boardsData.topAttempts.userData[userID] = boarUser.stats.powerups.topAttempts > 0
-                ? boarUser.stats.powerups.topAttempts
+            boardsData.topAttempts.userData[userID] = boarUser.stats.powerups.oneAttempts > 0
+                ? [username, boarUser.stats.powerups.oneAttempts]
                 : undefined;
             boardsData.giftsUsed.userData[userID] = boarUser.itemCollection.powerups.gift.numUsed > 0
-                ? boarUser.itemCollection.powerups.gift.numUsed
+                ? [username, boarUser.itemCollection.powerups.gift.numUsed]
                 : undefined;
-            boardsData.multiplier.userData[userID] = boarUser.stats.general.multiplier > 1
-                ? boarUser.stats.general.multiplier
+            boardsData.multiplier.userData[userID] = boarUser.stats.general.multiplier > 0
+                ? [username, boarUser.stats.general.multiplier]
                 : undefined;
 
             this.saveGlobalData(boardsData, GlobalFile.Leaderboards);
         } catch (err: unknown) {
-            await LogDebug.handleError(err, inter);
+            LogDebug.handleError(err, inter);
         }
     }
 

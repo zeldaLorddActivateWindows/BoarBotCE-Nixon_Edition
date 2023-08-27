@@ -467,7 +467,7 @@ export default class MarketSubcommand implements Subcommand {
 
         if (numToClaim > 0) {
             await Queue.addQueue(
-                async () => await DataHandlers.updateLeaderboardData(this.boarUser, this.compInter, this.config),
+                async () => DataHandlers.updateLeaderboardData(this.boarUser, this.config, this.compInter),
                 this.compInter.id + this.boarUser.user.id + 'global'
             ).catch((err) => { throw err });
 
@@ -522,7 +522,8 @@ export default class MarketSubcommand implements Subcommand {
                     canCancel = orderInfo.data.filledAmount === buyOrder.filledAmount;
 
                     if (isSameOrder && canCancel) {
-                        const hasEnoughRoom: boolean = (await this.returnOrderToUser(orderInfo, isSell, false)) > 0;
+                        const hasEnoughRoom: boolean =
+                            (await this.returnOrderToUser(orderInfo, isSell, false, true)) > 0;
 
                         if (hasEnoughRoom) {
                             await Replies.handleReply(
@@ -573,7 +574,8 @@ export default class MarketSubcommand implements Subcommand {
                     canCancel = orderInfo.data.filledAmount === sellOrder.filledAmount;
 
                     if (isSameOrder && canCancel) {
-                        const hasEnoughRoom: boolean = (await this.returnOrderToUser(orderInfo, isSell, false)) > 0;
+                        const hasEnoughRoom: boolean =
+                            (await this.returnOrderToUser(orderInfo, isSell, false, true)) > 0;
 
                         if (hasEnoughRoom) {
                             await Replies.handleReply(
@@ -626,7 +628,7 @@ export default class MarketSubcommand implements Subcommand {
         }, this.compInter.id + 'global').catch((err) => { throw err });
 
         await Queue.addQueue(
-            async () => await DataHandlers.updateLeaderboardData(this.boarUser, this.compInter, this.config),
+            async () => DataHandlers.updateLeaderboardData(this.boarUser, this.config, this.compInter),
             this.compInter.id + this.boarUser.user.id + 'global'
         ).catch((err) => { throw err });
     }
@@ -637,10 +639,11 @@ export default class MarketSubcommand implements Subcommand {
      * @param orderInfo - The order to examine for returns
      * @param isSell - Whether the order is for selling
      * @param isClaim - Whether the order is being claimed
+     * @param isCancel - Whether the order is being cancelled
      * @private
      */
     private async returnOrderToUser(
-        orderInfo: {data: BuySellData, id: string, type: string}, isSell: boolean, isClaim: boolean
+        orderInfo: {data: BuySellData, id: string, type: string}, isSell: boolean, isClaim: boolean, isCancel = false
     ): Promise<number> {
         let numToReturn = 0;
         let hasEnoughRoom = true;
@@ -674,7 +677,11 @@ export default class MarketSubcommand implements Subcommand {
                         this.boarUser.itemCollection.boars[orderInfo.id].firstObtained = Date.now();
                     }
 
-                    this.boarUser.itemCollection.boars[orderInfo.id].lastObtained = Date.now();
+                    if (!isCancel) {
+                        this.boarUser.itemCollection.boars[orderInfo.id].lastObtained = Date.now();
+                        this.boarUser.stats.general.lastBoar = orderInfo.id;
+                    }
+
                     this.boarUser.itemCollection.boars[orderInfo.id].editions =
                         this.boarUser.itemCollection.boars[orderInfo.id].editions.concat(
                             orderInfo.data.editions.slice(0, numToReturn)
@@ -683,7 +690,7 @@ export default class MarketSubcommand implements Subcommand {
                         this.boarUser.itemCollection.boars[orderInfo.id].editionDates.concat(
                             orderInfo.data.editionDates.slice(0, numToReturn)
                         ).sort((a, b) => a - b);
-                    this.boarUser.stats.general.lastBoar = orderInfo.id;
+
                     this.boarUser.stats.general.totalBoars += numToReturn;
                     this.boarUser.itemCollection.boars[orderInfo.id].num += numToReturn;
 
@@ -709,10 +716,6 @@ export default class MarketSubcommand implements Subcommand {
 
                     if (hasEnoughRoom || isClaim) {
                         this.boarUser.itemCollection.powerups[orderInfo.id].numTotal += numToReturn;
-                        this.boarUser.itemCollection.powerups[orderInfo.id].highestTotal = Math.max(
-                            this.boarUser.itemCollection.powerups[orderInfo.id].numTotal,
-                            this.boarUser.itemCollection.powerups[orderInfo.id].highestTotal
-                        );
                     }
                 } else {
                     const collectBucksIndex = questData.curQuestIDs.indexOf('collectBucks');
@@ -1014,10 +1017,6 @@ export default class MarketSubcommand implements Subcommand {
                         }
                     } else if (!failedBuy && itemData.type === 'powerups') {
                         this.boarUser.itemCollection.powerups[itemData.id].numTotal += this.modalData[0];
-                        this.boarUser.itemCollection.powerups[itemData.id].highestTotal = Math.max(
-                            this.boarUser.itemCollection.powerups[itemData.id].numTotal,
-                            this.boarUser.itemCollection.powerups[itemData.id].highestTotal
-                        );
                     }
 
                     if (!failedBuy) {
@@ -1036,7 +1035,7 @@ export default class MarketSubcommand implements Subcommand {
                         this.boarUser.updateUserData();
 
                         await Queue.addQueue(
-                            async () => await DataHandlers.updateLeaderboardData(this.boarUser, inter, this.config),
+                            async () => DataHandlers.updateLeaderboardData(this.boarUser, this.config, inter),
                             inter.id + this.boarUser.user.id + 'global'
                         ).catch((err) => { throw err });
 
@@ -1244,7 +1243,7 @@ export default class MarketSubcommand implements Subcommand {
                         this.boarUser.updateUserData();
 
                         await Queue.addQueue(async () =>
-                            await DataHandlers.updateLeaderboardData(this.boarUser, inter, this.config),
+                            DataHandlers.updateLeaderboardData(this.boarUser, this.config, inter),
                             inter.id + this.boarUser.user.id + 'global'
                         ).catch((err) => { throw err });
 
@@ -1392,7 +1391,7 @@ export default class MarketSubcommand implements Subcommand {
                     this.boarUser.updateUserData();
 
                     await Queue.addQueue(
-                        async () => await DataHandlers.updateLeaderboardData(this.boarUser, inter, this.config),
+                        async () => DataHandlers.updateLeaderboardData(this.boarUser, this.config, inter),
                         inter.id + this.boarUser.user.id + 'global'
                     ).catch((err) => { throw err });
 
@@ -1493,7 +1492,7 @@ export default class MarketSubcommand implements Subcommand {
                     this.boarUser.updateUserData();
 
                     await Queue.addQueue(
-                        async () => await DataHandlers.updateLeaderboardData(this.boarUser, inter, this.config),
+                        async () => DataHandlers.updateLeaderboardData(this.boarUser, this.config, inter),
                         inter.id + this.boarUser.user.id + 'global'
                     ).catch((err) => { throw err });
 
@@ -2361,7 +2360,7 @@ export default class MarketSubcommand implements Subcommand {
             const bucksBoardData = leaderboardsData['bucks'];
             let maxBucks = this.config.numberConfig.marketMaxBucks;
             for (const userID of Object.keys(bucksBoardData.userData)) {
-                maxBucks = Math.max(maxBucks, bucksBoardData.userData[userID] as number * 10);
+                maxBucks = Math.max(maxBucks, (bucksBoardData.userData[userID] as [string, number])[1] * 10);
             }
 
             if (!isBuyOrder && (priceVal === null || priceVal > maxBucks)) {
@@ -2521,7 +2520,7 @@ export default class MarketSubcommand implements Subcommand {
             const bucksBoardData = leaderboardsData['bucks'];
             let maxBucks = this.config.numberConfig.marketMaxBucks;
             for (const userID of Object.keys(bucksBoardData.userData)) {
-                maxBucks = Math.max(maxBucks, bucksBoardData.userData[userID] as number * 10);
+                maxBucks = Math.max(maxBucks, (bucksBoardData.userData[userID] as [string, number])[1] * 10);
             }
 
             if (!isBuyOrder && priceVal > maxBucks) {
@@ -2624,7 +2623,7 @@ export default class MarketSubcommand implements Subcommand {
             const bucksBoardData = leaderboardsData['bucks'];
             let maxBucks = this.config.numberConfig.marketMaxBucks;
             for (const userID of Object.keys(bucksBoardData.userData)) {
-                maxBucks = Math.max(maxBucks, bucksBoardData.userData[userID] as number * 10);
+                maxBucks = Math.max(maxBucks, (bucksBoardData.userData[userID] as [string, number])[1] * 10);
             }
 
             let minBuyVal: number;
@@ -2633,11 +2632,12 @@ export default class MarketSubcommand implements Subcommand {
             let maxSellVal: number;
 
             if (
-                itemData.lastBuys[2] === this.firstInter.user.id || itemData.lastSells[2] === this.firstInter.user.id
+                (isBuyOrder && itemData.lastBuys[2] === this.firstInter.user.id ||
+                !isBuyOrder && itemData.lastSells[2] === this.firstInter.user.id) &&
+                itemData.data.listTime + this.config.numberConfig.orderExpire < Date.now()
             ) {
                 await Replies.handleReply(
-                    submittedModal, 'You already have the best order for this item!',
-                    colorConfig.error, undefined, undefined, true
+                    submittedModal, strConfig.marketBestOrder, colorConfig.error, undefined, undefined, true
                 );
                 this.endModalListener(submittedModal.client);
                 return;

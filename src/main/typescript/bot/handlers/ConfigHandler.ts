@@ -22,13 +22,22 @@ export class ConfigHandler {
     /**
      * Loads config data from configuration file in project root
      */
-    public async loadConfig(): Promise<void> {
-        let parsedConfig: BotConfig;
+    public async loadConfig(firstLoad = false): Promise<void> {
+        let parsedConfig: any;
 
         this.setRelativeTime();
 
         try {
             parsedConfig = JSON.parse(fs.readFileSync('config.json', 'utf-8'));
+            if (firstLoad) {
+                parsedConfig.maintenanceMode = true;
+                setTimeout(() => {
+                    if (!parsedConfig.maintenanceOverride) {
+                        parsedConfig.maintenanceMode = false;
+                        this.config = parsedConfig as BotConfig;
+                    }
+                }, 10000);
+            }
         } catch {
             await LogDebug.handleError('Unable to parse config file. Is \'config.json\' in the project root?');
             process.exit(-1);
@@ -39,7 +48,7 @@ export class ConfigHandler {
             return;
         }
 
-        this.config = parsedConfig;
+        this.config = parsedConfig as BotConfig;
 
         LogDebug.log('Config file successfully loaded!', this.config);
 

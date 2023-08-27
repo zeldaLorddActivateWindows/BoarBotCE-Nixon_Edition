@@ -56,7 +56,7 @@ export class PowerupSpawner {
         this.initIntervalVal = initPowTime !== undefined
             ? Math.max(initPowTime - Date.now(), 5000)
             : Math.round(
-                BoarBotApp.getBot().getConfig().numberConfig.powInterval * (Math.random() * (1.05 - .95) + .95)
+                BoarBotApp.getBot().getConfig().numberConfig.powInterval * (Math.random() * (1.01 - .99) + .99)
             );
     }
 
@@ -66,7 +66,7 @@ export class PowerupSpawner {
     public async startSpawning(): Promise<void> {
         const powerupData = DataHandlers.getGlobalData(DataHandlers.GlobalFile.Powerups);
 
-        await Object.keys((powerupData as PowerupData).messagesInfo).forEach(async channelID => {
+        Object.keys((powerupData as PowerupData).messagesInfo).forEach(async channelID => {
             try {
                 const channel = await BoarBotApp.getBot().getClient().channels.fetch(channelID) as TextChannel;
                 (powerupData as PowerupData).messagesInfo[channelID].forEach(async msgID => {
@@ -718,7 +718,7 @@ export class PowerupSpawner {
                         interaction, strConfig.powResponse, config.colorConfig.font,
                         ['/boar collection', 'Powerups', '/boar help', 'Powerups'],
                         [colorConfig.silver, colorConfig.powerup, colorConfig.silver, colorConfig.powerup], true
-                    );
+                    ).catch(() => {});
 
                     await Queue.addQueue(async () => {
                         try {
@@ -729,7 +729,7 @@ export class PowerupSpawner {
                             }
 
                             if (boarUser.user.id === topUserID) {
-                                boarUser.stats.powerups.topAttempts++;
+                                boarUser.stats.powerups.oneAttempts++;
                             }
 
                             if (
@@ -752,16 +752,10 @@ export class PowerupSpawner {
 
                             boarUser.itemCollection.powerups[this.powerupTypeID].numTotal +=
                                 this.powerupType.rewardAmt as number;
-                            boarUser.itemCollection.powerups[this.powerupTypeID].numClaimed +=
-                                this.powerupType.rewardAmt as number;
-                            boarUser.itemCollection.powerups[this.powerupTypeID].highestTotal = Math.max(
-                                boarUser.itemCollection.powerups[this.powerupTypeID].highestTotal,
-                                boarUser.itemCollection.powerups[this.powerupTypeID].numTotal
-                            );
 
                             boarUser.updateUserData();
-                            await Queue.addQueue(async () =>
-                                    await DataHandlers.updateLeaderboardData(boarUser, interaction, config),
+                            await Queue.addQueue(
+                                async () => DataHandlers.updateLeaderboardData(boarUser, config, interaction),
                                 interaction.id + 'global'
                             ).catch((err) => { throw err });
                         } catch (err: unknown) {

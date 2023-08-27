@@ -99,6 +99,11 @@ export class BotConfig {
     public readonly maintenanceMode: boolean = false;
 
     /**
+     * Whether to override the current state of maintenance mode to true
+     */
+    public readonly maintenanceOverride: boolean = false;
+
+    /**
      * If the market can be opened using /boar market
      */
     public readonly marketOpen: boolean = false;

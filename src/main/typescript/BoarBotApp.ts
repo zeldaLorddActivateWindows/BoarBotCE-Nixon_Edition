@@ -47,7 +47,7 @@ export class BoarBotApp {
     }
 
     private static async deployProd(): Promise<void> {
-        this.bot.loadConfig();
+        this.bot.loadConfig(true);
 
         const configData = JSON.parse(fs.readFileSync('config.json', 'utf-8'));
         const origConfig = JSON.parse(JSON.stringify(configData));

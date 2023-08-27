@@ -80,6 +80,7 @@ export class PathConfig {
     public readonly marketOrdersUnderlay: string = '';
     public readonly mainFont: string = '';
     public readonly helpGeneral1: string = '';
+    public readonly helpGeneral2: string = '';
     public readonly helpPowerup1: string = '';
     public readonly helpPowerup2: string = '';
     public readonly helpMarket1: string = '';
@@ -90,6 +91,8 @@ export class PathConfig {
     public readonly circleMask: string = '';
     public readonly bucks: string = '';
     public readonly powerup: string = '';
+    public readonly check: string = '';
+    public readonly noAvatar: string = '';
 
     // Python scripts
 

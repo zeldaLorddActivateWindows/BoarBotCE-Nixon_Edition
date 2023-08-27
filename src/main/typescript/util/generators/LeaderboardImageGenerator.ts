@@ -2,7 +2,6 @@ import Canvas from 'canvas';
 import {BotConfig} from '../../bot/config/BotConfig';
 import {CanvasUtils} from './CanvasUtils';
 import {AttachmentBuilder} from 'discord.js';
-import {BoarBotApp} from '../../BoarBotApp';
 import {Queue} from '../interactions/Queue';
 import {DataHandlers} from '../data/DataHandlers';
 
@@ -29,7 +28,7 @@ enum Board {
 export class LeaderboardImageGenerator {
     private config: BotConfig = {} as BotConfig;
     private curBoard: Board = Board.Bucks;
-    private boardData: [string, number][] = [];
+    private boardData: [string, [string, number]][] = [];
 
     /**
      * Creates a new leaderboard image generator
@@ -38,7 +37,7 @@ export class LeaderboardImageGenerator {
      * @param board
      * @param config - Used to get strings, paths, and other information
      */
-    constructor(boardData: [string, number][], board: Board, config: BotConfig) {
+    constructor(boardData: [string, [string, number]][], board: Board, config: BotConfig) {
         this.curBoard = board;
         this.boardData = boardData;
         this.config = config;
@@ -51,7 +50,7 @@ export class LeaderboardImageGenerator {
      * @param board
      * @param config - Used to get strings, paths, and other information
      */
-    public updateInfo(boardData: [string, number][], board: Board, config: BotConfig): void {
+    public updateInfo(boardData: [string, [string, number]][], board: Board, config: BotConfig): void {
         this.curBoard = board;
         this.boardData = boardData;
         this.config = config;
@@ -134,17 +133,15 @@ export class LeaderboardImageGenerator {
                 nums.leaderboardStart[1] + i % nums.leaderboardRows * nums.leaderboardIncY
             ];
             const userID = curShowing[i][0];
-            const userVal = curShowing[i][1].toLocaleString();
+            const userVal = curShowing[i][1][1].toLocaleString();
+            let username = curShowing[i][1][0];
             const position: number = (page*nums.leaderboardNumPlayers)+1+i;
             const bannedUserIDs = Object.keys(
                 DataHandlers.getGlobalData(DataHandlers.GlobalFile.BannedUsers) as Record<string, number>
             );
-            let username: string | undefined;
             let positionColor: string;
 
-            username = BoarBotApp.getBot().getClient().users.cache.get(userID)?.username;
-
-            if (!username || bannedUserIDs.includes(userID)) {
+            if (bannedUserIDs.includes(userID)) {
                 username = strConfig.deletedUsername;
                 await Queue.addQueue(async () => await DataHandlers.removeLeaderboardUser(userID),
                     userID + 'global'

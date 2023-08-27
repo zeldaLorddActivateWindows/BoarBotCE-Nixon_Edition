@@ -43,7 +43,7 @@ export class BoarUser {
     /**
      * Creates a new BoarUser from data file.
      *
-     * @param user - User to base BoarUser off of
+     * @param user - User or user ID to base BoarUser off of
      * @param createFile - Whether a file for the user should be made
      */
     constructor(user: User, createFile?: boolean) {
@@ -51,7 +51,10 @@ export class BoarUser {
 
         const userData: any = this.refreshUserData(createFile);
 
-        if (createFile || this.stats.general.boarStreak > 0) {
+        if (
+            createFile || this.stats.general.firstDaily > 0 || this.stats.general.totalBoars > 0 ||
+            Object.keys(this.itemCollection.badges).length > 0
+        ) {
             this.fixUserData(userData);
         }
     }
@@ -106,16 +109,26 @@ export class BoarUser {
         this.stats.quests.progress[cloneBoarsIndex] += this.itemCollection.powerups.clone.numUsed -
             userData.itemCollection.powerups.clone.numUsed;
         this.stats.quests.progress[cloneRarityIndex] += (this.itemCollection.powerups.clone.raritiesUsed as number[])[
-                Math.floor(cloneRarityIndex / 2) + 1
-            ] - userData.itemCollection.powerups.clone.raritiesUsed[Math.floor(cloneRarityIndex / 2) + 1];
+                Math.floor(cloneRarityIndex / 2)
+            ] - userData.itemCollection.powerups.clone.raritiesUsed[Math.floor(cloneRarityIndex / 2)];
         this.stats.quests.progress[sendGiftsIndex] += this.itemCollection.powerups.gift.numUsed -
             userData.itemCollection.powerups.gift.numUsed;
         this.stats.quests.progress[openGiftsIndex] += (this.itemCollection.powerups.gift.numOpened as number) -
             userData.itemCollection.powerups.gift.numOpened;
         this.stats.quests.progress[powParticipateIndex] += this.stats.powerups.attempts -
             userData.stats.powerups.attempts;
-        this.stats.quests.progress[powFirstIndex] += this.stats.powerups.topAttempts -
-            userData.stats.powerups.topAttempts;
+        this.stats.quests.progress[powFirstIndex] += this.stats.powerups.oneAttempts -
+            userData.stats.powerups.oneAttempts;
+
+        for (const powerupID of Object.keys(this.itemCollection.powerups)) {
+            this.itemCollection.powerups[powerupID].highestTotal = Math.max(
+                this.itemCollection.powerups[powerupID].numTotal, this.itemCollection.powerups[powerupID].highestTotal
+            );
+            this.itemCollection.powerups[powerupID].numClaimed += Math.max(
+                this.itemCollection.powerups[powerupID].numTotal - userData.itemCollection.powerups[powerupID].numTotal,
+                0
+            )
+        }
 
         userData.itemCollection = this.itemCollection;
         userData.stats = this.stats;
@@ -193,6 +206,7 @@ export class BoarUser {
         if (this.stats.quests.questWeekStart !== questData.questsStartTimestamp) {
             this.stats.quests.questWeekStart = questData.questsStartTimestamp;
             this.stats.quests.progress = [0,0,0,0,0,0,0];
+            this.stats.quests.claimed = [0,0,0,0,0,0,0,0];
         }
 
         if (!this.itemCollection.powerups.miracle) {
@@ -217,16 +231,29 @@ export class BoarUser {
 
         this.itemCollection.powerups.miracle.numTotal =
             Math.max(0, Math.min(this.itemCollection.powerups.miracle.numTotal, nums.maxPowBase));
+        this.itemCollection.powerups.miracle.highestTotal =
+            Math.max(0, Math.min(this.itemCollection.powerups.miracle.highestTotal, nums.maxPowBase));
         this.itemCollection.powerups.gift.numTotal =
             Math.max(0, Math.min(this.itemCollection.powerups.gift.numTotal, nums.maxSmallPow));
+        this.itemCollection.powerups.gift.highestTotal =
+            Math.max(0, Math.min(this.itemCollection.powerups.gift.highestTotal, nums.maxSmallPow));
         this.itemCollection.powerups.enhancer.numTotal =
             Math.max(0, Math.min(this.itemCollection.powerups.enhancer.numTotal, nums.maxEnhancers));
+        this.itemCollection.powerups.enhancer.highestTotal =
+            Math.max(0, Math.min(this.itemCollection.powerups.enhancer.highestTotal, nums.maxEnhancers));
         this.itemCollection.powerups.clone.numTotal =
             Math.max(0, Math.min(this.itemCollection.powerups.clone.numTotal, nums.maxSmallPow));
+        this.itemCollection.powerups.clone.highestTotal =
+            Math.max(0, Math.min(this.itemCollection.powerups.clone.highestTotal, nums.maxSmallPow));
+
+        if (!this.stats.general.highestStreak) {
+            this.stats.general.highestStreak = this.stats.general.boarStreak;
+        }
 
         if (this.stats.general.lastDaily < twoDailiesAgo) {
             this.stats.general.boarStreak = 0;
         }
+
         this.stats.general.highestStreak = Math.max(this.stats.general.boarStreak, this.stats.general.highestStreak);
 
         if (this.stats.general.unbanTime !== undefined) {
@@ -245,7 +272,7 @@ export class BoarUser {
         this.stats.general.multiplier = Math.min(this.stats.general.multiplier, nums.maxPowBase);
         this.stats.general.highestMulti = Math.max(this.stats.general.multiplier, this.stats.general.highestMulti);
 
-        this.stats.general.boarScore = Math.max(this.stats.general.boarScore, 0);
+        this.stats.general.boarScore = Math.max(Math.min(this.stats.general.boarScore, nums.maxScore), 0);
 
         userData.itemCollection = this.itemCollection;
         userData.stats = this.stats;
@@ -435,7 +462,7 @@ export class BoarUser {
             }, interaction.id + this.user.id).catch((err) => { throw err });
         }
 
-        await Queue.addQueue(async () => await DataHandlers.updateLeaderboardData(this, interaction, config),
+        await Queue.addQueue(async () => DataHandlers.updateLeaderboardData(this, config, interaction),
             interaction.id + 'global'
         ).catch((err) => { throw err });
 

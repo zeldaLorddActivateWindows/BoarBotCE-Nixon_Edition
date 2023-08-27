@@ -37,6 +37,8 @@ export class CollectorUtils {
         Record<string, InteractionCollector<ButtonInteraction | StringSelectMenuInteraction>> = {};
     public static selfWipeCollectors:
         Record<string, InteractionCollector<ButtonInteraction | StringSelectMenuInteraction>> = {};
+    public static questsCollectors:
+        Record<string, InteractionCollector<ButtonInteraction | StringSelectMenuInteraction>> = {};
 
     /**
      * Determines whether the interaction should be processed

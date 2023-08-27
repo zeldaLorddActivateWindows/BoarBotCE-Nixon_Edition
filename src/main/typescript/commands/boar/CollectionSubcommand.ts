@@ -480,11 +480,20 @@ export default class CollectionSubcommand implements Subcommand {
         const colorConfig = this.config.colorConfig;
 
         if (this.giftStage !== 1) {
-            this.giftStage = 2;
-            await Replies.handleReply(
-                this.compInter, strConfig.giftConfirm, colorConfig.font, [this.config.itemConfigs.powerups.gift.name],
-                [colorConfig.powerup], true
-            );
+            this.boarUser.refreshUserData();
+
+            if (this.boarUser.itemCollection.powerups.gift.numTotal > 0) {
+                this.giftStage = 2;
+                await Replies.handleReply(
+                    this.compInter, strConfig.giftConfirm, colorConfig.font, [this.config.itemConfigs.powerups.gift.name],
+                    [colorConfig.powerup], true
+                );
+            } else {
+                await Replies.handleReply(
+                    this.compInter, strConfig.giftNone, colorConfig.error, undefined, undefined, true
+                );
+            }
+
             return;
         }
 

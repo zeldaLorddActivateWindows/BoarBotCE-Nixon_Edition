@@ -65,7 +65,7 @@ export default class HelpSubcommand implements Subcommand {
         const otherAssets: string = pathConfig.otherAssets;
 
         this.helpImages = [
-            [otherAssets + pathConfig.helpGeneral1],
+            [otherAssets + pathConfig.helpGeneral1, otherAssets + pathConfig.helpGeneral2],
             [otherAssets + pathConfig.helpPowerup1, otherAssets + pathConfig.helpPowerup2],
             [otherAssets + pathConfig.helpMarket1, otherAssets + pathConfig.helpMarket2],
             [

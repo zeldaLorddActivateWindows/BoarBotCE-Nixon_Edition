@@ -85,10 +85,17 @@ item_image = Image.open(image_path)
 circle_mask = Image.open(circle_mask_path).convert('RGBA').resize(avatar_size)
 
 if gifter_user_tag != '' and gifter_avatar_url != '':
-    gifter_avatar = Image.open(BytesIO(requests.get(gifter_avatar_url).content)).convert('RGBA').resize(avatar_size)
+    try:
+        gifter_avatar = Image.open(BytesIO(requests.get(gifter_avatar_url).content)).convert('RGBA').resize(avatar_size)
+    except:
+        gifter_avatar = Image.open(other_assets + path_config['noAvatar']).convert('RGBA').resize(avatar_size)
     gifter_avatar.putalpha(ImageChops.multiply(gifter_avatar.getchannel('A'), circle_mask.getchannel('A')).convert('L'))
 
-user_avatar = Image.open(BytesIO(requests.get(avatar_url).content)).convert('RGBA').resize(avatar_size)
+
+try:
+    user_avatar = Image.open(BytesIO(requests.get(avatar_url).content)).convert('RGBA').resize(avatar_size)
+except:
+    user_avatar = Image.open(other_assets + path_config['noAvatar']).convert('RGBA').resize(avatar_size)
 user_avatar.putalpha(ImageChops.multiply(user_avatar.getchannel('A'), circle_mask.getchannel('A')).convert('L'))
 
 # Stores all newly processed frames
