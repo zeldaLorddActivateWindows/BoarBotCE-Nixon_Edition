@@ -181,12 +181,14 @@ export class MarketImageGenerator {
             }
 
             await CanvasUtils.drawText(
-                ctx, 'B: %@' + buyNowVal, buyPos, font, 'center', colorConfig.font, nums.marketOverTextWidth, false,
-                [buyNowVal !== 'N/A' ? '$' : ''], [colorConfig.bucks]
+                ctx, 'B: %@', buyPos, font, 'center', colorConfig.font, nums.marketOverTextWidth, false,
+                [buyNowVal !== 'N/A' ? '$' + buyNowVal : buyNowVal],
+                [buyNowVal !== 'N/A' ? colorConfig.bucks : colorConfig.font]
             );
             await CanvasUtils.drawText(
-                ctx, 'S: %@' + sellNowVal, sellPos, font, 'center', colorConfig.font, nums.marketOverTextWidth, false,
-                [sellNowVal !== 'N/A' ? '$' : ''], [colorConfig.bucks]
+                ctx, 'S: %@', sellPos, font, 'center', colorConfig.font, nums.marketOverTextWidth, false,
+                [sellNowVal !== 'N/A' ? '$' + sellNowVal : sellNowVal],
+                [sellNowVal !== 'N/A' ? colorConfig.bucks : colorConfig.font]
             );
         }
 
@@ -230,7 +232,7 @@ export class MarketImageGenerator {
                 if (noEditionExists) continue;
 
                 if (buyNowVal === strConfig.unavailable) {
-                    buyNowVal = '%@' + sellOrder.price.toLocaleString();
+                    buyNowVal = '$' + sellOrder.price.toLocaleString();
                 }
 
                 sellOrderVolume++;
@@ -244,7 +246,7 @@ export class MarketImageGenerator {
                 if (noEditionExists) continue;
 
                 if (sellNowVal === strConfig.unavailable) {
-                    sellNowVal = '%@' + buyOrder.price.toLocaleString();
+                    sellNowVal = '$' + buyOrder.price.toLocaleString();
                 }
 
                 buyOrderVolume++;
@@ -262,7 +264,7 @@ export class MarketImageGenerator {
                 sellOrderVolume += sellOrder.num - sellOrder.filledAmount;
 
                 if (lowBuyUnset) {
-                    buyNowVal = '%@' + sellOrder.price.toLocaleString();
+                    buyNowVal = '$' + sellOrder.price.toLocaleString();
                 }
             }
 
@@ -276,7 +278,7 @@ export class MarketImageGenerator {
                 buyOrderVolume += buyOrder.num - buyOrder.filledAmount;
 
                 if (highSellUnset) {
-                    sellNowVal = '%@' + buyOrder.price.toLocaleString();
+                    sellNowVal = '$' + buyOrder.price.toLocaleString();
                 }
             }
         }
@@ -301,16 +303,18 @@ export class MarketImageGenerator {
             ctx, strConfig.marketBSBuyNowLabel, nums.marketBSBuyNowLabelPos, mediumFont, 'center', colorConfig.font
         );
         await CanvasUtils.drawText(
-            ctx, buyNowVal, nums.marketBSBuyNowPos, smallMediumFont, 'center', colorConfig.font,
-            undefined, false, ['$'], [colorConfig.bucks]
+            ctx, buyNowVal, nums.marketBSBuyNowPos, smallMediumFont, 'center', buyNowVal.includes('$')
+                ? colorConfig.bucks
+                : colorConfig.font
         );
 
         await CanvasUtils.drawText(
             ctx, strConfig.marketBSSellNowLabel, nums.marketBSSellNowLabelPos, mediumFont, 'center', colorConfig.font
         );
         await CanvasUtils.drawText(
-            ctx, sellNowVal, nums.marketBSSellNowPos, smallMediumFont, 'center', colorConfig.font,
-            undefined, false, ['$'], [colorConfig.bucks]
+            ctx, sellNowVal, nums.marketBSSellNowPos, smallMediumFont, 'center', sellNowVal.includes('$')
+                ? colorConfig.bucks
+                : colorConfig.font
         );
 
         await CanvasUtils.drawText(
@@ -338,39 +342,41 @@ export class MarketImageGenerator {
         const nums = this.config.numberConfig;
         const colorConfig = this.config.colorConfig;
 
-        let orderInfo: {data: BuySellData, id: string, type: string};
+        let orderInfo: { data: BuySellData, id: string, type: string };
         let claimText = strConfig.emptySelect;
-        let coloredClaimText = '';
 
         if (page < this.userBuyOrders.length) {
             orderInfo = this.userBuyOrders[page];
             const numToClaim = orderInfo.data.filledAmount - orderInfo.data.claimedAmount;
 
             if (orderInfo.data.claimedAmount < orderInfo.data.filledAmount && numToClaim === 1) {
-                claimText = numToClaim.toLocaleString() + ' %@';
-                coloredClaimText = this.config.itemConfigs[orderInfo.type][orderInfo.id].name;
+                claimText = numToClaim.toLocaleString() + ' ' +
+                    this.config.itemConfigs[orderInfo.type][orderInfo.id].name;
             } else if (orderInfo.data.claimedAmount < orderInfo.data.filledAmount) {
-                claimText = numToClaim.toLocaleString() + ' %@';
-                coloredClaimText = this.config.itemConfigs[orderInfo.type][orderInfo.id].pluralName;
+                claimText = numToClaim.toLocaleString() + ' ' +
+                    this.config.itemConfigs[orderInfo.type][orderInfo.id].pluralName;
             }
         } else {
             orderInfo = this.userSellOrders[page - this.userBuyOrders.length];
             const numToClaim = orderInfo.data.filledAmount - orderInfo.data.claimedAmount;
 
             if (orderInfo.data.claimedAmount < orderInfo.data.filledAmount) {
-                claimText = '%@' + (numToClaim * orderInfo.data.price).toLocaleString();
-                coloredClaimText = '$';
+                claimText = '$' + (numToClaim * orderInfo.data.price).toLocaleString();
             }
         }
 
-        let rarityColor = colorConfig.powerup;
+        let rarityColor = colorConfig.font;
         let isSpecial = false;
         const isSell = page >= this.userBuyOrders.length;
 
-        if (orderInfo.type === 'boars') {
+        if (!claimText.includes(strConfig.emptySelect) && orderInfo.type === 'boars') {
             const rarity = BoarUtils.findRarity(orderInfo.id, this.config);
             rarityColor = colorConfig['rarity' + rarity[0]];
             isSpecial = rarity[1].name === 'Special' && rarity[0] !== 0;
+        } else if (!claimText.includes(strConfig.emptySelect) && orderInfo.type === 'powerup') {
+            rarityColor = colorConfig.powerup;
+        } else if (claimText.includes('$')) {
+            rarityColor = colorConfig.bucks;
         }
 
         const underlay = pathConfig.otherAssets + pathConfig.marketOrdersUnderlay;
@@ -410,8 +416,8 @@ export class MarketImageGenerator {
             ctx, strConfig.marketOrdPriceLabel, nums.marketOrdPriceLabelPos, mediumFont, 'center', colorConfig.font
         );
         await CanvasUtils.drawText(
-            ctx, '%@' + orderInfo.data.price.toLocaleString(), nums.marketOrdPricePos, smallMediumFont, 'center',
-            colorConfig.font, undefined, false, ['$'], [colorConfig.bucks]
+            ctx, '$' + orderInfo.data.price.toLocaleString(), nums.marketOrdPricePos, smallMediumFont, 'center',
+            colorConfig.bucks
         );
 
         await CanvasUtils.drawText(
@@ -426,10 +432,7 @@ export class MarketImageGenerator {
             ctx, strConfig.marketOrdClaimLabel, nums.marketOrdClaimLabelPos, mediumFont, 'center', colorConfig.font
         );
         await CanvasUtils.drawText(
-            ctx, claimText, nums.marketOrdClaimPos, smallMediumFont, 'center', colorConfig.font,
-            nums.marketOrdClaimWidth, false, [coloredClaimText], [coloredClaimText === '$'
-                ? colorConfig.bucks
-                : rarityColor]
+            ctx, claimText, nums.marketOrdClaimPos, smallMediumFont, 'center', rarityColor, nums.marketOrdClaimWidth
         );
 
         return new AttachmentBuilder(canvas.toBuffer(), { name: `${strConfig.imageName}.png` });

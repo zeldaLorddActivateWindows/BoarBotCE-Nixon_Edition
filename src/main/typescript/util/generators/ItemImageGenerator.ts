@@ -376,8 +376,8 @@ export class ItemImageGenerator {
             ctx.fill();
 
             await CanvasUtils.drawText(
-                ctx, '+%@' + score.toLocaleString(), [nums.itemTextX, nums.itemBoxTwoY + nums.itemTextYOffset],
-                smallMediumFont, 'left', colorConfig.font, undefined, false, ['$'], [colorConfig.bucks]
+                ctx, '+%@', [nums.itemTextX, nums.itemBoxTwoY + nums.itemTextYOffset], smallMediumFont,
+                'left', colorConfig.font, undefined, false, ['$' + score.toLocaleString()], [colorConfig.bucks]
             );
         }
 

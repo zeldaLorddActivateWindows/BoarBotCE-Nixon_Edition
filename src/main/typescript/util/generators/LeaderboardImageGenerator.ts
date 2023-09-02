@@ -14,7 +14,8 @@ enum Board {
     Attempts = 'attempts',
     TopAttempts = 'topAttempts',
     GiftsUsed = 'giftsUsed',
-    Multiplier = 'multiplier'
+    Multiplier = 'multiplier',
+    Fastest = 'fastest'
 }
 
 /**
@@ -97,6 +98,9 @@ export class LeaderboardImageGenerator {
             case (Board.Multiplier):
                 leaderboardTypeStr = topChoices[8].name;
                 break;
+            case (Board.Fastest):
+                leaderboardTypeStr = topChoices[9].name;
+                break;
         }
 
         const numUsers = this.boardData.length;
@@ -133,7 +137,9 @@ export class LeaderboardImageGenerator {
                 nums.leaderboardStart[1] + i % nums.leaderboardRows * nums.leaderboardIncY
             ];
             const userID = curShowing[i][0];
-            const userVal = curShowing[i][1][1].toLocaleString();
+            const userVal = curShowing[i][1][1].toLocaleString() + (this.curBoard === Board.Fastest
+                ? 'ms'
+                : '');
             let username = curShowing[i][1][0];
             const position: number = (page*nums.leaderboardNumPlayers)+1+i;
             const bannedUserIDs = Object.keys(

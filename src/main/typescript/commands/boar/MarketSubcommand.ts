@@ -101,6 +101,7 @@ export default class MarketSubcommand implements Subcommand {
     private curModalListener: ((submittedModal: Interaction) => Promise<void>) | undefined;
     private collector: InteractionCollector<ButtonInteraction | StringSelectMenuInteraction> = 
         {} as InteractionCollector<ButtonInteraction | StringSelectMenuInteraction>;
+    private hasStopped = false;
     public readonly data = { name: this.subcommandInfo.name, path: __filename };
 
     /**
@@ -523,7 +524,7 @@ export default class MarketSubcommand implements Subcommand {
 
                     if (isSameOrder && canCancel) {
                         const hasEnoughRoom: boolean =
-                            (await this.returnOrderToUser(orderInfo, isSell, false, true)) > 0;
+                            (await this.returnOrderToUser(orderInfo, isSell, false)) > 0;
 
                         if (hasEnoughRoom) {
                             await Replies.handleReply(
@@ -575,7 +576,7 @@ export default class MarketSubcommand implements Subcommand {
 
                     if (isSameOrder && canCancel) {
                         const hasEnoughRoom: boolean =
-                            (await this.returnOrderToUser(orderInfo, isSell, false, true)) > 0;
+                            (await this.returnOrderToUser(orderInfo, isSell, false)) > 0;
 
                         if (hasEnoughRoom) {
                             await Replies.handleReply(
@@ -639,11 +640,10 @@ export default class MarketSubcommand implements Subcommand {
      * @param orderInfo - The order to examine for returns
      * @param isSell - Whether the order is for selling
      * @param isClaim - Whether the order is being claimed
-     * @param isCancel - Whether the order is being cancelled
      * @private
      */
     private async returnOrderToUser(
-        orderInfo: {data: BuySellData, id: string, type: string}, isSell: boolean, isClaim: boolean, isCancel = false
+        orderInfo: {data: BuySellData, id: string, type: string}, isSell: boolean, isClaim: boolean
     ): Promise<number> {
         let numToReturn = 0;
         let hasEnoughRoom = true;
@@ -664,7 +664,7 @@ export default class MarketSubcommand implements Subcommand {
                     numToReturn = orderInfo.data.num - orderInfo.data.filledAmount;
                 }
 
-                if (!isSell) {
+                if (!isSell && isClaim) {
                     const spendBucksIndex = questData.curQuestIDs.indexOf('spendBucks');
                     this.boarUser.stats.quests.progress[spendBucksIndex] += numToReturn * orderInfo.data.price;
                 }
@@ -677,7 +677,7 @@ export default class MarketSubcommand implements Subcommand {
                         this.boarUser.itemCollection.boars[orderInfo.id].firstObtained = Date.now();
                     }
 
-                    if (!isCancel) {
+                    if (isClaim) {
                         this.boarUser.itemCollection.boars[orderInfo.id].lastObtained = Date.now();
                         this.boarUser.stats.general.lastBoar = orderInfo.id;
                     }
@@ -695,7 +695,7 @@ export default class MarketSubcommand implements Subcommand {
                     this.boarUser.itemCollection.boars[orderInfo.id].num += numToReturn;
 
                     if (
-                        collectBoarIndex >= 0 &&
+                        collectBoarIndex >= 0 && isClaim &&
                         Math.floor(collectBoarIndex / 2) === BoarUtils.findRarity(orderInfo.id, this.config)[0]
                     ) {
                         this.boarUser.stats.quests.progress[collectBoarIndex] += numToReturn;
@@ -717,7 +717,7 @@ export default class MarketSubcommand implements Subcommand {
                     if (hasEnoughRoom || isClaim) {
                         this.boarUser.itemCollection.powerups[orderInfo.id].numTotal += numToReturn;
                     }
-                } else {
+                } else if (isClaim) {
                     const collectBucksIndex = questData.curQuestIDs.indexOf('collectBucks');
 
                     this.boarUser.stats.quests.progress[collectBucksIndex] += numToReturn * orderInfo.data.price;
@@ -1740,6 +1740,8 @@ export default class MarketSubcommand implements Subcommand {
 
     private async handleEndCollect(reason: string) {
         try {
+            this.hasStopped = true;
+
             LogDebug.log('Ended collection with reason: ' + reason, this.config, this.firstInter);
 
             if (reason == CollectorUtils.Reasons.Error) {
@@ -2310,6 +2312,8 @@ export default class MarketSubcommand implements Subcommand {
                 maxSellVal = itemData.lastSells[0] * this.config.numberConfig.marketRange;
             }
 
+            minSellVal = Math.ceil(minSellVal);
+
             if (
                 isBuyOrder && minBuyVal > 0 && priceVal < minBuyVal ||
                 !isBuyOrder && minSellVal > 0 && priceVal < minSellVal
@@ -2634,7 +2638,7 @@ export default class MarketSubcommand implements Subcommand {
             if (
                 (isBuyOrder && itemData.lastBuys[2] === this.firstInter.user.id ||
                 !isBuyOrder && itemData.lastSells[2] === this.firstInter.user.id) &&
-                itemData.data.listTime + this.config.numberConfig.orderExpire < Date.now()
+                itemData.data.listTime + this.config.numberConfig.orderExpire >= Date.now()
             ) {
                 await Replies.handleReply(
                     submittedModal, strConfig.marketBestOrder, colorConfig.error, undefined, undefined, true
@@ -2658,6 +2662,8 @@ export default class MarketSubcommand implements Subcommand {
                 minSellVal = itemData.lastSells[0] / this.config.numberConfig.marketRange;
                 maxSellVal = itemData.lastSells[0] * this.config.numberConfig.marketRange;
             }
+
+            minSellVal = Math.ceil(minSellVal);
 
             if (
                 isBuyOrder && minBuyVal > 0 && priceVal < minBuyVal ||
@@ -3015,12 +3021,12 @@ export default class MarketSubcommand implements Subcommand {
                 imageToSend = await this.imageGen.makeOrdersImage(this.curPage);
             }
 
-            if (!this.collector.ended) {
-                await this.firstInter.editReply({
-                    files: [imageToSend],
-                    components: this.baseRows.concat(rowsToAdd)
-                });
-            }
+            if (this.hasStopped) return;
+
+            await this.firstInter.editReply({
+                files: [imageToSend],
+                components: this.baseRows.concat(rowsToAdd)
+            });
         } catch (err: unknown) {
             const canStop = await LogDebug.handleError(err, this.firstInter);
             if (canStop) {

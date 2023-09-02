@@ -37,7 +37,8 @@ enum Board {
     Attempts = 'attempts',
     TopAttempts = 'topAttempts',
     GiftsUsed = 'giftsUsed',
-    Multiplier = 'multiplier'
+    Multiplier = 'multiplier',
+    Fastest = 'fastest'
 }
 
 /**
@@ -68,6 +69,7 @@ export default class TopSubcommand implements Subcommand {
     private curModalListener: ((submittedModal: Interaction) => Promise<void>) | undefined;
     private collector: InteractionCollector<ButtonInteraction | StringSelectMenuInteraction> =
         {} as InteractionCollector<ButtonInteraction | StringSelectMenuInteraction>;
+    private hasStopped = false;
     public readonly data = { name: this.subcommandInfo.name, path: __filename };
 
     /**
@@ -84,7 +86,7 @@ export default class TopSubcommand implements Subcommand {
         this.firstInter = interaction;
 
         // Leaderboard to start out in
-        this.curBoard = interaction.options.getString(this.subcommandInfo.args[0].name) as Board.Bucks | null
+        this.curBoard = interaction.options.getString(this.subcommandInfo.args[0].name) as Board | null
             ?? Board.Bucks;
 
         // Used to get the page of the board a user is on
@@ -98,8 +100,14 @@ export default class TopSubcommand implements Subcommand {
             DataHandlers.getGlobalData(DataHandlers.GlobalFile.Leaderboards) as Record<string, BoardData>;
 
         this.curBoardData =
-            (Object.entries(this.leaderboardData[this.curBoard].userData) as [string, [string, number]][])
-                .sort((a, b) => b[1][1] - a[1][1]);
+            (Object.entries(this.leaderboardData[this.curBoard].userData) as [string, [string, number]][]);
+
+        if (this.curBoard !== Board.Fastest) {
+            this.curBoardData.sort((a, b) => b[1][1] - a[1][1]);
+        } else {
+            this.curBoardData.sort((a, b) => a[1][1] - b[1][1]);
+        }
+
         await this.doAthleteBadge();
 
         this.maxPage = Math.ceil(this.curBoardData.length / this.config.numberConfig.leaderboardNumPlayers) - 1;
@@ -197,8 +205,14 @@ export default class TopSubcommand implements Subcommand {
                     this.leaderboardData =
                         DataHandlers.getGlobalData(DataHandlers.GlobalFile.Leaderboards) as Record<string, BoardData>;
                     this.curBoardData =
-                        (Object.entries(this.leaderboardData[this.curBoard].userData) as [string, [string, number]][])
-                            .sort((a, b) => b[1][1] - a[1][1]);
+                        (Object.entries(this.leaderboardData[this.curBoard].userData) as [string, [string, number]][]);
+
+                    if (this.curBoard !== Board.Fastest) {
+                        this.curBoardData.sort((a, b) => b[1][1] - a[1][1]);
+                    } else {
+                        this.curBoardData.sort((a, b) => a[1][1] - b[1][1]);
+                    }
+
                     await this.doAthleteBadge();
                     this.maxPage = Math.ceil(
                         this.curBoardData.length / this.config.numberConfig.leaderboardNumPlayers
@@ -210,8 +224,14 @@ export default class TopSubcommand implements Subcommand {
                 case leaderComponents.boardSelect.customId:
                     this.curBoard = (this.compInter as StringSelectMenuInteraction).values[0] as Board;
                     this.curBoardData =
-                        (Object.entries(this.leaderboardData[this.curBoard].userData) as [string, [string, number]][])
-                            .sort((a, b) => b[1][1] - a[1][1]);
+                        (Object.entries(this.leaderboardData[this.curBoard].userData) as [string, [string, number]][]);
+
+                    if (this.curBoard !== Board.Fastest) {
+                        this.curBoardData.sort((a, b) => b[1][1] - a[1][1]);
+                    } else {
+                        this.curBoardData.sort((a, b) => a[1][1] - b[1][1]);
+                    }
+
                     await this.doAthleteBadge();
                     this.maxPage = Math.ceil(
                         this.curBoardData.length / this.config.numberConfig.leaderboardNumPlayers
@@ -240,6 +260,8 @@ export default class TopSubcommand implements Subcommand {
      */
     private async handleEndCollect(reason: string): Promise<void> {
         try {
+            this.hasStopped = true;
+
             LogDebug.log('Ended collection with reason: ' + reason, this.config, this.firstInter);
 
             if (reason == CollectorUtils.Reasons.Error) {
@@ -373,6 +395,8 @@ export default class TopSubcommand implements Subcommand {
             this.rows[0].components[2].setDisabled(this.curPage === this.maxPage);
             this.rows[0].components[3].setDisabled(false);
             this.rows[1].components[0].setDisabled(false);
+
+            if (this.hasStopped) return;
 
             await this.firstInter.editReply({
                 files: [await this.imageGen.makeLeaderboardImage(this.curPage)],

@@ -240,6 +240,9 @@ export class DataHandlers {
             boardsData.multiplier.userData[userID] = boarUser.stats.general.multiplier > 0
                 ? [username, boarUser.stats.general.multiplier]
                 : undefined;
+            boardsData.fastest.userData[userID] = boarUser.stats.powerups.fastestTime > 0
+                ? [username, boarUser.stats.powerups.fastestTime]
+                : undefined;
 
             this.saveGlobalData(boardsData, GlobalFile.Leaderboards);
         } catch (err: unknown) {

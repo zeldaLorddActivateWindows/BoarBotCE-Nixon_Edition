@@ -14,5 +14,6 @@ export class CollectedPowerup {
     public numActive?: number;
     public numOpened?: number;
     public curOut?: number;
+    public numSuccess?: number;
     public raritiesUsed?: number[];
 }

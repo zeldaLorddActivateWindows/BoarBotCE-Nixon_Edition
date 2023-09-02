@@ -217,7 +217,7 @@ export class CanvasUtils {
                     pos[1]
                 ], color
             );
-        } else {
+        } else if (align === 'left') {
             for (let i=0; i<replaceIndexes.length; i++) {
                 this.applyTextGradient(ctx, priorNormText[i], pos, color);
 
@@ -233,6 +233,32 @@ export class CanvasUtils {
             this.applyTextGradient(
                 ctx, textEnd, [
                     pos[0] + ctx.measureText(
+                        text.substring(
+                            0, replaceIndexes[replaceIndexes.length-1] +
+                            coloredContents[coloredContents.length-1].length
+                        )
+                    ).width,
+                    pos[1]
+                ], color
+            );
+        } else {
+            for (let i=0; i<replaceIndexes.length; i++) {
+                this.applyTextGradient(ctx, priorNormText[i], [
+                    pos[0] - ctx.measureText(text).width, pos[1]
+                ], color);
+
+                if (replaceIndexes[i] === -1) break;
+
+                this.applyTextGradient(
+                    ctx, coloredContents[i], [
+                        pos[0] - ctx.measureText(text.substring(0, replaceIndexes[i])).width, pos[1]
+                    ], secondaryColors[i]
+                );
+            }
+
+            this.applyTextGradient(
+                ctx, textEnd, [
+                    pos[0] - ctx.measureText(
                         text.substring(
                             0, replaceIndexes[replaceIndexes.length-1] +
                             coloredContents[coloredContents.length-1].length

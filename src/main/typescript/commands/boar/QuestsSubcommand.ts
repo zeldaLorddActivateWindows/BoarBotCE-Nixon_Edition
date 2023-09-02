@@ -42,6 +42,7 @@ export default class QuestsSubcommand implements Subcommand {
     private baseRows: ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>[] = [];
     private collector: InteractionCollector<ButtonInteraction | StringSelectMenuInteraction> =
         {} as InteractionCollector<ButtonInteraction | StringSelectMenuInteraction>;
+    private hasStopped = false;
     public readonly data = { name: this.subcommandInfo.name, path: __filename };
 
     /**
@@ -86,6 +87,8 @@ export default class QuestsSubcommand implements Subcommand {
 
             const shouldClaimFull =
                 (this.baseRows[0].components[0] as ButtonBuilder).data.label === 'Claim Full Completion Bonus';
+            const claimAmts: Record<string, number> = {};
+            let itemsNotFit = false;
 
             if (inter.customId.split('|')[0] === questsComponents.claim.customId && shouldClaimFull) {
                 const nums = this.config.numberConfig;
@@ -100,13 +103,14 @@ export default class QuestsSubcommand implements Subcommand {
                     this.boarUser.itemCollection.powerups.enhancer.numTotal += amtToAdd;
                     this.boarUser.stats.quests.claimed[this.boarUser.stats.quests.claimed.length-1] += amtToAdd;
 
+                    if (amtToAdd > 0) {
+                        claimAmts.enhancer = amtToAdd;
+                    }
+
                     const numFullClaimed =
                         this.boarUser.stats.quests.claimed[this.boarUser.stats.quests.claimed.length-1];
                     if (numFullClaimed < nums.questFullAmt) {
-                        await Replies.handleReply(
-                            inter, this.config.stringConfig.questInvFull, this.config.colorConfig.error,
-                            undefined, undefined, true
-                        );
+                        itemsNotFit = true;
                     }
 
                     this.boarUser.updateUserData();
@@ -117,7 +121,6 @@ export default class QuestsSubcommand implements Subcommand {
                 const questData = DataHandlers.getGlobalData(DataHandlers.GlobalFile.Quest) as QuestData;
 
                 let index = 0;
-                let itemsNotFit = false;
                 for (const id of questData.curQuestIDs) {
                     const questConfig = questConfigs[id];
                     const valIndex = Math.floor(index / 2);
@@ -159,6 +162,12 @@ export default class QuestsSubcommand implements Subcommand {
 
                             const amtToAdd = Math.min(roomLeft, questRewardLeft);
 
+                            if (!claimAmts[rewardType] && amtToAdd > 0) {
+                                claimAmts[rewardType] = amtToAdd;
+                            } else if (claimAmts[rewardType]) {
+                                claimAmts[rewardType] += amtToAdd;
+                            }
+
                             if (rewardType === 'bucks') {
                                 this.boarUser.stats.general.boarScore += amtToAdd;
                             } else {
@@ -177,13 +186,51 @@ export default class QuestsSubcommand implements Subcommand {
 
                     index++;
                 }
+            }
 
-                if (itemsNotFit) {
-                    await Replies.handleReply(
-                        inter, this.config.stringConfig.questInvFull, this.config.colorConfig.error,
-                        undefined, undefined, true
-                    );
+            let claimString = 'You claimed';
+            const coloredParts: string[] = [];
+            const colors: string[] = [];
+
+            Object.keys(claimAmts).forEach((rewardType, index, rewardTypes) => {
+                if (index === 0) {
+                    claimString += ' %@';
                 }
+                if (index !== 0 && index !== rewardTypes.length-1) {
+                    claimString += ', %@';
+                }
+                if (index === rewardTypes.length-1 && index === 1) {
+                    claimString += ' and %@';
+                }
+                if (index === rewardTypes.length-1 && index > 1) {
+                    claimString += ', and %@';
+                }
+                if (index === rewardTypes.length-1) {
+                    claimString += '!';
+                }
+
+                if (rewardType === 'bucks') {
+                    coloredParts.push('$' + claimAmts[rewardType].toLocaleString());
+                    colors.push(this.config.colorConfig.bucks);
+                } else {
+                    coloredParts.push(claimAmts[rewardType].toLocaleString() + ' ' + (claimAmts[rewardType] > 1
+                        ? this.config.itemConfigs.powerups[rewardType].pluralName
+                        : this.config.itemConfigs.powerups[rewardType].name));
+                    colors.push(this.config.colorConfig.powerup);
+                }
+            });
+
+            if (coloredParts.length > 0) {
+                await Replies.handleReply(
+                    inter, claimString, this.config.colorConfig.font, coloredParts, colors, true
+                );
+            }
+
+            if (itemsNotFit) {
+                await Replies.handleReply(
+                    inter, this.config.stringConfig.questInvFull, this.config.colorConfig.error,
+                    undefined, undefined, true
+                );
             }
 
             await this.showQuests();
@@ -197,6 +244,8 @@ export default class QuestsSubcommand implements Subcommand {
 
     public async handleEndCollect(reason: string) {
         try {
+            this.hasStopped = true;
+
             LogDebug.log('Ended collection with reason: ' + reason, this.config, this.firstInter);
 
             if (reason == CollectorUtils.Reasons.Error) {
@@ -221,6 +270,8 @@ export default class QuestsSubcommand implements Subcommand {
     private async showQuests(firstRun = false) {
         try {
             this.disableButtons();
+
+            const questImage = await QuestsImageGenerator.makeImage(this.boarUser, this.config);
 
             if (firstRun) {
                 this.initButtons();
@@ -274,8 +325,10 @@ export default class QuestsSubcommand implements Subcommand {
                 (this.baseRows[0].components[0] as ButtonBuilder).setLabel('Claim Full Completion Bonus');
             }
 
+            if (this.hasStopped) return;
+
             await this.firstInter.editReply({
-                files: [await QuestsImageGenerator.makeImage(this.boarUser, this.config)],
+                files: [questImage],
                 components: this.baseRows
             });
         } catch (err: unknown) {

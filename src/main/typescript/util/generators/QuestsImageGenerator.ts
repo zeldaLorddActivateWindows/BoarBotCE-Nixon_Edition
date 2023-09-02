@@ -136,14 +136,16 @@ export class QuestsImageGenerator {
 
             if (questRewardLeft > 0 && valIndex < 2 && questConfig.lowerReward === 'bucks') {
                 await CanvasUtils.drawText(
-                    ctx, '+$' + questRewardLeft, bucksRewardPos, fontMedium, 'right', colorConfig.bucks
+                    ctx, '+%@', bucksRewardPos, fontMedium, 'right', colorConfig.font, undefined, undefined,
+                    ['$' + questRewardLeft], [colorConfig.bucks]
                 );
                 fullComplete = false;
             } else if (questRewardLeft > 0 && valIndex < 2) {
                 const powRewardImgPath = pathConfig.powerups + powConfigs[questConfig.lowerReward].file;
 
                 await CanvasUtils.drawText(
-                    ctx, '+' + questRewardLeft, powRewardAmtPos, fontSmallest, 'right', colorConfig.powerup
+                    ctx, '+%@', powRewardAmtPos, fontSmallest, 'right', colorConfig.font,
+                    undefined, undefined, [questRewardLeft.toLocaleString()], [colorConfig.powerup]
                 );
                 ctx.drawImage(await Canvas.loadImage(powRewardImgPath), ...powRewardImgPos, ...nums.questRewardImgSize);
                 fullComplete = false;
@@ -151,7 +153,8 @@ export class QuestsImageGenerator {
                 const powRewardImgPath = pathConfig.powerups + powConfigs[questConfig.higherReward].file;
 
                 await CanvasUtils.drawText(
-                    ctx, '+' + questRewardLeft, powRewardAmtPos, fontSmallest, 'right', colorConfig.powerup
+                    ctx, '+%@', powRewardAmtPos, fontSmallest, 'right', colorConfig.font,
+                    undefined, undefined, [questRewardLeft.toLocaleString()], [colorConfig.powerup]
                 );
                 ctx.drawImage(await Canvas.loadImage(powRewardImgPath), ...powRewardImgPos, ...nums.questRewardImgSize);
                 fullComplete = false;

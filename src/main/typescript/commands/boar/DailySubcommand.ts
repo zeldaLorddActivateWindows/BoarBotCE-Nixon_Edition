@@ -72,6 +72,7 @@ export default class DailySubcommand implements Subcommand {
         let boarIDs: string[] = [''];
 
         let firstDaily = false;
+        let powTried = false;
         let powCanUse = false;
 
         await Queue.addQueue(async () => {
@@ -84,7 +85,8 @@ export default class DailySubcommand implements Subcommand {
 
                 // Gets powerup to be used
                 const powInput: string | null = this.interaction.options.getString(this.subcommandInfo.args[0].name);
-                powCanUse = powInput !== null && boarUser.itemCollection.powerups.miracle.numTotal > 0;
+                powTried = powInput !== null;
+                powCanUse = powTried && boarUser.itemCollection.powerups.miracle.numTotal > 0;
 
                 // Map of rarity index keys and weight values
                 let rarityWeights: Map<number, number> = BoarUtils.getBaseRarityWeights(this.config);
@@ -107,8 +109,6 @@ export default class DailySubcommand implements Subcommand {
                     Math.min(userMultiplier / 100, 100),
                     Math.min(userMultiplier / 1000, 100)
                 ];
-
-                LogDebug.log(userMultiplier + ' ' + extraVals, this.config);
 
                 boarIDs = BoarUtils.getRandBoars(
                     this.guildData, this.interaction, rarityWeights, this.config, extraVals
@@ -208,7 +208,13 @@ export default class DailySubcommand implements Subcommand {
         if (powCanUse) {
             await Replies.handleReply(
                 this.interaction, strConfig.dailyPowUsed, colorConfig.font,
-                [powItemConfigs.miracle.name], [colorConfig.powerup], true
+                [powItemConfigs.miracle.pluralName], [colorConfig.powerup], true
+            );
+        } else if (powTried) {
+            await Replies.handleReply(
+                this.interaction, strConfig.dailyPowFailed, colorConfig.error,
+                [powItemConfigs.miracle.pluralName, 'Powerups', '/boar collection'],
+                [colorConfig.powerup, colorConfig.powerup, colorConfig.silver], true
             );
         }
     }
@@ -285,6 +291,7 @@ export default class DailySubcommand implements Subcommand {
                         LogDebug.handleError(err, this.interaction);
                     });
                 });
+
                 collector.once('end', async () => {
                     try {
                         await msg.delete();

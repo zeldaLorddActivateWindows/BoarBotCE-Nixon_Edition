@@ -103,8 +103,14 @@ export class LogDebug {
             const time: string = LogDebug.getPrefixTime();
             const config: BotConfig = BoarBotApp.getBot().getConfig();
 
-            if (errString && (errString.includes('Unknown interaction') || errString.includes('Unknown Message')))
+            if (
+                errString && (errString.includes('Unknown interaction') ||
+                errString.includes('Unknown Message') ||
+                errString.includes('Missing Access'))
+            ) {
+                LogDebug.log(errString, config);
                 return false;
+            }
 
             let completeString: string = prefix + time;
             if (interaction && interaction.isChatInputCommand()) {

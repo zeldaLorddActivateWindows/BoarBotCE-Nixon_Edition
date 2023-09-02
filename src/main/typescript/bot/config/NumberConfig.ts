@@ -47,6 +47,8 @@ export class NumberConfig {
     public readonly enhanceBoarSize: [number, number] = [0, 0];
     public readonly enhanceRarityPos: [number, number] = [0, 0];
     public readonly giftImageSize: [number, number] = [0, 0];
+    public readonly giftFromPos: [number, number] = [0, 0];
+    public readonly giftFromWidth: number = 0 ;
 
     // Item image positions, sizes, and values
 
@@ -152,6 +154,8 @@ export class NumberConfig {
     public readonly collClonesClaimedPos: [number, number] = [0, 0];
     public readonly collClonesUsedLabelPos: [number, number] = [0, 0];
     public readonly collClonesUsedPos: [number, number] = [0, 0];
+    public readonly collClonesSuccLabelPos: [number, number] = [0, 0];
+    public readonly collClonesSuccPos: [number, number] = [0, 0];
     public readonly collMostClonesLabelPos: [number, number] = [0, 0];
     public readonly collMostClonesPos: [number, number] = [0, 0];
     public readonly collEnhancersClaimedLabelPos: [number, number] = [0, 0];
@@ -206,6 +210,7 @@ export class NumberConfig {
     public readonly fastCols: number = 0;
     public readonly powInterval: number = 0;
     public readonly powDuration: number = 0;
+    public readonly powExperiencedNum: number = 0;
 
     // Leaderboard image positions, sizes, and values
 

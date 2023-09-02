@@ -53,10 +53,7 @@ export class CollectorUtils {
         const startTime = Date.now();
 
         // If the collection attempt was too quick, cancel it
-        if (
-            inter && (startTime <= timerVars.timeUntilNextCollect ||
-            inter.createdTimestamp <= timerVars.timeUntilNextCollect)
-        ) {
+        if (inter && startTime <= timerVars.timeUntilNextCollect) {
             await inter.deferUpdate();
             return false;
         }

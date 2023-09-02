@@ -3,6 +3,8 @@ import {BotConfig} from '../../bot/config/BotConfig';
 import {ChatInputCommandInteraction, MessageComponentInteraction} from 'discord.js';
 import {GuildData} from '../data/global/GuildData';
 import {ItemConfigs} from '../../bot/config/items/ItemConfigs';
+import {ItemsData} from '../data/global/ItemsData';
+import {ItemData} from '../data/global/ItemData';
 
 /**
  * {@link BoarUtils BoarUtils.ts}
@@ -175,6 +177,36 @@ export class BoarUtils {
             return posToReturn;
         } else {
             return 0;
+        }
+    }
+
+    public static orderGlobalBoars(itemsData: ItemsData, config: BotConfig): void {
+        const globalBoars: string[] = Object.keys(itemsData.boars);
+
+        const orderedRarities: RarityConfig[] = [...config.rarityConfigs.slice(0,config.rarityConfigs.length-1)]
+            .sort((rarity1, rarity2) => { return rarity1.weight - rarity2.weight; });
+        orderedRarities.unshift(config.rarityConfigs[config.rarityConfigs.length-1]);
+
+        // Looping through all boar classes (Common -> Special)
+        for (const rarity of orderedRarities) {
+            const orderedBoars: string[] = [];
+            const boarsOfRarity: string[] = rarity.boars;
+
+            // Looping through user's boar collection
+            for (let j=0; j<globalBoars.length; j++) {
+                const curBoarID: string = globalBoars[j];                           // ID of current boar
+                const curBoarData: ItemData = itemsData.boars[curBoarID]; // Data of current boar
+
+                if (!boarsOfRarity.includes(curBoarID) || orderedBoars.includes(curBoarID))
+                    continue;
+
+                // Removes boar from front and add it to the back of the list to refresh the order
+                delete itemsData.boars[curBoarID];
+                itemsData.boars[curBoarID] = curBoarData;
+
+                orderedBoars.push(curBoarID);
+                j--;
+            }
         }
     }
 }

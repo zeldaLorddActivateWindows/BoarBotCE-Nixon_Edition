@@ -168,12 +168,8 @@ for frame in ImageSequence.Iterator(item_image):
             bucks_pos, '+', font_color, font=text_small_medium, anchor='ls'
         )
         new_frame_draw.text(
-            (bucks_pos[0] + text_small_medium.getlength('+'),
-             bucks_pos[1]), '$', bucks_color, font=text_small_medium, anchor='ls'
-        )
-        new_frame_draw.text(
-            (bucks_pos[0] + text_small_medium.getlength('+$'),
-             bucks_pos[1]), score, font_color, font=text_small_medium, anchor='ls'
+            (bucks_pos[0] + text_small_medium.getlength('+'), bucks_pos[1]),
+            '$' + score, bucks_color, font=text_small_medium, anchor='ls'
         )
 
     # Places the user avatar image

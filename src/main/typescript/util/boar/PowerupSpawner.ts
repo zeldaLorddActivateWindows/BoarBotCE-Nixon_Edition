@@ -98,10 +98,13 @@ export class PowerupSpawner {
             }
         }, 'powDelMsgs' + 'global').catch((err) => { throw err });
 
-        arrCopy.forEach(async msg => {
+        arrCopy.forEach(async (msg, index) => {
             try {
+                LogDebug.log('Deleted message #' + index, BoarBotApp.getBot().getConfig());
                 await msg.delete().catch(() => {});
-            } catch {}
+            } catch (err: unknown) {
+                LogDebug.handleError(err);
+            }
         });
     }
 
@@ -462,7 +465,11 @@ export class PowerupSpawner {
         const powerups = config.itemConfigs.powerups;
         const powerupIDs = Object.keys(powerups);
 
-        return powerupIDs[Math.floor(Math.random() * powerupIDs.length)];
+        let powerupID = powerupIDs[Math.floor(Math.random() * powerupIDs.length)];
+        while (powerupID === 'enhancer') {
+            powerupID = powerupIDs[Math.floor(Math.random() * powerupIDs.length)];
+        }
+        return powerupID;
     }
 
     /**
@@ -714,15 +721,17 @@ export class PowerupSpawner {
                         return;
                     }
 
-                    await Replies.handleReply(
-                        interaction, strConfig.powResponse, config.colorConfig.font,
-                        ['/boar collection', 'Powerups', '/boar help', 'Powerups'],
-                        [colorConfig.silver, colorConfig.powerup, colorConfig.silver, colorConfig.powerup], true
-                    ).catch(() => {});
-
                     await Queue.addQueue(async () => {
                         try {
+                            const questConfig = config.questConfigs;
+                            const questData = DataHandlers.getGlobalData(DataHandlers.GlobalFile.Quest) as QuestData;
+                            const powFirstIndex = questData.curQuestIDs.indexOf('powFirst');
+
                             const boarUser: BoarUser = new BoarUser(interaction.user, true);
+
+                            if (userTime <= questConfig['powFirst'].questVals[Math.floor(powFirstIndex / 2)][0]) {
+                                boarUser.stats.quests.progress[powFirstIndex]++;
+                            }
 
                             if (boarUser.stats.general.firstDaily === 0) {
                                 boarUser.stats.general.firstDaily = Date.now();
@@ -754,6 +763,31 @@ export class PowerupSpawner {
                                 this.powerupType.rewardAmt as number;
 
                             boarUser.updateUserData();
+
+                            const rewardString: string = this.powerupType.rewardAmt + ' ' +
+                                (this.powerupType.rewardAmt as number > 1
+                                    ? this.powerupType.pluralName
+                                    : this.powerupType.name);
+
+                            if (boarUser.stats.powerups.attempts > config.numberConfig.powExperiencedNum) {
+                                await Replies.handleReply(
+                                    interaction, strConfig.powResponseShort, config.colorConfig.font,
+                                    [rewardString, 'Powerup Event'], [colorConfig.powerup, colorConfig.powerup], true
+                                ).catch(() => {});
+                            } else {
+                                await Replies.handleReply(
+                                    interaction, strConfig.powResponse, config.colorConfig.font,
+                                    [
+                                        rewardString, 'Powerup Event', '/boar collection',
+                                        'Powerups', '/boar help', 'Powerups'
+                                    ],
+                                    [
+                                        colorConfig.powerup, colorConfig.powerup, colorConfig.silver,
+                                        colorConfig.powerup, colorConfig.silver, colorConfig.powerup
+                                    ], true
+                                ).catch(() => {});
+                            }
+
                             await Queue.addQueue(
                                 async () => DataHandlers.updateLeaderboardData(boarUser, config, interaction),
                                 interaction.id + 'global'

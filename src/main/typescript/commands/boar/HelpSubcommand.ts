@@ -46,6 +46,7 @@ export default class HelpSubcommand implements Subcommand {
     };
     private collector: InteractionCollector<ButtonInteraction | StringSelectMenuInteraction> =
         {} as InteractionCollector<ButtonInteraction | StringSelectMenuInteraction>;
+    private hasStopped = false;
     public readonly data = { name: this.subcommandInfo.name, path: __filename };
 
     /**
@@ -170,6 +171,8 @@ export default class HelpSubcommand implements Subcommand {
      */
     private async handleEndCollect(reason: string): Promise<void> {
         try {
+            this.hasStopped = true;
+
             LogDebug.log('Ended collection with reason: ' + reason, this.config, this.firstInter);
 
             if (reason == CollectorUtils.Reasons.Error) {
@@ -207,6 +210,8 @@ export default class HelpSubcommand implements Subcommand {
             this.rows[0].components[0].setDisabled(this.curPage === 0);
             this.rows[0].components[1].setDisabled(this.curPage === this.helpImages[this.curArea].length - 1);
             this.rows[1].components[0].setDisabled(false);
+
+            if (this.hasStopped) return;
 
             await this.firstInter.editReply({
                 files: [fs.readFileSync(this.helpImages[this.curArea][this.curPage])],

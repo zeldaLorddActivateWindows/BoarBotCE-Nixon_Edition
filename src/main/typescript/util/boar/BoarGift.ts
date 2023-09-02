@@ -38,6 +38,8 @@ export class BoarGift {
         {} as MessageComponentInteraction | ChatInputCommandInteraction;
     private compInters: ButtonInteraction[] = [];
     private giftMessage: Message = {} as Message;
+    private editedTime: number = Date.now();
+    private interTimes: number[] = [];
     private collector: InteractionCollector<ButtonInteraction | StringSelectMenuInteraction> =
         {} as InteractionCollector<ButtonInteraction | StringSelectMenuInteraction>;
 
@@ -103,7 +105,7 @@ export class BoarGift {
                 components: rows
             });
 
-            setTimeout(() => {
+            setTimeout(async () => {
                 const randRow = Math.floor(randCorrectIndex / numRows);
                 const randCol = randCorrectIndex - (randRow * numRows);
 
@@ -111,9 +113,10 @@ export class BoarGift {
                     .setCustomId((rightButton.customId + '|' + interaction.id + '|' + interaction.user.id))
                     .setDisabled(false);
 
-                this.giftMessage.edit({
+                await this.giftMessage.edit({
                     components: rows
                 });
+                this.editedTime = Date.now();
             }, randTimeoutDuration);
         } catch (err) {
             await Queue.addQueue(async () => {
@@ -143,6 +146,9 @@ export class BoarGift {
      */
     private async handleCollect(inter: ButtonInteraction): Promise<void> {
         try {
+            const index = this.compInters.push(inter) - 1;
+            this.interTimes.push(Date.now());
+
             LogDebug.log(
                 `${inter.user.username} (${inter.user.id}) tried to open gift`, this.config, this.firstInter, true
             );
@@ -150,9 +156,11 @@ export class BoarGift {
             await inter.deferUpdate();
 
             const isBanned = await InteractionUtils.handleBanned(inter, this.config, true);
-            if (isBanned) return;
+            if (isBanned) {
+                this.compInters.splice(index, 1);
+                return;
+            }
 
-            this.compInters.push(inter);
             this.collector.stop();
         } catch (err: unknown) {
             const canStop = await LogDebug.handleError(err, this.firstInter);
@@ -203,6 +211,9 @@ export class BoarGift {
      * @private
      */
     private async doGift(inter: ButtonInteraction): Promise<void> {
+        const strConfig = this.config.stringConfig;
+        const colorConfig = this.config.colorConfig;
+
         const outcome: number = this.getOutcome();
         const subOutcome = this.getOutcome(outcome);
         const claimedButton: ButtonBuilder = new ButtonBuilder()
@@ -240,6 +251,13 @@ export class BoarGift {
             await this.giftMessage.delete().catch(() => {});
             return;
         }
+
+        const timeToOpen = (this.interTimes[0] - this.editedTime).toLocaleString() + 'ms';
+
+        await Replies.handleReply(
+            this.compInters[0], strConfig.giftOpened, colorConfig.font, [strConfig.giftOpenedWow, timeToOpen],
+            [colorConfig.green, colorConfig.silver], true, true
+        );
 
         switch (outcome) {
             case 0:
@@ -410,8 +428,7 @@ export class BoarGift {
                     this.config.stringConfig.giftOpenTitle, this.config
                 ).handleImageCreate(
                     false, this.firstInter.user,
-                    outcomeName.substring(outcomeName.indexOf(' ')),
-                    {
+                    outcomeName.substring(1), {
                         name: outcomeName,
                         file: this.config.pathConfig.otherAssets + this.config.pathConfig.bucks,
                         colorKey: 'bucks'
@@ -437,9 +454,12 @@ export class BoarGift {
 
         switch (suboutcome) {
             case 0:
-                powImgPath = this.config.pathConfig.powerups + this.config.itemConfigs.powerups.miracle.file;
+                powImgPath = this.config.pathConfig.powerups + this.config.itemConfigs.powerups.clone.file;
                 break;
             case 1:
+                powImgPath = this.config.pathConfig.powerups + this.config.itemConfigs.powerups.miracle.file;
+                break;
+            case 2:
                 powImgPath = this.config.pathConfig.powerups + this.config.itemConfigs.powerups.enhancer.file;
                 break;
         }
@@ -449,6 +469,13 @@ export class BoarGift {
                 this.giftedUser.refreshUserData();
 
                 if (suboutcome === 0) {
+                    LogDebug.log(
+                        `Received Cloning Serum(s) from ${this.boarUser.user.username} (${this.boarUser.user.id}) ` +
+                        `in gift`, this.config, inter, true
+                    );
+
+                    this.giftedUser.itemCollection.powerups.clone.numTotal++;
+                } else if (suboutcome === 1) {
                     LogDebug.log(
                         `Received Miracle Charm(s) from ${this.boarUser.user.username} (${this.boarUser.user.id}) ` +
                         `in gift`, this.config, inter, true
@@ -475,6 +502,8 @@ export class BoarGift {
                 this.boarUser.refreshUserData();
 
                 if (suboutcome === 0) {
+                    this.boarUser.itemCollection.powerups.clone.numTotal++;
+                } else if (suboutcome === 1) {
                     this.boarUser.itemCollection.powerups.miracle.numTotal++;
                 } else {
                     this.boarUser.itemCollection.powerups.enhancer.numTotal++;
@@ -493,8 +522,7 @@ export class BoarGift {
                     this.config.stringConfig.giftOpenTitle, this.config
                 ).handleImageCreate(
                     false, this.firstInter.user,
-                    outcomeName.substring(outcomeName.indexOf(' ')),
-                    {
+                    outcomeName.substring(1), {
                         name: outcomeConfig.suboutcomes[suboutcome].name,
                         file: powImgPath,
                         colorKey: 'powerup'

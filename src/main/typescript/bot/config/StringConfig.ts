@@ -36,6 +36,7 @@ export class StringConfig {
     // Daily command messages/strings
 
     public readonly dailyPowUsed: string = ' ';
+    public readonly dailyPowFailed: string = ' ';
     public readonly dailyUsed: string = ' ';
     public readonly dailyFirstTime: string = ' ';
     public readonly dailyBonus: string = ' ';
@@ -92,10 +93,11 @@ export class StringConfig {
     public readonly collMostGiftsLabel: string = ' ';
     public readonly collClonesClaimedLabel: string = ' ';
     public readonly collClonesUsedLabel: string = ' ';
+    public readonly collClonesSuccLabel: string = ' ';
     public readonly collMostClonesLabel: string = ' ';
     public readonly collEnhancersClaimedLabel: string = ' ';
     public readonly collEnhancedLabel: string = ' ';
-    public readonly collEnhanceDataChange: string = ' ';
+    public readonly collDataChange: string = ' ';
     public readonly collEnhanceNoBucks: string = ' ';
     public readonly collEnhanceDetails: string = ' ';
     public readonly collEditionTitle: string = ' ';
@@ -125,6 +127,7 @@ export class StringConfig {
     public readonly powAvgResultPlural: string = ' ';
     public readonly powPrompt: string = ' ';
     public readonly powResponse: string = ' ';
+    public readonly powResponseShort: string = ' ';
     public readonly powReward: string = ' ';
 
     // Market Strings
@@ -181,6 +184,9 @@ export class StringConfig {
     public readonly giftOut: string = ' ';
     public readonly giftSent: string = ' ';
     public readonly giftNone: string = ' ';
+    public readonly giftFrom: string = ' ';
+    public readonly giftOpened: string = ' ';
+    public readonly giftOpenedWow: string = ' ';
     public readonly miracleConfirm: string = ' ';
     public readonly miracleSuccess: string = ' ';
     public readonly cloneConfirm: string = ' ';

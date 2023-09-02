@@ -113,8 +113,7 @@ export class CollectionImageGenerator {
             ctx, strConfig.collScoreLabel, nums.collScoreLabelPos, mediumFont, 'center', colorConfig.font
         );
         await CanvasUtils.drawText(
-            ctx, '%@' + scoreString, nums.collScorePos, smallFont, 'center',
-            colorConfig.font, undefined, false, ['$'], [colorConfig.bucks]
+            ctx, '$' + scoreString, nums.collScorePos, smallFont, 'center', colorConfig.bucks
         );
 
         await CanvasUtils.drawText(
@@ -380,7 +379,7 @@ export class CollectionImageGenerator {
         );
 
         await CanvasUtils.drawText(
-            ctx, curBoar.description + '%@', nums.collDescriptionPos, smallestFont,
+            ctx, curBoar.description + ' %@', nums.collDescriptionPos, smallestFont,
             'center', colorConfig.font, nums.collDescriptionWidth, true,
             [curBoar.isSB ? strConfig.collDescriptionSB : ''], [colorConfig.silver]
         );
@@ -668,6 +667,8 @@ export class CollectionImageGenerator {
 
         const clonesClaimed: string = Math.min(powerupItemsData.clone.numClaimed, nums.maxPowBase).toLocaleString();
         const clonesUsed: string = Math.min(powerupItemsData.clone.numUsed, nums.maxPowBase).toLocaleString();
+        const clonesSucc: string =
+            Math.min(powerupItemsData.clone.numSuccess as number, nums.maxPowBase).toLocaleString();
         const clonesMost: string = Math.min(powerupItemsData.clone.highestTotal, nums.maxPowBase).toLocaleString();
 
         const enhancersClaimed: string = Math.min(powerupItemsData.enhancer.numClaimed, nums.maxPowBase)
@@ -704,6 +705,11 @@ export class CollectionImageGenerator {
             ctx, strConfig.collClonesUsedLabel, nums.collClonesUsedLabelPos, mediumFont, 'center', colorConfig.font
         );
         await CanvasUtils.drawText(ctx, clonesUsed, nums.collClonesUsedPos, smallMedium, 'center', colorConfig.font);
+
+        await CanvasUtils.drawText(
+            ctx, strConfig.collClonesSuccLabel, nums.collClonesSuccLabelPos, mediumFont, 'center', colorConfig.font
+        );
+        await CanvasUtils.drawText(ctx, clonesSucc, nums.collClonesSuccPos, smallMedium, 'center', colorConfig.font);
 
         await CanvasUtils.drawText(
             ctx, strConfig.collMostClonesLabel, nums.collMostClonesLabelPos, mediumFont, 'center', colorConfig.font
@@ -871,8 +877,8 @@ export class CollectionImageGenerator {
         await CanvasUtils.drawText(
             ctx, strConfig.collEnhanceDetails, nums.enhanceDetailsPos, mediumFont, 'center', colorConfig.font,
             nums.enhanceDetailsWidth, true,
-            [this.allBoars[page].name, nextRarityName + ' Boar', '$', scoreLost, strConfig.collCellLabel],
-            [this.allBoars[page].color, nextRarityColor, colorConfig.bucks, colorConfig.font, colorConfig.powerup]
+            [this.allBoars[page].name, nextRarityName + ' Boar', '$' + scoreLost, strConfig.collCellLabel],
+            [this.allBoars[page].color, nextRarityColor, colorConfig.bucks, colorConfig.powerup]
         );
 
         return new AttachmentBuilder(canvas.toBuffer(), { name:`${this.config.stringConfig.imageName}.png` });
@@ -883,16 +889,23 @@ export class CollectionImageGenerator {
      */
     public async finalizeGift(): Promise<AttachmentBuilder> {
         // Config aliases
-
+        const strConfig = this.config.stringConfig;
         const nums: NumberConfig = this.config.numberConfig;
         const pathConfig: PathConfig = this.config.pathConfig;
 
         const giftUnderlay: string = pathConfig.collAssets + pathConfig.collGiftUnderlay;
 
+        const fontBig = `${nums.fontBig}px ${strConfig.fontName}`;
+
         const canvas: Canvas.Canvas = Canvas.createCanvas(...nums.giftImageSize);
         const ctx: Canvas.CanvasRenderingContext2D = canvas.getContext('2d');
 
         ctx.drawImage(await Canvas.loadImage(giftUnderlay), ...nums.originPos, ...nums.giftImageSize);
+
+        CanvasUtils.drawText(
+            ctx, strConfig.giftFrom + this.boarUser.user.username.substring(0, nums.maxUsernameLength),
+            nums.giftFromPos, fontBig, 'center', this.config.colorConfig.silver, nums.giftFromWidth
+        );
 
         return new AttachmentBuilder(canvas.toBuffer(), { name:`${this.config.stringConfig.imageName}.png` });
     }

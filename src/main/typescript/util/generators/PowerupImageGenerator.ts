@@ -149,7 +149,7 @@ export class PowerupImageGenerator {
         const font = `${nums.fontBig}px ${strConfig.fontName}`;
 
         const powerupType: ItemConfig = config.itemConfigs.powerups[powerupTypeID];
-        const powRewardStr: string = '+' + powerupType.rewardAmt + ' ' + (powerupType.rewardAmt as number > 1
+        const powRewardStr: string = powerupType.rewardAmt + ' ' + (powerupType.rewardAmt as number > 1
             ? powerupType.pluralName
             : powerupType.name);
 

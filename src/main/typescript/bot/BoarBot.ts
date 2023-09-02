@@ -1,6 +1,6 @@
 import fs from 'fs';
 import {
-	Client, ColorResolvable, EmbedBuilder,
+	Client, ClientUser, ColorResolvable, EmbedBuilder,
 	Events,
 	GatewayIntentBits,
 	Partials, TextChannel,
@@ -26,6 +26,9 @@ import {InteractionUtils} from '../util/interactions/InteractionUtils';
 import {GitHubData} from '../util/data/global/GitHubData';
 import * as crypto from 'crypto';
 import {PowerupData} from '../util/data/global/PowerupData';
+import {BoarUtils} from '../util/boar/BoarUtils';
+import {ItemsData} from '../util/data/global/ItemsData';
+import {QuestData} from '../util/data/global/QuestData';
 
 /**
  * {@link BoarBot BoarBot.ts}
@@ -181,7 +184,13 @@ export class BoarBot implements Bot {
 				const config = this.getConfig();
 				LogDebug.log('Interaction Listeners: ' + this.client.listenerCount(Events.InteractionCreate), config);
 				await this.sendUpdateInfo(DataHandlers.getGithubData());
-			}, 10000);
+
+				const questData = DataHandlers.getGlobalData(DataHandlers.GlobalFile.Quest) as QuestData;
+
+				if (questData.questsStartTimestamp + config.numberConfig.oneDay * 7 < Date.now()) {
+					DataHandlers.updateQuestData(config);
+				}
+			}, 120000);
 
 			// Powerup spawning
 
@@ -198,6 +207,8 @@ export class BoarBot implements Bot {
 
 			this.powSpawner = new PowerupSpawner(timeUntilPow);
 			this.powSpawner.startSpawning();
+
+			(this.client.user as ClientUser).setActivity("/boar help | boarbot.dev");
 
 			LogDebug.log('All functions online!', this.getConfig(), undefined, true);
 		} catch (err: unknown) {
@@ -331,7 +342,10 @@ export class BoarBot implements Bot {
 			this.fixedGlobal = true;
 		} catch {}
 
-		DataHandlers.getGlobalData(DataHandlers.GlobalFile.Items, true);
+		const itemsData = DataHandlers.getGlobalData(DataHandlers.GlobalFile.Items, true) as ItemsData;
+		BoarUtils.orderGlobalBoars(itemsData, this.getConfig());
+		DataHandlers.saveGlobalData(itemsData, DataHandlers.GlobalFile.Items);
+
 		DataHandlers.getGlobalData(DataHandlers.GlobalFile.Leaderboards, true);
 		DataHandlers.getGlobalData(DataHandlers.GlobalFile.BannedUsers, true);
 		DataHandlers.getGlobalData(DataHandlers.GlobalFile.Powerups, true);
@@ -345,7 +359,7 @@ export class BoarBot implements Bot {
 					const boarUser = new BoarUser(user);
 					boarUser.itemCollection.powerups.miracle.numTotal +=
 						Math.floor(boarUser.itemCollection.powerups.multiBoost.numTotal / 100) +
-						Math.floor(boarUser.itemCollection.powerups.extraChance.numTotal / 100);
+						Math.min(Math.floor(boarUser.itemCollection.powerups.extraChance.numTotal / 100), 3);
 					delete boarUser.itemCollection.powerups.multiBoost;
 					delete boarUser.itemCollection.powerups.extraChance;
 					(boarUser.stats.powerups as any).tenAttempts = undefined;
