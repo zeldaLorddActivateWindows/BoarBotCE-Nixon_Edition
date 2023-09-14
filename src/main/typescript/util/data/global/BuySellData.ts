@@ -8,9 +8,9 @@
  */
 
 export class BuySellData {
-    public readonly userID: string = '';
+    public userID = '';
     public price = 0;
-    public readonly num: number = 0;
+    public num = 0;
     public editions: number[] = [];
     public editionDates: number[] = [];
     public listTime = 0;

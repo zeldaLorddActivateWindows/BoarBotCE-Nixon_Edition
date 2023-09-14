@@ -208,7 +208,13 @@ export class BoarBot implements Bot {
 			this.powSpawner = new PowerupSpawner(timeUntilPow);
 			this.powSpawner.startSpawning();
 
-			(this.client.user as ClientUser).setActivity("/boar help | boarbot.dev");
+			(this.client.user as ClientUser).setPresence({
+				activities: [{
+					name: "Info",
+					state: "/boar help | boarbot.dev",
+					type: 4
+				}]
+			});
 
 			LogDebug.log('All functions online!', this.getConfig(), undefined, true);
 		} catch (err: unknown) {
@@ -359,7 +365,7 @@ export class BoarBot implements Bot {
 					const boarUser = new BoarUser(user);
 					boarUser.itemCollection.powerups.miracle.numTotal +=
 						Math.floor(boarUser.itemCollection.powerups.multiBoost.numTotal / 100) +
-						Math.min(Math.floor(boarUser.itemCollection.powerups.extraChance.numTotal / 100), 3);
+						Math.min(Math.floor(boarUser.itemCollection.powerups.extraChance.numTotal / 50), 6);
 					delete boarUser.itemCollection.powerups.multiBoost;
 					delete boarUser.itemCollection.powerups.extraChance;
 					(boarUser.stats.powerups as any).tenAttempts = undefined;

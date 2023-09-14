@@ -268,7 +268,13 @@ export class BoarUser {
 
         this.stats.general.multiplier = uniques + this.stats.general.highestStreak;
         this.stats.general.multiplier = Math.min(this.stats.general.multiplier, nums.maxPowBase);
-        this.stats.general.highestMulti = Math.max(this.stats.general.multiplier, this.stats.general.highestMulti);
+
+        let visualMulti = this.stats.general.multiplier;
+        for (let i=0; i<(this.itemCollection.powerups.miracle.numActive as number); i++) {
+            visualMulti += Math.min(Math.ceil(visualMulti * 0.05), config.numberConfig.miracleIncreaseMax);
+        }
+
+        this.stats.general.highestMulti = Math.max(visualMulti, this.stats.general.highestMulti);
 
         this.stats.general.boarScore = Math.max(Math.min(this.stats.general.boarScore, nums.maxScore), 0);
 

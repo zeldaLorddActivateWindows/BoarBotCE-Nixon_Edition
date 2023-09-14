@@ -1121,6 +1121,9 @@ export default class MarketSubcommand implements Subcommand {
 
                                     if (noEditionExists) continue;
 
+                                    prices += '$' + instaSell.price;
+                                    userIDs += instaSell.userID;
+
                                     curPrice = instaSell.price;
                                     break;
                                 }
@@ -1226,7 +1229,7 @@ export default class MarketSubcommand implements Subcommand {
                         const collectBucksIndex = questData.curQuestIDs.indexOf('collectBucks');
 
                         LogDebug.log(
-                            `Sold ${this.modalData[0]} of ${itemData.id} for ${prices} from ${userIDs}`,
+                            `Sold ${this.modalData[0]} of ${itemData.id} for ${prices} to ${userIDs}`,
                             this.config, inter, true
                         );
 

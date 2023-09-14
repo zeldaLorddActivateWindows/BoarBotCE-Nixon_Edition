@@ -95,6 +95,7 @@ export default class DailySubcommand implements Subcommand {
                 if (powCanUse) {
                     (boarUser.itemCollection.powerups.miracle.numActive as number) +=
                         boarUser.itemCollection.powerups.miracle.numTotal;
+                    boarUser.itemCollection.powerups.miracle.numTotal = 0;
                 }
 
                 for (let i=0; i<(boarUser.itemCollection.powerups.miracle.numActive as number); i++) {
@@ -125,18 +126,12 @@ export default class DailySubcommand implements Subcommand {
                         this.config, this.interaction, true
                     );
 
-                    boarUser.itemCollection.powerups.miracle.numTotal = 0;
                     boarUser.itemCollection.powerups.miracle.numUsed +=
                         (boarUser.itemCollection.powerups.miracle.numActive as number);
                     boarUser.itemCollection.powerups.miracle.numActive = 0;
                 }
 
-                boarUser.stats.general.highestMulti = Math.max(userMultiplier, boarUser.stats.general.highestMulti);
-
                 boarUser.stats.general.boarStreak++;
-
-                boarUser.stats.general.highestMulti =
-                    Math.max(boarUser.stats.general.multiplier, boarUser.stats.general.highestMulti);
 
                 boarUser.stats.general.lastDaily = Date.now();
                 boarUser.stats.general.numDailies++;

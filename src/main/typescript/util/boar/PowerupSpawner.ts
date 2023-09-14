@@ -99,12 +99,8 @@ export class PowerupSpawner {
         }, 'powDelMsgs' + 'global').catch((err) => { throw err });
 
         arrCopy.forEach(async (msg, index) => {
-            try {
-                LogDebug.log('Deleted message #' + index, BoarBotApp.getBot().getConfig());
-                await msg.delete().catch(() => {});
-            } catch (err: unknown) {
-                LogDebug.handleError(err);
-            }
+            LogDebug.log('Deleting message ' + (index + 1) + '/' + arrCopy.length, BoarBotApp.getBot().getConfig());
+            await msg.delete().catch((err) => LogDebug.handleError(err));
         });
     }
 
@@ -247,13 +243,15 @@ export class PowerupSpawner {
                         await this.handleEndCollect(reason, powMsg.msg, config)
                     );
 
-                    powMsg.msg = await channel.send({
-                        files: [powerupSpawnImage],
-                        components: rows
-                    }).catch((err) => {
+                    try {
+                        powMsg.msg = await channel.send({
+                            files: [powerupSpawnImage],
+                            components: rows
+                        });
+                    } catch (err: unknown) {
                         collector.stop(CollectorUtils.Reasons.Error);
-                        throw err;
-                    });
+                        return;
+                    }
 
                     this.numMsgs++;
                     this.numNotFinished++;

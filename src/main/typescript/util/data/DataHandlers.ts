@@ -55,6 +55,7 @@ export class DataHandlers {
 
         if (!data) {
             LogDebug.log('Creating global data file \'' + fileName + '\'...', config);
+
             switch (file) {
                 case GlobalFile.Items:
                     data = new ItemsData();
@@ -86,6 +87,8 @@ export class DataHandlers {
 
             this.saveGlobalData(data, file);
         }
+
+        data = data as ItemsData | Record<string, BoardData> | Record<string, number> | PowerupData | QuestData;
 
         if (updating) {
             switch (file) {
@@ -206,7 +209,6 @@ export class DataHandlers {
                 : undefined;
 
             let uniques = 0;
-
             for (let i=0; i<Object.keys(boarUser.itemCollection.boars).length; i++) {
                 const boarData = boarUser.itemCollection.boars[Object.keys(boarUser.itemCollection.boars)[i]];
                 const boarInfo = config.itemConfigs.boars[Object.keys(boarUser.itemCollection.boars)[i]];
@@ -221,7 +223,6 @@ export class DataHandlers {
             boardsData.uniques.userData[userID] = uniques > 0
                 ? [username, uniques]
                 : undefined;
-
             boardsData.uniquesSB.userData[userID] = Object.keys(boarUser.itemCollection.boars).length > 0
                 ? [username, Object.keys(boarUser.itemCollection.boars).length]
                 : undefined;
@@ -237,8 +238,14 @@ export class DataHandlers {
             boardsData.giftsUsed.userData[userID] = boarUser.itemCollection.powerups.gift.numUsed > 0
                 ? [username, boarUser.itemCollection.powerups.gift.numUsed]
                 : undefined;
-            boardsData.multiplier.userData[userID] = boarUser.stats.general.multiplier > 0
-                ? [username, boarUser.stats.general.multiplier]
+
+            let multiplier = boarUser.stats.general.multiplier;
+            for (let i=0; i<(boarUser.itemCollection.powerups.miracle.numActive as number); i++) {
+                multiplier += Math.min(Math.ceil(multiplier * 0.05), config.numberConfig.miracleIncreaseMax);
+            }
+
+            boardsData.multiplier.userData[userID] = multiplier > 0
+                ? [username, multiplier]
                 : undefined;
             boardsData.fastest.userData[userID] = boarUser.stats.powerups.fastestTime > 0
                 ? [username, boarUser.stats.powerups.fastestTime]
