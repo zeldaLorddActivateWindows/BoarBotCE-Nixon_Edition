@@ -71,12 +71,14 @@ export class BoarBotApp {
         await client.cd(this.bot.getConfig().pathConfig.prodRemotePath);
         await client.uploadFrom('config.json', 'config.json');
 
+        client.close();
+
         fs.writeFileSync('config.json', JSON.stringify(origConfig));
 
-        await this.doFilePush(client);
+        await this.doFilePush();
     }
 
-    private static async doFilePush(client: ftp.Client) {
+    private static async doFilePush() {
         const config = this.bot.getConfig();
         const pathConfig = config.pathConfig;
 
@@ -91,11 +93,23 @@ export class BoarBotApp {
             process.stdout.cursorTo(0);
             process.stdout.write(`${LogDebug.Colors.Yellow}Pushing...${LogDebug.Colors.White}`);
 
-            await client.uploadFromDir('src/main/typescript', 'src/main/typescript');
-            await client.uploadFromDir('src/main/python', 'src/main/python');
-            await client.uploadFromDir(pathConfig.otherAssets, pathConfig.otherAssets);
-            await client.uploadFromDir(pathConfig.collAssets, pathConfig.collAssets);
-            await client.uploadFromDir(pathConfig.itemAssets, pathConfig.itemAssets);
+            const client = new ftp.Client();
+
+            await client.access({
+                host: process.env.FTP_HOST,
+                user: process.env.FTP_USER,
+                password: process.env.FTP_PASS
+            });
+
+            await client.cd(this.bot.getConfig().pathConfig.prodRemotePath);
+
+            await this.pushToDir(client, 'src/main/typescript');
+            await this.pushToDir(client, 'src/main/python');
+            await this.pushToDir(client, pathConfig.otherAssets);
+            await this.pushToDir(client, pathConfig.collAssets);
+            await this.pushToDir(client, pathConfig.itemAssets);
+
+            client.close();
 
             exec(pathConfig.prodStartScript);
 
@@ -127,6 +141,13 @@ export class BoarBotApp {
                 `${LogDebug.Colors.White} (Ctrl+C to abort)`
             );
         }, 1000);
+    }
+
+    private static async pushToDir(client: ftp.Client, from: string, to?: string) {
+        await client.ensureDir(to ? to : from);
+        await client.clearWorkingDir();
+        await client.uploadFromDir(from);
+        await client.cd(this.bot.getConfig().pathConfig.prodRemotePath);
     }
 }
 

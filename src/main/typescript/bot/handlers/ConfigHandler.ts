@@ -117,7 +117,7 @@ export class ConfigHandler {
             collAssets + pathConfig.collPowerOverlay,
             collAssets + pathConfig.collGiftUnderlay,
             collAssets + pathConfig.collEnhanceUnderlay,
-            otherAssets + pathConfig.mainFont,
+            pathConfig.fontAssets + pathConfig.mainFont,
             otherAssets + pathConfig.helpGeneral1,
             otherAssets + pathConfig.helpPowerup1,
             otherAssets + pathConfig.helpPowerup2,
@@ -214,7 +214,7 @@ export class ConfigHandler {
      */
     public loadFonts(): void {
         try {
-            const mcFont: string = this.config.pathConfig.otherAssets + this.config.pathConfig.mainFont;
+            const mcFont: string = this.config.pathConfig.fontAssets + this.config.pathConfig.mainFont;
 
             registerFont(mcFont, { family: this.config.stringConfig.fontName });
         } catch {

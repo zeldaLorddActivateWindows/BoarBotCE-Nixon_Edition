@@ -542,7 +542,7 @@ export class BoarUser {
                 this.refreshUserData();
                 this.removeBadgeFromUser(badgeID);
                 this.updateUserData();
-            }, interaction.id + this.user.id);
+            }, interaction.id + this.user.id).catch((err) => { throw err });
         }
 
         LogDebug.log(`Removed ${badgeID} badge from collection`, BoarBotApp.getBot().getConfig(), interaction, true);

@@ -522,7 +522,7 @@ export default class CollectionSubcommand implements Subcommand {
             } catch (err) {
                 LogDebug.handleError(err, this.compInter);
             }
-        }, this.compInter.id + this.compInter.user.id);
+        }, this.compInter.id + this.compInter.user.id).catch((err) => { throw err });
     }
 
     private async doMiracles(): Promise<void> {
@@ -569,7 +569,7 @@ export default class CollectionSubcommand implements Subcommand {
             } catch (err) {
                 LogDebug.handleError(err, this.compInter);
             }
-        }, this.compInter.id + this.compInter.user.id);
+        }, this.compInter.id + this.compInter.user.id).catch((err) => { throw err });
 
         await Replies.handleReply(
             this.compInter, strConfig.miracleSuccess, colorConfig.font,
@@ -629,7 +629,7 @@ export default class CollectionSubcommand implements Subcommand {
             } catch (err) {
                 LogDebug.handleError(err, this.compInter);
             }
-        }, this.compInter.id + this.compInter.user.id);
+        }, this.compInter.id + this.compInter.user.id).catch((err) => { throw err });
 
         if (dataChanged) {
             LogDebug.log(

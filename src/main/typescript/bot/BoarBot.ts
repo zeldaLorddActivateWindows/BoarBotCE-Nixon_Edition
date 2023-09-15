@@ -46,7 +46,6 @@ export class BoarBot implements Bot {
 	private commandHandler: CommandHandler = new CommandHandler();
 	private eventHandler: EventHandler = new EventHandler();
 	private powSpawner: PowerupSpawner = {} as PowerupSpawner;
-	private fixedGlobal = false;
 
 	/**
 	 * Creates the bot by loading and registering global information
@@ -152,24 +151,19 @@ export class BoarBot implements Bot {
 		try {
 			LogDebug.log('Successfully logged in! Bot online!', this.getConfig());
 
-			this.client.rest.on(
-				'rateLimited',
-				() => LogDebug.log(
-					'Hit Limit! Cached Users: ' + this.client.users.cache.size + '/' +
-						fs.readdirSync(this.getConfig().pathConfig.userDataFolder).length,
-					this.getConfig(), undefined, true
-				)
-			);
+			let lastHit = Date.now();
+			this.client.rest.on('rateLimited', () => {
+				const shouldSend = Date.now() > lastHit + 30000 &&
+					this.client.users.cache.size >= fs.readdirSync(this.getConfig().pathConfig.userDataFolder).length;
 
-			if (!this.fixedGlobal) {
-				fs.readdirSync(this.getConfig().pathConfig.userDataFolder).forEach(async (userFile) => {
-					try {
-						this.getClient().users.fetch(userFile.split('.')[0]);
-					} catch {
-						LogDebug.handleError('Failed to find user ' + userFile.split('.')[0]);
-					}
-				});
-			}
+				LogDebug.log(
+					'Hit Limit! Cached Users: ' + this.client.users.cache.size + '/' +
+					fs.readdirSync(this.getConfig().pathConfig.userDataFolder).length,
+					this.getConfig(), undefined, shouldSend
+				);
+
+				lastHit = Date.now();
+			});
 
 			this.startNotificationCron();
 
@@ -217,6 +211,15 @@ export class BoarBot implements Bot {
 			});
 
 			LogDebug.log('All functions online!', this.getConfig(), undefined, true);
+
+			for (const userFile of fs.readdirSync(this.getConfig().pathConfig.userDataFolder)) {
+				try {
+					this.getClient().users.fetch(userFile.split('.')[0]);
+					await LogDebug.sleep(1000);
+				} catch {
+					LogDebug.handleError('Failed to find user ' + userFile.split('.')[0]);
+				}
+			}
 		} catch (err: unknown) {
 			await LogDebug.handleError(err);
 		}
@@ -323,31 +326,12 @@ export class BoarBot implements Bot {
 
 				commitChannel?.send({ embeds: [commitEmbed] });
 			}
-		} catch {
-			LogDebug.log('Failed to get latest GitHub commit', config);
+		} catch (err: unknown) {
+			LogDebug.log(err, config);
 		}
 	}
 
 	private updateAllData(): void {
-		try {
-			const oldGlobalData = JSON.parse(
-				fs.readFileSync(this.getConfig().pathConfig.globalDataFolder + 'global.json', 'utf-8')
-			);
-			const itemsData = oldGlobalData.itemData;
-			const boardsData = oldGlobalData.leaderboardData;
-			const bannedData = oldGlobalData.bannedUsers;
-			const powerupsData = new PowerupData();
-			powerupsData.nextPowerup = oldGlobalData.nextPowerup;
-
-			DataHandlers.saveGlobalData(itemsData, DataHandlers.GlobalFile.Items);
-			DataHandlers.saveGlobalData(boardsData, DataHandlers.GlobalFile.Leaderboards);
-			DataHandlers.saveGlobalData(bannedData, DataHandlers.GlobalFile.BannedUsers);
-			DataHandlers.saveGlobalData(powerupsData, DataHandlers.GlobalFile.Powerups);
-
-			fs.rmSync(this.getConfig().pathConfig.globalDataFolder + 'global.json');
-			this.fixedGlobal = true;
-		} catch {}
-
 		const itemsData = DataHandlers.getGlobalData(DataHandlers.GlobalFile.Items, true) as ItemsData;
 		BoarUtils.orderGlobalBoars(itemsData, this.getConfig());
 		DataHandlers.saveGlobalData(itemsData, DataHandlers.GlobalFile.Items);
@@ -356,31 +340,6 @@ export class BoarBot implements Bot {
 		DataHandlers.getGlobalData(DataHandlers.GlobalFile.BannedUsers, true);
 		DataHandlers.getGlobalData(DataHandlers.GlobalFile.Powerups, true);
 		DataHandlers.getGlobalData(DataHandlers.GlobalFile.Quest, true);
-
-		if (this.fixedGlobal) {
-			fs.readdirSync(this.getConfig().pathConfig.userDataFolder).forEach(async (fileName) => {
-				try {
-					const user: User = await this.client.users.fetch(fileName.split('.')[0]);
-
-					const boarUser = new BoarUser(user);
-					boarUser.itemCollection.powerups.miracle.numTotal +=
-						Math.floor(boarUser.itemCollection.powerups.multiBoost.numTotal / 100) +
-						Math.min(Math.floor(boarUser.itemCollection.powerups.extraChance.numTotal / 50), 6);
-					delete boarUser.itemCollection.powerups.multiBoost;
-					delete boarUser.itemCollection.powerups.extraChance;
-					(boarUser.stats.powerups as any).tenAttempts = undefined;
-					(boarUser.stats.powerups as any).fiftyAttempts = undefined;
-					boarUser.stats.general.highestMulti--;
-					boarUser.updateUserData();
-					await Queue.addQueue(() => {
-						DataHandlers.updateLeaderboardData(boarUser, this.getConfig())
-					}, 'fixleaderglobal');
-
-				} catch {
-					LogDebug.handleError('Failed to fetch user ' + fileName.split('.')[0]);
-				}
-			});
-		}
 	}
 
 	/**

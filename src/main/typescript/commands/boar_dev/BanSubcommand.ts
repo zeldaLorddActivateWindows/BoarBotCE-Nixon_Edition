@@ -69,6 +69,6 @@ export default class BanSubcommand implements Subcommand {
             } catch (err: unknown) {
                 await LogDebug.handleError(err, this.interaction);
             }
-        }, this.interaction.id + 'global');
+        }, this.interaction.id + 'global').catch((err) => { throw err });
     }
 }

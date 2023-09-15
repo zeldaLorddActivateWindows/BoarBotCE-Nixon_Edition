@@ -128,7 +128,7 @@ export default class SelfWipeSubcommand implements Subcommand {
                     const boarUser = new BoarUser(this.firstInter.user);
                     boarUser.stats.general.deletionTime = Date.now() + this.config.numberConfig.oneDay;
                     boarUser.updateUserData();
-                }, this.firstInter.id + this.firstInter.user.id);
+                }, this.firstInter.id + this.firstInter.user.id).catch((err) => { throw err });
 
                 await this.firstInter.editReply({
                     content: this.config.stringConfig.deletedData,

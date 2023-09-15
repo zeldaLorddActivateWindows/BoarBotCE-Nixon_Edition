@@ -302,8 +302,7 @@ export class PowerupSpawner {
                 if (isBanned) return;
 
                 LogDebug.log(
-                    `${inter.user.username} (${inter.user.id}) guessed CORRECT in Powerup Event`,
-                    config, undefined, true
+                    `${inter.user.username} (${inter.user.id}) guessed CORRECT in Powerup Event`, config
                 );
 
                 const correctString: string = config.stringConfig.powRightFull;
@@ -337,7 +336,7 @@ export class PowerupSpawner {
 
                         boarUser.stats.quests.progress[powFailIndex]++;
                         boarUser.updateUserData();
-                    }, inter.id + inter.user.id);
+                    }, inter.id + inter.user.id).catch((err) => { throw err });
 
                     await Replies.handleReply(
                         inter, config.stringConfig.powWrongSecond, config.colorConfig.font,
@@ -727,7 +726,10 @@ export class PowerupSpawner {
 
                             const boarUser: BoarUser = new BoarUser(interaction.user, true);
 
-                            if (userTime <= questConfig['powFirst'].questVals[Math.floor(powFirstIndex / 2)][0]) {
+                            if (
+                                powFirstIndex >= 0 &&
+                                userTime <= questConfig['powFirst'].questVals[Math.floor(powFirstIndex / 2)][0]
+                            ) {
                                 boarUser.stats.quests.progress[powFirstIndex]++;
                             }
 

@@ -72,6 +72,6 @@ export default class GiftSubcommand implements Subcommand {
             } catch (err) {
                 LogDebug.handleError(err, this.interaction);
             }
-        }, this.interaction.id + this.interaction.user.id);
+        }, this.interaction.id + this.interaction.user.id).catch((err) => { throw err });
     }
 }

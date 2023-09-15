@@ -86,7 +86,7 @@ export class InteractionUtils {
                 } catch (err: unknown) {
                     await LogDebug.handleError(err, interaction);
                 }
-            }, interaction.id + 'global');
+            }, interaction.id + 'global').catch((err) => { throw err });
         }
 
         return false;

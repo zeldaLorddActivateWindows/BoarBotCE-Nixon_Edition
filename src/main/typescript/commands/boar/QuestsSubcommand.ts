@@ -114,7 +114,7 @@ export default class QuestsSubcommand implements Subcommand {
                     }
 
                     this.boarUser.updateUserData();
-                }, inter.id + inter.user.id);
+                }, inter.id + inter.user.id).catch((err) => { throw err });
             } else if (inter.customId.split('|')[0] === questsComponents.claim.customId) {
                 const questConfigs = this.config.questConfigs;
                 const nums = this.config.numberConfig;
@@ -182,7 +182,7 @@ export default class QuestsSubcommand implements Subcommand {
                         }
 
                        this.boarUser.updateUserData();
-                    }, inter.id + inter.user.id);
+                    }, inter.id + inter.user.id).catch((err) => { throw err });
 
                     index++;
                 }

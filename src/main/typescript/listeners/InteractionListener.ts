@@ -70,6 +70,7 @@ export default class InteractionListener implements Listener {
                         try {
                             fs.rmSync(this.config.pathConfig.userDataFolder + interaction.user.id + '.json');
                         } catch {}
+
                         await Queue.addQueue(async () => {
                             const itemsData: ItemsData =
                                 DataHandlers.getGlobalData(DataHandlers.GlobalFile.Items) as ItemsData;
@@ -97,13 +98,16 @@ export default class InteractionListener implements Listener {
                             }
 
                             DataHandlers.saveGlobalData(itemsData, DataHandlers.GlobalFile.Items);
-                        }, interaction.id + 'global');
+                        }, interaction.id + 'global').catch((err) => {
+                            LogDebug.handleError(err, interaction);
+                        });
                     } else if (boarUser.stats.general.deletionTime !== undefined) {
                         boarUser.stats.general.deletionTime = undefined;
                         boarUser.updateUserData();
                     }
-
-                }, interaction.id + interaction.user.id);
+                }, interaction.id + interaction.user.id).catch((err) => {
+                    LogDebug.handleError(err, interaction);
+                });
 
                 try {
                     onCooldown = await Cooldown.handleCooldown(interaction as ChatInputCommandInteraction, this.config);

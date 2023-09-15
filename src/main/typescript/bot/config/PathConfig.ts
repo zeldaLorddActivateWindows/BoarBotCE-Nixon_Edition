@@ -38,6 +38,7 @@ export class PathConfig {
     public readonly tempItemAssets: string = '';
     public readonly collAssets: string = '';
     public readonly otherAssets: string = '';
+    public readonly fontAssets: string = '';
 
     // Image/asset file names for item attachments (boars and badges)
 

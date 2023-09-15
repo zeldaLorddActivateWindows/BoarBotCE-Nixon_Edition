@@ -74,9 +74,6 @@ export class BoarGift {
 
         const giftFieldConfig: RowConfig[] = this.config.commandConfigs.boar.collection.componentFields[2];
 
-        this.collector.on('collect', async (inter: ButtonInteraction) => await this.handleCollect(inter));
-        this.collector.once('end', async (collected, reason) => await this.handleEndCollect(collected, reason));
-
         try {
             const rows: ActionRowBuilder<ButtonBuilder>[] = [];
 
@@ -117,6 +114,9 @@ export class BoarGift {
                     components: rows
                 });
                 this.editedTime = Date.now();
+
+                this.collector.on('collect', async (inter: ButtonInteraction) => await this.handleCollect(inter));
+                this.collector.once('end', async (collected, reason) => await this.handleEndCollect(collected, reason));
             }, randTimeoutDuration);
         } catch (err) {
             await Queue.addQueue(async () => {
@@ -127,7 +127,9 @@ export class BoarGift {
                 } catch (err) {
                     LogDebug.handleError(err, this.firstInter);
                 }
-            }, this.firstInter + this.firstInter.user.id);
+            }, this.firstInter + this.firstInter.user.id).catch((err) => {
+                LogDebug.handleError(err, this.firstInter)
+            });
 
             await Replies.handleReply(
                 interaction, this.config.stringConfig.giftFail, this.config.colorConfig.error,
@@ -150,7 +152,7 @@ export class BoarGift {
             this.interTimes.push(Date.now());
 
             LogDebug.log(
-                `${inter.user.username} (${inter.user.id}) tried to open gift`, this.config, this.firstInter, true
+                `${inter.user.username} (${inter.user.id}) tried to open gift`, this.config, this.firstInter
             );
 
             await inter.deferUpdate();
@@ -190,7 +192,7 @@ export class BoarGift {
                 } catch (err) {
                     LogDebug.handleError(err, this.firstInter);
                 }
-            }, this.firstInter + this.firstInter.user.id);
+            }, this.firstInter + this.firstInter.user.id).catch((err) => { throw err });
 
             if (this.compInters.length === 0 || reason === CollectorUtils.Reasons.Error) {
                 LogDebug.log(`Gift expired`, this.config, this.firstInter, true);
