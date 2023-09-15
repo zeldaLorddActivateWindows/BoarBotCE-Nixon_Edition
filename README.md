@@ -79,7 +79,7 @@ Lists all the top users for certain stats. Compete for #1!
 Shows a user their progress on the current week's quests.
 
 <div align="center">
-    <img src="https://github.com/WeslayCodes/BoarBot/assets/60010287/1869279c-dc47-4efa-9098-c0de8a994b58" alt="The quests a user needs to complete along with the rewards you can get from them" width="600">
+    <img src="https://github.com/WeslayCodes/BoarBot/assets/60010287/80b4a38d-ccd6-48e5-8557-1218640e91f9" alt="The quests a user needs to complete along with the rewards you can get from them" width="600">
 </div>
 
 # Features
@@ -88,8 +88,8 @@ Shows a user their progress on the current week's quests.
 An event that occurs roughly every two hours that gives users powerups, but only if they successfully complete a challenge.
 
 <div align="center">
-    <img src="https://github.com/WeslayCodes/BoarBot/assets/60010287/5ac2fe96-58cc-42a2-ba59-d93d20f444b8" alt="A powerup event in its active form" width="600">
-    <img src="https://github.com/WeslayCodes/BoarBot/assets/60010287/df95c336-7698-44f4-adcb-c4d70ba86e98" alt="A powerup event after it ends" width="600">
+    <img src="https://github.com/WeslayCodes/BoarBot/assets/60010287/a045cbe6-b219-44cb-9478-91f1a991ba4a" alt="A powerup event in its active form" width="600">
+    <img src="https://github.com/WeslayCodes/BoarBot/assets/60010287/00c924e7-75c8-4392-946a-c50115ad1bf1" alt="A powerup event after it ends" width="600">
 </div>
 
 ### Boar Blessings
