@@ -36,12 +36,15 @@ export class StringConfig {
     // Daily command messages/strings
 
     public readonly dailyPowUsed: string = ' ';
+    public readonly dailyPowFailed: string = ' ';
     public readonly dailyUsed: string = ' ';
     public readonly dailyFirstTime: string = ' ';
     public readonly dailyBonus: string = ' ';
     public readonly dailyUsedNotify: string = ' ';
     public readonly dailyTitle: string = ' ';
     public readonly extraTitle: string = ' ';
+    public readonly enhanceTitle: string = ' ';
+    public readonly cloneTitle: string = ' ';
     public readonly dailyNoBoarFound: string = ' ';
 
     // Give command messages/strings (also badges)
@@ -72,53 +75,59 @@ export class StringConfig {
     public readonly collFirstObtainedLabel: string = ' ';
     public readonly collLastObtainedLabel: string = ' ';
     public readonly collDescriptionLabel: string = ' ';
-    public readonly collAttemptsLabel: string = ' ';
-    public readonly collAttempts50Label: string = ' ';
-    public readonly collAttempts10Label: string = ' ';
-    public readonly collAttempts1Label: string = ' ';
+    public readonly collClaimsLabel: string = ' ';
+    public readonly collFastestClaimsLabel: string = ' ';
     public readonly collFastestTimeLabel: string = ' ';
     public readonly collBestPromptLabel: string = ' ';
-    public readonly collMultiplierLabel: string = ' ';
+    public readonly collBlessLabel: string = ' ';
     public readonly collGiftsLabel: string = ' ';
-    public readonly collExtraBoarLabel: string = ' ';
-    public readonly collEnhancerLabel: string = ' ';
-    public readonly collBoostsClaimedLabel: string = ' ';
-    public readonly collBoostsUsedLabel: string = ' ';
+    public readonly collClonesLabel: string = ' ';
+    public readonly collCellLabel: string = ' ';
+    public readonly collMiraclesClaimedLabel: string = ' ';
+    public readonly collMiraclesUsedLabel: string = ' ';
+    public readonly collMostMiraclesLabel: string = ' ';
     public readonly collHighestMultiLabel: string = ' ';
-    public readonly collHighestBoostLabel: string = ' ';
     public readonly collGiftsClaimedLabel: string = ' ';
     public readonly collGiftsUsedLabel: string = ' ';
     public readonly collGiftsOpenedLabel: string = ' ';
     public readonly collMostGiftsLabel: string = ' ';
-    public readonly collChancesClaimedLabel: string = ' ';
-    public readonly collChancesUsedLabel: string = ' ';
-    public readonly collChanceHighestLabel: string = ' ';
+    public readonly collClonesClaimedLabel: string = ' ';
+    public readonly collClonesUsedLabel: string = ' ';
+    public readonly collClonesSuccLabel: string = ' ';
+    public readonly collMostClonesLabel: string = ' ';
     public readonly collEnhancersClaimedLabel: string = ' ';
     public readonly collEnhancedLabel: string = ' ';
+    public readonly collDataChange: string = ' ';
+    public readonly collEnhanceNoBucks: string = ' ';
     public readonly collEnhanceDetails: string = ' ';
-    public readonly collEnhanceBoarLose: string = ' ';
-    public readonly collEnhanceBoarGain: string = ' ';
-    public readonly collGiftDetails: string = ' ';
     public readonly collEditionTitle: string = ' ';
     public readonly collEditionLine: string = ' ';
     public readonly collDescriptionSB: string = ' ';
+
+    // Event strings
+
+    public readonly eventTitle: string = ' ';
+    public readonly eventEndedTitle: string = ' ';
+    public readonly eventsDisabled: string = ' ';
+    public readonly eventParticipated: string = ' ';
+    public readonly eventNobody: string = ' ';
 
     // Powerup strings
 
     public readonly powRightFull: string = ' ';
     public readonly powRight: string = ' ';
-    public readonly powWrongFull: string = ' ';
+    public readonly powWrongFirst: string = ' ';
+    public readonly powWrongSecond: string = ' ';
     public readonly powWrong: string = ' ';
-    public readonly powAttempted: string = ' ';
-    public readonly powLessThan: string = ' ';
-    public readonly powTopOne: string = ' ';
-    public readonly powTopOneResponse: string = ' ';
-    public readonly powTopTen: string = ' ';
-    public readonly powTopTenResponse: string = ' ';
-    public readonly powTopFifty: string = ' ';
-    public readonly powTopFiftyResponse: string = ' ';
-    public readonly powNoRewardResponse: string = ' ';
-    public readonly powNoClaim: string = ' ';
+    public readonly powNoMore: string = ' ';
+    public readonly powTop: string = ' ';
+    public readonly powTopResult: string = ' ';
+    public readonly powAvg: string = ' ';
+    public readonly powAvgResult: string = ' ';
+    public readonly powAvgResultPlural: string = ' ';
+    public readonly powPrompt: string = ' ';
+    public readonly powResponse: string = ' ';
+    public readonly powResponseShort: string = ' ';
     public readonly powReward: string = ' ';
 
     // Market Strings
@@ -170,17 +179,32 @@ export class StringConfig {
 
     // Miscellaneous strings
 
+    public readonly giftConfirm: string = ' ';
     public readonly giftFail: string = ' ';
-    public readonly enhanceGotten: string = ' ';
+    public readonly giftOut: string = ' ';
+    public readonly giftSent: string = ' ';
+    public readonly giftNone: string = ' ';
+    public readonly giftFrom: string = ' ';
+    public readonly giftOpened: string = ' ';
+    public readonly giftOpenedWow: string = ' ';
+    public readonly miracleConfirm: string = ' ';
+    public readonly miracleSuccess: string = ' ';
+    public readonly cloneConfirm: string = ' ';
+    public readonly cloneFail: string = ' ';
     public readonly notInBoard: string = ' ';
     public readonly boardHeader: string = ' ';
     public readonly boardFooter: string = ' ';
     public readonly deletedUsername: string = ' ';
     public readonly notificationSuccess: string = ' ';
+    public readonly notificationFailed: string = ' ';
     public readonly notificationSuccessReply: string = ' ';
     public readonly notificationDailyReady: string = ' ';
     public readonly notificationStopStr: string = ' ';
     public readonly notificationExtras: string[] = [];
+    public readonly notificationServerPing: string = ' ';
+    public readonly questCompletionBonus: string = ' ';
+    public readonly questFullyComplete: string = ' ';
+    public readonly questInvFull: string = ' ';
     public readonly noParentChannel: string = ' ';
     public readonly notValidChannel: string = ' ';
     public readonly sentReport: string = ' ';
@@ -195,4 +219,6 @@ export class StringConfig {
     public readonly imageName: string = ' ';
     public readonly fontName: string = ' ';
     public readonly commandDebugPrefix: string = ' ';
+    public readonly commitLink: string = ' ';
+    public readonly githubImg: string = ' ';
 }

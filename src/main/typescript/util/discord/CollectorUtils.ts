@@ -37,6 +37,8 @@ export class CollectorUtils {
         Record<string, InteractionCollector<ButtonInteraction | StringSelectMenuInteraction>> = {};
     public static selfWipeCollectors:
         Record<string, InteractionCollector<ButtonInteraction | StringSelectMenuInteraction>> = {};
+    public static questsCollectors:
+        Record<string, InteractionCollector<ButtonInteraction | StringSelectMenuInteraction>> = {};
 
     /**
      * Determines whether the interaction should be processed
@@ -51,10 +53,7 @@ export class CollectorUtils {
         const startTime = Date.now();
 
         // If the collection attempt was too quick, cancel it
-        if (
-            inter && (startTime <= timerVars.timeUntilNextCollect ||
-            inter.createdTimestamp <= timerVars.timeUntilNextCollect)
-        ) {
+        if (inter && startTime <= timerVars.timeUntilNextCollect) {
             await inter.deferUpdate();
             return false;
         }

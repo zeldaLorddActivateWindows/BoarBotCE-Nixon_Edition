@@ -1,7 +1,10 @@
 .env
 .idea
 /node_modules
-src/main/resources
+src/main/resources/items
+src/main/resources/photoshop
+src/main/resources/temp_items
+src/main/resources/unused
 /logs
 /database
 *.txt
@@ -11,3 +14,4 @@ package-lock.json
 tsconfig.json
 config.json
 *.cjs
+*.bat

@@ -19,9 +19,11 @@ import {CollectedItems} from '../data/userdata/collectibles/CollectedItems';
 import {UserStats} from '../data/userdata/stats/UserStats';
 import {CollectedBadge} from '../data/userdata/collectibles/CollectedBadge';
 import {CollectedPowerup} from '../data/userdata/collectibles/CollectedPowerup';
-import {GlobalData} from '../data/global/GlobalData';
 import {ItemData} from '../data/global/ItemData';
 import {GuildData} from '../data/global/GuildData';
+import {ItemsData} from '../data/global/ItemsData';
+import {QuestStats} from '../data/userdata/stats/QuestStats';
+import {QuestData} from '../data/global/QuestData';
 
 /**
  * {@link BoarUser BoarUser.ts}
@@ -41,7 +43,7 @@ export class BoarUser {
     /**
      * Creates a new BoarUser from data file.
      *
-     * @param user - User to base BoarUser off of
+     * @param user - User or user ID to base BoarUser off of
      * @param createFile - Whether a file for the user should be made
      */
     constructor(user: User, createFile?: boolean) {
@@ -49,7 +51,10 @@ export class BoarUser {
 
         const userData: any = this.refreshUserData(createFile);
 
-        if (createFile || this.stats.general.boarStreak > 0) {
+        if (
+            createFile || this.stats.general.firstDaily > 0 || this.stats.general.totalBoars > 0 ||
+            Object.keys(this.itemCollection.badges).length > 0
+        ) {
             this.fixUserData(userData);
         }
     }
@@ -90,6 +95,38 @@ export class BoarUser {
     public updateUserData(): void {
         const userData: any = this.getUserData();
 
+        const questData = DataHandlers.getGlobalData(DataHandlers.GlobalFile.Quest) as QuestData;
+        const dailyQuestIndex = questData.curQuestIDs.indexOf('daily');
+        const cloneBoarsIndex = questData.curQuestIDs.indexOf('cloneBoars');
+        const cloneRarityIndex = questData.curQuestIDs.indexOf('cloneRarity');
+        const sendGiftsIndex = questData.curQuestIDs.indexOf('sendGifts');
+        const openGiftsIndex = questData.curQuestIDs.indexOf('openGifts');
+        const powParticipateIndex = questData.curQuestIDs.indexOf('powParticipate');
+
+        this.stats.quests.progress[dailyQuestIndex] += this.stats.general.numDailies -
+            userData.stats.general.numDailies;
+        this.stats.quests.progress[cloneBoarsIndex] += this.itemCollection.powerups.clone.numUsed -
+            userData.itemCollection.powerups.clone.numUsed;
+        this.stats.quests.progress[cloneRarityIndex] += (this.itemCollection.powerups.clone.raritiesUsed as number[])[
+                Math.floor(cloneRarityIndex / 2)
+            ] - userData.itemCollection.powerups.clone.raritiesUsed[Math.floor(cloneRarityIndex / 2)];
+        this.stats.quests.progress[sendGiftsIndex] += this.itemCollection.powerups.gift.numUsed -
+            userData.itemCollection.powerups.gift.numUsed;
+        this.stats.quests.progress[openGiftsIndex] += (this.itemCollection.powerups.gift.numOpened as number) -
+            userData.itemCollection.powerups.gift.numOpened;
+        this.stats.quests.progress[powParticipateIndex] += this.stats.powerups.attempts -
+            userData.stats.powerups.attempts;
+
+        for (const powerupID of Object.keys(this.itemCollection.powerups)) {
+            this.itemCollection.powerups[powerupID].highestTotal = Math.max(
+                this.itemCollection.powerups[powerupID].numTotal, this.itemCollection.powerups[powerupID].highestTotal
+            );
+            this.itemCollection.powerups[powerupID].numClaimed += Math.max(
+                this.itemCollection.powerups[powerupID].numTotal - userData.itemCollection.powerups[powerupID].numTotal,
+                0
+            )
+        }
+
         userData.itemCollection = this.itemCollection;
         userData.stats = this.stats;
 
@@ -122,7 +159,7 @@ export class BoarUser {
         const userFile: string = config.pathConfig.userDataFolder + this.user.id + '.json';
 
         const boarsGottenIDs: string[] = Object.keys(this.itemCollection.boars);
-        const twoDailiesAgo: number = Math.floor(new Date().setUTCHours(24,0,0,0)) - config.numberConfig.oneDay * 2;
+        const twoDailiesAgo: number = new Date().setUTCHours(24,0,0,0) - config.numberConfig.oneDay * 2;
 
         const nums: NumberConfig = BoarBotApp.getBot().getConfig().numberConfig;
 
@@ -158,8 +195,20 @@ export class BoarUser {
             }
         }
 
-        if (!this.itemCollection.powerups.multiBoost) {
-            this.itemCollection.powerups.multiBoost = new CollectedPowerup;
+        if (!this.stats.quests) {
+            this.stats.quests = new QuestStats;
+        }
+
+        const questData = DataHandlers.getGlobalData(DataHandlers.GlobalFile.Quest) as QuestData;
+        if (this.stats.quests.questWeekStart !== questData.questsStartTimestamp) {
+            this.stats.quests.questWeekStart = questData.questsStartTimestamp;
+            this.stats.quests.progress = [0,0,0,0,0,0,0];
+            this.stats.quests.claimed = [0,0,0,0,0,0,0,0];
+        }
+
+        if (!this.itemCollection.powerups.miracle) {
+            this.itemCollection.powerups.miracle = new CollectedPowerup;
+            this.itemCollection.powerups.miracle.numActive = 0;
         }
 
         if (!this.itemCollection.powerups.gift) {
@@ -167,27 +216,43 @@ export class BoarUser {
             this.itemCollection.powerups.gift.numOpened = 0;
         }
 
-        if (!this.itemCollection.powerups.extraChance) {
-            this.itemCollection.powerups.extraChance = new CollectedPowerup;
-        }
-
         if (!this.itemCollection.powerups.enhancer) {
             this.itemCollection.powerups.enhancer = new CollectedPowerup;
             this.itemCollection.powerups.enhancer.raritiesUsed = [0,0,0,0,0,0,0];
         }
 
-        this.itemCollection.powerups.multiBoost.numTotal =
-            Math.max(0, Math.min(this.itemCollection.powerups.multiBoost.numTotal, nums.maxMultiBoost));
+        if (!this.itemCollection.powerups.clone) {
+            this.itemCollection.powerups.clone = new CollectedPowerup;
+            this.itemCollection.powerups.clone.numSuccess = 0;
+            this.itemCollection.powerups.clone.raritiesUsed = [0,0,0,0,0,0,0];
+        }
+
+        this.itemCollection.powerups.miracle.numTotal =
+            Math.max(0, Math.min(this.itemCollection.powerups.miracle.numTotal, nums.maxPowBase));
+        this.itemCollection.powerups.miracle.highestTotal =
+            Math.max(0, Math.min(this.itemCollection.powerups.miracle.highestTotal, nums.maxPowBase));
         this.itemCollection.powerups.gift.numTotal =
-            Math.max(0, Math.min(this.itemCollection.powerups.gift.numTotal, nums.maxPowBase));
-        this.itemCollection.powerups.extraChance.numTotal =
-            Math.max(0, Math.min(this.itemCollection.powerups.extraChance.numTotal, nums.maxExtraChance));
+            Math.max(0, Math.min(this.itemCollection.powerups.gift.numTotal, nums.maxSmallPow));
+        this.itemCollection.powerups.gift.highestTotal =
+            Math.max(0, Math.min(this.itemCollection.powerups.gift.highestTotal, nums.maxSmallPow));
         this.itemCollection.powerups.enhancer.numTotal =
             Math.max(0, Math.min(this.itemCollection.powerups.enhancer.numTotal, nums.maxEnhancers));
+        this.itemCollection.powerups.enhancer.highestTotal =
+            Math.max(0, Math.min(this.itemCollection.powerups.enhancer.highestTotal, nums.maxEnhancers));
+        this.itemCollection.powerups.clone.numTotal =
+            Math.max(0, Math.min(this.itemCollection.powerups.clone.numTotal, nums.maxSmallPow));
+        this.itemCollection.powerups.clone.highestTotal =
+            Math.max(0, Math.min(this.itemCollection.powerups.clone.highestTotal, nums.maxSmallPow));
+
+        if (!this.stats.general.highestStreak) {
+            this.stats.general.highestStreak = this.stats.general.boarStreak;
+        }
 
         if (this.stats.general.lastDaily < twoDailiesAgo) {
             this.stats.general.boarStreak = 0;
         }
+
+        this.stats.general.highestStreak = Math.max(this.stats.general.boarStreak, this.stats.general.highestStreak);
 
         if (this.stats.general.unbanTime !== undefined) {
             this.stats.general.unbanTime = undefined;
@@ -201,11 +266,17 @@ export class BoarUser {
             }
         }
 
-        this.stats.general.multiplier = 1 + uniques + this.stats.general.boarStreak;
-        this.stats.general.multiplier = Math.min(this.stats.general.multiplier, nums.maxMulti);
-        this.stats.general.highestMulti = Math.max(this.stats.general.multiplier, this.stats.general.highestMulti);
+        this.stats.general.multiplier = uniques + this.stats.general.highestStreak;
+        this.stats.general.multiplier = Math.min(this.stats.general.multiplier, nums.maxPowBase);
 
-        this.stats.general.boarScore = Math.max(this.stats.general.boarScore, 0);
+        let visualMulti = this.stats.general.multiplier;
+        for (let i=0; i<(this.itemCollection.powerups.miracle.numActive as number); i++) {
+            visualMulti += Math.min(Math.ceil(visualMulti * 0.05), config.numberConfig.miracleIncreaseMax);
+        }
+
+        this.stats.general.highestMulti = Math.max(visualMulti, this.stats.general.highestMulti);
+
+        this.stats.general.boarScore = Math.max(Math.min(this.stats.general.boarScore, nums.maxScore), 0);
 
         userData.itemCollection = this.itemCollection;
         userData.stats = this.stats;
@@ -248,23 +319,23 @@ export class BoarUser {
         // Config aliases
         const strConfig: StringConfig = config.stringConfig;
         const numConfig: NumberConfig = config.numberConfig;
+        const questData = DataHandlers.getGlobalData(DataHandlers.GlobalFile.Quest) as QuestData;
 
         // Rarity information
         const rarities: RarityConfig[] = config.rarityConfigs;
-        const rarityInfos: RarityConfig[] = [];
+        const rarityInfos: [number, RarityConfig][] = [];
 
         for (let i=0; i<boarIDs.length; i++) {
-            rarityInfos.push({} as RarityConfig);
             for (const rarity of rarities) {
                 if (rarity.boars.includes(boarIDs[i])) {
-                    rarityInfos[i] = BoarUtils.findRarity(boarIDs[i], config)[1];
+                    rarityInfos[i] = BoarUtils.findRarity(boarIDs[i], config);
                     break;
                 }
             }
         }
 
-        for (const info of rarityInfos) {
-            if (Object.keys(info).length === 0 || boarIDs.length === 0) {
+        for (const [index] of rarityInfos) {
+            if (index === 0 || boarIDs.length === 0) {
                 await LogDebug.handleError(strConfig.dailyNoBoarFound, interaction);
                 return [];
             }
@@ -277,40 +348,41 @@ export class BoarUser {
         await Queue.addQueue(async () => {
             try {
                 LogDebug.log('Updating global edition info...', config, interaction);
-                const globalData: GlobalData = DataHandlers.getGlobalData();
+                const itemsData: ItemsData =
+                    DataHandlers.getGlobalData(DataHandlers.GlobalFile.Items) as ItemsData;
 
                 // Sets edition numbers
                 for (let i=0; i<boarIDs.length; i++) {
                     const boarID = boarIDs[i];
-                    const rarityName = rarityInfos[i].name;
+                    const rarityName = rarityInfos[i][1].name;
 
-                    if (!globalData.itemData.boars[boarID]) {
+                    if (!itemsData.boars[boarID]) {
                         LogDebug.log(`First edition of ${boarID}`, config, interaction, true);
 
-                        globalData.itemData.boars[boarID] = new ItemData;
-                        globalData.itemData.boars[boarID].curEdition = 0;
-                        const lastBuySell = rarityInfos[i].baseScore === 1
+                        itemsData.boars[boarID] = new ItemData;
+                        itemsData.boars[boarID].curEdition = 0;
+                        const lastBuySell = rarityInfos[i][1].baseScore === 1
                             ? 4
-                            : rarityInfos[i].baseScore;
-                        globalData.itemData.boars[boarID].lastBuys[1] = lastBuySell;
-                        globalData.itemData.boars[boarID].lastSells[1] = lastBuySell;
+                            : rarityInfos[i][1].baseScore;
+                        itemsData.boars[boarID].lastBuys[1] = lastBuySell;
+                        itemsData.boars[boarID].lastSells[1] = lastBuySell;
 
                         if (rarityName !== 'Special') {
                             let specialEdition = 0;
-                            if (!globalData.itemData.boars['bacteria']) {
-                                globalData.itemData.boars['bacteria'] = new ItemData;
-                                globalData.itemData.boars['bacteria'].curEdition = 0;
+                            if (!itemsData.boars['bacteria']) {
+                                itemsData.boars['bacteria'] = new ItemData;
+                                itemsData.boars['bacteria'].curEdition = 0;
                             }
 
-                            specialEdition = ++(globalData.itemData.boars['bacteria'].curEdition as number);
+                            specialEdition = ++(itemsData.boars['bacteria'].curEdition as number);
                             bacteriaEditions.push(specialEdition);
                         }
                     }
-                    boarEditions.push(++(globalData.itemData.boars[boarID].curEdition as number));
+                    boarEditions.push(++(itemsData.boars[boarID].curEdition as number));
                 }
 
-                this.orderGlobalBoars(globalData, config);
-                DataHandlers.saveGlobalData(globalData);
+                BoarUtils.orderGlobalBoars(itemsData, config);
+                DataHandlers.saveGlobalData(itemsData, DataHandlers.GlobalFile.Items);
             } catch (err: unknown) {
                 await LogDebug.handleError(err, interaction);
             }
@@ -322,9 +394,19 @@ export class BoarUser {
                 this.refreshUserData();
 
                 for (let i=0; i<boarIDs.length; i++) {
+                    const collectBoarIndex = questData.curQuestIDs.indexOf('collectBoar');
+                    const collectBucksIndex = questData.curQuestIDs.indexOf('collectBucks');
                     const boarID: string = boarIDs[i];
 
                     LogDebug.log(`Adding ${boarID} to collection`, config, interaction, true);
+
+                    this.stats.quests.progress[collectBucksIndex] += scores[i]
+                        ? scores[i]
+                        : 0;
+
+                    if (collectBoarIndex >= 0 && Math.floor(collectBoarIndex / 2) + 1 === rarityInfos[i][0]) {
+                        this.stats.quests.progress[collectBoarIndex]++;
+                    }
 
                     if (!this.itemCollection.boars[boarID]) {
                         this.itemCollection.boars[boarID] = new CollectedBoar;
@@ -334,7 +416,7 @@ export class BoarUser {
                     this.itemCollection.boars[boarID].num++;
                     this.itemCollection.boars[boarID].lastObtained = Date.now();
 
-                    if (boarEditions[i] <= numConfig.maxTrackedEditions || rarityInfos[i].name === 'Special') {
+                    if (boarEditions[i] <= numConfig.maxTrackedEditions || rarityInfos[i][1].name === 'Special') {
                         this.itemCollection.boars[boarID].editions.push(boarEditions[i]);
                         this.itemCollection.boars[boarID].editions.sort((a, b) => a-b);
                         this.itemCollection.boars[boarID].editionDates.push(Date.now());
@@ -384,7 +466,7 @@ export class BoarUser {
             }, interaction.id + this.user.id).catch((err) => { throw err });
         }
 
-        await Queue.addQueue(async () => await DataHandlers.updateLeaderboardData(this, interaction, config),
+        await Queue.addQueue(async () => DataHandlers.updateLeaderboardData(this, config, interaction),
             interaction.id + 'global'
         ).catch((err) => { throw err });
 
@@ -460,7 +542,7 @@ export class BoarUser {
                 this.refreshUserData();
                 this.removeBadgeFromUser(badgeID);
                 this.updateUserData();
-            }, interaction.id + this.user.id);
+            }, interaction.id + this.user.id).catch((err) => { throw err });
         }
 
         LogDebug.log(`Removed ${badgeID} badge from collection`, BoarBotApp.getBot().getConfig(), interaction, true);
@@ -482,8 +564,7 @@ export class BoarUser {
      * @param interaction - Used to give badge if user has max uniques
      */
     public async orderBoars(
-        interaction: ChatInputCommandInteraction | MessageComponentInteraction,
-        config: BotConfig
+        interaction: ChatInputCommandInteraction | MessageComponentInteraction, config: BotConfig
     ): Promise<void> {
         const obtainedBoars: string[] = Object.keys(this.itemCollection.boars);
 
@@ -544,35 +625,6 @@ export class BoarUser {
             await this.addBadge('hunter', interaction, true);
         } else {
             await this.removeBadge('hunter', interaction, true);
-        }
-    }
-
-    private orderGlobalBoars(globalData: GlobalData, config: BotConfig): void {
-        const globalBoars: string[] = Object.keys(globalData.itemData.boars);
-
-        const orderedRarities: RarityConfig[] = [...config.rarityConfigs]
-            .sort((rarity1, rarity2) => { return rarity1.weight - rarity2.weight; });
-
-        // Looping through all boar classes (Common -> Special)
-        for (const rarity of orderedRarities) {
-            const orderedBoars: string[] = [];
-            const boarsOfRarity: string[] = rarity.boars;
-
-            // Looping through user's boar collection
-            for (let j=0; j<globalBoars.length; j++) {
-                const curBoarID: string = globalBoars[j];                           // ID of current boar
-                const curBoarData: ItemData = globalData.itemData.boars[curBoarID]; // Data of current boar
-
-                if (!boarsOfRarity.includes(curBoarID) || orderedBoars.includes(curBoarID))
-                    continue;
-
-                // Removes boar from front and add it to the back of the list to refresh the order
-                delete globalData.itemData.boars[curBoarID];
-                globalData.itemData.boars[curBoarID] = curBoarData;
-
-                orderedBoars.push(curBoarID);
-                j--;
-            }
         }
     }
 }

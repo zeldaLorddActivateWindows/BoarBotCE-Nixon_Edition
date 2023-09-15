@@ -84,8 +84,8 @@ export class Replies {
      * @param interaction - Interaction to reply to
      * @param content - Content of the reply
      * @param color - Color of the embed
-     * @param coloredContent - Secondary text to color
-     * @param color2 - Secondary color
+     * @param coloredContents - Secondary text to color
+     * @param secondaryColors - Secondary colors
      * @param forceFollowup - Forces interaction reply to be a followup
      * @param ephemeral
      */
@@ -93,13 +93,13 @@ export class Replies {
         interaction: ChatInputCommandInteraction | MessageComponentInteraction | ModalSubmitInteraction,
         content: string,
         color: string = BoarBotApp.getBot().getConfig().colorConfig.font,
-        coloredContent?: string,
-        color2?: string,
+        coloredContents?: string[],
+        secondaryColors?: string[],
         forceFollowup = false,
         ephemeral = true
     ): Promise<void> {
-        const embedImage: AttachmentBuilder = CustomEmbedGenerator.makeEmbed(
-            content, color, BoarBotApp.getBot().getConfig(), coloredContent, color2
+        const embedImage: AttachmentBuilder = await CustomEmbedGenerator.makeEmbed(
+            content, color, BoarBotApp.getBot().getConfig(), coloredContents, secondaryColors
         );
 
         if (!forceFollowup && interaction.deferred) {
@@ -123,7 +123,5 @@ export class Replies {
                 ephemeral: ephemeral
             });
         }
-
-
     }
 }

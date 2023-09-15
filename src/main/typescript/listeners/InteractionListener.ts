@@ -18,6 +18,7 @@ import {Queue} from '../util/interactions/Queue';
 import {BoarUser} from '../util/boar/BoarUser';
 import fs from 'fs';
 import {DataHandlers} from '../util/data/DataHandlers';
+import {ItemsData} from '../util/data/global/ItemsData';
 
 /**
  * {@link InteractionListener InteractionListener.ts}
@@ -69,18 +70,20 @@ export default class InteractionListener implements Listener {
                         try {
                             fs.rmSync(this.config.pathConfig.userDataFolder + interaction.user.id + '.json');
                         } catch {}
-                        await Queue.addQueue(() => {
-                            const globalData = DataHandlers.getGlobalData();
 
-                            for (const itemTypeID of Object.keys(globalData.itemData)) {
-                                for (const itemID of Object.keys(globalData.itemData[itemTypeID])) {
-                                    const itemData = globalData.itemData[itemTypeID][itemID];
+                        await Queue.addQueue(async () => {
+                            const itemsData: ItemsData =
+                                DataHandlers.getGlobalData(DataHandlers.GlobalFile.Items) as ItemsData;
+
+                            for (const itemTypeID of Object.keys(itemsData)) {
+                                for (const itemID of Object.keys(itemsData[itemTypeID])) {
+                                    const itemData = itemsData[itemTypeID][itemID];
 
                                     for (let i=0; i<itemData.buyers.length; i++) {
                                         const buyOrder = itemData.buyers[i];
 
                                         if (buyOrder.userID === boarUser.user.id) {
-                                            globalData.itemData[itemTypeID][itemID].buyers.splice(i, 1);
+                                            itemsData[itemTypeID][itemID].buyers.splice(i, 1);
                                         }
                                     }
 
@@ -88,20 +91,23 @@ export default class InteractionListener implements Listener {
                                         const sellOrder = itemData.sellers[i];
 
                                         if (sellOrder.userID === boarUser.user.id) {
-                                            globalData.itemData[itemTypeID][itemID].sellers.splice(i, 1);
+                                            itemsData[itemTypeID][itemID].sellers.splice(i, 1);
                                         }
                                     }
                                 }
                             }
 
-                            DataHandlers.saveGlobalData(globalData);
-                        }, interaction.id + 'global');
+                            DataHandlers.saveGlobalData(itemsData, DataHandlers.GlobalFile.Items);
+                        }, interaction.id + 'global').catch((err) => {
+                            LogDebug.handleError(err, interaction);
+                        });
                     } else if (boarUser.stats.general.deletionTime !== undefined) {
                         boarUser.stats.general.deletionTime = undefined;
                         boarUser.updateUserData();
                     }
-
-                }, interaction.id + interaction.user.id);
+                }, interaction.id + interaction.user.id).catch((err) => {
+                    LogDebug.handleError(err, interaction);
+                });
 
                 try {
                     onCooldown = await Cooldown.handleCooldown(interaction as ChatInputCommandInteraction, this.config);
@@ -123,10 +129,8 @@ export default class InteractionListener implements Listener {
                 ) {
                     await interaction.followUp({
                         files: [
-                            CustomEmbedGenerator.makeEmbed(
-                                'This server is missing out on powerups! To allow them to spawn, make sure View ' +
-                                'Channels, Send Messages, and Attach Files permissions are all enabled for BoarBot!',
-                                this.config.colorConfig.error, this.config
+                            await CustomEmbedGenerator.makeEmbed(
+                                this.config.stringConfig.eventsDisabled, this.config.colorConfig.error, this.config
                             )
                         ]
                     });

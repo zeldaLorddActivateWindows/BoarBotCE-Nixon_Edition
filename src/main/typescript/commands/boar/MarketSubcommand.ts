@@ -27,20 +27,20 @@ import {ComponentUtils} from '../../util/discord/ComponentUtils';
 import {LogDebug} from '../../util/logging/LogDebug';
 import {DataHandlers} from '../../util/data/DataHandlers';
 import {BuySellData} from '../../util/data/global/BuySellData';
-import createRBTree, {Tree} from 'functional-red-black-tree';
 import {MarketImageGenerator} from '../../util/generators/MarketImageGenerator';
 import {BoarUser} from '../../util/boar/BoarUser';
 import {ModalConfig} from '../../bot/config/modals/ModalConfig';
 import {BoarUtils} from '../../util/boar/BoarUtils';
 import {Queue} from '../../util/interactions/Queue';
 import {CollectedBoar} from '../../util/data/userdata/collectibles/CollectedBoar';
-import {GlobalData} from '../../util/data/global/GlobalData';
 import {StringConfig} from '../../bot/config/StringConfig';
 import {ColorConfig} from '../../bot/config/ColorConfig';
 import {NumberConfig} from '../../bot/config/NumberConfig';
 import {RarityConfig} from '../../bot/config/items/RarityConfig';
 import {ItemData} from '../../util/data/global/ItemData';
-import moment from 'moment';
+import {ItemsData} from '../../util/data/global/ItemsData';
+import {BoardData} from '../../util/data/global/BoardData';
+import {QuestData} from '../../util/data/global/QuestData';
 
 enum View {
     Overview,
@@ -70,7 +70,7 @@ export default class MarketSubcommand implements Subcommand {
         lastBuys: [number, number, string],
         lastSells: [number, number, string]
     }[] = [];
-    private pricingDataTree: Tree<string, number> = createRBTree();
+    private pricingDataSearchArr: [string, number][] = [];
     private boarUser: BoarUser = {} as BoarUser;
     private userBuyOrders: {
         data: BuySellData,
@@ -101,6 +101,7 @@ export default class MarketSubcommand implements Subcommand {
     private curModalListener: ((submittedModal: Interaction) => Promise<void>) | undefined;
     private collector: InteractionCollector<ButtonInteraction | StringSelectMenuInteraction> = 
         {} as InteractionCollector<ButtonInteraction | StringSelectMenuInteraction>;
+    private hasStopped = false;
     public readonly data = { name: this.subcommandInfo.name, path: __filename };
 
     /**
@@ -114,24 +115,8 @@ export default class MarketSubcommand implements Subcommand {
 
         await interaction.deferReply({ ephemeral: true });
 
-        const unbanTime: number | undefined = DataHandlers.getGlobalData().bannedUsers[interaction.user.id];
-        if (unbanTime && unbanTime > Date.now()) {
-            await Replies.handleReply(
-                interaction, this.config.stringConfig.bannedString.replace('%@', moment(unbanTime).fromNow()),
-                this.config.colorConfig.error
-            );
-            return;
-        } else if (unbanTime && unbanTime <= Date.now()) {
-            await Queue.addQueue(async () => {
-                try {
-                    const globalData = DataHandlers.getGlobalData();
-                    globalData.bannedUsers[interaction.user.id] = undefined;
-                    DataHandlers.saveGlobalData(globalData);
-                } catch (err: unknown) {
-                    await LogDebug.handleError(err, interaction);
-                }
-            }, interaction.id + 'global');
-        }
+        const isBanned = await InteractionUtils.handleBanned(interaction, this.config);
+        if (isBanned) return;
 
         if (!this.config.marketOpen && !this.config.devs.includes(interaction.user.id)) {
             await Replies.handleReply(
@@ -151,16 +136,13 @@ export default class MarketSubcommand implements Subcommand {
 
         // View to start out in
         this.curView = interaction.options.getInteger(this.subcommandInfo.args[0].name)
-            ? interaction.options.getInteger(this.subcommandInfo.args[0].name) as View
-            : View.Overview;
+            ?? View.Overview;
 
         // Page to start out on
-        const pageInput: string = interaction.options.getString(this.subcommandInfo.args[1].name)
-            ? (interaction.options.getString(this.subcommandInfo.args[1].name) as string)
-                .toLowerCase().replace(/\s+/g, '')
-            : '1';
+        const pageInput: string = interaction.options.getString(this.subcommandInfo.args[1].name)?.toLowerCase()
+            .replace(/\s+/g, '') ?? '1';
 
-        this.getPricingData();
+        await this.getPricingData();
         this.boarUser = new BoarUser(interaction.user);
 
         // Only allow orders to be viewed if there's something to show
@@ -173,8 +155,13 @@ export default class MarketSubcommand implements Subcommand {
         let pageVal = 1;
         if (!Number.isNaN(parseInt(pageInput))) {
             pageVal = parseInt(pageInput);
+        } else if (this.curView === View.Overview) {
+            const overviewSearchArr = this.pricingDataSearchArr.map(val =>
+                [val[0], Math.ceil(val[1] / this.config.numberConfig.marketPerPage)] as [string, number]
+            );
+            pageVal = BoarUtils.getClosestName(pageInput.toLowerCase().replace(/\s+/g, ''), overviewSearchArr);
         } else if (this.curView === View.BuySell) {
-            pageVal = BoarUtils.getClosestName(pageInput.toLowerCase().replace(/\s+/g, ''), this.pricingDataTree.root);
+            pageVal = BoarUtils.getClosestName(pageInput.toLowerCase().replace(/\s+/g, ''), this.pricingDataSearchArr);
         }
 
         this.setPage(pageVal);
@@ -325,7 +312,7 @@ export default class MarketSubcommand implements Subcommand {
 
                 // User wants to refresh the market data
                 case marketComponents.refresh.customId:
-                    this.getPricingData();
+                    await this.getPricingData();
                     this.imageGen.updateInfo(this.pricingData, this.userBuyOrders, this.userSellOrders, this.config);
                     this.boarUser.refreshUserData();
                     this.curEdition = 0;
@@ -411,10 +398,11 @@ export default class MarketSubcommand implements Subcommand {
 
         await Queue.addQueue(async () => {
             try {
-                const globalData: GlobalData = DataHandlers.getGlobalData();
+                const itemsData: ItemsData =
+                    DataHandlers.getGlobalData(DataHandlers.GlobalFile.Items) as ItemsData;
 
-                const buyOrders: BuySellData[] = globalData.itemData[orderInfo.type][orderInfo.id].buyers;
-                const sellOrders: BuySellData[] = globalData.itemData[orderInfo.type][orderInfo.id].sellers;
+                const buyOrders: BuySellData[] = itemsData[orderInfo.type][orderInfo.id].buyers;
+                const sellOrders: BuySellData[] = itemsData[orderInfo.type][orderInfo.id].sellers;
 
                 // Tries to find order in buy orders
                 for (let i=0; i<buyOrders.length && !isSell; i++) {
@@ -426,23 +414,18 @@ export default class MarketSubcommand implements Subcommand {
                         foundOrder = true;
 
                         numToClaim = await this.returnOrderToUser(orderInfo, isSell, true);
-                        await DataHandlers.updateLeaderboardData(this.boarUser, this.compInter, this.config);
 
                         if (
                             orderInfo.data.num === orderInfo.data.filledAmount &&
                             orderInfo.data.filledAmount === orderInfo.data.claimedAmount + numToClaim
                         ) {
-                            globalData.itemData[orderInfo.type][orderInfo.id].buyers.splice(i, 1);
+                            itemsData[orderInfo.type][orderInfo.id].buyers.splice(i, 1);
                             break;
                         }
 
-                        globalData.itemData[orderInfo.type][orderInfo.id].buyers[i].editions.splice(
-                            0, numToClaim
-                        );
-                        globalData.itemData[orderInfo.type][orderInfo.id].buyers[i].editionDates.splice(
-                            0, numToClaim
-                        );
-                        globalData.itemData[orderInfo.type][orderInfo.id].buyers[i].claimedAmount += numToClaim;
+                        itemsData[orderInfo.type][orderInfo.id].buyers[i].editions.splice(0, numToClaim);
+                        itemsData[orderInfo.type][orderInfo.id].buyers[i].editionDates.splice(0, numToClaim);
+                        itemsData[orderInfo.type][orderInfo.id].buyers[i].claimedAmount += numToClaim;
                         break;
                     }
                 }
@@ -457,24 +440,22 @@ export default class MarketSubcommand implements Subcommand {
                         foundOrder = true;
 
                         numToClaim = await this.returnOrderToUser(orderInfo, isSell, true);
-                        await DataHandlers.updateLeaderboardData(this.boarUser, this.compInter, this.config);
 
                         if (
                             orderInfo.data.num === orderInfo.data.filledAmount &&
                             orderInfo.data.filledAmount === orderInfo.data.claimedAmount + numToClaim
                         ) {
-                            globalData.itemData[orderInfo.type][orderInfo.id].sellers.splice(i, 1);
+                            itemsData[orderInfo.type][orderInfo.id].sellers.splice(i, 1);
                             break;
                         }
 
-                        globalData.itemData[orderInfo.type][orderInfo.id].sellers[i].claimedAmount +=
-                            numToClaim;
+                        itemsData[orderInfo.type][orderInfo.id].sellers[i].claimedAmount += numToClaim;
                         break;
                     }
                 }
 
-                DataHandlers.saveGlobalData(globalData);
-                this.getPricingData();
+                DataHandlers.saveGlobalData(itemsData, DataHandlers.GlobalFile.Items);
+                await this.getPricingData();
                 this.imageGen.updateInfo(
                     this.pricingData, this.userBuyOrders, this.userSellOrders, this.config
                 );
@@ -486,6 +467,11 @@ export default class MarketSubcommand implements Subcommand {
         if (!foundOrder) return;
 
         if (numToClaim > 0) {
+            await Queue.addQueue(
+                async () => DataHandlers.updateLeaderboardData(this.boarUser, this.config, this.compInter),
+                this.compInter.id + this.boarUser.user.id + 'global'
+            ).catch((err) => { throw err });
+
             await Replies.handleReply(
                 this.compInter, strConfig.marketClaimComplete, colorConfig.green, undefined, undefined, true
             );
@@ -522,22 +508,23 @@ export default class MarketSubcommand implements Subcommand {
 
         await Queue.addQueue(async () => {
             try {
-                const globalData: GlobalData = DataHandlers.getGlobalData();
+                const itemsData: ItemsData =
+                    DataHandlers.getGlobalData(DataHandlers.GlobalFile.Items) as ItemsData;
 
-                const buyOrders: BuySellData[] = globalData.itemData[orderInfo.type][orderInfo.id].buyers;
-                const sellOrders: BuySellData[] = globalData.itemData[orderInfo.type][orderInfo.id].sellers;
+                const buyOrders: BuySellData[] = itemsData[orderInfo.type][orderInfo.id].buyers;
+                const sellOrders: BuySellData[] = itemsData[orderInfo.type][orderInfo.id].sellers;
 
                 for (let i=0; i<buyOrders.length && !isSell; i++) {
                     const buyOrder: BuySellData = buyOrders[i];
-                    const orderPrice = globalData.itemData[orderInfo.type][orderInfo.id].buyers[i].price;
-                    const itemLastBuy = globalData.itemData[orderInfo.type][orderInfo.id].lastBuys[0];
+                    const orderPrice = itemsData[orderInfo.type][orderInfo.id].buyers[i].price;
+                    const itemLastBuy = itemsData[orderInfo.type][orderInfo.id].lastBuys[0];
                     const isSameOrder: boolean = buyOrder.userID === orderInfo.data.userID &&
                         buyOrder.listTime === orderInfo.data.listTime;
                     canCancel = orderInfo.data.filledAmount === buyOrder.filledAmount;
 
                     if (isSameOrder && canCancel) {
-                        const hasEnoughRoom: boolean = (await this.returnOrderToUser(orderInfo, isSell, false)) > 0;
-                        await DataHandlers.updateLeaderboardData(this.boarUser, this.compInter, this.config);
+                        const hasEnoughRoom: boolean =
+                            (await this.returnOrderToUser(orderInfo, isSell, false)) > 0;
 
                         if (hasEnoughRoom) {
                             await Replies.handleReply(
@@ -545,21 +532,19 @@ export default class MarketSubcommand implements Subcommand {
                                 undefined, undefined, true
                             );
 
-                            globalData.itemData[orderInfo.type][orderInfo.id].buyers.splice(i, 1);
+                            itemsData[orderInfo.type][orderInfo.id].buyers.splice(i, 1);
 
                             if (!isSpecial && orderPrice === itemLastBuy) {
-                                globalData.itemData[orderInfo.type][orderInfo.id].lastBuys[0] = 0;
-                                globalData.itemData[orderInfo.type][orderInfo.id].lastBuys[2] = '';
-                                for (const possibleOrder of globalData.itemData[orderInfo.type][orderInfo.id].buyers) {
+                                itemsData[orderInfo.type][orderInfo.id].lastBuys[0] = 0;
+                                itemsData[orderInfo.type][orderInfo.id].lastBuys[2] = '';
+                                for (const possibleOrder of itemsData[orderInfo.type][orderInfo.id].buyers) {
                                     const isFilled = possibleOrder.num === possibleOrder.filledAmount;
                                     const isExpired = possibleOrder.listTime +
                                         this.config.numberConfig.orderExpire < Date.now();
 
                                     if (!isFilled && !isExpired) {
-                                        globalData.itemData[orderInfo.type][orderInfo.id].lastBuys[0] =
-                                            possibleOrder.price;
-                                        globalData.itemData[orderInfo.type][orderInfo.id].lastBuys[2] =
-                                            possibleOrder.userID;
+                                        itemsData[orderInfo.type][orderInfo.id].lastBuys[0] = possibleOrder.price;
+                                        itemsData[orderInfo.type][orderInfo.id].lastBuys[2] = possibleOrder.userID;
                                         break;
                                     }
                                 }
@@ -585,13 +570,13 @@ export default class MarketSubcommand implements Subcommand {
                     const sellOrder: BuySellData = sellOrders[i];
                     const isSameOrder: boolean = sellOrder.userID === orderInfo.data.userID &&
                         sellOrder.listTime === orderInfo.data.listTime;
-                    const orderPrice = globalData.itemData[orderInfo.type][orderInfo.id].sellers[i].price;
-                    const itemLastSell = globalData.itemData[orderInfo.type][orderInfo.id].lastSells[0];
+                    const orderPrice = itemsData[orderInfo.type][orderInfo.id].sellers[i].price;
+                    const itemLastSell = itemsData[orderInfo.type][orderInfo.id].lastSells[0];
                     canCancel = orderInfo.data.filledAmount === sellOrder.filledAmount;
 
                     if (isSameOrder && canCancel) {
-                        const hasEnoughRoom: boolean = (await this.returnOrderToUser(orderInfo, isSell, false)) > 0;
-                        await DataHandlers.updateLeaderboardData(this.boarUser, this.compInter, this.config);
+                        const hasEnoughRoom: boolean =
+                            (await this.returnOrderToUser(orderInfo, isSell, false)) > 0;
 
                         if (hasEnoughRoom) {
                             await Replies.handleReply(
@@ -599,21 +584,19 @@ export default class MarketSubcommand implements Subcommand {
                                 colorConfig.green, undefined, undefined, true
                             );
 
-                            globalData.itemData[orderInfo.type][orderInfo.id].sellers.splice(i, 1);
+                            itemsData[orderInfo.type][orderInfo.id].sellers.splice(i, 1);
 
                             if (!isSpecial && orderPrice === itemLastSell) {
-                                globalData.itemData[orderInfo.type][orderInfo.id].lastSells[0] = 0;
-                                globalData.itemData[orderInfo.type][orderInfo.id].lastSells[2] = '';
-                                for (const possibleOrder of globalData.itemData[orderInfo.type][orderInfo.id].sellers) {
+                                itemsData[orderInfo.type][orderInfo.id].lastSells[0] = 0;
+                                itemsData[orderInfo.type][orderInfo.id].lastSells[2] = '';
+                                for (const possibleOrder of itemsData[orderInfo.type][orderInfo.id].sellers) {
                                     const isFilled = possibleOrder.num === possibleOrder.filledAmount;
                                     const isExpired = possibleOrder.listTime +
                                         this.config.numberConfig.orderExpire < Date.now();
 
                                     if (!isFilled && !isExpired) {
-                                        globalData.itemData[orderInfo.type][orderInfo.id].lastSells[0] =
-                                            possibleOrder.price;
-                                        globalData.itemData[orderInfo.type][orderInfo.id].lastSells[2] =
-                                            possibleOrder.userID;
+                                        itemsData[orderInfo.type][orderInfo.id].lastSells[0] = possibleOrder.price;
+                                        itemsData[orderInfo.type][orderInfo.id].lastSells[2] = possibleOrder.userID;
                                         break;
                                     }
                                 }
@@ -635,8 +618,8 @@ export default class MarketSubcommand implements Subcommand {
                     }
                 }
 
-                DataHandlers.saveGlobalData(globalData);
-                this.getPricingData();
+                DataHandlers.saveGlobalData(itemsData, DataHandlers.GlobalFile.Items);
+                await this.getPricingData();
                 this.imageGen.updateInfo(
                     this.pricingData, this.userBuyOrders, this.userSellOrders, this.config
                 );
@@ -644,6 +627,11 @@ export default class MarketSubcommand implements Subcommand {
                 await LogDebug.handleError(err, this.compInter);
             }
         }, this.compInter.id + 'global').catch((err) => { throw err });
+
+        await Queue.addQueue(
+            async () => DataHandlers.updateLeaderboardData(this.boarUser, this.config, this.compInter),
+            this.compInter.id + this.boarUser.user.id + 'global'
+        ).catch((err) => { throw err });
     }
 
     /**
@@ -660,6 +648,8 @@ export default class MarketSubcommand implements Subcommand {
         let numToReturn = 0;
         let hasEnoughRoom = true;
 
+        const questData = DataHandlers.getGlobalData(DataHandlers.GlobalFile.Quest) as QuestData;
+
         if (!isClaim) {
             isSell = !isSell;
         }
@@ -674,13 +664,24 @@ export default class MarketSubcommand implements Subcommand {
                     numToReturn = orderInfo.data.num - orderInfo.data.filledAmount;
                 }
 
+                if (!isSell && isClaim) {
+                    const spendBucksIndex = questData.curQuestIDs.indexOf('spendBucks');
+                    this.boarUser.stats.quests.progress[spendBucksIndex] += numToReturn * orderInfo.data.price;
+                }
+
                 if (!isSell && orderInfo.type === 'boars') {
+                    const collectBoarIndex = questData.curQuestIDs.indexOf('collectBoar');
+
                     if (!this.boarUser.itemCollection.boars[orderInfo.id]) {
                         this.boarUser.itemCollection.boars[orderInfo.id] = new CollectedBoar;
                         this.boarUser.itemCollection.boars[orderInfo.id].firstObtained = Date.now();
                     }
 
-                    this.boarUser.itemCollection.boars[orderInfo.id].lastObtained = Date.now();
+                    if (isClaim) {
+                        this.boarUser.itemCollection.boars[orderInfo.id].lastObtained = Date.now();
+                        this.boarUser.stats.general.lastBoar = orderInfo.id;
+                    }
+
                     this.boarUser.itemCollection.boars[orderInfo.id].editions =
                         this.boarUser.itemCollection.boars[orderInfo.id].editions.concat(
                             orderInfo.data.editions.slice(0, numToReturn)
@@ -689,42 +690,37 @@ export default class MarketSubcommand implements Subcommand {
                         this.boarUser.itemCollection.boars[orderInfo.id].editionDates.concat(
                             orderInfo.data.editionDates.slice(0, numToReturn)
                         ).sort((a, b) => a - b);
-                    this.boarUser.stats.general.lastBoar = orderInfo.id;
+
                     this.boarUser.stats.general.totalBoars += numToReturn;
                     this.boarUser.itemCollection.boars[orderInfo.id].num += numToReturn;
+
+                    if (
+                        collectBoarIndex >= 0 && isClaim &&
+                        Math.floor(collectBoarIndex / 2) === BoarUtils.findRarity(orderInfo.id, this.config)[0]
+                    ) {
+                        this.boarUser.stats.quests.progress[collectBoarIndex] += numToReturn;
+                    }
                 } else if (!isSell && orderInfo.type === 'powerups') {
-                    if (orderInfo.id === 'extraChance') {
-                        hasEnoughRoom = this.boarUser.itemCollection.powerups[orderInfo.id].numTotal + numToReturn <=
-                            this.config.numberConfig.maxExtraChance;
+                    const maxValue = orderInfo.id === 'enhancer'
+                        ? this.config.numberConfig.maxEnhancers
+                        : this.config.numberConfig.maxPowBase;
 
-                        if (isClaim) {
-                            numToReturn = Math.min(
-                                numToReturn,
-                                this.config.numberConfig.maxExtraChance -
-                                this.boarUser.itemCollection.powerups[orderInfo.id].numTotal
-                            );
-                        }
-                    } else if (orderInfo.id === 'enhancer') {
-                        hasEnoughRoom = this.boarUser.itemCollection.powerups[orderInfo.id].numTotal + numToReturn <=
-                            this.config.numberConfig.maxEnhancers;
+                    hasEnoughRoom = this.boarUser.itemCollection.powerups[orderInfo.id].numTotal + numToReturn <=
+                        maxValue;
 
-                        if (isClaim) {
-                            numToReturn = Math.min(
-                                numToReturn,
-                                this.config.numberConfig.maxEnhancers -
-                                this.boarUser.itemCollection.powerups[orderInfo.id].numTotal
-                            );
-                        }
+                    if (isClaim) {
+                        numToReturn = Math.min(
+                            numToReturn, maxValue - this.boarUser.itemCollection.powerups[orderInfo.id].numTotal
+                        );
                     }
 
                     if (hasEnoughRoom || isClaim) {
                         this.boarUser.itemCollection.powerups[orderInfo.id].numTotal += numToReturn;
-                        this.boarUser.itemCollection.powerups[orderInfo.id].highestTotal = Math.max(
-                            this.boarUser.itemCollection.powerups[orderInfo.id].numTotal,
-                            this.boarUser.itemCollection.powerups[orderInfo.id].highestTotal
-                        );
                     }
-                } else {
+                } else if (isClaim) {
+                    const collectBucksIndex = questData.curQuestIDs.indexOf('collectBucks');
+
+                    this.boarUser.stats.quests.progress[collectBucksIndex] += numToReturn * orderInfo.data.price;
                     this.boarUser.stats.general.boarScore += numToReturn * orderInfo.data.price;
                 }
 
@@ -766,6 +762,8 @@ export default class MarketSubcommand implements Subcommand {
             const strConfig: StringConfig = this.config.stringConfig;
             const nums: NumberConfig = this.config.numberConfig;
             const colorConfig: ColorConfig = this.config.colorConfig;
+
+            const questData = DataHandlers.getGlobalData(DataHandlers.GlobalFile.Quest) as QuestData;
 
             let specialSellOrder: BuySellData | undefined;
             const itemRarity: [number, RarityConfig] = BoarUtils.findRarity(itemData.id, this.config);
@@ -829,9 +827,7 @@ export default class MarketSubcommand implements Subcommand {
 
                 if (
                     itemData.id === 'enhancer' &&
-                    this.modalData[0] + this.boarUser.itemCollection.powerups.enhancer.numTotal > nums.maxEnhancers ||
-                    itemData.id === 'extraChance' &&
-                    this.modalData[0] + this.boarUser.itemCollection.powerups.extraChance.numTotal > nums.maxExtraChance
+                    this.modalData[0] + this.boarUser.itemCollection.powerups.enhancer.numTotal > nums.maxEnhancers
                 ) {
                     await Replies.handleReply(
                         inter, strConfig.marketNoRoom, colorConfig.error, undefined, undefined, true
@@ -843,8 +839,9 @@ export default class MarketSubcommand implements Subcommand {
 
                     await Queue.addQueue(async () => {
                         try {
-                            const globalData: GlobalData = DataHandlers.getGlobalData();
-                            const newItemData: ItemData = globalData.itemData[itemData.type][itemData.id];
+                            const itemsData: ItemsData = 
+                                DataHandlers.getGlobalData(DataHandlers.GlobalFile.Items) as ItemsData;
+                            const newItemData: ItemData = itemsData[itemData.type][itemData.id];
 
                             let curPrice = 0;
 
@@ -933,25 +930,25 @@ export default class MarketSubcommand implements Subcommand {
                             }
 
                             if (!isSpecial) {
-                                globalData.itemData[itemData.type][itemData.id].lastSells[0] = 0;
-                                globalData.itemData[itemData.type][itemData.id].lastSells[2] = '';
-                                for (const possibleOrder of globalData.itemData[itemData.type][itemData.id].sellers) {
+                                itemsData[itemData.type][itemData.id].lastSells[0] = 0;
+                                itemsData[itemData.type][itemData.id].lastSells[2] = '';
+                                for (const possibleOrder of itemsData[itemData.type][itemData.id].sellers) {
                                     const isFilled = possibleOrder.num === possibleOrder.filledAmount;
                                     const isExpired = possibleOrder.listTime +
                                         this.config.numberConfig.orderExpire < Date.now();
 
                                     if (!isFilled && !isExpired) {
-                                        globalData.itemData[itemData.type][itemData.id].lastSells[0] =
+                                        itemsData[itemData.type][itemData.id].lastSells[0] =
                                             possibleOrder.price;
-                                        globalData.itemData[itemData.type][itemData.id].lastSells[2] =
+                                        itemsData[itemData.type][itemData.id].lastSells[2] =
                                             possibleOrder.userID;
                                         break;
                                     }
                                 }
                             }
 
-                            DataHandlers.saveGlobalData(globalData);
-                            this.getPricingData();
+                            DataHandlers.saveGlobalData(itemsData, DataHandlers.GlobalFile.Items);
+                            await this.getPricingData();
                             this.imageGen.updateInfo(
                                 this.pricingData, this.userBuyOrders, this.userSellOrders, this.config
                             );
@@ -962,6 +959,8 @@ export default class MarketSubcommand implements Subcommand {
                     }, inter.id + 'global').catch((err) => { throw err });
 
                     if (!failedBuy && itemData.type === 'boars') {
+                        const collectBoarIndex = questData.curQuestIDs.indexOf('collectBoar');
+
                         itemData = this.pricingData[this.curPage];
 
                         if (!this.boarUser.itemCollection.boars[itemData.id]) {
@@ -1009,26 +1008,34 @@ export default class MarketSubcommand implements Subcommand {
 
                             this.curEdition = 0;
                         }
+
+                        if (
+                            collectBoarIndex >= 0 &&
+                            Math.floor(collectBoarIndex / 2) === BoarUtils.findRarity(itemData.id, this.config)[0]
+                        ) {
+                            this.boarUser.stats.quests.progress[collectBoarIndex] += this.modalData[0];
+                        }
                     } else if (!failedBuy && itemData.type === 'powerups') {
                         this.boarUser.itemCollection.powerups[itemData.id].numTotal += this.modalData[0];
-                        this.boarUser.itemCollection.powerups[itemData.id].highestTotal = Math.max(
-                            this.boarUser.itemCollection.powerups[itemData.id].numTotal,
-                            this.boarUser.itemCollection.powerups[itemData.id].highestTotal
-                        );
                     }
 
                     if (!failedBuy) {
+                        const spendBucksIndex = questData.curQuestIDs.indexOf('spendBucks');
+
                         LogDebug.log(
                             `Bought ${this.modalData[0]} of ${itemData.id} for ${prices.trim()} from ${userIDs.trim()}`,
                             this.config, inter, true
                         );
 
                         this.boarUser.stats.general.boarScore -= this.modalData[1];
+
+                        this.boarUser.stats.quests.progress[spendBucksIndex] += this.modalData[1];
+
                         await this.boarUser.orderBoars(this.compInter, this.config);
                         this.boarUser.updateUserData();
 
-                        await Queue.addQueue(async () =>
-                            await DataHandlers.updateLeaderboardData(this.boarUser, inter, this.config),
+                        await Queue.addQueue(
+                            async () => DataHandlers.updateLeaderboardData(this.boarUser, this.config, inter),
                             inter.id + this.boarUser.user.id + 'global'
                         ).catch((err) => { throw err });
 
@@ -1062,8 +1069,9 @@ export default class MarketSubcommand implements Subcommand {
 
                     await Queue.addQueue(async () => {
                         try {
-                            const globalData: GlobalData = DataHandlers.getGlobalData();
-                            const newItemData: ItemData = globalData.itemData[itemData.type][itemData.id];
+                            const itemsData: ItemsData =
+                                DataHandlers.getGlobalData(DataHandlers.GlobalFile.Items) as ItemsData;
+                            const newItemData: ItemData = itemsData[itemData.type][itemData.id];
 
                             let curPrice = 0;
 
@@ -1112,6 +1120,9 @@ export default class MarketSubcommand implements Subcommand {
                                     editionOrderIndex++;
 
                                     if (noEditionExists) continue;
+
+                                    prices += '$' + instaSell.price;
+                                    userIDs += instaSell.userID;
 
                                     curPrice = instaSell.price;
                                     break;
@@ -1186,25 +1197,25 @@ export default class MarketSubcommand implements Subcommand {
                             }
 
                             if (!isSpecial) {
-                                globalData.itemData[itemData.type][itemData.id].lastBuys[0] = 0;
-                                globalData.itemData[itemData.type][itemData.id].lastBuys[2] = '';
-                                for (const possibleOrder of globalData.itemData[itemData.type][itemData.id].buyers) {
+                                itemsData[itemData.type][itemData.id].lastBuys[0] = 0;
+                                itemsData[itemData.type][itemData.id].lastBuys[2] = '';
+                                for (const possibleOrder of itemsData[itemData.type][itemData.id].buyers) {
                                     const isFilled = possibleOrder.num === possibleOrder.filledAmount;
                                     const isExpired = possibleOrder.listTime +
                                         this.config.numberConfig.orderExpire < Date.now();
 
                                     if (!isFilled && !isExpired) {
-                                        globalData.itemData[itemData.type][itemData.id].lastBuys[0] =
+                                        itemsData[itemData.type][itemData.id].lastBuys[0] =
                                             possibleOrder.price;
-                                        globalData.itemData[itemData.type][itemData.id].lastBuys[2] =
+                                        itemsData[itemData.type][itemData.id].lastBuys[2] =
                                             possibleOrder.userID;
                                         break;
                                     }
                                 }
                             }
 
-                            DataHandlers.saveGlobalData(globalData);
-                            this.getPricingData();
+                            DataHandlers.saveGlobalData(itemsData, DataHandlers.GlobalFile.Items);
+                            await this.getPricingData();
                             this.imageGen.updateInfo(
                                 this.pricingData, this.userBuyOrders, this.userSellOrders, this.config
                             );
@@ -1215,8 +1226,10 @@ export default class MarketSubcommand implements Subcommand {
                     }, inter.id + 'global').catch((err) => { throw err });
 
                     if (!failedSale) {
+                        const collectBucksIndex = questData.curQuestIDs.indexOf('collectBucks');
+
                         LogDebug.log(
-                            `Sold ${this.modalData[0]} of ${itemData.id} for ${prices} from ${userIDs}`,
+                            `Sold ${this.modalData[0]} of ${itemData.id} for ${prices} to ${userIDs}`,
                             this.config, inter, true
                         );
 
@@ -1227,12 +1240,13 @@ export default class MarketSubcommand implements Subcommand {
                             this.boarUser.itemCollection.powerups[itemData.id].numTotal -= this.modalData[0];
                         }
 
+                        this.boarUser.stats.quests.progress[collectBucksIndex] += this.modalData[1];
                         this.boarUser.stats.general.boarScore += this.modalData[1];
                         await this.boarUser.orderBoars(this.compInter, this.config);
                         this.boarUser.updateUserData();
 
                         await Queue.addQueue(async () =>
-                                await DataHandlers.updateLeaderboardData(this.boarUser, inter, this.config),
+                            DataHandlers.updateLeaderboardData(this.boarUser, this.config, inter),
                             inter.id + this.boarUser.user.id + 'global'
                         ).catch((err) => { throw err });
 
@@ -1326,7 +1340,8 @@ export default class MarketSubcommand implements Subcommand {
                 if (this.boarUser.stats.general.boarScore >= this.modalData[0] * this.modalData[1]) {
                     await Queue.addQueue(async () => {
                         try {
-                            const globalData: GlobalData = DataHandlers.getGlobalData();
+                            const itemsData: ItemsData =
+                                DataHandlers.getGlobalData(DataHandlers.GlobalFile.Items) as ItemsData;
                             const order: BuySellData = {
                                 userID: inter.user.id,
                                 num: this.modalData[0],
@@ -1338,18 +1353,18 @@ export default class MarketSubcommand implements Subcommand {
                                 claimedAmount: 0
                             };
 
-                            globalData.itemData[itemData.type][itemData.id].buyers.push(order);
-                            globalData.itemData[itemData.type][itemData.id].buyers.sort((a, b) => b.price - a.price);
+                            itemsData[itemData.type][itemData.id].buyers.push(order);
+                            itemsData[itemData.type][itemData.id].buyers.sort((a, b) => b.price - a.price);
 
                             if (!isSpecial) {
                                 let highestBuyOrder: BuySellData = new BuySellData;
 
                                 for (
                                     let i=0;
-                                    i<globalData.itemData[itemData.type][itemData.id].buyers.length;
+                                    i<itemsData[itemData.type][itemData.id].buyers.length;
                                     i++
                                 ) {
-                                    const buyData = globalData.itemData[itemData.type][itemData.id].buyers[i];
+                                    const buyData = itemsData[itemData.type][itemData.id].buyers[i];
                                     const isExpired = buyData.listTime +
                                         this.config.numberConfig.orderExpire < Date.now();
                                     const isFilled = buyData.num === buyData.filledAmount;
@@ -1360,12 +1375,12 @@ export default class MarketSubcommand implements Subcommand {
                                     }
                                 }
 
-                                globalData.itemData[itemData.type][itemData.id].lastBuys[0] = highestBuyOrder.price;
-                                globalData.itemData[itemData.type][itemData.id].lastBuys[2] = highestBuyOrder.userID;
+                                itemsData[itemData.type][itemData.id].lastBuys[0] = highestBuyOrder.price;
+                                itemsData[itemData.type][itemData.id].lastBuys[2] = highestBuyOrder.userID;
                             }
 
-                            DataHandlers.saveGlobalData(globalData);
-                            this.getPricingData();
+                            DataHandlers.saveGlobalData(itemsData, DataHandlers.GlobalFile.Items);
+                            await this.getPricingData();
                             this.imageGen.updateInfo(
                                 this.pricingData, this.userBuyOrders, this.userSellOrders, this.config
                             );
@@ -1379,7 +1394,7 @@ export default class MarketSubcommand implements Subcommand {
                     this.boarUser.updateUserData();
 
                     await Queue.addQueue(
-                        async () => await DataHandlers.updateLeaderboardData(this.boarUser, inter, this.config),
+                        async () => DataHandlers.updateLeaderboardData(this.boarUser, this.config, inter),
                         inter.id + this.boarUser.user.id + 'global'
                     ).catch((err) => { throw err });
 
@@ -1414,7 +1429,8 @@ export default class MarketSubcommand implements Subcommand {
 
                     await Queue.addQueue(async () => {
                         try {
-                            const globalData: GlobalData = DataHandlers.getGlobalData();
+                            const itemsData: ItemsData =
+                                DataHandlers.getGlobalData(DataHandlers.GlobalFile.Items) as ItemsData;
 
                             const editions: number[] = itemData.type === 'boars'
                                 ? this.boarUser.itemCollection.boars[itemData.id]
@@ -1436,14 +1452,14 @@ export default class MarketSubcommand implements Subcommand {
                                 claimedAmount: 0
                             };
 
-                            globalData.itemData[itemData.type][itemData.id].sellers.push(order);
-                            globalData.itemData[itemData.type][itemData.id].sellers.sort((a, b) => a.price - b.price);
+                            itemsData[itemData.type][itemData.id].sellers.push(order);
+                            itemsData[itemData.type][itemData.id].sellers.sort((a, b) => a.price - b.price);
 
                             if (!isSpecial) {
                                 let lowestSellOrder: BuySellData = new BuySellData;
 
-                                for (let i=0; i<globalData.itemData[itemData.type][itemData.id].sellers.length; i++) {
-                                    const sellData = globalData.itemData[itemData.type][itemData.id].sellers[i];
+                                for (let i=0; i<itemsData[itemData.type][itemData.id].sellers.length; i++) {
+                                    const sellData = itemsData[itemData.type][itemData.id].sellers[i];
                                     const isExpired = sellData.listTime +
                                         this.config.numberConfig.orderExpire < Date.now();
                                     const isFilled = sellData.num === sellData.filledAmount;
@@ -1454,12 +1470,12 @@ export default class MarketSubcommand implements Subcommand {
                                     }
                                 }
 
-                                globalData.itemData[itemData.type][itemData.id].lastSells[0] = lowestSellOrder.price;
-                                globalData.itemData[itemData.type][itemData.id].lastSells[2] = lowestSellOrder.userID;
+                                itemsData[itemData.type][itemData.id].lastSells[0] = lowestSellOrder.price;
+                                itemsData[itemData.type][itemData.id].lastSells[2] = lowestSellOrder.userID;
                             }
 
-                            DataHandlers.saveGlobalData(globalData);
-                            this.getPricingData();
+                            DataHandlers.saveGlobalData(itemsData, DataHandlers.GlobalFile.Items);
+                            await this.getPricingData();
                             this.imageGen.updateInfo(
                                 this.pricingData, this.userBuyOrders, this.userSellOrders, this.config
                             );
@@ -1479,7 +1495,7 @@ export default class MarketSubcommand implements Subcommand {
                     this.boarUser.updateUserData();
 
                     await Queue.addQueue(
-                        async () => await DataHandlers.updateLeaderboardData(this.boarUser, inter, this.config),
+                        async () => DataHandlers.updateLeaderboardData(this.boarUser, this.config, inter),
                         inter.id + this.boarUser.user.id + 'global'
                     ).catch((err) => { throw err });
 
@@ -1542,10 +1558,11 @@ export default class MarketSubcommand implements Subcommand {
 
             await Queue.addQueue(async () => {
                 try {
-                    const globalData: GlobalData = DataHandlers.getGlobalData();
+                    const itemsData: ItemsData =
+                        DataHandlers.getGlobalData(DataHandlers.GlobalFile.Items) as ItemsData;
 
-                    const buyOrders = globalData.itemData[orderInfo.type][orderInfo.id].buyers;
-                    const sellOrders = globalData.itemData[orderInfo.type][orderInfo.id].sellers;
+                    const buyOrders = itemsData[orderInfo.type][orderInfo.id].buyers;
+                    const sellOrders = itemsData[orderInfo.type][orderInfo.id].sellers;
 
                     for (let i=0; i<buyOrders.length && !isSell; i++) {
                         const buyOrder = buyOrders[i];
@@ -1572,15 +1589,15 @@ export default class MarketSubcommand implements Subcommand {
                                     await this.boarUser.orderBoars(this.compInter, this.config);
                                     this.boarUser.updateUserData();
 
-                                    globalData.itemData[orderInfo.type][orderInfo.id].buyers[i].price =
+                                    itemsData[orderInfo.type][orderInfo.id].buyers[i].price =
                                         this.modalData[1];
-                                    globalData.itemData[orderInfo.type][orderInfo.id].buyers[i].listTime = Date.now();
+                                    itemsData[orderInfo.type][orderInfo.id].buyers[i].listTime = Date.now();
 
                                     const newOrderData: BuySellData =
-                                        globalData.itemData[orderInfo.type][orderInfo.id].buyers.splice(i, 1)[0];
-                                    globalData.itemData[orderInfo.type][orderInfo.id].buyers.push(newOrderData);
+                                        itemsData[orderInfo.type][orderInfo.id].buyers.splice(i, 1)[0];
+                                    itemsData[orderInfo.type][orderInfo.id].buyers.push(newOrderData);
 
-                                    globalData.itemData[orderInfo.type][orderInfo.id].buyers
+                                    itemsData[orderInfo.type][orderInfo.id].buyers
                                         .sort((a, b) => b.price - a.price);
 
                                     if (!isSpecial) {
@@ -1588,10 +1605,10 @@ export default class MarketSubcommand implements Subcommand {
 
                                         for (
                                             let i=0;
-                                            i<globalData.itemData[orderInfo.type][orderInfo.id].buyers.length;
+                                            i<itemsData[orderInfo.type][orderInfo.id].buyers.length;
                                             i++
                                         ) {
-                                            const buyData = globalData.itemData[orderInfo.type][orderInfo.id].buyers[i];
+                                            const buyData = itemsData[orderInfo.type][orderInfo.id].buyers[i];
                                             const isExpired = buyData.listTime +
                                                 this.config.numberConfig.orderExpire < Date.now();
                                             const isFilled = buyData.num === buyData.filledAmount;
@@ -1602,9 +1619,9 @@ export default class MarketSubcommand implements Subcommand {
                                             }
                                         }
 
-                                        globalData.itemData[orderInfo.type][orderInfo.id].lastBuys[0] =
+                                        itemsData[orderInfo.type][orderInfo.id].lastBuys[0] =
                                             highestBuyOrder.price;
-                                        globalData.itemData[orderInfo.type][orderInfo.id].lastBuys[2] =
+                                        itemsData[orderInfo.type][orderInfo.id].lastBuys[2] =
                                             highestBuyOrder.userID;
                                     }
 
@@ -1643,14 +1660,14 @@ export default class MarketSubcommand implements Subcommand {
                                 showModal = false;
                                 foundOrder = true;
 
-                                globalData.itemData[orderInfo.type][orderInfo.id].sellers[i].price = this.modalData[1];
-                                globalData.itemData[orderInfo.type][orderInfo.id].sellers[i].listTime = Date.now();
+                                itemsData[orderInfo.type][orderInfo.id].sellers[i].price = this.modalData[1];
+                                itemsData[orderInfo.type][orderInfo.id].sellers[i].listTime = Date.now();
 
                                 const newOrderData: BuySellData =
-                                    globalData.itemData[orderInfo.type][orderInfo.id].sellers.splice(i, 1)[0];
-                                globalData.itemData[orderInfo.type][orderInfo.id].sellers.push(newOrderData);
+                                    itemsData[orderInfo.type][orderInfo.id].sellers.splice(i, 1)[0];
+                                itemsData[orderInfo.type][orderInfo.id].sellers.push(newOrderData);
 
-                                globalData.itemData[orderInfo.type][orderInfo.id].sellers
+                                itemsData[orderInfo.type][orderInfo.id].sellers
                                     .sort((a, b) => a.price - b.price);
 
                                 if (!isSpecial) {
@@ -1658,10 +1675,10 @@ export default class MarketSubcommand implements Subcommand {
 
                                     for (
                                         let i=0;
-                                        i<globalData.itemData[orderInfo.type][orderInfo.id].sellers.length;
+                                        i<itemsData[orderInfo.type][orderInfo.id].sellers.length;
                                         i++
                                     ) {
-                                        const sellData = globalData.itemData[orderInfo.type][orderInfo.id].sellers[i];
+                                        const sellData = itemsData[orderInfo.type][orderInfo.id].sellers[i];
                                         const isExpired = sellData.listTime +
                                             this.config.numberConfig.orderExpire < Date.now();
                                         const isFilled = sellData.num === sellData.filledAmount;
@@ -1672,9 +1689,9 @@ export default class MarketSubcommand implements Subcommand {
                                         }
                                     }
 
-                                    globalData.itemData[orderInfo.type][orderInfo.id].lastSells[0] =
+                                    itemsData[orderInfo.type][orderInfo.id].lastSells[0] =
                                         lowestSellOrder.price;
-                                    globalData.itemData[orderInfo.type][orderInfo.id].lastSells[2] =
+                                    itemsData[orderInfo.type][orderInfo.id].lastSells[2] =
                                         lowestSellOrder.userID;
                                 }
 
@@ -1699,8 +1716,8 @@ export default class MarketSubcommand implements Subcommand {
                         }
                     }
 
-                    DataHandlers.saveGlobalData(globalData);
-                    this.getPricingData();
+                    DataHandlers.saveGlobalData(itemsData, DataHandlers.GlobalFile.Items);
+                    await this.getPricingData();
                     this.imageGen.updateInfo(
                         this.pricingData, this.userBuyOrders, this.userSellOrders, this.config
                     );
@@ -1726,6 +1743,8 @@ export default class MarketSubcommand implements Subcommand {
 
     private async handleEndCollect(reason: string) {
         try {
+            this.hasStopped = true;
+
             LogDebug.log('Ended collection with reason: ' + reason, this.config, this.firstInter);
 
             if (reason == CollectorUtils.Reasons.Error) {
@@ -1743,32 +1762,32 @@ export default class MarketSubcommand implements Subcommand {
         }
     }
 
-    private getPricingData(): void {
-        const itemData = DataHandlers.getGlobalData().itemData;
+    private async getPricingData(): Promise<void> {
+        const itemsData: ItemsData = DataHandlers.getGlobalData(DataHandlers.GlobalFile.Items) as ItemsData;
         const curItem = this.pricingData.length > 0
             ? this.pricingData[this.curPage]
             : undefined;
 
         this.pricingData = [];
-        this.pricingDataTree = createRBTree();
+        this.pricingDataSearchArr = [];
         this.userBuyOrders = [];
         this.userSellOrders = [];
 
-        for (const itemType of Object.keys(itemData)) {
-            for (const itemID of Object.keys(itemData[itemType])) {
+        for (const itemType of Object.keys(itemsData)) {
+            for (const itemID of Object.keys(itemsData[itemType])) {
                 this.pricingData.push({
                     id: itemID,
                     type: itemType,
-                    buyers: itemData[itemType][itemID].buyers,
-                    sellers: itemData[itemType][itemID].sellers,
-                    lastBuys: itemData[itemType][itemID].lastBuys,
-                    lastSells: itemData[itemType][itemID].lastSells
+                    buyers: itemsData[itemType][itemID].buyers,
+                    sellers: itemsData[itemType][itemID].sellers,
+                    lastBuys: itemsData[itemType][itemID].lastBuys,
+                    lastSells: itemsData[itemType][itemID].lastSells
                 });
 
-                this.pricingDataTree = this.pricingDataTree.insert(
+                this.pricingDataSearchArr.push([
                     this.config.itemConfigs[itemType][itemID].name.toLowerCase().replace(/\s+/g, ''),
                     this.pricingData.length
-                );
+                ]);
             }
         }
 
@@ -1913,9 +1932,14 @@ export default class MarketSubcommand implements Subcommand {
             let pageVal = 1;
             if (!Number.isNaN(parseInt(submittedPage))) {
                 pageVal = parseInt(submittedPage);
+            } else if (this.curView === View.Overview) {
+                const overviewSearchArr = this.pricingDataSearchArr.map(val =>
+                    [val[0], Math.ceil(val[1] / this.config.numberConfig.marketPerPage)] as [string, number]
+                );
+                pageVal = BoarUtils.getClosestName(submittedPage.toLowerCase().replace(/\s+/g, ''), overviewSearchArr);
             } else if (this.curView === View.BuySell) {
                 pageVal = BoarUtils.getClosestName(
-                    submittedPage.toLowerCase().replace(/\s+/g, ''), this.pricingDataTree.root
+                    submittedPage.toLowerCase().replace(/\s+/g, ''), this.pricingDataSearchArr
                 )
             }
 
@@ -1974,7 +1998,7 @@ export default class MarketSubcommand implements Subcommand {
 
             this.boarUser.refreshUserData();
 
-            this.getPricingData();
+            await this.getPricingData();
             this.imageGen.updateInfo(this.pricingData, this.userBuyOrders, this.userSellOrders, this.config);
 
             const itemData = this.pricingData[this.curPage];
@@ -2101,7 +2125,7 @@ export default class MarketSubcommand implements Subcommand {
 
             this.boarUser.refreshUserData();
 
-            this.getPricingData();
+            await this.getPricingData();
             this.imageGen.updateInfo(this.pricingData, this.userBuyOrders, this.userSellOrders, this.config);
 
             const itemData = this.pricingData[this.curPage];
@@ -2253,7 +2277,7 @@ export default class MarketSubcommand implements Subcommand {
                 return;
             }
 
-            this.getPricingData();
+            await this.getPricingData();
             this.imageGen.updateInfo(this.pricingData, this.userBuyOrders, this.userSellOrders, this.config);
 
             const itemData = this.pricingData[this.curPage];
@@ -2290,6 +2314,9 @@ export default class MarketSubcommand implements Subcommand {
                 minSellVal = itemData.lastSells[0] / this.config.numberConfig.marketRange;
                 maxSellVal = itemData.lastSells[0] * this.config.numberConfig.marketRange;
             }
+
+            minSellVal = Math.ceil(minSellVal);
+            minBuyVal = Math.ceil(minBuyVal);
 
             if (
                 isBuyOrder && minBuyVal > 0 && priceVal < minBuyVal ||
@@ -2336,10 +2363,12 @@ export default class MarketSubcommand implements Subcommand {
 
             const price = priceVal * numVal;
 
-            const bucksBoardData = DataHandlers.getGlobalData().leaderboardData['bucks'];
+            const leaderboardsData: Record<string, BoardData> =
+                DataHandlers.getGlobalData(DataHandlers.GlobalFile.Leaderboards) as Record<string, BoardData>;
+            const bucksBoardData = leaderboardsData['bucks'];
             let maxBucks = this.config.numberConfig.marketMaxBucks;
             for (const userID of Object.keys(bucksBoardData.userData)) {
-                maxBucks = Math.max(maxBucks, bucksBoardData.userData[userID] as number * 10);
+                maxBucks = Math.max(maxBucks, (bucksBoardData.userData[userID] as [string, number])[1] * 10);
             }
 
             if (!isBuyOrder && (priceVal === null || priceVal > maxBucks)) {
@@ -2448,12 +2477,13 @@ export default class MarketSubcommand implements Subcommand {
                 return;
             }
 
-            this.getPricingData();
+            await this.getPricingData();
             this.imageGen.updateInfo(this.pricingData, this.userBuyOrders, this.userSellOrders, this.config);
 
             const itemData = this.pricingData[this.curPage];
 
-            const curEdition = DataHandlers.getGlobalData().itemData[itemData.type][itemData.id].curEdition as number;
+            const itemsData: ItemsData = DataHandlers.getGlobalData(DataHandlers.GlobalFile.Items) as ItemsData;
+            const curEdition = itemsData[itemData.type][itemData.id].curEdition as number;
 
             if (editionVal > curEdition) {
                 await Replies.handleReply(
@@ -2493,10 +2523,12 @@ export default class MarketSubcommand implements Subcommand {
                 return;
             }
 
-            const bucksBoardData = DataHandlers.getGlobalData().leaderboardData['bucks'];
+            const leaderboardsData: Record<string, BoardData> =
+                DataHandlers.getGlobalData(DataHandlers.GlobalFile.Leaderboards) as Record<string, BoardData>;
+            const bucksBoardData = leaderboardsData['bucks'];
             let maxBucks = this.config.numberConfig.marketMaxBucks;
             for (const userID of Object.keys(bucksBoardData.userData)) {
-                maxBucks = Math.max(maxBucks, bucksBoardData.userData[userID] as number * 10);
+                maxBucks = Math.max(maxBucks, (bucksBoardData.userData[userID] as [string, number])[1] * 10);
             }
 
             if (!isBuyOrder && priceVal > maxBucks) {
@@ -2581,7 +2613,7 @@ export default class MarketSubcommand implements Subcommand {
 
             this.boarUser.refreshUserData();
 
-            this.getPricingData();
+            await this.getPricingData();
             this.imageGen.updateInfo(this.pricingData, this.userBuyOrders, this.userSellOrders, this.config);
 
             const itemData = this.userBuyOrders.concat(this.userSellOrders)[this.curPage];
@@ -2594,10 +2626,12 @@ export default class MarketSubcommand implements Subcommand {
                 ? strConfig.marketConfirmUpdateIncrease
                 : strConfig.marketConfirmUpdateDecrease;
 
-            const bucksBoardData = DataHandlers.getGlobalData().leaderboardData['bucks'];
+            const leaderboardsData: Record<string, BoardData> =
+                DataHandlers.getGlobalData(DataHandlers.GlobalFile.Leaderboards) as Record<string, BoardData>;
+            const bucksBoardData = leaderboardsData['bucks'];
             let maxBucks = this.config.numberConfig.marketMaxBucks;
             for (const userID of Object.keys(bucksBoardData.userData)) {
-                maxBucks = Math.max(maxBucks, bucksBoardData.userData[userID] as number * 10);
+                maxBucks = Math.max(maxBucks, (bucksBoardData.userData[userID] as [string, number])[1] * 10);
             }
 
             let minBuyVal: number;
@@ -2606,11 +2640,12 @@ export default class MarketSubcommand implements Subcommand {
             let maxSellVal: number;
 
             if (
-                itemData.lastBuys[2] === this.firstInter.user.id || itemData.lastSells[2] === this.firstInter.user.id
+                (isBuyOrder && itemData.lastBuys[2] === this.firstInter.user.id ||
+                !isBuyOrder && itemData.lastSells[2] === this.firstInter.user.id) &&
+                itemData.data.listTime + this.config.numberConfig.orderExpire >= Date.now()
             ) {
                 await Replies.handleReply(
-                    submittedModal, 'You already have the best order for this item!',
-                    colorConfig.error, undefined, undefined, true
+                    submittedModal, strConfig.marketBestOrder, colorConfig.error, undefined, undefined, true
                 );
                 this.endModalListener(submittedModal.client);
                 return;
@@ -2631,6 +2666,9 @@ export default class MarketSubcommand implements Subcommand {
                 minSellVal = itemData.lastSells[0] / this.config.numberConfig.marketRange;
                 maxSellVal = itemData.lastSells[0] * this.config.numberConfig.marketRange;
             }
+
+            minSellVal = Math.ceil(minSellVal);
+            minBuyVal = Math.ceil(minBuyVal);
 
             if (
                 isBuyOrder && minBuyVal > 0 && priceVal < minBuyVal ||
@@ -2988,12 +3026,12 @@ export default class MarketSubcommand implements Subcommand {
                 imageToSend = await this.imageGen.makeOrdersImage(this.curPage);
             }
 
-            if (!this.collector.ended) {
-                await this.firstInter.editReply({
-                    files: [imageToSend],
-                    components: this.baseRows.concat(rowsToAdd)
-                });
-            }
+            if (this.hasStopped) return;
+
+            await this.firstInter.editReply({
+                files: [imageToSend],
+                components: this.baseRows.concat(rowsToAdd)
+            });
         } catch (err: unknown) {
             const canStop = await LogDebug.handleError(err, this.firstInter);
             if (canStop) {

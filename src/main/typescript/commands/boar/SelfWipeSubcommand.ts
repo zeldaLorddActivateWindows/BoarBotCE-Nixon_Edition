@@ -37,6 +37,7 @@ export default class SelfWipeSubcommand implements Subcommand {
     private baseRows: ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>[] = [];
     private collector: InteractionCollector<ButtonInteraction | StringSelectMenuInteraction> =
         {} as InteractionCollector<ButtonInteraction | StringSelectMenuInteraction>;
+    private hasStopped = false;
     public readonly data = { name: this.subcommandInfo.name, path: __filename };
 
     /**
@@ -111,6 +112,8 @@ export default class SelfWipeSubcommand implements Subcommand {
      */
     private async handleEndCollect(reason: string): Promise<void> {
         try {
+            this.hasStopped = true;
+
             LogDebug.log('Ended collection with reason: ' + reason, this.config, this.firstInter);
 
             if (reason === CollectorUtils.Reasons.Error) {
@@ -125,7 +128,7 @@ export default class SelfWipeSubcommand implements Subcommand {
                     const boarUser = new BoarUser(this.firstInter.user);
                     boarUser.stats.general.deletionTime = Date.now() + this.config.numberConfig.oneDay;
                     boarUser.updateUserData();
-                }, this.firstInter.id + this.firstInter.user.id);
+                }, this.firstInter.id + this.firstInter.user.id).catch((err) => { throw err });
 
                 await this.firstInter.editReply({
                     content: this.config.stringConfig.deletedData,
@@ -168,6 +171,9 @@ export default class SelfWipeSubcommand implements Subcommand {
                 : this.config.stringConfig.deleteMsgTwo;
 
             this.baseRows[0].components[1].setDisabled(false);
+
+            if (this.hasStopped) return;
+
             await this.firstInter.editReply({ content: contentStr, components: this.baseRows });
 
             setTimeout(async () => {

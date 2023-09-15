@@ -19,8 +19,15 @@ export class PathConfig {
     public readonly guildDataFolder: string = '';
     public readonly userDataFolder: string = '';
     public readonly globalDataFolder: string = '';
-    public readonly globalFileName: string = '';
+    public readonly itemDataFileName: string = '';
+    public readonly leaderboardsFileName: string = '';
+    public readonly bannedUsersFileName: string = '';
+    public readonly powerupDataFileName: string = '';
+    public readonly questDataFileName: string = '';
+    public readonly githubFileName: string = '';
     public readonly logsFolder: string = '';
+    public readonly prodStartScript: string = '';
+    public readonly prodRemotePath: string = '';
 
     // Base paths for images/assets
 
@@ -31,6 +38,7 @@ export class PathConfig {
     public readonly tempItemAssets: string = '';
     public readonly collAssets: string = '';
     public readonly otherAssets: string = '';
+    public readonly fontAssets: string = '';
 
     // Image/asset file names for item attachments (boars and badges)
 
@@ -51,22 +59,29 @@ export class PathConfig {
     public readonly collEnhanceUnderlay: string = '';
     public readonly collGiftUnderlay: string = '';
     public readonly clanNone: string = '';
-    public readonly enhancerOff: string = '';
+    public readonly cellNone: string = '';
+    public readonly cellCommon: string = '';
+    public readonly cellUncommon: string = '';
+    public readonly cellRare: string = '';
+    public readonly cellEpic: string = '';
+    public readonly cellLegendary: string = '';
+    public readonly cellMythic: string = '';
+    public readonly cellDivine: string = '';
     public readonly favorite: string = '';
 
     // Other image/asset file names
 
-    public readonly powerupSpawn: string = '';
-    public readonly powerupEnd: string = '';
+    public readonly eventUnderlay: string = '';
+    public readonly questsUnderlay: string = '';
     public readonly leaderboardUnderlay: string = '';
     public readonly marketOverviewUnderlay: string = '';
     public readonly marketOverviewOverlay: string = '';
     public readonly marketBuySellUnderlay: string = '';
     public readonly marketBuySellOverlay: string = '';
     public readonly marketOrdersUnderlay: string = '';
-    public readonly thankYouImage: string = '';
     public readonly mainFont: string = '';
     public readonly helpGeneral1: string = '';
+    public readonly helpGeneral2: string = '';
     public readonly helpPowerup1: string = '';
     public readonly helpPowerup2: string = '';
     public readonly helpMarket1: string = '';
@@ -77,6 +92,8 @@ export class PathConfig {
     public readonly circleMask: string = '';
     public readonly bucks: string = '';
     public readonly powerup: string = '';
+    public readonly check: string = '';
+    public readonly noAvatar: string = '';
 
     // Python scripts
 

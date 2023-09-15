@@ -1,13 +1,9 @@
 import {BoarUser} from './BoarUser';
 import {
-    ActionRowBuilder, ButtonBuilder,
-    ButtonInteraction,
-    Collection,
-    InteractionCollector, Message, MessageComponentInteraction, StringSelectMenuBuilder,
-    StringSelectMenuInteraction, TextChannel
+    ActionRowBuilder, ButtonBuilder, ButtonInteraction, ChatInputCommandInteraction, Collection, InteractionCollector,
+    Message, MessageComponentInteraction, StringSelectMenuInteraction, TextChannel
 } from 'discord.js';
 import {CollectorUtils} from '../discord/CollectorUtils';
-import {ComponentUtils} from '../discord/ComponentUtils';
 import {BotConfig} from '../../bot/config/BotConfig';
 import {CollectionImageGenerator} from '../generators/CollectionImageGenerator';
 import {OutcomeConfig} from '../../bot/config/items/OutcomeConfig';
@@ -19,7 +15,9 @@ import {ItemImageGenerator} from '../generators/ItemImageGenerator';
 import {LogDebug} from '../logging/LogDebug';
 import {Replies} from '../interactions/Replies';
 import {RowConfig} from '../../bot/config/components/RowConfig';
-import moment from 'moment';
+import {InteractionUtils} from '../interactions/InteractionUtils';
+import {ComponentConfig} from '../../bot/config/components/ComponentConfig';
+import {QuestData} from '../data/global/QuestData';
 
 /**
  * {@link BoarGift BoarGift.ts}
@@ -36,10 +34,12 @@ export class BoarGift {
     public boarUser: BoarUser;
     public giftedUser: BoarUser = {} as BoarUser;
     private imageGen: CollectionImageGenerator;
-    private firstInter: MessageComponentInteraction = {} as MessageComponentInteraction;
+    private firstInter: MessageComponentInteraction | ChatInputCommandInteraction =
+        {} as MessageComponentInteraction | ChatInputCommandInteraction;
     private compInters: ButtonInteraction[] = [];
     private giftMessage: Message = {} as Message;
-    private completedGift = false;
+    private editedTime: number = Date.now();
+    private interTimes: number[] = [];
     private collector: InteractionCollector<ButtonInteraction | StringSelectMenuInteraction> =
         {} as InteractionCollector<ButtonInteraction | StringSelectMenuInteraction>;
 
@@ -50,10 +50,12 @@ export class BoarGift {
      * @param imageGen - The image generator used to send attachments
      * @param config - Used to get several configurations
      */
-    constructor(boarUser: BoarUser, imageGen: CollectionImageGenerator, config: BotConfig) {
+    constructor(boarUser: BoarUser, config: BotConfig, imageGen?: CollectionImageGenerator) {
         this.boarUser = boarUser;
         this.config = config;
-        this.imageGen = imageGen;
+        this.imageGen = imageGen
+            ? imageGen
+            : new CollectionImageGenerator(boarUser, [], config);
     }
 
     /**
@@ -61,7 +63,7 @@ export class BoarGift {
      *
      * @param interaction - The interaction to follow up
      */
-    public async sendMessage(interaction: MessageComponentInteraction): Promise<void> {
+    public async sendMessage(interaction: MessageComponentInteraction | ChatInputCommandInteraction): Promise<void> {
         if (!interaction.channel) return;
 
         this.collector = await CollectorUtils.createCollector(
@@ -72,33 +74,70 @@ export class BoarGift {
 
         const giftFieldConfig: RowConfig[] = this.config.commandConfigs.boar.collection.componentFields[2];
 
-        const claimRows: ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>[] =
-            ComponentUtils.makeRows(giftFieldConfig);
-
-        ComponentUtils.addToIDs(giftFieldConfig, claimRows, interaction.id, interaction.user.id);
-
-        claimRows[0].components[0].setDisabled(false);
-
-        this.collector.on('collect', async (inter: ButtonInteraction) => await this.handleCollect(inter));
-        this.collector.once('end', async (collected, reason) => await this.handleEndCollect(collected, reason));
-
         try {
+            const rows: ActionRowBuilder<ButtonBuilder>[] = [];
+
+            const rightButton = giftFieldConfig[0].components[0] as ComponentConfig;
+            const fillerButton = giftFieldConfig[0].components[1] as ComponentConfig;
+
+            const numRows = 3;
+            const numCols = 3;
+            const randCorrectIndex = Math.floor(Math.random() * numRows * numCols);
+            const randTimeoutDuration = Math.floor(Math.random() * (6000 - 3000)) + 3000;
+
+            let curIndex = 0;
+
+            for (let i=0; i<numRows; i++) {
+                const row: ActionRowBuilder<ButtonBuilder> = new ActionRowBuilder<ButtonBuilder>();
+                for (let j=0; j<numCols; j++) {
+                    row.addComponents(new ButtonBuilder(fillerButton).setCustomId(
+                        fillerButton.customId + curIndex++ + '|' + interaction.id + '|' + interaction.user.id
+                    ));
+                }
+                rows.push(row);
+            }
+
             this.giftMessage = await interaction.channel.send({
                 files: [await this.imageGen.finalizeGift()],
-                components: [claimRows[0]]
+                components: rows
             });
-        } catch {
-            this.completedGift = true;
+
+            setTimeout(async () => {
+                const randRow = Math.floor(randCorrectIndex / numRows);
+                const randCol = randCorrectIndex - (randRow * numRows);
+
+                rows[randRow].components[randCol] = new ButtonBuilder(rightButton)
+                    .setCustomId((rightButton.customId + '|' + interaction.id + '|' + interaction.user.id))
+                    .setDisabled(false);
+
+                await this.giftMessage.edit({
+                    components: rows
+                });
+                this.editedTime = Date.now();
+
+                this.collector.on('collect', async (inter: ButtonInteraction) => await this.handleCollect(inter));
+                this.collector.once('end', async (collected, reason) => await this.handleEndCollect(collected, reason));
+            }, randTimeoutDuration);
+        } catch (err) {
+            await Queue.addQueue(async () => {
+                try {
+                    this.boarUser.refreshUserData();
+                    delete this.boarUser.itemCollection.powerups.gift.curOut;
+                    this.boarUser.updateUserData();
+                } catch (err) {
+                    LogDebug.handleError(err, this.firstInter);
+                }
+            }, this.firstInter + this.firstInter.user.id).catch((err) => {
+                LogDebug.handleError(err, this.firstInter)
+            });
+
             await Replies.handleReply(
                 interaction, this.config.stringConfig.giftFail, this.config.colorConfig.error,
                 undefined, undefined, true
             ).catch(() => {});
+
             return;
         }
-    }
-
-    public isCompleted(): boolean {
-        return this.completedGift;
     }
 
     /**
@@ -109,32 +148,21 @@ export class BoarGift {
      */
     private async handleCollect(inter: ButtonInteraction): Promise<void> {
         try {
+            const index = this.compInters.push(inter) - 1;
+            this.interTimes.push(Date.now());
+
             LogDebug.log(
-                `${inter.user.username} (${inter.user.id}) tried to open gift`, this.config, this.firstInter, true
+                `${inter.user.username} (${inter.user.id}) tried to open gift`, this.config, this.firstInter
             );
 
             await inter.deferUpdate();
 
-            const unbanTime: number | undefined = DataHandlers.getGlobalData().bannedUsers[inter.user.id];
-            if (unbanTime && unbanTime > Date.now()) {
-                await Replies.handleReply(
-                    inter, this.config.stringConfig.bannedString.replace('%@', moment(unbanTime).fromNow()),
-                    this.config.colorConfig.error
-                );
+            const isBanned = await InteractionUtils.handleBanned(inter, this.config, true);
+            if (isBanned) {
+                this.compInters.splice(index, 1);
                 return;
-            } else if (unbanTime && unbanTime <= Date.now()) {
-                await Queue.addQueue(async () => {
-                    try {
-                        const globalData = DataHandlers.getGlobalData();
-                        globalData.bannedUsers[inter.user.id] = undefined;
-                        DataHandlers.saveGlobalData(globalData);
-                    } catch (err: unknown) {
-                        await LogDebug.handleError(err, inter);
-                    }
-                }, inter.id + 'global');
             }
 
-            this.compInters.push(inter);
             this.collector.stop();
         } catch (err: unknown) {
             const canStop = await LogDebug.handleError(err, this.firstInter);
@@ -156,9 +184,18 @@ export class BoarGift {
         reason: string
     ): Promise<void> {
         try {
+            await Queue.addQueue(async () => {
+                try {
+                    this.boarUser.refreshUserData();
+                    delete this.boarUser.itemCollection.powerups.gift.curOut;
+                    this.boarUser.updateUserData();
+                } catch (err) {
+                    LogDebug.handleError(err, this.firstInter);
+                }
+            }, this.firstInter + this.firstInter.user.id).catch((err) => { throw err });
+
             if (this.compInters.length === 0 || reason === CollectorUtils.Reasons.Error) {
                 LogDebug.log(`Gift expired`, this.config, this.firstInter, true);
-                this.completedGift = true;
                 await this.giftMessage.delete().catch(() => {});
                 return;
             }
@@ -176,6 +213,9 @@ export class BoarGift {
      * @private
      */
     private async doGift(inter: ButtonInteraction): Promise<void> {
+        const strConfig = this.config.stringConfig;
+        const colorConfig = this.config.colorConfig;
+
         const outcome: number = this.getOutcome();
         const subOutcome = this.getOutcome(outcome);
         const claimedButton: ButtonBuilder = new ButtonBuilder()
@@ -200,6 +240,7 @@ export class BoarGift {
                     return;
                 }
 
+                delete this.boarUser.itemCollection.powerups.gift.curOut;
                 this.boarUser.itemCollection.powerups.gift.numTotal--;
                 this.boarUser.itemCollection.powerups.gift.numUsed++;
                 this.boarUser.updateUserData();
@@ -208,12 +249,17 @@ export class BoarGift {
             }
         }, this.firstInter.id + this.boarUser.user.id).catch((err) => { throw err });
 
-        this.completedGift = true;
-
         if (!canGift) {
             await this.giftMessage.delete().catch(() => {});
             return;
         }
+
+        const timeToOpen = (this.interTimes[0] - this.editedTime).toLocaleString() + 'ms';
+
+        await Replies.handleReply(
+            this.compInters[0], strConfig.giftOpened, colorConfig.font, [strConfig.giftOpenedWow, timeToOpen],
+            [colorConfig.green, colorConfig.silver], true, true
+        );
 
         switch (outcome) {
             case 0:
@@ -245,11 +291,11 @@ export class BoarGift {
             }
         }, inter.id + this.giftedUser.user.id).catch((err) => { throw err });
 
-        await Queue.addQueue(async () => await DataHandlers.updateLeaderboardData(this.boarUser, inter, this.config),
+        await Queue.addQueue(async () => DataHandlers.updateLeaderboardData(this.boarUser, this.config, inter),
             inter.id + this.boarUser.user.id + 'global'
         ).catch((err) => { throw err });
 
-        await Queue.addQueue(async () => await DataHandlers.updateLeaderboardData(this.giftedUser, inter, this.config),
+        await Queue.addQueue(async () => DataHandlers.updateLeaderboardData(this.giftedUser, this.config, inter),
             inter.id + this.giftedUser.user.id + 'global'
         ).catch((err) => { throw err });
     }
@@ -333,12 +379,15 @@ export class BoarGift {
         let outcomeName: string = outcomeConfig.suboutcomes[suboutcome].name;
         let numBucks = 0;
 
+        const questData = DataHandlers.getGlobalData(DataHandlers.GlobalFile.Quest) as QuestData;
+        const collectBucksIndex = questData.curQuestIDs.indexOf('collectBucks');
+
         if (suboutcome === 0) {
-            numBucks = Math.round(Math.random() * (3 - 1) + 1)
+            numBucks = Math.round(Math.random() * (5 - 1) + 1)
         } else if (suboutcome === 1) {
-            numBucks = Math.round(Math.random() * (40 - 10) + 10)
+            numBucks = Math.round(Math.random() * (50 - 10) + 10)
         } else {
-            numBucks = Math.round(Math.random() * (400 - 100) + 100)
+            numBucks = Math.round(Math.random() * (500 - 100) + 100)
         }
 
         LogDebug.log(
@@ -354,6 +403,7 @@ export class BoarGift {
         await Queue.addQueue(async () => {
             try {
                 this.giftedUser.refreshUserData();
+                this.boarUser.stats.quests.progress[collectBucksIndex] += numBucks;
                 this.giftedUser.stats.general.boarScore += numBucks;
                 this.giftedUser.updateUserData();
             } catch (err: unknown) {
@@ -364,6 +414,7 @@ export class BoarGift {
         await Queue.addQueue(async () => {
             try {
                 this.boarUser.refreshUserData();
+                this.boarUser.stats.quests.progress[collectBucksIndex] += numBucks;
                 this.boarUser.stats.general.boarScore += numBucks;
                 this.boarUser.updateUserData();
             } catch (err: unknown) {
@@ -379,10 +430,9 @@ export class BoarGift {
                     this.config.stringConfig.giftOpenTitle, this.config
                 ).handleImageCreate(
                     false, this.firstInter.user,
-                    outcomeName.substring(outcomeName.indexOf(' ')),
-                    {
+                    outcomeName.substring(1), {
                         name: outcomeName,
-                        file: this.config.pathConfig.bucks,
+                        file: this.config.pathConfig.otherAssets + this.config.pathConfig.bucks,
                         colorKey: 'bucks'
                     }
                 )
@@ -402,43 +452,45 @@ export class BoarGift {
         const outcomeConfig: OutcomeConfig = (this.config.itemConfigs.powerups.gift.outcomes as OutcomeConfig[])[2];
         const outcomeName: string = outcomeConfig.suboutcomes[suboutcome].name;
 
+        let powImgPath = '';
+
+        switch (suboutcome) {
+            case 0:
+                powImgPath = this.config.pathConfig.powerups + this.config.itemConfigs.powerups.clone.file;
+                break;
+            case 1:
+                powImgPath = this.config.pathConfig.powerups + this.config.itemConfigs.powerups.miracle.file;
+                break;
+            case 2:
+                powImgPath = this.config.pathConfig.powerups + this.config.itemConfigs.powerups.enhancer.file;
+                break;
+        }
+
         await Queue.addQueue(async () => {
             try {
                 this.giftedUser.refreshUserData();
 
                 if (suboutcome === 0) {
                     LogDebug.log(
-                        `Received Multi Boost from ${this.boarUser.user.username} (${this.boarUser.user.id}) in gift`,
-                        this.config, inter, true
+                        `Received Cloning Serum(s) from ${this.boarUser.user.username} (${this.boarUser.user.id}) ` +
+                        `in gift`, this.config, inter, true
                     );
 
-                    this.giftedUser.itemCollection.powerups.multiBoost.numTotal += 15;
-                    this.giftedUser.itemCollection.powerups.multiBoost.highestTotal = Math.max(
-                        this.giftedUser.itemCollection.powerups.multiBoost.numTotal,
-                        this.giftedUser.itemCollection.powerups.multiBoost.highestTotal
-                    )
+                    this.giftedUser.itemCollection.powerups.clone.numTotal++;
                 } else if (suboutcome === 1) {
                     LogDebug.log(
-                        `Received Extra Chance from ${this.boarUser.user.username} (${this.boarUser.user.id}) in gift`,
-                        this.config, inter, true
+                        `Received Miracle Charm(s) from ${this.boarUser.user.username} (${this.boarUser.user.id}) ` +
+                        `in gift`, this.config, inter, true
                     );
 
-                    this.giftedUser.itemCollection.powerups.extraChance.numTotal += 3;
-                    this.giftedUser.itemCollection.powerups.extraChance.highestTotal = Math.max(
-                        this.giftedUser.itemCollection.powerups.extraChance.numTotal,
-                        this.giftedUser.itemCollection.powerups.extraChance.highestTotal
-                    )
+                    this.giftedUser.itemCollection.powerups.miracle.numTotal++;
                 } else {
                     LogDebug.log(
-                        `Received Enhancer from ${this.boarUser.user.username} (${this.boarUser.user.id}) in gift`,
-                        this.config, inter, true
+                        `Received Transmutation Charges from ${this.boarUser.user.username} ` +
+                        `(${this.boarUser.user.id}) in gift`, this.config, inter, true
                     );
 
                     this.giftedUser.itemCollection.powerups.enhancer.numTotal++;
-                    this.giftedUser.itemCollection.powerups.enhancer.highestTotal = Math.max(
-                        this.giftedUser.itemCollection.powerups.enhancer.numTotal,
-                        this.giftedUser.itemCollection.powerups.enhancer.highestTotal
-                    )
                 }
 
                 this.giftedUser.updateUserData();
@@ -452,23 +504,11 @@ export class BoarGift {
                 this.boarUser.refreshUserData();
 
                 if (suboutcome === 0) {
-                    this.boarUser.itemCollection.powerups.multiBoost.numTotal += 15;
-                    this.boarUser.itemCollection.powerups.multiBoost.highestTotal = Math.max(
-                        this.boarUser.itemCollection.powerups.multiBoost.numTotal,
-                        this.boarUser.itemCollection.powerups.multiBoost.highestTotal
-                    )
+                    this.boarUser.itemCollection.powerups.clone.numTotal++;
                 } else if (suboutcome === 1) {
-                    this.boarUser.itemCollection.powerups.extraChance.numTotal += 3;
-                    this.boarUser.itemCollection.powerups.extraChance.highestTotal = Math.max(
-                        this.boarUser.itemCollection.powerups.extraChance.numTotal,
-                        this.boarUser.itemCollection.powerups.extraChance.highestTotal
-                    )
+                    this.boarUser.itemCollection.powerups.miracle.numTotal++;
                 } else {
                     this.boarUser.itemCollection.powerups.enhancer.numTotal++;
-                    this.boarUser.itemCollection.powerups.enhancer.highestTotal = Math.max(
-                        this.boarUser.itemCollection.powerups.enhancer.numTotal,
-                        this.boarUser.itemCollection.powerups.enhancer.highestTotal
-                    )
                 }
 
                 this.boarUser.updateUserData();
@@ -484,10 +524,9 @@ export class BoarGift {
                     this.config.stringConfig.giftOpenTitle, this.config
                 ).handleImageCreate(
                     false, this.firstInter.user,
-                    outcomeName.substring(outcomeName.indexOf(' ')),
-                    {
+                    outcomeName.substring(1), {
                         name: outcomeConfig.suboutcomes[suboutcome].name,
-                        file: this.config.pathConfig.powerup,
+                        file: powImgPath,
                         colorKey: 'powerup'
                     }
                 )
@@ -506,7 +545,7 @@ export class BoarGift {
         const rarityWeights: Map<number, number> = BoarUtils.getBaseRarityWeights(this.config);
 
         const boarIDs: string[] = BoarUtils.getRandBoars(
-            await DataHandlers.getGuildData(inter.guild?.id, inter), inter, rarityWeights, false, 0, this.config
+            await DataHandlers.getGuildData(inter.guild?.id, inter), inter, rarityWeights, this.config
         );
 
         LogDebug.log(

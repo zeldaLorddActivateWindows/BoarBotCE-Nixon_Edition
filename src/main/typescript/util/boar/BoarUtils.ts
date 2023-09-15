@@ -3,7 +3,8 @@ import {BotConfig} from '../../bot/config/BotConfig';
 import {ChatInputCommandInteraction, MessageComponentInteraction} from 'discord.js';
 import {GuildData} from '../data/global/GuildData';
 import {ItemConfigs} from '../../bot/config/items/ItemConfigs';
-import {Node} from 'functional-red-black-tree';
+import {ItemsData} from '../data/global/ItemsData';
+import {ItemData} from '../data/global/ItemData';
 
 /**
  * {@link BoarUtils BoarUtils.ts}
@@ -75,17 +76,15 @@ export class BoarUtils {
      * @param guildData - Used to see if a boar should be ignored
      * @param inter - Used for debugging
      * @param rarityWeights - Map of weights and their indexes
-     * @param extra - Whether to apply extra boar chance
-     * @param extraVal - User's chance of extra boar
+     * @param extraVals - User's chances of extra boars
      * @private
      */
     public static getRandBoars(
         guildData: GuildData | undefined,
         inter: ChatInputCommandInteraction | MessageComponentInteraction,
         rarityWeights: Map<number, number>,
-        extra: boolean,
-        extraVal: number,
-        config: BotConfig
+        config: BotConfig,
+        extraVals: number[] = [],
     ): string[] {
         const boarIDs: string[] = [];
         let numBoars = 1;
@@ -103,14 +102,11 @@ export class BoarUtils {
             return prob;
         }));
 
-        if (extra) {
-            numBoars += Math.floor(extraVal / 100);
-            extraVal -= (numBoars-1) * 100;
-
-            if (Math.random() < extraVal / 100) {
+        extraVals.forEach(percentage => {
+            if (Math.random() * 100 < percentage) {
                 numBoars++;
             }
-        }
+        });
 
         for (let i=0; i<numBoars; i++) {
             const randomRarity: number = Math.random();
@@ -158,13 +154,59 @@ export class BoarUtils {
         return rarityWeights;
     }
 
-    public static getClosestName(input: string, root: Node<string, number>): number {
-        if (root.key.startsWith(input))
-            return root.value;
-        if (input > root.key && root.right !== null)
-            return this.getClosestName(input, root.right);
-        if (input < root.key && root.left !== null)
-            return this.getClosestName(input, root.left);
-        return root.value;
+    public static getClosestName(input: string, searchArr: [string, number][]): number {
+        let posToReturn;
+
+        searchArr.every(val => {
+            if (!val[0].includes(input)) return true;
+            posToReturn = val[1];
+        });
+
+        if (posToReturn !== undefined) {
+            return posToReturn;
+        }
+
+        const sortedSearchArr = searchArr.sort((a, b) => a[0].localeCompare(b[0]));
+
+        sortedSearchArr.every((val, index) => {
+            if (index !== searchArr.length-1 && input > val[0]) return true;
+            posToReturn = val[1];
+        });
+
+        if (posToReturn !== undefined) {
+            return posToReturn;
+        } else {
+            return 0;
+        }
+    }
+
+    public static orderGlobalBoars(itemsData: ItemsData, config: BotConfig): void {
+        const globalBoars: string[] = Object.keys(itemsData.boars);
+
+        const orderedRarities: RarityConfig[] = [...config.rarityConfigs.slice(0,config.rarityConfigs.length-1)]
+            .sort((rarity1, rarity2) => { return rarity1.weight - rarity2.weight; });
+        orderedRarities.unshift(config.rarityConfigs[config.rarityConfigs.length-1]);
+
+        // Looping through all boar classes (Common -> Special)
+        for (const rarity of orderedRarities) {
+            const orderedBoars: string[] = [];
+            const boarsOfRarity: string[] = rarity.boars;
+
+            // Looping through user's boar collection
+            for (let j=0; j<globalBoars.length; j++) {
+                const curBoarID: string = globalBoars[j];                           // ID of current boar
+                const curBoarData: ItemData = itemsData.boars[curBoarID]; // Data of current boar
+
+                if (!boarsOfRarity.includes(curBoarID) || orderedBoars.includes(curBoarID))
+                    continue;
+
+                // Removes boar from front and add it to the back of the list to refresh the order
+                delete itemsData.boars[curBoarID];
+                itemsData.boars[curBoarID] = curBoarData;
+
+                orderedBoars.push(curBoarID);
+                j--;
+            }
+        }
     }
 }

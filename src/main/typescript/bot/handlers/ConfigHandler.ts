@@ -22,13 +22,22 @@ export class ConfigHandler {
     /**
      * Loads config data from configuration file in project root
      */
-    public async loadConfig(): Promise<void> {
-        let parsedConfig: BotConfig;
+    public async loadConfig(firstLoad = false): Promise<void> {
+        let parsedConfig: any;
 
         this.setRelativeTime();
 
         try {
             parsedConfig = JSON.parse(fs.readFileSync('config.json', 'utf-8'));
+            if (firstLoad) {
+                parsedConfig.maintenanceMode = true;
+                setTimeout(() => {
+                    if (!parsedConfig.maintenanceOverride) {
+                        parsedConfig.maintenanceMode = false;
+                        this.config = parsedConfig as BotConfig;
+                    }
+                }, 10000);
+            }
         } catch {
             await LogDebug.handleError('Unable to parse config file. Is \'config.json\' in the project root?');
             process.exit(-1);
@@ -39,7 +48,7 @@ export class ConfigHandler {
             return;
         }
 
-        this.config = parsedConfig;
+        this.config = parsedConfig as BotConfig;
 
         LogDebug.log('Config file successfully loaded!', this.config);
 
@@ -73,6 +82,13 @@ export class ConfigHandler {
         const collAssets: string = pathConfig.collAssets;
         const otherAssets: string = pathConfig.otherAssets;
 
+        const globalFileNames: string[] | undefined[] = [
+            pathConfig.itemDataFileName,
+            pathConfig.leaderboardsFileName,
+            pathConfig.bannedUsersFileName,
+            pathConfig.powerupDataFileName
+        ];
+
         const allPaths: string[] = [
             pathConfig.listeners,
             pathConfig.commands,
@@ -85,9 +101,23 @@ export class ConfigHandler {
             collAssets + pathConfig.collOverlay,
             collAssets + pathConfig.collUnderlay,
             collAssets + pathConfig.clanNone,
-            collAssets + pathConfig.enhancerOff,
-            otherAssets + pathConfig.thankYouImage,
-            otherAssets + pathConfig.mainFont,
+            collAssets + pathConfig.cellNone,
+            collAssets + pathConfig.cellCommon,
+            collAssets + pathConfig.cellUncommon,
+            collAssets + pathConfig.cellRare,
+            collAssets + pathConfig.cellEpic,
+            collAssets + pathConfig.cellLegendary,
+            collAssets + pathConfig.cellMythic,
+            collAssets + pathConfig.cellDivine,
+            collAssets + pathConfig.collDetailUnderlay,
+            collAssets + pathConfig.collDetailOverlay,
+            collAssets + pathConfig.collPowerUnderlay,
+            collAssets + pathConfig.collPowerUnderlay2,
+            collAssets + pathConfig.collPowerUnderlay3,
+            collAssets + pathConfig.collPowerOverlay,
+            collAssets + pathConfig.collGiftUnderlay,
+            collAssets + pathConfig.collEnhanceUnderlay,
+            pathConfig.fontAssets + pathConfig.mainFont,
             otherAssets + pathConfig.helpGeneral1,
             otherAssets + pathConfig.helpPowerup1,
             otherAssets + pathConfig.helpPowerup2,
@@ -148,6 +178,13 @@ export class ConfigHandler {
             passed = false;
         }
 
+        for (const file of globalFileNames) {
+            if (file !== undefined) continue;
+
+            LogDebug.log(`Global file name '${file}' is invalid`, this.config);
+            passed = false;
+        }
+
         return passed || parsedConfig.maintenanceMode;
     }
 
@@ -177,7 +214,7 @@ export class ConfigHandler {
      */
     public loadFonts(): void {
         try {
-            const mcFont: string = this.config.pathConfig.otherAssets + this.config.pathConfig.mainFont;
+            const mcFont: string = this.config.pathConfig.fontAssets + this.config.pathConfig.mainFont;
 
             registerFont(mcFont, { family: this.config.stringConfig.fontName });
         } catch {

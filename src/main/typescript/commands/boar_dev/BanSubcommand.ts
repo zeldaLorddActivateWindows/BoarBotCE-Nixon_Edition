@@ -46,8 +46,7 @@ export default class BanSubcommand implements Subcommand {
 
         const userInput: User | null = interaction.options.getUser(this.subcommandInfo.args[0].name);
         const timeInput: number = interaction.options.getInteger(this.subcommandInfo.args[1].name)
-            ? interaction.options.getInteger(this.subcommandInfo.args[1].name) as number
-            : 24;
+            ?? 24;
 
         if (!userInput) {
             await Replies.handleReply(interaction, strConfig.nullFound);
@@ -56,9 +55,11 @@ export default class BanSubcommand implements Subcommand {
 
         await Queue.addQueue(async () => {
             try {
-                const globalData = DataHandlers.getGlobalData();
-                globalData.bannedUsers[userInput.id] = Date.now() + timeInput * 60 * 60 * 1000;
-                DataHandlers.saveGlobalData(globalData);
+                const bannedUserData: Record<string, number> = DataHandlers.getGlobalData(
+                    DataHandlers.GlobalFile.BannedUsers
+                ) as Record<string, number>;
+                bannedUserData[userInput.id] = Date.now() + timeInput * 60 * 60 * 1000;
+                DataHandlers.saveGlobalData(bannedUserData, DataHandlers.GlobalFile.BannedUsers);
 
                 await Replies.handleReply(
                     interaction, this.config.stringConfig.banSuccess
@@ -68,6 +69,6 @@ export default class BanSubcommand implements Subcommand {
             } catch (err: unknown) {
                 await LogDebug.handleError(err, this.interaction);
             }
-        }, this.interaction.id + 'global');
+        }, this.interaction.id + 'global').catch((err) => { throw err });
     }
 }

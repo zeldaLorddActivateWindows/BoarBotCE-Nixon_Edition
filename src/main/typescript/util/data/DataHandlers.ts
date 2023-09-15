@@ -1,5 +1,5 @@
 import fs from 'fs';
-import {ChatInputCommandInteraction, MessageComponentInteraction} from 'discord.js';
+import {ChatInputCommandInteraction, MessageComponentInteraction, User} from 'discord.js';
 import {BoarBotApp} from '../../BoarBotApp';
 import {LogDebug} from '../logging/LogDebug';
 import {Replies} from '../interactions/Replies';
@@ -7,9 +7,20 @@ import {GuildData} from './global/GuildData';
 import {BotConfig} from '../../bot/config/BotConfig';
 import {StringConfig} from '../../bot/config/StringConfig';
 import {BoarUser} from '../boar/BoarUser';
-import {GlobalData} from './global/GlobalData';
 import {ItemData} from './global/ItemData';
 import {BoardData} from './global/BoardData';
+import {GitHubData} from './global/GitHubData';
+import {ItemsData} from './global/ItemsData';
+import {PowerupData} from './global/PowerupData';
+import {QuestData} from './global/QuestData';
+
+enum GlobalFile {
+    Items,
+    Leaderboards,
+    BannedUsers,
+    Powerups,
+    Quest
+}
 
 /**
  * {@link DataHandlers DataHandlers.ts}
@@ -21,62 +32,183 @@ import {BoardData} from './global/BoardData';
  * @copyright WeslayCodes 2023
  */
 export class DataHandlers {
+    public static GlobalFile = GlobalFile;
+
     /**
-     * Gets data from global JSON file
+     * Gets data from items data JSON file
      *
-     * @return globalData - Global data parsed from JSON
+     * @return itemsData - Items data parsed from JSON
      */
-    public static getGlobalData(): GlobalData {
+    public static getGlobalData(file: GlobalFile, updating = false):
+        ItemsData | Record<string, BoardData> | Record<string, number> | PowerupData | QuestData
+    {
         const config: BotConfig = BoarBotApp.getBot().getConfig();
 
-        const globalFile: string = config.pathConfig.globalDataFolder + config.pathConfig.globalFileName;
-        let globalData: GlobalData | undefined;
+        const fileName = this.getGlobalFilename(file);
+
+        const dataFile: string = config.pathConfig.globalDataFolder + fileName;
+        let data: ItemsData | Record<string, BoardData> | Record<string, number> | PowerupData | QuestData | undefined;
 
         try {
-            globalData = JSON.parse(fs.readFileSync(globalFile, 'utf-8'));
+            data = JSON.parse(fs.readFileSync(dataFile, 'utf-8'));
         } catch {}
 
-        if (!globalData || globalData.nextPowerup === undefined) {
-            LogDebug.log('Creating global data file...', config);
-            globalData = new GlobalData;
+        if (!data) {
+            LogDebug.log('Creating global data file \'' + fileName + '\'...', config);
 
-            for (const powerupID of Object.keys(config.itemConfigs.powerups)) {
-                globalData.itemData.powerups[powerupID] = new ItemData;
+            switch (file) {
+                case GlobalFile.Items:
+                    data = new ItemsData();
+
+                    for (const powerupID of Object.keys(config.itemConfigs.powerups)) {
+                        data.powerups[powerupID] = new ItemData;
+                    }
+
+                    break;
+                case GlobalFile.Leaderboards:
+                    data = {};
+
+                    for (let i=0; i<config.commandConfigs.boar.top.args[0].choices.length; i++) {
+                        const boardID = config.commandConfigs.boar.top.args[0].choices[i].value;
+                        data[boardID] = new BoardData;
+                    }
+
+                    break;
+                case GlobalFile.BannedUsers:
+                    data = {};
+                    break;
+                case GlobalFile.Powerups:
+                    data = new PowerupData();
+                    break;
+                case GlobalFile.Quest:
+                    data = new QuestData();
+                    break;
             }
 
-            for (let i=0; i<config.commandConfigs.boar.top.args[0].choices.length; i++) {
-                const boardID = config.commandConfigs.boar.top.args[0].choices[i].value;
-                globalData.leaderboardData[boardID] = new BoardData;
-            }
-
-            DataHandlers.saveGlobalData(globalData);
+            this.saveGlobalData(data, file);
         }
 
-        return globalData;
+        data = data as ItemsData | Record<string, BoardData> | Record<string, number> | PowerupData | QuestData;
+
+        if (updating) {
+            switch (file) {
+                case GlobalFile.Items:
+                    data = data as ItemsData;
+                    for (const powerupID of Object.keys(config.itemConfigs.powerups)) {
+                        if (!data.powerups[powerupID]) {
+                            data.powerups[powerupID] = new ItemData;
+                        }
+                    }
+
+                    for (const powerupID of Object.keys(data.powerups)) {
+                        if (!Object.keys(config.itemConfigs.powerups).includes(powerupID)) {
+                            const powItemData = data.powerups[powerupID];
+                            for (const buyOrder of powItemData.buyers) {
+                                const boarUser = new BoarUser({id: buyOrder.userID} as User);
+                                boarUser.itemCollection.powerups[powerupID].numTotal +=
+                                    buyOrder.filledAmount - buyOrder.claimedAmount;
+                                boarUser.stats.general.boarScore +=
+                                    (buyOrder.num - buyOrder.filledAmount) * buyOrder.price;
+                                boarUser.updateUserData();
+                            }
+                            for (const sellOrder of data.powerups[powerupID].sellers) {
+                                const boarUser = new BoarUser({id: sellOrder.userID} as User);
+                                boarUser.itemCollection.powerups[powerupID].numTotal +=
+                                    sellOrder.num - sellOrder.filledAmount;
+                                boarUser.stats.general.boarScore +=
+                                    (sellOrder.filledAmount - sellOrder.claimedAmount) * sellOrder.price;
+                                boarUser.updateUserData();
+                            }
+                            delete data.powerups[powerupID];
+                        }
+                    }
+
+                    break;
+                case GlobalFile.Leaderboards:
+                    data = data as Record<string, BoardData>;
+                    for (let i=0; i<config.commandConfigs.boar.top.args[0].choices.length; i++) {
+                        const boardID = config.commandConfigs.boar.top.args[0].choices[i].value;
+
+                        if (!data[boardID]) {
+                            data[boardID] = new BoardData;
+                        }
+                    }
+
+                    for (const boardID of Object.keys(data)) {
+                        const boardChoices = config.commandConfigs.boar.top.args[0].choices;
+                        const boardValues = boardChoices.map((choice) => { return choice.value; });
+
+                        if (!boardValues.includes(boardID)) {
+                            delete data[boardID];
+                        }
+                    }
+
+                    break;
+                case GlobalFile.Quest:
+                    data = data as QuestData;
+
+                    if (data.questsStartTimestamp + config.numberConfig.oneDay * 7 < Date.now()) {
+                        data = this.updateQuestData(config);
+                    }
+
+                    break;
+            }
+
+            this.saveGlobalData(data, file);
+        }
+
+        return data;
     }
 
-    public static saveGlobalData(data: GlobalData) {
+    public static saveGlobalData(
+        data: ItemsData | Record<string, BoardData> | Record<string, number> | PowerupData | QuestData | undefined,
+        file: GlobalFile
+    ) {
         const config: BotConfig = BoarBotApp.getBot().getConfig();
-
-        fs.writeFileSync(config.pathConfig.globalDataFolder + config.pathConfig.globalFileName, JSON.stringify(data));
+        fs.writeFileSync(config.pathConfig.globalDataFolder + this.getGlobalFilename(file), JSON.stringify(data));
     }
 
-    public static async updateLeaderboardData(
-        boarUser: BoarUser, inter: MessageComponentInteraction | ChatInputCommandInteraction, config: BotConfig
-    ): Promise<void> {
-        try {
-            const globalData = DataHandlers.getGlobalData();
-            const userID = boarUser.user.id;
+    private static getGlobalFilename(file: GlobalFile): string {
+        const config: BotConfig = BoarBotApp.getBot().getConfig();
+        let fileName = '';
 
-            globalData.leaderboardData.bucks.userData[userID] = boarUser.stats.general.boarScore > 0
-                ? boarUser.stats.general.boarScore
+        switch (file) {
+            case GlobalFile.Items:
+                fileName = config.pathConfig.itemDataFileName;
+                break;
+            case GlobalFile.Leaderboards:
+                fileName = config.pathConfig.leaderboardsFileName;
+                break;
+            case GlobalFile.BannedUsers:
+                fileName = config.pathConfig.bannedUsersFileName;
+                break;
+            case GlobalFile.Powerups:
+                fileName = config.pathConfig.powerupDataFileName;
+                break;
+            case GlobalFile.Quest:
+                fileName = config.pathConfig.questDataFileName;
+                break;
+        }
+
+        return fileName;
+    }
+
+    public static updateLeaderboardData(
+        boarUser: BoarUser, config: BotConfig, inter?: MessageComponentInteraction | ChatInputCommandInteraction
+    ): void {
+        try {
+            const boardsData = this.getGlobalData(GlobalFile.Leaderboards) as Record<string, BoardData>;
+            const userID = boarUser.user.id;
+            const username = boarUser.user.username;
+
+            boardsData.bucks.userData[userID] = boarUser.stats.general.boarScore > 0
+                ? [username, boarUser.stats.general.boarScore]
                 : undefined;
-            globalData.leaderboardData.total.userData[userID] = boarUser.stats.general.totalBoars > 0
-                ? boarUser.stats.general.totalBoars
+            boardsData.total.userData[userID] = boarUser.stats.general.totalBoars > 0
+                ? [username, boarUser.stats.general.totalBoars]
                 : undefined;
 
             let uniques = 0;
-
             for (let i=0; i<Object.keys(boarUser.itemCollection.boars).length; i++) {
                 const boarData = boarUser.itemCollection.boars[Object.keys(boarUser.itemCollection.boars)[i]];
                 const boarInfo = config.itemConfigs.boars[Object.keys(boarUser.itemCollection.boars)[i]];
@@ -88,77 +220,101 @@ export class DataHandlers {
                 }
             }
 
-            globalData.leaderboardData.uniques.userData[userID] = uniques > 0
-                ? uniques
+            boardsData.uniques.userData[userID] = uniques > 0
+                ? [username, uniques]
+                : undefined;
+            boardsData.uniquesSB.userData[userID] = Object.keys(boarUser.itemCollection.boars).length > 0
+                ? [username, Object.keys(boarUser.itemCollection.boars).length]
+                : undefined;
+            boardsData.streak.userData[userID] = boarUser.stats.general.boarStreak > 0
+                ? [username, boarUser.stats.general.boarStreak]
+                : undefined;
+            boardsData.attempts.userData[userID] = boarUser.stats.powerups.attempts > 0
+                ? [username, boarUser.stats.powerups.attempts]
+                : undefined;
+            boardsData.topAttempts.userData[userID] = boarUser.stats.powerups.oneAttempts > 0
+                ? [username, boarUser.stats.powerups.oneAttempts]
+                : undefined;
+            boardsData.giftsUsed.userData[userID] = boarUser.itemCollection.powerups.gift.numUsed > 0
+                ? [username, boarUser.itemCollection.powerups.gift.numUsed]
                 : undefined;
 
-            globalData.leaderboardData.uniquesSB.userData[userID] = Object.keys(boarUser.itemCollection.boars).length > 0
-                ? Object.keys(boarUser.itemCollection.boars).length
+            let multiplier = boarUser.stats.general.multiplier;
+            for (let i=0; i<(boarUser.itemCollection.powerups.miracle.numActive as number); i++) {
+                multiplier += Math.min(Math.ceil(multiplier * 0.05), config.numberConfig.miracleIncreaseMax);
+            }
+
+            boardsData.multiplier.userData[userID] = multiplier > 0
+                ? [username, multiplier]
                 : undefined;
-            globalData.leaderboardData.streak.userData[userID] = boarUser.stats.general.boarStreak > 0
-                ? boarUser.stats.general.boarStreak
-                : undefined;
-            globalData.leaderboardData.attempts.userData[userID] = boarUser.stats.powerups.attempts > 0
-                ? boarUser.stats.powerups.attempts
-                : undefined;
-            globalData.leaderboardData.topAttempts.userData[userID] = boarUser.stats.powerups.oneAttempts > 0
-                ? boarUser.stats.powerups.oneAttempts
-                : undefined;
-            globalData.leaderboardData.giftsUsed.userData[userID] = boarUser.itemCollection.powerups.gift.numUsed > 0
-                ? boarUser.itemCollection.powerups.gift.numUsed
-                : undefined;
-            globalData.leaderboardData.multiplier.userData[userID] = boarUser.stats.general.multiplier > 1
-                ? boarUser.stats.general.multiplier
+            boardsData.fastest.userData[userID] = boarUser.stats.powerups.fastestTime > 0
+                ? [username, boarUser.stats.powerups.fastestTime]
                 : undefined;
 
-            DataHandlers.saveGlobalData(globalData);
+            this.saveGlobalData(boardsData, GlobalFile.Leaderboards);
         } catch (err: unknown) {
-            await LogDebug.handleError(err, inter);
+            LogDebug.handleError(err, inter);
         }
     }
 
     public static async removeLeaderboardUser(userID: string) {
         try {
-            const globalData = DataHandlers.getGlobalData();
+            const boardsData = this.getGlobalData(GlobalFile.Leaderboards) as Record<string, BoardData>;
 
-            globalData.leaderboardData.bucks.userData[userID] = undefined;
-            globalData.leaderboardData.total.userData[userID] = undefined;
-            globalData.leaderboardData.uniques.userData[userID] = undefined;
-            globalData.leaderboardData.streak.userData[userID] = undefined;
-            globalData.leaderboardData.attempts.userData[userID] = undefined;
-            globalData.leaderboardData.topAttempts.userData[userID] = undefined;
-            globalData.leaderboardData.giftsUsed.userData[userID] = undefined;
-            globalData.leaderboardData.multiplier.userData[userID] = undefined;
+            delete boardsData.bucks.userData[userID];
+            delete boardsData.total.userData[userID];
+            delete boardsData.uniques.userData[userID];
+            delete boardsData.streak.userData[userID];
+            delete boardsData.attempts.userData[userID];
+            delete boardsData.topAttempts.userData[userID];
+            delete boardsData.giftsUsed.userData[userID];
+            delete boardsData.multiplier.userData[userID];
 
-            globalData.leaderboardData.bucks.topUser = globalData.leaderboardData.bucks.topUser === userID
+            boardsData.bucks.topUser = boardsData.bucks.topUser === userID
                 ? undefined
-                : globalData.leaderboardData.bucks.topUser;
-            globalData.leaderboardData.total.topUser = globalData.leaderboardData.total.topUser === userID
+                : boardsData.bucks.topUser;
+            boardsData.total.topUser = boardsData.total.topUser === userID
                 ? undefined
-                : globalData.leaderboardData.total.topUser;
-            globalData.leaderboardData.uniques.topUser = globalData.leaderboardData.uniques.topUser === userID
+                : boardsData.total.topUser;
+            boardsData.uniques.topUser = boardsData.uniques.topUser === userID
                 ? undefined
-                : globalData.leaderboardData.uniques.topUser;
-            globalData.leaderboardData.streak.topUser = globalData.leaderboardData.streak.topUser === userID
+                : boardsData.uniques.topUser;
+            boardsData.streak.topUser = boardsData.streak.topUser === userID
                 ? undefined
-                : globalData.leaderboardData.streak.topUser;
-            globalData.leaderboardData.attempts.topUser = globalData.leaderboardData.attempts.topUser === userID
+                : boardsData.streak.topUser;
+            boardsData.attempts.topUser = boardsData.attempts.topUser === userID
                 ? undefined
-                : globalData.leaderboardData.attempts.topUser;
-            globalData.leaderboardData.topAttempts.topUser = globalData.leaderboardData.topAttempts.topUser === userID
+                : boardsData.attempts.topUser;
+            boardsData.topAttempts.topUser = boardsData.topAttempts.topUser === userID
                 ? undefined
-                : globalData.leaderboardData.topAttempts.topUser;
-            globalData.leaderboardData.giftsUsed.topUser = globalData.leaderboardData.giftsUsed.topUser === userID
+                : boardsData.topAttempts.topUser;
+            boardsData.giftsUsed.topUser = boardsData.giftsUsed.topUser === userID
                 ? undefined
-                : globalData.leaderboardData.giftsUsed.topUser;
-            globalData.leaderboardData.multiplier.topUser = globalData.leaderboardData.multiplier.topUser === userID
+                : boardsData.giftsUsed.topUser;
+            boardsData.multiplier.topUser = boardsData.multiplier.topUser === userID
                 ? undefined
-                : globalData.leaderboardData.multiplier.topUser;
+                : boardsData.multiplier.topUser;
 
-            DataHandlers.saveGlobalData(globalData);
+            this.saveGlobalData(boardsData, GlobalFile.Leaderboards);
         } catch (err: unknown) {
             await LogDebug.handleError(err);
         }
+    }
+
+    public static updateQuestData(config: BotConfig) {
+        const data = this.getGlobalData(GlobalFile.Quest) as QuestData;
+        const questIDs = Object.keys(config.questConfigs);
+
+        data.questsStartTimestamp = new Date().setUTCHours(0,0,0,0) -
+            new Date().getUTCDay() * config.numberConfig.oneDay;
+
+        for (let i=0; i<data.curQuestIDs.length; i++) {
+            data.curQuestIDs[i] = questIDs.splice(Math.floor(Math.random() * questIDs.length), 1)[0];
+        }
+
+        this.saveGlobalData(data, GlobalFile.Quest);
+
+        return data;
     }
 
     /**
@@ -210,5 +366,25 @@ export class DataHandlers {
         } catch {
             await LogDebug.handleError('Already deleted this file!');
         }
+    }
+
+    public static getGithubData(): GitHubData | undefined {
+        const config: BotConfig = BoarBotApp.getBot().getConfig();
+
+        const githubFile: string = config.pathConfig.globalDataFolder + config.pathConfig.githubFileName;
+        let githubData: GitHubData | undefined;
+
+        try {
+            githubData = JSON.parse(fs.readFileSync(githubFile, 'utf-8'));
+        } catch {
+            if (config.pathConfig.githubFileName) {
+                try {
+                    githubData = new GitHubData();
+                    fs.writeFileSync(githubFile, JSON.stringify(githubData));
+                } catch {}
+            }
+        }
+
+        return githubData;
     }
 }

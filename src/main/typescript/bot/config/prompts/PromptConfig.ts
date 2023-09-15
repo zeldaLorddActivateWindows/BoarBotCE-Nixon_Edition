@@ -17,4 +17,5 @@ export class PromptConfig {
     public readonly emoji2: string = ' ';
     public readonly choices: string[] = [' ', ' ', ' ', ' '];
     public readonly numButtons: number = 0;
+    public readonly rightClock: string = ' ';
 }

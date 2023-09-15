@@ -16,6 +16,6 @@ export class ItemConfig {
     public readonly staticFile?: string;
     public readonly isSB: boolean = false;
     public readonly blacklisted: boolean = false;
-    public readonly tiers?: number[];
+    public readonly rewardAmt?: number;
     public readonly outcomes?: OutcomeConfig[];
 }

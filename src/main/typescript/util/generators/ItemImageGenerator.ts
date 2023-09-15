@@ -73,7 +73,7 @@ export class ItemImageGenerator {
         const strConfig: StringConfig = this.config.stringConfig;
         const pathConfig: PathConfig = this.config.pathConfig;
 
-        let folderPath: string;
+        let folderPath: string | undefined;
 
         if (isBadge && manualInput === undefined) {
             const badgeInfo: ItemConfig = this.config.itemConfigs.badges[this.id];
@@ -90,14 +90,15 @@ export class ItemImageGenerator {
         } else {
             this.itemName = manualInput.name;
             this.itemFile = manualInput.file;
-            folderPath = pathConfig.otherAssets;
             this.colorKey = manualInput.colorKey;
         }
 
         this.itemNameColored = coloredText ? coloredText : this.itemName;
         this.itemName = this.itemName.replace(this.itemNameColored, '%@');
 
-        this.imageFilePath = folderPath + this.itemFile;
+        this.imageFilePath = folderPath
+            ? folderPath + this.itemFile
+            : this.itemFile;
         const imageExtension: string = this.imageFilePath.split('.')[1];
         const isAnimated: boolean = imageExtension === 'gif';
 
@@ -140,18 +141,19 @@ export class ItemImageGenerator {
      */
     private async makeAnimated(): Promise<void> {
         const script: string = this.config.pathConfig.dynamicImageScript;
+        await this.makeStatic(false);
+
+        const tempAnimBasePath = this.config.pathConfig.tempItemAssets + this.id + this.colorKey + 'animbase.png';
+        fs.writeFileSync(tempAnimBasePath, this.buffer);
 
         // Waits for python code to execute before continuing
         await new Promise((resolve) => {
             const scriptOptions: Options = {
                 args: [
                     JSON.stringify(this.config.pathConfig),
-                    JSON.stringify(this.config.colorConfig),
                     JSON.stringify(this.config.numberConfig),
-                    this.colorKey,
                     this.imageFilePath,
-                    this.title,
-                    this.itemName.replace('%@', this.itemNameColored)
+                    tempAnimBasePath
                 ]
             };
 
@@ -166,6 +168,8 @@ export class ItemImageGenerator {
                 resolve('Success');
             });
         });
+
+        fs.rmSync(tempAnimBasePath);
     }
 
     /**
@@ -173,7 +177,7 @@ export class ItemImageGenerator {
      *
      * @private
      */
-    private async makeStatic(): Promise<void> {
+    private async makeStatic(makeWithBoar = true): Promise<void> {
         const strConfig: StringConfig = this.config.stringConfig;
         const nums: NumberConfig = this.config.numberConfig;
         const pathConfig: PathConfig = this.config.pathConfig;
@@ -210,15 +214,17 @@ export class ItemImageGenerator {
         // Draws item and overlay
 
         ctx.drawImage(await Canvas.loadImage(backplatePath), ...origin);
-        ctx.drawImage(await Canvas.loadImage(this.imageFilePath), ...mainPos, ...mainSize);
+        if (makeWithBoar) {
+            ctx.drawImage(await Canvas.loadImage(this.imageFilePath), ...mainPos, ...mainSize);
+        }
         ctx.drawImage(await Canvas.loadImage(overlay), ...origin);
 
         // Draws method of delivery and name of item
 
-        CanvasUtils.drawText(ctx, this.title, nums.itemTitlePos, mediumFont, 'center', colorConfig.font);
-        CanvasUtils.drawText(
+        await CanvasUtils.drawText(ctx, this.title, nums.itemTitlePos, mediumFont, 'center', colorConfig.font);
+        await CanvasUtils.drawText(
             ctx, this.itemName, nums.itemNamePos, mediumFont, 'center', colorConfig.font,
-            undefined, false, this.itemNameColored, colorConfig[this.colorKey]
+            undefined, false, [this.itemNameColored], [colorConfig[this.colorKey]]
         );
 
         this.buffer = canvas.toBuffer();
@@ -297,7 +303,7 @@ export class ItemImageGenerator {
             ctx.fillStyle = this.config.colorConfig.dark;
             ctx.fill();
 
-            CanvasUtils.drawText(
+            await CanvasUtils.drawText(
                 ctx, 'To', [nums.itemTextX, nums.itemBoxOneY + nums.itemTextYOffset],
                 smallMediumFont, 'left', colorConfig.font
             );
@@ -310,7 +316,7 @@ export class ItemImageGenerator {
             ctx.fillStyle = this.config.colorConfig.dark;
             ctx.fill();
 
-            CanvasUtils.drawText(
+            await CanvasUtils.drawText(
                 ctx, 'From', [nums.itemTextX, nums.itemBoxThreeY + nums.itemTextYOffset],
                 smallMediumFont, 'left', colorConfig.font
             );
@@ -324,7 +330,7 @@ export class ItemImageGenerator {
             ctx.fillStyle = this.config.colorConfig.dark;
             ctx.fill();
 
-            CanvasUtils.drawText(
+            await CanvasUtils.drawText(
                 ctx, this.giftingUserTag, [nums.itemUserTagX, nums.itemBoxFourY + nums.itemTextYOffset],
                 smallMediumFont, 'left', colorConfig.font
             );
@@ -343,14 +349,21 @@ export class ItemImageGenerator {
         ctx.fillStyle = this.config.colorConfig.dark;
         ctx.fill();
 
-        CanvasUtils.drawText(
+        await CanvasUtils.drawText(
             ctx, this.userTag, [nums.itemUserTagX, userBoxY + nums.itemTextYOffset],
             smallMediumFont, 'left', colorConfig.font
         );
 
+        let userAvatar;
+
+        try {
+            userAvatar = await Canvas.loadImage(this.userAvatar);
+        } catch {
+            userAvatar = await Canvas.loadImage(this.config.pathConfig.otherAssets + this.config.pathConfig.noAvatar);
+        }
+
         CanvasUtils.drawCircleImage(
-            ctx, await Canvas.loadImage(this.userAvatar),
-            [nums.itemUserAvatarX, userBoxY + nums.itemUserAvatarYOffset], nums.itemUserAvatarWidth
+            ctx, userAvatar, [nums.itemUserAvatarX, userBoxY + nums.itemUserAvatarYOffset], nums.itemUserAvatarWidth
         );
 
         if (score && this.giftingUserTag === undefined) {
@@ -362,9 +375,9 @@ export class ItemImageGenerator {
             ctx.fillStyle = this.config.colorConfig.dark;
             ctx.fill();
 
-            CanvasUtils.drawText(
-                ctx, '+%@' + score.toLocaleString(), [nums.itemTextX, nums.itemBoxTwoY + nums.itemTextYOffset],
-                smallMediumFont, 'left', colorConfig.font, undefined, false, '$', colorConfig.bucks
+            await CanvasUtils.drawText(
+                ctx, '+%@', [nums.itemTextX, nums.itemBoxTwoY + nums.itemTextYOffset], smallMediumFont,
+                'left', colorConfig.font, undefined, false, ['$' + score.toLocaleString()], [colorConfig.bucks]
             );
         }
 

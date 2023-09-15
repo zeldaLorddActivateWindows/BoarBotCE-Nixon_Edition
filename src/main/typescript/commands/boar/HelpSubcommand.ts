@@ -46,6 +46,7 @@ export default class HelpSubcommand implements Subcommand {
     };
     private collector: InteractionCollector<ButtonInteraction | StringSelectMenuInteraction> =
         {} as InteractionCollector<ButtonInteraction | StringSelectMenuInteraction>;
+    private hasStopped = false;
     public readonly data = { name: this.subcommandInfo.name, path: __filename };
 
     /**
@@ -65,7 +66,7 @@ export default class HelpSubcommand implements Subcommand {
         const otherAssets: string = pathConfig.otherAssets;
 
         this.helpImages = [
-            [otherAssets + pathConfig.helpGeneral1],
+            [otherAssets + pathConfig.helpGeneral1, otherAssets + pathConfig.helpGeneral2],
             [otherAssets + pathConfig.helpPowerup1, otherAssets + pathConfig.helpPowerup2],
             [otherAssets + pathConfig.helpMarket1, otherAssets + pathConfig.helpMarket2],
             [
@@ -76,13 +77,11 @@ export default class HelpSubcommand implements Subcommand {
 
         // The help area to start out in
         this.curArea = interaction.options.getInteger(this.subcommandInfo.args[0].name)
-            ? interaction.options.getInteger(this.subcommandInfo.args[0].name) as Area
-            : Area.General;
+            ?? Area.General;
 
         // The page to start out on
         this.curPage = interaction.options.getInteger(this.subcommandInfo.args[1].name)
-            ? interaction.options.getInteger(this.subcommandInfo.args[1].name) as number - 1
-            : 0;
+            ?? 0;
 
         this.curPage = Math.max(0, this.curPage);
         this.curPage = Math.min(this.helpImages[this.curArea].length-1, this.curPage);
@@ -172,6 +171,8 @@ export default class HelpSubcommand implements Subcommand {
      */
     private async handleEndCollect(reason: string): Promise<void> {
         try {
+            this.hasStopped = true;
+
             LogDebug.log('Ended collection with reason: ' + reason, this.config, this.firstInter);
 
             if (reason == CollectorUtils.Reasons.Error) {
@@ -209,6 +210,8 @@ export default class HelpSubcommand implements Subcommand {
             this.rows[0].components[0].setDisabled(this.curPage === 0);
             this.rows[0].components[1].setDisabled(this.curPage === this.helpImages[this.curArea].length - 1);
             this.rows[1].components[0].setDisabled(false);
+
+            if (this.hasStopped) return;
 
             await this.firstInter.editReply({
                 files: [fs.readFileSync(this.helpImages[this.curArea][this.curPage])],

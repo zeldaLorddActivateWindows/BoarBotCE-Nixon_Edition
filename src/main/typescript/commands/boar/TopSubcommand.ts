@@ -27,7 +27,6 @@ import {ModalConfig} from '../../bot/config/modals/ModalConfig';
 import {BoardData} from '../../util/data/global/BoardData';
 import {BoarUser} from '../../util/boar/BoarUser';
 import {Queue} from '../../util/interactions/Queue';
-import {GlobalData} from '../../util/data/global/GlobalData';
 
 enum Board {
     Bucks = 'bucks',
@@ -38,7 +37,8 @@ enum Board {
     Attempts = 'attempts',
     TopAttempts = 'topAttempts',
     GiftsUsed = 'giftsUsed',
-    Multiplier = 'multiplier'
+    Multiplier = 'multiplier',
+    Fastest = 'fastest'
 }
 
 /**
@@ -57,7 +57,7 @@ export default class TopSubcommand implements Subcommand {
     private imageGen: LeaderboardImageGenerator = {} as LeaderboardImageGenerator;
     private leaderboardData: Record<string, BoardData> = {};
     private curBoard: Board = Board.Bucks;
-    private curBoardData: [string, number][] = [];
+    private curBoardData: [string, [string, number]][] = [];
     private curPage = 0;
     private maxPage = 0;
     private rows: ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>[] = [];
@@ -69,6 +69,7 @@ export default class TopSubcommand implements Subcommand {
     private curModalListener: ((submittedModal: Interaction) => Promise<void>) | undefined;
     private collector: InteractionCollector<ButtonInteraction | StringSelectMenuInteraction> =
         {} as InteractionCollector<ButtonInteraction | StringSelectMenuInteraction>;
+    private hasStopped = false;
     public readonly data = { name: this.subcommandInfo.name, path: __filename };
 
     /**
@@ -85,22 +86,28 @@ export default class TopSubcommand implements Subcommand {
         this.firstInter = interaction;
 
         // Leaderboard to start out in
-        this.curBoard = interaction.options.getString(this.subcommandInfo.args[0].name)
-            ? interaction.options.getString(this.subcommandInfo.args[0].name) as Board
-            : Board.Bucks;
+        this.curBoard = interaction.options.getString(this.subcommandInfo.args[0].name) as Board | null
+            ?? Board.Bucks;
 
         // Used to get the page of the board a user is on
         const userInput: User | null = interaction.options.getUser(this.subcommandInfo.args[1].name);
 
         // Used to get the page to start out on
         const pageInput: number = interaction.options.getInteger(this.subcommandInfo.args[2].name)
-            ? interaction.options.getInteger(this.subcommandInfo.args[2].name) as number
-            : 1;
+            ?? 1;
 
-        this.leaderboardData = DataHandlers.getGlobalData().leaderboardData;
+        this.leaderboardData =
+            DataHandlers.getGlobalData(DataHandlers.GlobalFile.Leaderboards) as Record<string, BoardData>;
 
-        this.curBoardData = (Object.entries(this.leaderboardData[this.curBoard].userData) as [string, number][])
-            .sort((a, b) => b[1] - a[1]);
+        this.curBoardData =
+            (Object.entries(this.leaderboardData[this.curBoard].userData) as [string, [string, number]][]);
+
+        if (this.curBoard !== Board.Fastest) {
+            this.curBoardData.sort((a, b) => b[1][1] - a[1][1]);
+        } else {
+            this.curBoardData.sort((a, b) => a[1][1] - b[1][1]);
+        }
+
         await this.doAthleteBadge();
 
         this.maxPage = Math.ceil(this.curBoardData.length / this.config.numberConfig.leaderboardNumPlayers) - 1;
@@ -129,7 +136,7 @@ export default class TopSubcommand implements Subcommand {
         this.collector.once('end', async (collected, reason) => await this.handleEndCollect(reason));
 
         this.imageGen = new LeaderboardImageGenerator(this.curBoardData, this.curBoard, this.config);
-        await this.showLeaderboard();
+        await this.showLeaderboard(true);
 
         if (userInput && this.getUserIndex(userInput.id) === -1) {
             await Replies.handleReply(
@@ -168,6 +175,7 @@ export default class TopSubcommand implements Subcommand {
                 leftPage: leaderRowConfig[0][0].components[0],
                 inputPage: leaderRowConfig[0][0].components[1],
                 rightPage: leaderRowConfig[0][0].components[2],
+                refresh: leaderRowConfig[0][0].components[3],
                 boardSelect: leaderRowConfig[0][1].components[0]
             };
 
@@ -192,12 +200,38 @@ export default class TopSubcommand implements Subcommand {
                     this.curPage++;
                     break;
 
+                // User wants to go to refresh data
+                case leaderComponents.refresh.customId:
+                    this.leaderboardData =
+                        DataHandlers.getGlobalData(DataHandlers.GlobalFile.Leaderboards) as Record<string, BoardData>;
+                    this.curBoardData =
+                        (Object.entries(this.leaderboardData[this.curBoard].userData) as [string, [string, number]][]);
+
+                    if (this.curBoard !== Board.Fastest) {
+                        this.curBoardData.sort((a, b) => b[1][1] - a[1][1]);
+                    } else {
+                        this.curBoardData.sort((a, b) => a[1][1] - b[1][1]);
+                    }
+
+                    await this.doAthleteBadge();
+                    this.maxPage = Math.ceil(
+                        this.curBoardData.length / this.config.numberConfig.leaderboardNumPlayers
+                    ) - 1;
+                    this.imageGen.updateInfo(this.curBoardData, this.curBoard, this.config);
+                    break;
+
                 // User wants to change the boars they're viewing
                 case leaderComponents.boardSelect.customId:
                     this.curBoard = (this.compInter as StringSelectMenuInteraction).values[0] as Board;
-                    this.curBoardData = (Object.entries(
-                        this.leaderboardData[this.curBoard].userData
-                    ) as [string, number][]).sort((a, b) => b[1] - a[1]);
+                    this.curBoardData =
+                        (Object.entries(this.leaderboardData[this.curBoard].userData) as [string, [string, number]][]);
+
+                    if (this.curBoard !== Board.Fastest) {
+                        this.curBoardData.sort((a, b) => b[1][1] - a[1][1]);
+                    } else {
+                        this.curBoardData.sort((a, b) => a[1][1] - b[1][1]);
+                    }
+
                     await this.doAthleteBadge();
                     this.maxPage = Math.ceil(
                         this.curBoardData.length / this.config.numberConfig.leaderboardNumPlayers
@@ -226,6 +260,8 @@ export default class TopSubcommand implements Subcommand {
      */
     private async handleEndCollect(reason: string): Promise<void> {
         try {
+            this.hasStopped = true;
+
             LogDebug.log('Ended collection with reason: ' + reason, this.config, this.firstInter);
 
             if (reason == CollectorUtils.Reasons.Error) {
@@ -255,8 +291,9 @@ export default class TopSubcommand implements Subcommand {
         this.modalShowing = new ModalBuilder(modals[0]);
         this.modalShowing.setCustomId(modals[0].customId + '|' + inter.id);
         await inter.showModal(this.modalShowing);
+        this.curModalListener = this.modalListener;
 
-        inter.client.on(Events.InteractionCreate, this.modalListener);
+        inter.client.on(Events.InteractionCreate, this.curModalListener);
     }
 
     /**
@@ -341,9 +378,9 @@ export default class TopSubcommand implements Subcommand {
      *
      * @private
      */
-    private async showLeaderboard(): Promise<void> {
+    private async showLeaderboard(firstRun = false): Promise<void> {
         try {
-            if (!this.imageGen.hasMadeImage()) {
+            if (firstRun) {
                 this.initButtons();
             }
 
@@ -356,7 +393,10 @@ export default class TopSubcommand implements Subcommand {
             this.rows[0].components[0].setDisabled(this.curPage === 0);
             this.rows[0].components[1].setDisabled(this.maxPage === 0);
             this.rows[0].components[2].setDisabled(this.curPage === this.maxPage);
+            this.rows[0].components[3].setDisabled(false);
             this.rows[1].components[0].setDisabled(false);
+
+            if (this.hasStopped) return;
 
             await this.firstInter.editReply({
                 files: [await this.imageGen.makeLeaderboardImage(this.curPage)],
@@ -436,9 +476,10 @@ export default class TopSubcommand implements Subcommand {
                 await newTopBoarUser.addBadge('athlete', this.firstInter);
 
                 await Queue.addQueue(async () => {
-                    const globalData: GlobalData = DataHandlers.getGlobalData();
-                    globalData.leaderboardData[this.curBoard].topUser = newTopUserID;
-                    DataHandlers.saveGlobalData(globalData);
+                    const boardsData: Record<string, BoardData> =
+                        DataHandlers.getGlobalData(DataHandlers.GlobalFile.Leaderboards) as Record<string, BoardData>;
+                    boardsData[this.curBoard].topUser = newTopUserID;
+                    DataHandlers.saveGlobalData(boardsData, DataHandlers.GlobalFile.Leaderboards);
                 }, newTopUserID + 'global').catch((err) => { throw err });
             } catch {}
         }

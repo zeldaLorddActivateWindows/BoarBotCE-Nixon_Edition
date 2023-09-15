@@ -34,13 +34,10 @@ export default class BoarCommand implements Command {
         )
         .addSubcommand(sub => sub.setName(this.commandInfo.daily.name)
             .setDescription(this.commandInfo.daily.description)
-            .addBooleanOption(option => option.setName(this.commandInfo.daily.args[0].name)
+            .addStringOption(option => option.setName(this.commandInfo.daily.args[0].name)
                 .setDescription(this.commandInfo.daily.args[0].description)
                 .setRequired(this.commandInfo.daily.args[0].required !== undefined)
-            )
-            .addBooleanOption(option => option.setName(this.commandInfo.daily.args[1].name)
-                .setDescription(this.commandInfo.daily.args[1].description)
-                .setRequired(this.commandInfo.daily.args[1].required !== undefined)
+                .setChoices(...this.commandInfo.daily.args[0].choices)
             )
         )
         .addSubcommand(sub => sub.setName(this.commandInfo.collection.name)
@@ -92,6 +89,12 @@ export default class BoarCommand implements Command {
         )
         .addSubcommand(sub => sub.setName(this.commandInfo.selfWipe.name)
             .setDescription(this.commandInfo.selfWipe.description)
+        )
+        .addSubcommand(sub => sub.setName(this.commandInfo.gift.name)
+            .setDescription(this.commandInfo.gift.description)
+        )
+        .addSubcommand(sub => sub.setName(this.commandInfo.quests.name)
+            .setDescription(this.commandInfo.quests.description)
         );
 
     /**

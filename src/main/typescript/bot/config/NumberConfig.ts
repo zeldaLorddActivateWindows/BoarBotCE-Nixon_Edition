@@ -12,6 +12,7 @@ export class NumberConfig {
 
     // Font sizes
 
+    public readonly fontHuge: number = 0;
     public readonly fontBig: number = 0;
     public readonly fontMedium: number = 0;
     public readonly fontSmallMedium: number = 0;
@@ -27,19 +28,27 @@ export class NumberConfig {
     public readonly maxStreak: number = 0;
     public readonly maxIndivBoars: number = 0;
     public readonly maxPowBase: number = 0;
-    public readonly maxMulti: number = 0;
-    public readonly maxMultiBoost: number = 0;
-    public readonly maxExtraChance: number = 0;
     public readonly maxEnhancers: number = 0;
-    public readonly maxSmallEnhanced: number = 0;
+    public readonly maxSmallPow: number = 0;
     public readonly maxPowPages: number = 0;
 
     // A constant used to determine how quickly to increase rarity
     public readonly rarityIncreaseConst: number = 0;
-    public readonly responseDetailsPos: [number, number] = [0, 0];
-    public readonly responseDetailsWidth: number = 0;
 
-    public readonly responseImageSize: [number, number] = [0, 0];
+    // A constant to prevent compounding miracles to go too high
+    public readonly miracleIncreaseMax: number = 0;
+
+    public readonly enhanceDetailsPos: [number, number] = [0, 0];
+    public readonly enhanceDetailsWidth: number = 0;
+    public readonly enhanceImageSize: [number, number] = [0, 0];
+    public readonly enhanceCellPos: [number, number] = [0, 0];
+    public readonly enhanceCellSize: [number, number] = [0, 0];
+    public readonly enhanceBoarPos: [number, number] = [0, 0];
+    public readonly enhanceBoarSize: [number, number] = [0, 0];
+    public readonly enhanceRarityPos: [number, number] = [0, 0];
+    public readonly giftImageSize: [number, number] = [0, 0];
+    public readonly giftFromPos: [number, number] = [0, 0];
+    public readonly giftFromWidth: number = 0 ;
 
     // Item image positions, sizes, and values
 
@@ -107,31 +116,32 @@ export class NumberConfig {
     public readonly collDescriptionWidth: number = 0;
     public readonly collAttemptsLabelPos: [number, number] = [0, 0];
     public readonly collAttemptsPos: [number, number] = [0, 0];
-    public readonly collAttempts1LabelPos: [number, number] = [0, 0];
-    public readonly collAttempts1Pos: [number, number] = [0, 0];
-    public readonly collAttempts10LabelPos: [number, number] = [0, 0];
-    public readonly collAttempts10Pos: [number, number] = [0, 0];
-    public readonly collAttempts50LabelPos: [number, number] = [0, 0];
-    public readonly collAttempts50Pos: [number, number] = [0, 0];
+    public readonly collAttemptsTopLabelPos: [number, number] = [0, 0];
+    public readonly collAttemptsTopPos: [number, number] = [0, 0];
     public readonly collFastestTimeLabelPos: [number, number] = [0, 0];
     public readonly collFastestTimePos: [number, number] = [0, 0];
     public readonly collBestPromptLabelPos: [number, number] = [0, 0];
     public readonly collBestPromptPos: [number, number] = [0, 0];
-    public readonly collMultiLabelPos: [number, number] = [0, 0];
-    public readonly collMultiPos: [number, number] = [0, 0];
+    public readonly collBlessLabelPos: [number, number] = [0, 0];
+    public readonly collBlessPos: [number, number] = [0, 0];
+    public readonly collMiraclesLabelPos: [number, number] = [0, 0];
+    public readonly collMiraclesPos: [number, number] = [0, 0];
     public readonly collGiftsLabelPos: [number, number] = [0, 0];
     public readonly collGiftsPos: [number, number] = [0, 0];
-    public readonly collExtraChanceLabelPos: [number, number] = [0, 0];
-    public readonly collExtraChancePos: [number, number] = [0, 0];
-    public readonly collEnhancerLabelPos: [number, number] = [0, 0];
-    public readonly collBoostClaimedLabelPos: [number, number] = [0, 0];
-    public readonly collBoostClaimedPos: [number, number] = [0, 0];
-    public readonly collBoostUsedLabelPos: [number, number] = [0, 0];
-    public readonly collBoostUsedPos: [number, number] = [0, 0];
+    public readonly collClonesLabelPos: [number, number] = [0, 0];
+    public readonly collClonesPos: [number, number] = [0, 0];
+    public readonly collCellLabelPos: [number, number] = [0, 0];
+    public readonly collCellPos: [number, number] = [0, 0];
+    public readonly collCellSize: [number, number] = [0, 0];
+    public readonly collChargePos: [number, number] = [0, 0];
+    public readonly collLifetimeMiraclesLabelPos: [number, number] = [0, 0];
+    public readonly collLifetimeMiraclesPos: [number, number] = [0, 0];
+    public readonly collMiraclesUsedLabelPos: [number, number] = [0, 0];
+    public readonly collMiraclesUsedPos: [number, number] = [0, 0];
+    public readonly collMostMiraclesLabelPos: [number, number] = [0, 0];
+    public readonly collMostMiraclesPos: [number, number] = [0, 0];
     public readonly collHighestMultiLabelPos: [number, number] = [0, 0];
     public readonly collHighestMultiPos: [number, number] = [0, 0];
-    public readonly collHighestBoostLabelPos: [number, number] = [0, 0];
-    public readonly collHighestBoostPos: [number, number] = [0, 0];
     public readonly collGiftsClaimedLabelPos: [number, number] = [0, 0];
     public readonly collGiftsClaimedPos: [number, number] = [0, 0];
     public readonly collGiftsUsedLabelPos: [number, number] = [0, 0];
@@ -140,21 +150,18 @@ export class NumberConfig {
     public readonly collGiftsOpenedPos: [number, number] = [0, 0];
     public readonly collMostGiftsLabelPos: [number, number] = [0, 0];
     public readonly collMostGiftsPos: [number, number] = [0, 0];
-    public readonly collChancesClaimedLabelPos: [number, number] = [0, 0];
-    public readonly collChancesClaimedPos: [number, number] = [0, 0];
-    public readonly collChancesUsedLabelPos: [number, number] = [0, 0];
-    public readonly collChancesUsedPos: [number, number] = [0, 0];
-    public readonly collChanceHighestLabelPos: [number, number] = [0, 0];
-    public readonly collChanceHighestPos: [number, number] = [0, 0];
+    public readonly collClonesClaimedLabelPos: [number, number] = [0, 0];
+    public readonly collClonesClaimedPos: [number, number] = [0, 0];
+    public readonly collClonesUsedLabelPos: [number, number] = [0, 0];
+    public readonly collClonesUsedPos: [number, number] = [0, 0];
+    public readonly collClonesSuccLabelPos: [number, number] = [0, 0];
+    public readonly collClonesSuccPos: [number, number] = [0, 0];
+    public readonly collMostClonesLabelPos: [number, number] = [0, 0];
+    public readonly collMostClonesPos: [number, number] = [0, 0];
     public readonly collEnhancersClaimedLabelPos: [number, number] = [0, 0];
     public readonly collEnhancersClaimedPos: [number, number] = [0, 0];
     public readonly collEnhancedLabelPositions: [number, number][] = [];
     public readonly collEnhancedPositions: [number, number][] = [];
-    public readonly collEnhanceBoarLosePos: [number, number] = [0, 0];
-    public readonly collEnhanceBoarGainPos: [number, number] = [0, 0];
-    public readonly collEnhanceLosePos: [number, number] = [0, 0];
-    public readonly collEnhanceScoreGainPos: [number, number] = [0, 0];
-    public readonly collEnhanceResultWidth: number = 0;
     public readonly collPowDataWidth: number = 0;
     public readonly collBoarStartX: number = 0;
     public readonly collBoarStartY: number = 0;
@@ -174,23 +181,28 @@ export class NumberConfig {
     public readonly collFavLabelPos: [number, number] = [0, 0];
     public readonly collIndivBoarPos: [number, number] = [0, 0];
     public readonly collIndivBoarSize: [number, number] = [0, 0];
-    public readonly collEnhancerStartX: number = 0;
-    public readonly collEnhancerStartY: number = 0;
-    public readonly collEnhancerSpacingX: number = 0;
-    public readonly collEnhancerSpacingY: number = 0;
-    public readonly collEnhancerCols: number = 0;
-    public readonly collEnhancerSize: [number, number] = [0, 0];
+
+    // Event image positions, sizes, and values
+
+    public readonly eventSpawnSize: [number, number] = [0, 0];
+    public readonly eventTitlePos: [number, number] = [0, 0];
+    public readonly eventTitleWidth: number = 0;
+    public readonly eventCornerImgSize: [number, number] = [0, 0];
+    public readonly eventCornerImgPos1: [number, number] = [0, 0];
+    public readonly eventCornerImgPos2: [number, number] = [0, 0];
 
     // Powerup image positions, sizes, and values
 
-    public readonly powSpawnSize: [number, number] = [0, 0];
     public readonly powSpawnDescriptionPos: [number, number] = [0, 0];
     public readonly powSpawnDescriptionWidth: number = 0;
     public readonly powSpawnRewardPos: [number, number] = [0, 0];
-    public readonly powTopOnePos: [number, number] = [0, 0];
-    public readonly powTopTenPos: [number, number] = [0, 0];
-    public readonly powTopFiftyPos: [number, number] = [0, 0];
-    public readonly powResultsYOffset: number = 0;
+    public readonly powTopLabelPos: [number, number] = [0, 0];
+    public readonly powTopPos: [number, number] = [0, 0];
+    public readonly powAvgLabelPos: [number, number] = [0, 0];
+    public readonly powAvgPos: [number, number] = [0, 0];
+    public readonly powPromptLabelPos: [number, number] = [0, 0];
+    public readonly powPromptPos: [number, number] = [0, 0];
+    public readonly powDataWidth: number = 0;
     public readonly emojiRows: number = 0;
     public readonly emojiCols: number = 0;
     public readonly triviaRows: number = 0;
@@ -198,6 +210,7 @@ export class NumberConfig {
     public readonly fastCols: number = 0;
     public readonly powInterval: number = 0;
     public readonly powDuration: number = 0;
+    public readonly powExperiencedNum: number = 0;
 
     // Leaderboard image positions, sizes, and values
 
@@ -251,6 +264,22 @@ export class NumberConfig {
     public readonly marketOrdClaimPos: [number, number] = [0, 0];
     public readonly marketOrdClaimWidth: number = 0;
     public readonly marketRange: number = 0;
+
+    public readonly questFullAmt: number = 0;
+    public readonly questImgSize: [number, number] = [0, 0];
+    public readonly questDatesPos: [number, number] = [0, 0];
+    public readonly questStrStartPos: [number, number] = [0, 0];
+    public readonly questSpacingY: number = 0;
+    public readonly questProgressYOffset: number = 0;
+    public readonly questBucksOffsets: [number, number] = [0, 0];
+    public readonly questPowAmtOffsets: [number, number] = [0, 0];
+    public readonly questPowImgOffsets: [number, number] = [0, 0];
+    public readonly questStrWidth: number = 0;
+    public readonly questRewardImgSize: [number, number] = [0, 0];
+    public readonly questCompletionLabelPos: [number, number] = [0, 0];
+    public readonly questCompletionPos: [number, number] = [0, 0];
+    public readonly questCompleteCheckPos: [number, number] = [0, 0];
+    public readonly questCompleteStrPos: [number, number] = [0, 0];
 
     public readonly border: number = 0;
     public readonly embedMaxWidth: number = 0;

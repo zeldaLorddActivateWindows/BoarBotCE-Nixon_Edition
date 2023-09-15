@@ -15,8 +15,9 @@ import {PowerupSpawner} from '../../util/boar/PowerupSpawner';
 export interface Bot {
     buildClient(): void;
     getClient(): Client;
-    loadConfig(): void;
+    loadConfig(firstLoad: boolean): void;
     getConfig(): BotConfig;
+    getConfigHash(): string;
     registerCommands(): void;
     getCommands(): Map<string, Command>;
     getSubcommands(): Map<string, Subcommand>;

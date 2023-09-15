@@ -24,7 +24,6 @@ import {CollectionImageGenerator} from '../../util/generators/CollectionImageGen
 import {Replies} from '../../util/interactions/Replies';
 import {FormatStrings} from '../../util/discord/FormatStrings';
 import {RarityConfig} from '../../bot/config/items/RarityConfig';
-import createRBTree, {Tree} from 'functional-red-black-tree';
 import {BoarGift} from '../../util/boar/BoarGift';
 import {GuildData} from '../../util/data/global/GuildData';
 import {RowConfig} from '../../bot/config/components/RowConfig';
@@ -35,6 +34,7 @@ import {ItemImageGenerator} from '../../util/generators/ItemImageGenerator';
 import {ItemConfig} from '../../bot/config/items/ItemConfig';
 import {DataHandlers} from '../../util/data/DataHandlers';
 import {BoardData} from '../../util/data/global/BoardData';
+import {QuestData} from '../../util/data/global/QuestData';
 
 enum View {
     Normal,
@@ -59,7 +59,7 @@ export default class CollectionSubcommand implements Subcommand {
     private compInter: ButtonInteraction = {} as ButtonInteraction;
     private collectionImage = {} as CollectionImageGenerator;
     private allBoars: any[] = [];
-    private allBoarsTree: Tree<string, number> = createRBTree();
+    private allBoarsSearchArr: [string, number][] = [];
     private boarUser: BoarUser = {} as BoarUser;
     private baseRows: ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>[] = [];
     private optionalButtons: ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder> =
@@ -68,7 +68,9 @@ export default class CollectionSubcommand implements Subcommand {
     private curPage = 0;
     private maxPageNormal = 0;
     private enhanceStage = 0;
-    private curGift: BoarGift | undefined;
+    private giftStage = 0;
+    private miracleStage = 0;
+    private cloneStage = 0;
     private timerVars = {
         timeUntilNextCollect: 0,
         updateTime: setTimeout(() => {})
@@ -77,6 +79,7 @@ export default class CollectionSubcommand implements Subcommand {
     private modalShowing: ModalBuilder = {} as ModalBuilder;
     private collector: InteractionCollector<ButtonInteraction | StringSelectMenuInteraction> =
         {} as InteractionCollector<ButtonInteraction | StringSelectMenuInteraction>;
+    private hasStopped = false;
     public readonly data = { name: this.subcommandInfo.name, path: __filename };
 
     /**
@@ -93,19 +96,15 @@ export default class CollectionSubcommand implements Subcommand {
 
         // Gets user to interact with
         const userInput: User = interaction.options.getUser(this.subcommandInfo.args[0].name)
-            ? interaction.options.getUser(this.subcommandInfo.args[0].name) as User
-            : interaction.user;
+            ?? interaction.user;
 
         // Gets view to start out in
         const viewInput: View = interaction.options.getInteger(this.subcommandInfo.args[1].name)
-            ? interaction.options.getInteger(this.subcommandInfo.args[1].name) as View
-            : View.Normal;
+            ?? View.Normal;
 
         // Gets page to start out on
         const pageInput: string = interaction.options.getString(this.subcommandInfo.args[2].name)
-            ? (interaction.options.getString(this.subcommandInfo.args[2].name) as string)
-                .toLowerCase().replace(/\s+/g, '')
-            : '1';
+            ?? '1';
 
         LogDebug.log(
             `User: ${userInput}, View: ${viewInput}, Page: ${pageInput}`, this.config, this.firstInter
@@ -120,7 +119,8 @@ export default class CollectionSubcommand implements Subcommand {
 
             if (!hasAthlete) return;
 
-            const leaderboardData: Record<string, BoardData> = DataHandlers.getGlobalData().leaderboardData;
+            const leaderboardData: Record<string, BoardData> =
+                DataHandlers.getGlobalData(DataHandlers.GlobalFile.Leaderboards) as Record<string, BoardData>;
 
             let removeAthlete = true;
             for (const boardID of Object.keys(leaderboardData)) {
@@ -155,9 +155,14 @@ export default class CollectionSubcommand implements Subcommand {
         let pageVal = 1;
         if (!Number.isNaN(parseInt(pageInput))) {
             pageVal = parseInt(pageInput);
+        } else if (this.curView === View.Normal) {
+            const normalSearchArr = this.allBoarsSearchArr.map(val =>
+                [val[0], Math.ceil(val[1] / this.config.numberConfig.collBoarsPerPage)] as [string, number]
+            );
+            pageVal = BoarUtils.getClosestName(pageInput.toLowerCase().replace(/\s+/g, ''), normalSearchArr);
         } else if (this.curView === View.Detailed) {
             pageVal = BoarUtils.getClosestName(
-                pageInput.toLowerCase().replace(/\s+/g, ''), this.allBoarsTree.root
+                pageInput.toLowerCase().replace(/\s+/g, ''), this.allBoarsSearchArr
             );
         }
 
@@ -168,9 +173,10 @@ export default class CollectionSubcommand implements Subcommand {
             setTimeout(() => { oldCollector.stop(CollectorUtils.Reasons.Expired) }, 1000);
         }
 
-        this.collector = CollectorUtils.collectionCollectors[interaction.user.id] = await CollectorUtils.createCollector(
-            interaction.channel as TextChannel, interaction.id, this.config.numberConfig
-        );
+        this.collector = CollectorUtils.collectionCollectors[interaction.user.id] =
+            await CollectorUtils.createCollector(
+                interaction.channel as TextChannel, interaction.id, this.config.numberConfig
+            );
 
         this.collector.on('collect', async (inter: ButtonInteraction) => await this.handleCollect(inter));
         this.collector.once('end', async (collected, reason) => await this.handleEndCollect(reason));
@@ -207,13 +213,16 @@ export default class CollectionSubcommand implements Subcommand {
                 leftPage: collRowConfig[0][0].components[0],
                 inputPage: collRowConfig[0][0].components[1],
                 rightPage: collRowConfig[0][0].components[2],
+                refresh: collRowConfig[0][0].components[3],
                 normalView: collRowConfig[0][1].components[0],
                 detailedView: collRowConfig[0][1].components[1],
                 powerupView: collRowConfig[0][1].components[2],
                 favorite: collRowConfig[1][0].components[0],
                 gift: collRowConfig[1][0].components[1],
                 editions: collRowConfig[1][0].components[2],
-                enhance: collRowConfig[1][0].components[3]
+                enhance: collRowConfig[1][0].components[3],
+                miracle: collRowConfig[1][0].components[4],
+                clone: collRowConfig[1][0].components[5]
             };
 
             // User wants to input a page manually
@@ -221,6 +230,9 @@ export default class CollectionSubcommand implements Subcommand {
                 await this.modalHandle(inter);
 
                 this.enhanceStage--;
+                this.giftStage--;
+                this.miracleStage--;
+                this.cloneStage--;
 
                 clearInterval(this.timerVars.updateTime);
                 return;
@@ -243,6 +255,12 @@ export default class CollectionSubcommand implements Subcommand {
                 case collComponents.normalView.customId:
                     this.curView = View.Normal;
                     this.curPage = 0;
+                    break;
+
+                // User wants to refresh data
+                case collComponents.refresh.customId:
+                    await this.getUserInfo();
+                    this.collectionImage.updateInfo(this.boarUser, this.allBoars, this.config);
                     break;
 
                 // User wants to view detailed view
@@ -277,32 +295,29 @@ export default class CollectionSubcommand implements Subcommand {
 
                 // User wants to enhance a boar in detailed view
                 case collComponents.enhance.customId:
-                    if (this.enhanceStage !== 1) {
-                        this.enhanceStage = 2;
-                        await this.firstInter.followUp({
-                            files: [await this.collectionImage.finalizeEnhanceConfirm(this.curPage)],
-                            ephemeral: true
-                        });
-                    } else {
-                        await this.doEnhance();
-                    }
+                    await this.doEnhance();
                     break;
 
                 // User wants to send a gift in powerup view
                 case collComponents.gift.customId:
-                    if (!this.curGift || this.curGift.isCompleted()) {
-                        this.curGift = await new BoarGift(this.boarUser, this.collectionImage, this.config);
-                        await this.curGift.sendMessage(inter);
-                    } else {
-                        await Replies.handleReply(
-                            inter, 'You already have a gift that\'s sent out!', this.config.colorConfig.error,
-                            undefined, undefined, true
-                        );
-                    }
+                    await this.doGift();
+                    break;
+
+                // User wants to activate miracles in powerup view
+                case collComponents.miracle.customId:
+                    await this.doMiracles();
+                    break;
+
+                // User wants to clone a boar in detailed view
+                case collComponents.clone.customId:
+                    await this.doClone();
                     break;
             }
 
             this.enhanceStage--;
+            this.giftStage--;
+            this.miracleStage--;
+            this.cloneStage--;
             await this.showCollection();
         } catch (err: unknown) {
             const canStop: boolean = await LogDebug.handleError(err, this.firstInter);
@@ -350,6 +365,19 @@ export default class CollectionSubcommand implements Subcommand {
      * @private
      */
     private async doEnhance(): Promise<void> {
+        const enhancersNeeded: number = this.allBoars[this.curPage].rarity[1].enhancersNeeded;
+
+        if (this.enhanceStage !== 1) {
+            this.enhanceStage = 2;
+            await this.compInter.followUp({
+                files: [await this.collectionImage.finalizeEnhanceConfirm(this.curPage)],
+                ephemeral: true
+            });
+            return;
+        }
+
+        const questData = DataHandlers.getGlobalData(DataHandlers.GlobalFile.Quest) as QuestData;
+
         const enhancedBoar: string =
             BoarUtils.findValid(this.allBoars[this.curPage].rarity[0], this.guildData, this.config);
 
@@ -359,52 +387,63 @@ export default class CollectionSubcommand implements Subcommand {
         }
 
         LogDebug.log(
-            `Attempting to enhance ${this.allBoars[this.curPage].id} to '${enhancedBoar}'`,
+            `Attempting to enhance '${this.allBoars[this.curPage].id}' to '${enhancedBoar}'`,
             this.config, this.firstInter, true
         );
 
-        let canEnhance = true;
+        let dataChanged = false;
+        let noMoney = false;
         await Queue.addQueue(async () => {
             try {
-                const enhancersUsed: number = this.allBoars[this.curPage].rarity[1].enhancersNeeded;
+                const spendBucksIndex = questData.curQuestIDs.indexOf('spendBucks');
                 this.boarUser.refreshUserData();
 
                 if (
-                    this.boarUser.itemCollection.powerups.enhancer.numTotal - enhancersUsed < 0 ||
+                    this.boarUser.itemCollection.powerups.enhancer.numTotal - enhancersNeeded < 0 ||
                     this.boarUser.itemCollection.boars[this.allBoars[this.curPage].id].num === 0
                 ) {
-                    canEnhance = false;
+                    dataChanged = true;
+                    return;
+                }
+
+                if (this.boarUser.stats.general.boarScore - enhancersNeeded * 5 < 0) {
+                    noMoney = true;
                     return;
                 }
 
                 this.boarUser.itemCollection.boars[this.allBoars[this.curPage].id].num--;
                 this.boarUser.itemCollection.boars[this.allBoars[this.curPage].id].editions.pop();
                 this.boarUser.itemCollection.boars[this.allBoars[this.curPage].id].editionDates.pop();
-                this.boarUser.stats.general.boarScore += enhancersUsed * 5;
+                this.boarUser.stats.general.boarScore -= enhancersNeeded * 5;
                 this.boarUser.stats.general.totalBoars--;
-                this.boarUser.itemCollection.powerups.enhancer.numTotal -= enhancersUsed;
+                this.boarUser.itemCollection.powerups.enhancer.numTotal = 0;
                 (this.boarUser.itemCollection.powerups.enhancer.raritiesUsed as number[])[
                     this.allBoars[this.curPage].rarity[0]-1
                 ]++;
+
+                this.boarUser.stats.quests.progress[spendBucksIndex] += enhancersNeeded * 5;
+
                 this.boarUser.updateUserData();
             } catch (err: unknown) {
                 await LogDebug.handleError(err, this.compInter);
             }
         }, this.compInter.id + this.boarUser.user.id).catch((err) => { throw err });
 
-        if (!canEnhance) {
+        if (dataChanged || noMoney) {
             LogDebug.log(
-                `Failed to enhance ${this.allBoars[this.curPage].id} to '${enhancedBoar}'`,
+                `Failed to enhance '${this.allBoars[this.curPage].id}' to '${enhancedBoar}'`,
                 this.config, this.firstInter, true
             );
 
             await Replies.handleReply(
-                this.compInter, 'Unable to enhance! Try again!',
+                this.compInter, dataChanged
+                    ? this.config.stringConfig.collDataChange
+                    : this.config.stringConfig.collEnhanceNoBucks,
                 this.config.colorConfig.error, undefined, undefined, true
             );
 
+            await this.getUserInfo();
             this.collectionImage.updateInfo(this.boarUser, this.allBoars, this.config);
-            await this.collectionImage.createNormalBase();
             return;
         }
 
@@ -413,13 +452,16 @@ export default class CollectionSubcommand implements Subcommand {
         await this.getUserInfo();
 
         this.curPage = BoarUtils.getClosestName(
-            this.config.itemConfigs.boars[enhancedBoar].name.toLowerCase().replace(/\s+/g, ''), this.allBoarsTree.root
+            this.config.itemConfigs.boars[enhancedBoar].name.toLowerCase().replace(/\s+/g, ''), this.allBoarsSearchArr
         ) - 1;
 
-        await Replies.handleReply(
-            this.compInter, this.config.stringConfig.enhanceGotten, this.config.colorConfig.font,
-            this.allBoars[this.curPage].name, this.allBoars[this.curPage].color, true
-        );
+        await this.compInter.followUp({
+            files: [
+                await new ItemImageGenerator(
+                    this.compInter.user, enhancedBoar, this.config.stringConfig.enhanceTitle, this.config
+                ).handleImageCreate()
+            ]
+        });
 
         for (const edition of editions) {
             if (edition !== 1) continue;
@@ -432,8 +474,201 @@ export default class CollectionSubcommand implements Subcommand {
             });
         }
 
+        await this.getUserInfo();
         this.collectionImage.updateInfo(this.boarUser, this.allBoars, this.config);
-        await this.collectionImage.createNormalBase();
+    }
+
+    private async doGift(): Promise<void> {
+        const strConfig = this.config.stringConfig;
+        const colorConfig = this.config.colorConfig;
+
+        if (this.giftStage !== 1) {
+            this.boarUser.refreshUserData();
+
+            if (this.boarUser.itemCollection.powerups.gift.numTotal > 0) {
+                this.giftStage = 2;
+                await Replies.handleReply(
+                    this.compInter, strConfig.giftConfirm, colorConfig.font, [this.config.itemConfigs.powerups.gift.name],
+                    [colorConfig.powerup], true
+                );
+            } else {
+                await Replies.handleReply(
+                    this.compInter, strConfig.giftNone, colorConfig.error, undefined, undefined, true
+                );
+            }
+
+            return;
+        }
+
+        await Queue.addQueue(async () => {
+            try {
+                this.boarUser.refreshUserData();
+                if (this.boarUser.itemCollection.powerups.gift.numTotal > 0) {
+                    const curOutVal = this.boarUser.itemCollection.powerups.gift.curOut;
+                    if (!curOutVal || curOutVal + 30000 < Date.now()) {
+                        this.boarUser.itemCollection.powerups.gift.curOut = Date.now();
+                        this.boarUser.updateUserData();
+                        await new BoarGift(this.boarUser, this.config).sendMessage(this.compInter);
+                    } else {
+                        await Replies.handleReply(
+                            this.compInter, strConfig.giftOut, colorConfig.error, undefined, undefined, true
+                        );
+                    }
+                } else {
+                    await Replies.handleReply(
+                        this.compInter, strConfig.giftNone, colorConfig.error, undefined, undefined, true
+                    );
+                }
+            } catch (err) {
+                LogDebug.handleError(err, this.compInter);
+            }
+        }, this.compInter.id + this.compInter.user.id).catch((err) => { throw err });
+    }
+
+    private async doMiracles(): Promise<void> {
+        const strConfig = this.config.stringConfig;
+        const colorConfig = this.config.colorConfig;
+        const powerupConfigs = this.config.itemConfigs.powerups;
+
+        if (this.miracleStage !== 1) {
+            this.miracleStage = 2;
+
+            let multiplier = this.boarUser.stats.general.multiplier;
+            for (
+                let i=0;
+                i<this.boarUser.itemCollection.powerups.miracle.numTotal +
+                    (this.boarUser.itemCollection.powerups.miracle.numActive as number);
+                i++
+            ) {
+                multiplier += Math.min(Math.ceil(multiplier * 0.05), this.config.numberConfig.miracleIncreaseMax);
+            }
+
+            await Replies.handleReply(
+                this.compInter, strConfig.miracleConfirm, colorConfig.font, [
+                    powerupConfigs.miracle.pluralName,
+                    multiplier.toLocaleString() + '\u2738 Boar Blessings', '/boar daily'
+                ],
+                [colorConfig.powerup, colorConfig.powerup, colorConfig.silver], true
+            );
+
+            return;
+        }
+
+        LogDebug.log(
+            `Activating ${this.boarUser.itemCollection.powerups.miracle.numTotal} miracles`,
+            this.config, this.firstInter, true
+        );
+
+        await Queue.addQueue(async () => {
+            try {
+                this.boarUser.refreshUserData();
+                (this.boarUser.itemCollection.powerups.miracle.numActive as number) +=
+                    this.boarUser.itemCollection.powerups.miracle.numTotal;
+                this.boarUser.itemCollection.powerups.miracle.numTotal = 0;
+                this.boarUser.updateUserData();
+            } catch (err) {
+                LogDebug.handleError(err, this.compInter);
+            }
+        }, this.compInter.id + this.compInter.user.id).catch((err) => { throw err });
+
+        await Replies.handleReply(
+            this.compInter, strConfig.miracleSuccess, colorConfig.font,
+            [powerupConfigs.miracle.pluralName], [colorConfig.powerup], true
+        );
+
+        await this.getUserInfo();
+        this.collectionImage.updateInfo(this.boarUser, this.allBoars, this.config);
+    }
+
+    private async doClone(): Promise<void> {
+        const strConfig = this.config.stringConfig;
+        const colorConfig = this.config.colorConfig;
+
+        if (this.cloneStage !== 1) {
+            this.cloneStage = 2;
+            const rarityInfo = this.allBoars[this.curPage].rarity;
+
+            await Replies.handleReply(
+                this.compInter, strConfig.cloneConfirm, colorConfig.font, [
+                    this.config.itemConfigs.powerups.clone.name, this.allBoars[this.curPage].name,
+                    (1 / rarityInfo[1].avgClones * 100).toLocaleString() + '%',
+                ],
+                [colorConfig.powerup, colorConfig['rarity' + rarityInfo[0]], colorConfig.silver], true
+            );
+
+            return;
+        }
+
+        const randVal = Math.random();
+        const cloneSuccess = randVal < 1 / this.allBoars[this.curPage].rarity[1].avgClones;
+
+        let dataChanged = false;
+        await Queue.addQueue(async () => {
+            try {
+                this.boarUser.refreshUserData();
+
+                if (
+                    this.boarUser.itemCollection.powerups.clone.numTotal === 0 ||
+                    this.boarUser.itemCollection.boars[this.allBoars[this.curPage].id].num === 0
+                ) {
+                    dataChanged = true;
+                    return;
+                }
+
+                this.boarUser.itemCollection.powerups.clone.numTotal--;
+                this.boarUser.itemCollection.powerups.clone.numUsed++;
+
+                if (cloneSuccess) {
+                    (this.boarUser.itemCollection.powerups.clone.numSuccess as number)++;
+                    (this.boarUser.itemCollection.powerups.clone.raritiesUsed as number[])[
+                        this.allBoars[this.curPage].rarity[0]-1
+                    ]++;
+                }
+
+                this.boarUser.updateUserData();
+            } catch (err) {
+                LogDebug.handleError(err, this.compInter);
+            }
+        }, this.compInter.id + this.compInter.user.id).catch((err) => { throw err });
+
+        if (dataChanged) {
+            LogDebug.log(
+                `Failed cloning of '${this.allBoars[this.curPage].id} due to data changing'`,
+                this.config, this.firstInter, true
+            );
+
+            await Replies.handleReply(
+                this.compInter, strConfig.collDataChange, this.config.colorConfig.error, undefined, undefined, true
+            );
+
+            await this.getUserInfo();
+            this.collectionImage.updateInfo(this.boarUser, this.allBoars, this.config);
+            return;
+        }
+
+        if (cloneSuccess) {
+            await this.boarUser.addBoars([this.allBoars[this.curPage].id], this.compInter, this.config);
+            await this.compInter.followUp({
+                files: [
+                    await new ItemImageGenerator(
+                        this.compInter.user, this.allBoars[this.curPage].id, strConfig.cloneTitle, this.config
+                    ).handleImageCreate()
+                ]
+            });
+        } else {
+            LogDebug.log(
+                `Failed cloning of '${this.allBoars[this.curPage].id}'`,
+                this.config, this.firstInter, true
+            );
+
+            await Replies.handleReply(
+                this.compInter, strConfig.cloneFail, colorConfig.font, [this.allBoars[this.curPage].name],
+                [colorConfig['rarity' + this.allBoars[this.curPage].rarity[0]]], true
+            );
+        }
+
+        await this.getUserInfo();
+        this.collectionImage.updateInfo(this.boarUser, this.allBoars, this.config);
     }
 
     /**
@@ -502,9 +737,14 @@ export default class CollectionSubcommand implements Subcommand {
             let pageVal = 1;
             if (!Number.isNaN(parseInt(submittedPage))) {
                 pageVal = parseInt(submittedPage);
+            } else if (this.curView === View.Normal) {
+                const normalSearchArr = this.allBoarsSearchArr.map(val =>
+                    [val[0], Math.ceil(val[1] / this.config.numberConfig.collBoarsPerPage)] as [string, number]
+                );
+                pageVal = BoarUtils.getClosestName(submittedPage.toLowerCase().replace(/\s+/g, ''), normalSearchArr);
             } else if (this.curView === View.Detailed) {
                 pageVal = BoarUtils.getClosestName(
-                    submittedPage.toLowerCase().replace(/\s+/g, ''), this.allBoarsTree.root
+                    submittedPage.toLowerCase().replace(/\s+/g, ''), this.allBoarsSearchArr
                 )
             }
 
@@ -543,6 +783,8 @@ export default class CollectionSubcommand implements Subcommand {
      */
     private async handleEndCollect(reason: string): Promise<void> {
         try {
+            this.hasStopped = true;
+
             LogDebug.log('Ended collection with reason: ' + reason, this.config, this.firstInter);
 
             if (reason === CollectorUtils.Reasons.Error) {
@@ -571,7 +813,7 @@ export default class CollectionSubcommand implements Subcommand {
 
         this.boarUser.refreshUserData();
         this.allBoars = [];
-        this.allBoarsTree = createRBTree();
+        this.allBoarsSearchArr = [];
 
         // Adds information about each boar in user's boar collection to an array
         for (const boarID of Object.keys(this.boarUser.itemCollection.boars)) {
@@ -601,9 +843,7 @@ export default class CollectionSubcommand implements Subcommand {
                 isSB: boarDetails.isSB
             });
 
-            this.allBoarsTree = this.allBoarsTree.insert(
-                boarDetails.name.toLowerCase().replace(/\s+/g, ''), this.allBoars.length
-            );
+            this.allBoarsSearchArr.push([boarDetails.name.toLowerCase().replace(/\s+/g, ''), this.allBoars.length]);
         }
     }
 
@@ -664,19 +904,21 @@ export default class CollectionSubcommand implements Subcommand {
             // Enables manual input button if there's more than one page
             this.baseRows[0].components[1].setDisabled(
                 this.curView === View.Normal && this.maxPageNormal <= 0 ||
-                this.curView === View.Detailed && this.allBoars.length <= 1 ||
-                this.curView === View.Powerups
+                this.curView === View.Detailed && this.allBoars.length <= 1
             );
+
+            // Enables refresh button
+            this.baseRows[0].components[3].setDisabled(false);
 
             // Allows pressing Normal view if not currently on it
             this.baseRows[1].components[0].setDisabled(this.curView === View.Normal);
 
             // Allows pressing Detailed view if not currently on it and if there's boars to view
-            this.baseRows[1].components[1].setDisabled(this.curView === View.Detailed || this.allBoars.length <= 0);
+            this.baseRows[1].components[1].setDisabled(this.curView === View.Detailed || this.allBoars.length === 0);
 
             // Allows pressing Powerup view if not currently on it
             this.baseRows[1].components[2].setDisabled(
-                this.curView !== View.Powerups && Object.keys(this.boarUser.itemCollection.powerups).length <= 0
+                this.curView === View.Powerups || Object.keys(this.boarUser.itemCollection.powerups).length === 0
             );
 
             // Enables edition viewing on special boars
@@ -698,15 +940,40 @@ export default class CollectionSubcommand implements Subcommand {
                 );
             }
 
-            // Gift button enabling
-            if (this.curView === View.Powerups) {
-                optionalRow.addComponents(
-                    this.optionalButtons.components[1].setDisabled(
-                        this.boarUser.itemCollection.powerups.gift.numTotal === 0 ||
+            // Enables clone button for viable boars
+            if (
+                this.curView === View.Detailed && this.allBoars[this.curPage].rarity[1].avgClones > 0
+            ) {
+                optionalRow.addComponents((this.optionalButtons.components[5] as ButtonBuilder)
+                    .setDisabled(
+                        this.boarUser.itemCollection.powerups.clone.numTotal === 0 ||
                         this.firstInter.user.id !== this.boarUser.user.id
                     )
+                    .setStyle(this.cloneStage === 1 ? 4 : 3)
                 );
             }
+
+            // Gift & Miracle Activation button enabling
+            if (this.curView === View.Powerups) {
+                optionalRow.addComponents(
+                    (this.optionalButtons.components[1] as ButtonBuilder)
+                        .setDisabled(
+                            this.boarUser.itemCollection.powerups.gift.numTotal === 0 ||
+                            this.firstInter.user.id !== this.boarUser.user.id
+                        )
+                        .setStyle(this.giftStage === 1 ? 4 : 3)
+                );
+                optionalRow.addComponents(
+                    (this.optionalButtons.components[4] as ButtonBuilder)
+                        .setDisabled(
+                            this.boarUser.itemCollection.powerups.miracle.numTotal === 0 ||
+                            this.firstInter.user.id !== this.boarUser.user.id
+                        )
+                        .setStyle(this.miracleStage === 1 ? 4 : 3)
+                );
+            }
+
+            if (this.hasStopped) return;
 
             if (optionalRow.components.length > 0) {
                 await this.firstInter.editReply({ files: [finalImage], components: [...this.baseRows, optionalRow] });

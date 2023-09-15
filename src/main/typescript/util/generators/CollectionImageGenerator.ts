@@ -57,6 +57,9 @@ export class CollectionImageGenerator {
         this.boarUser = boarUser;
         this.config = config;
         this.allBoars = boars;
+        this.normalBase = {} as Buffer;
+        this.detailedBase = {} as Buffer;
+        this.powerupsBase = {} as Buffer;
     }
 
     /**
@@ -106,38 +109,37 @@ export class CollectionImageGenerator {
 
         // Draws stats information
 
-        CanvasUtils.drawText(
+        await CanvasUtils.drawText(
             ctx, strConfig.collScoreLabel, nums.collScoreLabelPos, mediumFont, 'center', colorConfig.font
         );
-        CanvasUtils.drawText(
-            ctx, '%@' + scoreString, nums.collScorePos, smallFont, 'center',
-            colorConfig.font, undefined, false, '$', colorConfig.bucks
+        await CanvasUtils.drawText(
+            ctx, '$' + scoreString, nums.collScorePos, smallFont, 'center', colorConfig.bucks
         );
 
-        CanvasUtils.drawText(
+        await CanvasUtils.drawText(
             ctx, strConfig.collTotalLabel, nums.collTotalLabelPos, mediumFont, 'center', colorConfig.font
         );
-        CanvasUtils.drawText(ctx, totalString, nums.collTotalPos, smallFont, 'center', colorConfig.font);
+        await CanvasUtils.drawText(ctx, totalString, nums.collTotalPos, smallFont, 'center', colorConfig.font);
 
-        CanvasUtils.drawText(
+        await CanvasUtils.drawText(
             ctx, strConfig.collUniquesLabel, nums.collUniquesLabelPos, mediumFont, 'center', colorConfig.font
         );
-        CanvasUtils.drawText(ctx, uniqueString, nums.collUniquePos, smallFont, 'center', colorConfig.font);
+        await CanvasUtils.drawText(ctx, uniqueString, nums.collUniquePos, smallFont, 'center', colorConfig.font);
 
-        CanvasUtils.drawText(
+        await CanvasUtils.drawText(
             ctx, strConfig.collDailiesLabel, nums.collDailiesLabelPos, mediumFont, 'center', colorConfig.font
         );
-        CanvasUtils.drawText(ctx, dailiesString, nums.collDailiesPos, smallFont, 'center', colorConfig.font);
+        await CanvasUtils.drawText(ctx, dailiesString, nums.collDailiesPos, smallFont, 'center', colorConfig.font);
 
-        CanvasUtils.drawText(
+        await CanvasUtils.drawText(
             ctx, strConfig.collStreakLabel, nums.collStreakLabelPos, mediumFont, 'center', colorConfig.font
         );
-        CanvasUtils.drawText(ctx, streakString, nums.collStreakPos, smallFont, 'center', colorConfig.font);
+        await CanvasUtils.drawText(ctx, streakString, nums.collStreakPos, smallFont, 'center', colorConfig.font);
 
-        CanvasUtils.drawText(
+        await CanvasUtils.drawText(
             ctx, strConfig.collLastDailyLabel, nums.collLastDailyLabelPos, bigFont, 'center', colorConfig.font
         );
-        CanvasUtils.drawText(ctx, lastDailyString, nums.collLastDailyPos, bigFont, 'center', colorConfig.font);
+        await CanvasUtils.drawText(ctx, lastDailyString, nums.collLastDailyPos, bigFont, 'center', colorConfig.font);
 
         this.normalBase = canvas.toBuffer();
     }
@@ -235,11 +237,11 @@ export class CollectionImageGenerator {
         // Draws overlay
 
         ctx.drawImage(await Canvas.loadImage(collectionOverlay), ...nums.originPos, ...nums.collImageSize);
-        CanvasUtils.drawText(
+        await CanvasUtils.drawText(
             ctx, strConfig.collFavLabel, nums.collFavLabelPos, smallestFont,
             'center', favBoarRarity[0] === 0 ? colorConfig.font : colorConfig['rarity' + favBoarRarity[0]]
         );
-        CanvasUtils.drawText(
+        await CanvasUtils.drawText(
             ctx, strConfig.collRecentLabel, nums.collRecentLabelPos, smallestFont,
             'center', lastBoarRarity[0] === 0 ? colorConfig.font : colorConfig['rarity' + lastBoarRarity[0]]
         );
@@ -270,20 +272,20 @@ export class CollectionImageGenerator {
 
         // Draws labels
 
-        CanvasUtils.drawText(
+        await CanvasUtils.drawText(
             ctx, strConfig.collIndivTotalLabel, nums.collIndivTotalLabelPos, mediumFont, 'center', colorConfig.font
         );
 
-        CanvasUtils.drawText(
+        await CanvasUtils.drawText(
             ctx, strConfig.collFirstObtainedLabel, nums.collFirstObtainedLabelPos,
             mediumFont, 'center', colorConfig.font
         );
 
-        CanvasUtils.drawText(
+        await CanvasUtils.drawText(
             ctx, strConfig.collLastObtainedLabel, nums.collLastObtainedLabelPos, mediumFont, 'center', colorConfig.font
         );
 
-        CanvasUtils.drawText(
+        await CanvasUtils.drawText(
             ctx, strConfig.collDescriptionLabel, nums.collDescriptionLabelPos, mediumFont, 'center', colorConfig.font
         );
 
@@ -356,30 +358,30 @@ export class CollectionImageGenerator {
 
         // Draws stats
 
-        CanvasUtils.drawText(
+        await CanvasUtils.drawText(
             ctx, curBoar.rarity[1].name.toUpperCase(), indivRarityPos, mediumFont, 'center', curBoar.color
         );
 
-        CanvasUtils.drawText(
+        await CanvasUtils.drawText(
             ctx, curBoar.name, nums.collBoarNamePos, bigFont, 'center', colorConfig.font, nums.collBoarNameWidth
         );
 
-        CanvasUtils.drawText(
+        await CanvasUtils.drawText(
             ctx, numCollectedString, nums.collIndivTotalPos, smallMediumFont, 'center', colorConfig.font
         );
 
-        CanvasUtils.drawText(
+        await CanvasUtils.drawText(
             ctx, firstObtainedDate, nums.collFirstObtainedPos, smallMediumFont, 'center', colorConfig.font
         );
 
-        CanvasUtils.drawText(
+        await CanvasUtils.drawText(
             ctx, lastObtainedDate, nums.collLastObtainedPos, smallMediumFont, 'center', colorConfig.font
         );
 
-        CanvasUtils.drawText(
-            ctx, curBoar.description + '%@', nums.collDescriptionPos, smallestFont,
+        await CanvasUtils.drawText(
+            ctx, curBoar.description + ' %@', nums.collDescriptionPos, smallestFont,
             'center', colorConfig.font, nums.collDescriptionWidth, true,
-            curBoar.isSB ? strConfig.collDescriptionSB : '', colorConfig.silver
+            [curBoar.isSB ? strConfig.collDescriptionSB : ''], [colorConfig.silver]
         );
 
         ctx.drawImage(await Canvas.loadImage(collectionOverlay), ...nums.originPos, ...nums.collImageSize);
@@ -417,12 +419,11 @@ export class CollectionImageGenerator {
         const nums: NumberConfig = this.config.numberConfig;
         const pathConfig: PathConfig = this.config.pathConfig;
         const colorConfig: ColorConfig = this.config.colorConfig;
-        const powItemConfigs: ItemConfigs = this.config.itemConfigs.powerups;
         const promptConfig: PromptConfigs = this.config.promptConfigs;
+        const rarityConfigs: RarityConfig[] = this.config.rarityConfigs;
+        const powItemConfigs: ItemConfigs = this.config.itemConfigs.powerups;
 
         const collectionUnderlay: string = pathConfig.collAssets + pathConfig.collPowerUnderlay;
-        const enhancerActive: string = pathConfig.powerups + powItemConfigs.enhancer.file;
-        const enhancerInactive: string = pathConfig.collAssets + pathConfig.enhancerOff;
 
         const mediumFont = `${nums.fontMedium}px ${strConfig.fontName}`;
         const smallMedium = `${nums.fontSmallMedium}px ${strConfig.fontName}`;
@@ -431,9 +432,7 @@ export class CollectionImageGenerator {
         const powerupData: PowerupStats = this.boarUser.stats.powerups;
 
         const totalAttempts: string = Math.min(powerupData.attempts, nums.maxPowBase).toLocaleString();
-        const totalAttempts1: string = Math.min(powerupData.oneAttempts, nums.maxPowBase).toLocaleString();
-        const totalAttempts10: string = Math.min(powerupData.tenAttempts, nums.maxPowBase).toLocaleString();
-        const totalAttempts50: string = Math.min(powerupData.fiftyAttempts, nums.maxPowBase).toLocaleString();
+        const topAttempts: string = Math.min(powerupData.oneAttempts, nums.maxPowBase).toLocaleString();
         const fastestTime: string = powerupData.fastestTime
             ? powerupData.fastestTime.toLocaleString() + 'ms'
             : 'N/A';
@@ -462,17 +461,10 @@ export class CollectionImageGenerator {
             }
         }
 
-        const multiplier: string = Math.min(this.boarUser.stats.general.multiplier, nums.maxMulti)
-            .toLocaleString() + 'x';
-        const multiBoost: string = '+' + Math.min(powerupItemsData.multiBoost.numTotal, nums.maxMultiBoost)
-            .toLocaleString();
-        const gifts: string = Math.min(powerupItemsData.gift.numTotal, nums.maxPowBase).toLocaleString();
-        let extraChance: string = Math.min(powerupItemsData.extraChance.numTotal, nums.maxExtraChance)
-            .toLocaleString() + '%';
-
-        if (Math.min(powerupItemsData.extraChance.numTotal, nums.maxExtraChance) === nums.maxExtraChance) {
-            extraChance += ' (MAX)'
-        }
+        let multiplier: number = Math.min(this.boarUser.stats.general.multiplier, nums.maxPowBase);
+        const miracles: string = Math.min(powerupItemsData.miracle.numTotal, nums.maxPowBase).toLocaleString();
+        const gifts: string = Math.min(powerupItemsData.gift.numTotal, nums.maxSmallPow).toLocaleString();
+        const clones: string = Math.min(powerupItemsData.clone.numTotal, nums.maxSmallPow).toLocaleString();
 
         const canvas: Canvas.Canvas = Canvas.createCanvas(nums.collImageSize[0], nums.collImageSize[1]);
         const ctx: Canvas.CanvasRenderingContext2D = canvas.getContext('2d');
@@ -482,80 +474,85 @@ export class CollectionImageGenerator {
 
         // Draws stats info
 
-        CanvasUtils.drawText(
-            ctx, strConfig.collAttemptsLabel, nums.collAttemptsLabelPos, mediumFont, 'center', colorConfig.font
+        await CanvasUtils.drawText(
+            ctx, strConfig.collClaimsLabel, nums.collAttemptsLabelPos, mediumFont, 'center', colorConfig.font
         );
-        CanvasUtils.drawText(ctx, totalAttempts, nums.collAttemptsPos, smallMedium, 'center', colorConfig.font);
+        await CanvasUtils.drawText(ctx, totalAttempts, nums.collAttemptsPos, smallMedium, 'center', colorConfig.font);
 
-        CanvasUtils.drawText(
-            ctx, strConfig.collAttempts50Label, nums.collAttempts50LabelPos, mediumFont, 'center', colorConfig.font
+        await CanvasUtils.drawText(
+            ctx, strConfig.collFastestClaimsLabel, nums.collAttemptsTopLabelPos, mediumFont, 'center', colorConfig.font
         );
-        CanvasUtils.drawText(ctx, totalAttempts50, nums.collAttempts50Pos, smallMedium, 'center', colorConfig.font);
+        await CanvasUtils.drawText(ctx, topAttempts, nums.collAttemptsTopPos, smallMedium, 'center', colorConfig.font);
 
-        CanvasUtils.drawText(
-            ctx, strConfig.collAttempts10Label, nums.collAttempts10LabelPos, mediumFont, 'center', colorConfig.font
-        );
-        CanvasUtils.drawText(ctx, totalAttempts10, nums.collAttempts10Pos, smallMedium, 'center', colorConfig.font);
-
-        CanvasUtils.drawText(
-            ctx, strConfig.collAttempts1Label, nums.collAttempts1LabelPos, mediumFont, 'center', colorConfig.font
-        );
-        CanvasUtils.drawText(ctx, totalAttempts1, nums.collAttempts1Pos, smallMedium, 'center', colorConfig.font);
-
-        CanvasUtils.drawText(
+        await CanvasUtils.drawText(
             ctx, strConfig.collFastestTimeLabel, nums.collFastestTimeLabelPos, mediumFont, 'center', colorConfig.font
         );
-        CanvasUtils.drawText(
-            ctx, fastestTime, nums.collFastestTimePos, smallMedium, 'center', colorConfig.font, nums.collPowDataWidth
-        );
+        await CanvasUtils.drawText(ctx, fastestTime, nums.collFastestTimePos, smallMedium, 'center', colorConfig.font);
 
-        CanvasUtils.drawText(
+
+        await CanvasUtils.drawText(
             ctx, strConfig.collBestPromptLabel, nums.collBestPromptLabelPos, mediumFont, 'center', colorConfig.font
         );
-        CanvasUtils.drawText(
+        await CanvasUtils.drawText(
             ctx, bestPrompt[0], nums.collBestPromptPos, smallMedium, 'center', colorConfig.font, nums.collPowDataWidth
         );
 
-        CanvasUtils.drawText(
-            ctx, strConfig.collMultiplierLabel, nums.collMultiLabelPos, mediumFont, 'center', colorConfig.font
+        await CanvasUtils.drawText(
+            ctx, strConfig.collBlessLabel, nums.collBlessLabelPos, mediumFont, 'center', colorConfig.font
         );
-        if (powerupItemsData.multiBoost.numTotal > 0) {
-            CanvasUtils.drawText(
-                ctx, multiplier + ' (%@)', nums.collMultiPos, smallMedium,
-                'center', colorConfig.font, undefined, false, multiBoost, colorConfig.powerup
+
+        if (powerupItemsData.miracle.numActive as number > 0) {
+            for (let i=0; i<(powerupItemsData.miracle.numActive as number); i++) {
+                multiplier += Math.min(
+                    Math.ceil(multiplier * 0.05), this.config.numberConfig.miracleIncreaseMax
+                );
+            }
+
+            await CanvasUtils.drawText(
+                ctx, multiplier.toLocaleString() + '\u2738', nums.collBlessPos,
+                smallMedium, 'center', colorConfig.powerup
             );
         } else {
-            CanvasUtils.drawText(ctx, multiplier, nums.collMultiPos, smallMedium, 'center', colorConfig.font);
+            await CanvasUtils.drawText(
+                ctx, multiplier.toLocaleString(), nums.collBlessPos, smallMedium, 'center', colorConfig.font
+            );
         }
 
+        await CanvasUtils.drawText(
+            ctx, powItemConfigs.miracle.pluralName, nums.collMiraclesLabelPos, mediumFont, 'center', colorConfig.font
+        );
+        await CanvasUtils.drawText(ctx, miracles, nums.collMiraclesPos, smallMedium, 'center', colorConfig.font);
 
-        CanvasUtils.drawText(
+        await CanvasUtils.drawText(
             ctx, strConfig.collGiftsLabel, nums.collGiftsLabelPos, mediumFont, 'center', colorConfig.font
         );
-        CanvasUtils.drawText(ctx, gifts, nums.collGiftsPos, smallMedium, 'center', colorConfig.font);
+        await CanvasUtils.drawText(ctx, gifts, nums.collGiftsPos, smallMedium, 'center', colorConfig.font);
 
-        CanvasUtils.drawText(
-            ctx, strConfig.collExtraBoarLabel, nums.collExtraChanceLabelPos, mediumFont, 'center', colorConfig.font
+        await CanvasUtils.drawText(
+            ctx, strConfig.collClonesLabel, nums.collClonesLabelPos, mediumFont, 'center', colorConfig.font
         );
-        CanvasUtils.drawText(ctx, extraChance, nums.collExtraChancePos, smallMedium, 'center', colorConfig.font);
+        await CanvasUtils.drawText(ctx, clones, nums.collClonesPos, smallMedium, 'center', colorConfig.font);
 
-        CanvasUtils.drawText(
-            ctx, strConfig.collEnhancerLabel, nums.collEnhancerLabelPos, mediumFont, 'center', colorConfig.font
+        await CanvasUtils.drawText(
+            ctx, strConfig.collCellLabel, nums.collCellLabelPos, mediumFont, 'center', colorConfig.font
         );
 
-        // Draws enhancers
-        for (let i=0; i<nums.maxEnhancers; i++) {
-            const enhancerImagePos: [number, number] = [
-                nums.collEnhancerStartX + (i % nums.collEnhancerCols) * nums.collEnhancerSpacingX,
-                nums.collEnhancerStartY + Math.floor(i / nums.collEnhancerCols) * nums.collEnhancerSpacingY
-            ];
+        let cellImagePath = pathConfig.collAssets + pathConfig.cellNone;
+        let chargeStr = 'No';
+        let chargeColor = colorConfig.rarity1;
 
-            const enhancerFile: string = i < powerupItemsData.enhancer.numTotal
-                ? enhancerActive
-                : enhancerInactive;
+        [...rarityConfigs].reverse().every((rarityConfig, index) => {
+            if (rarityConfig.enhancersNeeded === 0 || powerupItemsData.enhancer.numTotal < rarityConfig.enhancersNeeded)
+                return true;
 
-            ctx.drawImage(await Canvas.loadImage(enhancerFile), ...enhancerImagePos, ...nums.collEnhancerSize);
-        }
+            cellImagePath = pathConfig.collAssets + pathConfig['cell' + rarityConfig.name];
+            chargeStr = rarityConfig.name;
+            chargeColor = colorConfig['rarity' + (rarityConfigs.length - index)];
+        });
+
+        chargeStr += ` Charge! (${powerupItemsData.enhancer.numTotal}/${nums.maxEnhancers})`;
+        ctx.drawImage(await Canvas.loadImage(cellImagePath), ...nums.collCellPos, ...nums.collCellSize);
+        await await CanvasUtils.drawText(ctx, chargeStr, nums.collChargePos, mediumFont, 'center', chargeColor);
 
         this.powerupsBase = canvas.toBuffer();
     }
@@ -580,12 +577,12 @@ export class CollectionImageGenerator {
 
         const powerupItemsData: Record<string, CollectedPowerup> = this.boarUser.itemCollection.powerups;
 
-        const multiBoostClaimed: string = Math.min(powerupItemsData.multiBoost.numClaimed, nums.maxPowBase)
+        const miraclesClaimed: string = Math.min(powerupItemsData.miracle.numClaimed, nums.maxPowBase)
             .toLocaleString();
-        const multiBoostsUsed: string = Math.min(powerupItemsData.multiBoost.numUsed, nums.maxPowBase).toLocaleString();
-        const highestMulti: string = Math.min(this.boarUser.stats.general.highestMulti, nums.maxMulti)
-            .toLocaleString() + 'x';
-        const highestMultiBoost: string = '+' + Math.min(powerupItemsData.multiBoost.highestTotal, nums.maxMultiBoost)
+        const miraclesUsed: string = Math.min(powerupItemsData.miracle.numUsed, nums.maxPowBase).toLocaleString();
+        const highestBless: string = Math.min(this.boarUser.stats.general.highestMulti, nums.maxPowBase)
+            .toLocaleString();
+        const highestMiracles: string = Math.min(powerupItemsData.miracle.highestTotal, nums.maxPowBase)
             .toLocaleString();
         const giftsClaimed: string = Math.min(powerupItemsData.gift.numClaimed, nums.maxPowBase).toLocaleString();
         const giftsUsed: string = Math.min(powerupItemsData.gift.numUsed, nums.maxPowBase).toLocaleString();
@@ -601,47 +598,48 @@ export class CollectionImageGenerator {
 
         // Draws stats info
 
-        CanvasUtils.drawText(
-            ctx, strConfig.collBoostsClaimedLabel, nums.collBoostClaimedLabelPos, mediumFont, 'center', colorConfig.font
+        await CanvasUtils.drawText(
+            ctx, strConfig.collMiraclesClaimedLabel, nums.collLifetimeMiraclesLabelPos,
+            mediumFont, 'center', colorConfig.font
         );
-        CanvasUtils.drawText(ctx, multiBoostClaimed, nums.collBoostClaimedPos, smallMedium, 'center', colorConfig.font);
-
-        CanvasUtils.drawText(
-            ctx, strConfig.collBoostsUsedLabel, nums.collBoostUsedLabelPos, mediumFont, 'center', colorConfig.font
+        await CanvasUtils.drawText(
+            ctx, miraclesClaimed, nums.collLifetimeMiraclesPos, smallMedium, 'center', colorConfig.font
         );
-        CanvasUtils.drawText(ctx, multiBoostsUsed, nums.collBoostUsedPos, smallMedium, 'center', colorConfig.font);
 
-        CanvasUtils.drawText(
+        await CanvasUtils.drawText(
+            ctx, strConfig.collMiraclesUsedLabel, nums.collMiraclesUsedLabelPos, mediumFont, 'center', colorConfig.font
+        );
+        await CanvasUtils.drawText(ctx, miraclesUsed, nums.collMiraclesUsedPos, smallMedium, 'center', colorConfig.font);
+
+        await CanvasUtils.drawText(
+            ctx, strConfig.collMostMiraclesLabel, nums.collMostMiraclesLabelPos, mediumFont, 'center', colorConfig.font
+        );
+        await CanvasUtils.drawText(ctx, highestMiracles, nums.collMostMiraclesPos, smallMedium, 'center', colorConfig.font);
+
+        await CanvasUtils.drawText(
             ctx, strConfig.collHighestMultiLabel, nums.collHighestMultiLabelPos, mediumFont, 'center', colorConfig.font
         );
-        CanvasUtils.drawText(ctx, highestMulti, nums.collHighestMultiPos, smallMedium, 'center', colorConfig.font);
+        await CanvasUtils.drawText(ctx, highestBless, nums.collHighestMultiPos, smallMedium, 'center', colorConfig.font);
 
-        CanvasUtils.drawText(
-            ctx, strConfig.collHighestBoostLabel, nums.collHighestBoostLabelPos, mediumFont, 'center', colorConfig.font
-        );
-        CanvasUtils.drawText(
-            ctx, highestMultiBoost, nums.collHighestBoostPos, smallMedium, 'center', colorConfig.powerup
-        );
-
-        CanvasUtils.drawText(
+        await CanvasUtils.drawText(
             ctx, strConfig.collGiftsClaimedLabel, nums.collGiftsClaimedLabelPos, mediumFont, 'center', colorConfig.font
         );
-        CanvasUtils.drawText(ctx, giftsClaimed, nums.collGiftsClaimedPos, smallMedium, 'center', colorConfig.font);
+        await CanvasUtils.drawText(ctx, giftsClaimed, nums.collGiftsClaimedPos, smallMedium, 'center', colorConfig.font);
 
-        CanvasUtils.drawText(
+        await CanvasUtils.drawText(
             ctx, strConfig.collGiftsUsedLabel, nums.collGiftsUsedLabelPos, mediumFont, 'center', colorConfig.font
         );
-        CanvasUtils.drawText(ctx, giftsUsed, nums.collGiftsUsedPos, smallMedium, 'center', colorConfig.font);
+        await CanvasUtils.drawText(ctx, giftsUsed, nums.collGiftsUsedPos, smallMedium, 'center', colorConfig.font);
 
-        CanvasUtils.drawText(
+        await CanvasUtils.drawText(
             ctx, strConfig.collGiftsOpenedLabel, nums.collGiftsOpenedLabelPos, mediumFont, 'center', colorConfig.font
         );
-        CanvasUtils.drawText(ctx, giftsOpened, nums.collGiftsOpenedPos, smallMedium, 'center', colorConfig.font);
+        await CanvasUtils.drawText(ctx, giftsOpened, nums.collGiftsOpenedPos, smallMedium, 'center', colorConfig.font);
 
-        CanvasUtils.drawText(
+        await CanvasUtils.drawText(
             ctx, strConfig.collMostGiftsLabel, nums.collMostGiftsLabelPos, mediumFont, 'center', colorConfig.font
         );
-        CanvasUtils.drawText(ctx, giftsMost, nums.collMostGiftsPos, smallMedium, 'center', colorConfig.font);
+        await CanvasUtils.drawText(ctx, giftsMost, nums.collMostGiftsPos, smallMedium, 'center', colorConfig.font);
 
         this.powerupsBase = canvas.toBuffer();
     }
@@ -667,12 +665,12 @@ export class CollectionImageGenerator {
 
         const powerupItemsData: Record<string, CollectedPowerup> = this.boarUser.itemCollection.powerups;
 
-        const extraChancesClaimed: string = Math.min(powerupItemsData.extraChance.numClaimed, nums.maxPowBase)
-            .toLocaleString();
-        const extraChancesUsed: string = Math.min(powerupItemsData.extraChance.numUsed, nums.maxPowBase)
-            .toLocaleString();
-        const highestExtraChance: string = Math.min(powerupItemsData.extraChance.highestTotal, nums.maxExtraChance)
-            .toLocaleString() + '%';
+        const clonesClaimed: string = Math.min(powerupItemsData.clone.numClaimed, nums.maxPowBase).toLocaleString();
+        const clonesUsed: string = Math.min(powerupItemsData.clone.numUsed, nums.maxPowBase).toLocaleString();
+        const clonesSucc: string =
+            Math.min(powerupItemsData.clone.numSuccess as number, nums.maxPowBase).toLocaleString();
+        const clonesMost: string = Math.min(powerupItemsData.clone.highestTotal, nums.maxPowBase).toLocaleString();
+
         const enhancersClaimed: string = Math.min(powerupItemsData.enhancer.numClaimed, nums.maxPowBase)
             .toLocaleString();
 
@@ -682,7 +680,7 @@ export class CollectionImageGenerator {
                 enhanced.push(Math.min((powerupItemsData.enhancer.raritiesUsed as number[])[i], nums.maxPowBase)
                     .toLocaleString())
             } else {
-                enhanced.push(Math.min((powerupItemsData.enhancer.raritiesUsed as number[])[i], nums.maxSmallEnhanced)
+                enhanced.push(Math.min((powerupItemsData.enhancer.raritiesUsed as number[])[i], nums.maxSmallPow)
                     .toLocaleString())
             }
         }
@@ -695,51 +693,51 @@ export class CollectionImageGenerator {
 
         // Draws stats info
 
-        CanvasUtils.drawText(
-            ctx, strConfig.collChancesClaimedLabel, nums.collChancesClaimedLabelPos,
+        await CanvasUtils.drawText(
+            ctx, strConfig.collClonesClaimedLabel, nums.collClonesClaimedLabelPos,
             mediumFont, 'center', colorConfig.font
         );
-        CanvasUtils.drawText(
-            ctx, extraChancesClaimed, nums.collChancesClaimedPos, smallMedium, 'center', colorConfig.font
+        await CanvasUtils.drawText(
+            ctx, clonesClaimed, nums.collClonesClaimedPos, smallMedium, 'center', colorConfig.font
         );
 
-        CanvasUtils.drawText(
-            ctx, strConfig.collChancesUsedLabel, nums.collChancesUsedLabelPos, mediumFont, 'center', colorConfig.font
+        await CanvasUtils.drawText(
+            ctx, strConfig.collClonesUsedLabel, nums.collClonesUsedLabelPos, mediumFont, 'center', colorConfig.font
         );
-        CanvasUtils.drawText(
-            ctx, extraChancesUsed, nums.collChancesUsedPos, smallMedium, 'center', colorConfig.font
-        );
+        await CanvasUtils.drawText(ctx, clonesUsed, nums.collClonesUsedPos, smallMedium, 'center', colorConfig.font);
 
-        CanvasUtils.drawText(
-            ctx, strConfig.collChanceHighestLabel, nums.collChanceHighestLabelPos,
-            mediumFont, 'center', colorConfig.font
+        await CanvasUtils.drawText(
+            ctx, strConfig.collClonesSuccLabel, nums.collClonesSuccLabelPos, mediumFont, 'center', colorConfig.font
         );
-        CanvasUtils.drawText(
-            ctx, highestExtraChance, nums.collChanceHighestPos, smallMedium, 'center', colorConfig.font
-        );
+        await CanvasUtils.drawText(ctx, clonesSucc, nums.collClonesSuccPos, smallMedium, 'center', colorConfig.font);
 
-        CanvasUtils.drawText(
+        await CanvasUtils.drawText(
+            ctx, strConfig.collMostClonesLabel, nums.collMostClonesLabelPos, mediumFont, 'center', colorConfig.font
+        );
+        await CanvasUtils.drawText(ctx, clonesMost, nums.collMostClonesPos, smallMedium, 'center', colorConfig.font);
+
+        await CanvasUtils.drawText(
             ctx, strConfig.collEnhancersClaimedLabel, nums.collEnhancersClaimedLabelPos,
             mediumFont, 'center', colorConfig.font
         );
-        CanvasUtils.drawText(
+        await CanvasUtils.drawText(
             ctx, enhancersClaimed, nums.collEnhancersClaimedPos, smallMedium, 'center', colorConfig.font
         );
 
         for (let i=0; i<7; i++) {
             if (i < 3) {
-                CanvasUtils.drawText(
+                await CanvasUtils.drawText(
                     ctx, strConfig.collEnhancedLabel, nums.collEnhancedLabelPositions[i], mediumFont, 'center',
-                    colorConfig.font, undefined, false, rarityConfig[i].pluralName, colorConfig['rarity' + (i+1)]
+                    colorConfig.font, undefined, false, [rarityConfig[i].pluralName], [colorConfig['rarity' + (i+1)]]
                 );
             } else {
-                CanvasUtils.drawText(
+                await CanvasUtils.drawText(
                     ctx, rarityConfig[i].pluralName, nums.collEnhancedLabelPositions[i],
                     mediumFont, 'center', colorConfig['rarity' + (i+1)]
                 );
             }
 
-            CanvasUtils.drawText(
+            await CanvasUtils.drawText(
                 ctx, enhanced[i], nums.collEnhancedPositions[i], smallMedium, 'center', colorConfig.font
             );
         }
@@ -775,7 +773,7 @@ export class CollectionImageGenerator {
      *
      * @param ctx - CanvasRenderingContext2D
      */
-    public async drawTopBar(ctx: Canvas.CanvasRenderingContext2D,): Promise<void> {
+    public async drawTopBar(ctx: Canvas.CanvasRenderingContext2D): Promise<void> {
         // Config aliases
 
         const strConfig: StringConfig = this.config.stringConfig;
@@ -788,7 +786,13 @@ export class CollectionImageGenerator {
         // Non-trivial user information
 
         const userTag: string = this.boarUser.user.username.substring(0, nums.maxUsernameLength);
-        const userAvatar: string = this.boarUser.user.displayAvatarURL({ extension: 'png' });
+        let userAvatar;
+
+        try {
+            userAvatar = await Canvas.loadImage(this.boarUser.user.displayAvatarURL({ extension: 'png' }));
+        } catch {
+            userAvatar = await Canvas.loadImage(pathConfig.otherAssets + pathConfig.noAvatar);
+        }
 
         // Fixes stats through flooring/alternate values
 
@@ -799,10 +803,10 @@ export class CollectionImageGenerator {
 
         const mediumFont = `${nums.fontMedium}px ${strConfig.fontName}`;
 
-        ctx.drawImage(await Canvas.loadImage(userAvatar), ...nums.collUserAvatarPos, ...nums.collUserAvatarSize);
-        CanvasUtils.drawText(ctx, userTag, nums.collUserTagPos, mediumFont, 'left', colorConfig.font);
-        CanvasUtils.drawText(ctx, strConfig.collDateLabel, nums.collDateLabelPos, mediumFont, 'left', colorConfig.font);
-        CanvasUtils.drawText(ctx, firstDate, nums.collDatePos, mediumFont, 'left', colorConfig.font);
+        ctx.drawImage(userAvatar, ...nums.collUserAvatarPos, ...nums.collUserAvatarSize);
+        await CanvasUtils.drawText(ctx, userTag, nums.collUserTagPos, mediumFont, 'left', colorConfig.font);
+        await CanvasUtils.drawText(ctx, strConfig.collDateLabel, nums.collDateLabelPos, mediumFont, 'left', colorConfig.font);
+        await CanvasUtils.drawText(ctx, firstDate, nums.collDatePos, mediumFont, 'left', colorConfig.font);
         ctx.drawImage(await Canvas.loadImage(noClan), ...nums.collClanPos, ...nums.collClanSize);
 
         // Draws badge information if the user has badges
@@ -824,7 +828,7 @@ export class CollectionImageGenerator {
         }
 
         if (numBadges === 0) {
-            CanvasUtils.drawText(
+            await CanvasUtils.drawText(
                 ctx, strConfig.collNoBadges, nums.collNoBadgePos, mediumFont, 'left', colorConfig.font
             );
         }
@@ -843,47 +847,38 @@ export class CollectionImageGenerator {
         const pathConfig: PathConfig = this.config.pathConfig;
         const colorConfig: ColorConfig = this.config.colorConfig;
         const rarityConfig: RarityConfig[] = this.config.rarityConfigs;
-        const powItemConfigs: ItemConfigs = this.config.itemConfigs.powerups;
 
-        const bigFont = `${nums.fontBig}px ${strConfig.fontName}`;
         const mediumFont = `${nums.fontMedium}px ${strConfig.fontName}`;
 
         const confirmUnderlay: string = pathConfig.collAssets + pathConfig.collEnhanceUnderlay;
+        const cellImagePath: string = pathConfig.collAssets + pathConfig['cell' + this.allBoars[page].rarity[1].name];
+        const boarImagePath: string = pathConfig.boars + (this.allBoars[page].staticFile
+            ? this.allBoars[page].staticFile
+            : this.allBoars[page].file);
 
         const nextRarityIndex: number = this.allBoars[page].rarity[0];
         const nextRarityName: string = rarityConfig[nextRarityIndex].name;
         const nextRarityColor: string = colorConfig['rarity' + (nextRarityIndex + 1)];
-        const enhancersLost: number = this.allBoars[page].rarity[1].enhancersNeeded;
-        const scoreGained: number = enhancersLost * 5;
+        const scoreLost: string = (this.allBoars[page].rarity[1].enhancersNeeded * 5).toLocaleString();
 
-        const canvas: Canvas.Canvas = Canvas.createCanvas(...nums.responseImageSize);
+        const canvas: Canvas.Canvas = Canvas.createCanvas(...nums.enhanceImageSize);
         const ctx: Canvas.CanvasRenderingContext2D = canvas.getContext('2d');
 
-        ctx.drawImage(await Canvas.loadImage(confirmUnderlay), ...nums.originPos, ...nums.responseImageSize);
+        ctx.drawImage(await Canvas.loadImage(confirmUnderlay), ...nums.originPos, ...nums.enhanceImageSize);
 
-        CanvasUtils.drawText(
-            ctx, strConfig.collEnhanceBoarLose, nums.collEnhanceBoarLosePos, bigFont, 'center', colorConfig.font,
-            nums.collEnhanceResultWidth, false, this.allBoars[page].name, this.allBoars[page].color
+        ctx.drawImage(await Canvas.loadImage(cellImagePath), ...nums.enhanceCellPos, ...nums.enhanceCellSize);
+
+        ctx.drawImage(await Canvas.loadImage(boarImagePath), ...nums.enhanceBoarPos, ...nums.enhanceBoarSize);
+
+        await CanvasUtils.drawText(
+            ctx, nextRarityName.toUpperCase(), nums.enhanceRarityPos, mediumFont, 'center', nextRarityColor
         );
 
-        CanvasUtils.drawText(
-            ctx, strConfig.collEnhanceBoarGain, nums.collEnhanceBoarGainPos, bigFont, 'center', colorConfig.font,
-            nums.collEnhanceResultWidth, false, nextRarityName, nextRarityColor
-        );
-
-        CanvasUtils.drawText(
-            ctx, '-' + enhancersLost + 'x %@', nums.collEnhanceLosePos, bigFont, 'center', colorConfig.font,
-            nums.collEnhanceResultWidth, false, powItemConfigs.enhancer.pluralName, colorConfig.powerup
-        );
-
-        CanvasUtils.drawText(
-            ctx, '+' + scoreGained + ' %@', nums.collEnhanceScoreGainPos, bigFont, 'center', colorConfig.font,
-            nums.collEnhanceResultWidth, false, strConfig.collScoreLabel, colorConfig.bucks
-        );
-
-        CanvasUtils.drawText(
-            ctx, strConfig.collEnhanceDetails, nums.responseDetailsPos, mediumFont, 'center', colorConfig.font,
-            nums.responseDetailsWidth, true, this.allBoars[page].name, this.allBoars[page].color
+        await CanvasUtils.drawText(
+            ctx, strConfig.collEnhanceDetails, nums.enhanceDetailsPos, mediumFont, 'center', colorConfig.font,
+            nums.enhanceDetailsWidth, true,
+            [this.allBoars[page].name, nextRarityName + ' Boar', '$' + scoreLost, strConfig.collCellLabel],
+            [this.allBoars[page].color, nextRarityColor, colorConfig.bucks, colorConfig.powerup]
         );
 
         return new AttachmentBuilder(canvas.toBuffer(), { name:`${this.config.stringConfig.imageName}.png` });
@@ -894,26 +889,22 @@ export class CollectionImageGenerator {
      */
     public async finalizeGift(): Promise<AttachmentBuilder> {
         // Config aliases
-
-        const strConfig: StringConfig = this.config.stringConfig;
+        const strConfig = this.config.stringConfig;
         const nums: NumberConfig = this.config.numberConfig;
         const pathConfig: PathConfig = this.config.pathConfig;
-        const colorConfig: ColorConfig = this.config.colorConfig;
-        const powItemConfigs: ItemConfigs = this.config.itemConfigs.powerups;
 
-        const mediumFont = `${nums.fontMedium}px ${strConfig.fontName}`;
+        const giftUnderlay: string = pathConfig.collAssets + pathConfig.collGiftUnderlay;
 
-        const confirmUnderlay: string = pathConfig.collAssets + pathConfig.collGiftUnderlay;
-        const userTag: string = this.boarUser.user.username.substring(0, nums.maxUsernameLength);
+        const fontBig = `${nums.fontBig}px ${strConfig.fontName}`;
 
-        const canvas: Canvas.Canvas = Canvas.createCanvas(...nums.responseImageSize);
+        const canvas: Canvas.Canvas = Canvas.createCanvas(...nums.giftImageSize);
         const ctx: Canvas.CanvasRenderingContext2D = canvas.getContext('2d');
 
-        ctx.drawImage(await Canvas.loadImage(confirmUnderlay), ...nums.originPos, ...nums.responseImageSize);
+        ctx.drawImage(await Canvas.loadImage(giftUnderlay), ...nums.originPos, ...nums.giftImageSize);
 
         CanvasUtils.drawText(
-            ctx, userTag + strConfig.collGiftDetails, nums.responseDetailsPos, mediumFont, 'center', colorConfig.font,
-            nums.responseDetailsWidth, true, powItemConfigs.gift.name, colorConfig.powerup
+            ctx, strConfig.giftFrom + this.boarUser.user.username.substring(0, nums.maxUsernameLength),
+            nums.giftFromPos, fontBig, 'center', this.config.colorConfig.silver, nums.giftFromWidth
         );
 
         return new AttachmentBuilder(canvas.toBuffer(), { name:`${this.config.stringConfig.imageName}.png` });

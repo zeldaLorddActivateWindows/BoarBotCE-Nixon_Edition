@@ -1,4 +1,5 @@
 import Canvas from 'canvas';
+
 /**
  * {@link CanvasUtils CanvasUtils.ts}
  *
@@ -18,8 +19,8 @@ export class CanvasUtils {
      * @param font - Font to use for text
      * @param align - Alignment of text
      * @param color - Base color of text
-     * @param coloredText - Text to use secondary color on
-     * @param color2 - Secondary color
+     * @param coloredContents - Texts to use secondary colors on
+     * @param secondaryColors - Secondary colors
      * @param wrap - Whether to wrap the text
      * @param width - Width to wrap/shrink at
      */
@@ -32,20 +33,23 @@ export class CanvasUtils {
         color: string,
         width?: number,
         wrap = false,
-        coloredText = '',
-        color2: string = color
+        coloredContents = [''],
+        secondaryColors = [color]
     ): number {
         ctx.font = font;
         ctx.textAlign = align;
         ctx.textBaseline = 'alphabetic';
         ctx.fillStyle = color;
 
-        let replaceIndex: number = text.indexOf('%@');
-        if (replaceIndex === -1) {
-            coloredText = '';
-        }
+        const replaceIndexes: number[] = [];
 
-        text = text.replace('%@', coloredText);
+        for (let i=0; i<coloredContents.length; i++) {
+            replaceIndexes.push(text.indexOf('%@', i === 0
+                ? 0
+                : replaceIndexes[i-1]
+            ));
+            text = text.replace('%@', coloredContents[i]);
+        }
 
         let heightDiff = 0;
 
@@ -56,65 +60,76 @@ export class CanvasUtils {
             let newHeight: number = pos[1];
             const lines: string[] = [];
             let curLine = '';
-            let curIndex = -1;
 
+            let totalChars = 0;
             for (let i=0; i<words.length; i++) {
                 const word: string = words[i];
 
-                if (ctx.measureText(curLine + word + ' ').width < width) {
+                if (ctx.measureText(curLine + word).width < width) {
                     curLine += word + ' ';
-                    curIndex += (word + ' ').length;
                 } else {
-                    lines.push(curLine.substring(0, curLine.length-1));
-                    if (replaceIndex > curIndex) {
-                        replaceIndex--;
+                    lines.push(curLine.trim());
+                    totalChars--;
+                    for (let i=0; i<replaceIndexes.length; i++) {
+                        if (replaceIndexes[i] >= totalChars) {
+                            replaceIndexes[i]--;
+                        }
                     }
-                    curIndex--;
                     curLine = word + ' ';
                 }
+                totalChars += (word + ' ').length;
             }
 
-            lines.push(curLine.substring(0, curLine.length-1));
+            lines.push(curLine.trim());
 
             newHeight -= lineHeight * (lines.length-1) / 2;
 
             let charIndex = 0;
-            const originalColorLength: number = coloredText.length;
-            let numColoredLines = 0;
+
             for (const line of lines) {
                 const prevCharIndex = charIndex;
                 charIndex += line.length;
 
-                if (charIndex > replaceIndex && prevCharIndex < replaceIndex + originalColorLength) {
-                    const relReplaceIndex: number = numColoredLines > 0
-                        ? replaceIndex-prevCharIndex-1
-                        : replaceIndex-prevCharIndex;
-                    const textPart1: string = line.substring(0, Math.min(relReplaceIndex, line.length));
-                    const textPart2: string = line.substring(Math.min(relReplaceIndex+coloredText.length, line.length));
-                    let coloredToPlace: string = coloredText;
+                let firstIndex = -1;
+                let lastIndex = -1;
 
-                    numColoredLines++;
-                    if (relReplaceIndex+coloredText.length > line.length) {
-                        coloredToPlace = line.substring(relReplaceIndex, line.length);
-                        replaceIndex = charIndex;
+                for (let i=0; i<replaceIndexes.length; i++) {
+                    if (replaceIndexes[i] >= charIndex) {
+                        break;
                     }
 
-                    ctx.fillText(textPart1, pos[0] - ctx.measureText(coloredToPlace+textPart2).width/2, newHeight);
-                    ctx.fillStyle = color2;
-                    ctx.fillText(
-                        coloredToPlace, pos[0] + ctx.measureText(textPart1).width/2 -
-                        ctx.measureText(textPart2).width/2, newHeight
-                    );
-                    ctx.fillStyle = color;
-                    ctx.fillText(textPart2, pos[0] + ctx.measureText(textPart1+coloredToPlace).width/2, newHeight);
-
-                    coloredText = coloredText.substring(coloredText.indexOf(coloredToPlace) + coloredToPlace.length);
-                } else {
-                    ctx.fillText(line, pos[0], newHeight);
+                    if (replaceIndexes[i] >= prevCharIndex) {
+                        firstIndex = firstIndex >= 0 ? firstIndex : i;
+                        lastIndex = i;
+                    }
                 }
 
-                heightDiff += lineHeight;
+                const relReplaceIndexes = lastIndex >= 0
+                    ? replaceIndexes.slice(firstIndex, lastIndex+1).map(val => val - prevCharIndex)
+                    : [-1];
+                const contentToReplace = lastIndex >= 0
+                    ? coloredContents.slice(firstIndex, lastIndex+1)
+                    : [''];
+                const colorsToUse = lastIndex >= 0
+                    ? secondaryColors.slice(firstIndex, lastIndex+1)
+                    : [color];
+
+                if (lastIndex >= 0 && replaceIndexes[lastIndex] + coloredContents[lastIndex].length >= charIndex) {
+                    const numCharsToColor = charIndex - replaceIndexes[lastIndex] + 1;
+
+                    contentToReplace[contentToReplace.length-1] = contentToReplace[contentToReplace.length-1]
+                        .substring(0, numCharsToColor).trimEnd();
+                    replaceIndexes[lastIndex] = charIndex;
+                    coloredContents[lastIndex] = coloredContents[lastIndex].substring(numCharsToColor).trimEnd();
+                }
+
+                this.drawColoredText(
+                    ctx, line, 'center', [pos[0], newHeight], relReplaceIndexes,
+                    contentToReplace, color, colorsToUse
+                );
+
                 newHeight += lineHeight;
+                heightDiff += lineHeight;
             }
         } else if (width != undefined) {
             ctx.textBaseline = 'middle';
@@ -122,9 +137,9 @@ export class CanvasUtils {
                 font = (parseInt(font)-1) + font.substring(font.indexOf('px'));
                 ctx.font = font;
             }
-            this.drawColoredText(ctx, text, align, pos, replaceIndex, coloredText, color, color2);
+            this.drawColoredText(ctx, text, align, pos, replaceIndexes, coloredContents, color, secondaryColors);
         } else {
-            this.drawColoredText(ctx, text, align, pos, replaceIndex, coloredText, color, color2);
+            this.drawColoredText(ctx, text, align, pos, replaceIndexes, coloredContents, color, secondaryColors);
         }
 
         return heightDiff;
@@ -137,10 +152,10 @@ export class CanvasUtils {
      * @param text - Text to draw
      * @param align - Alignment of text
      * @param pos - Position to place text
-     * @param replaceIndex - The index to start replacing with colored text
-     * @param coloredText - The actual text that's colored
+     * @param replaceIndexes - The indexes to start replacing with colored text
+     * @param coloredContents - The actual texts that are colored
      * @param color - Base color of text
-     * @param color2 - Secondary color
+     * @param secondaryColors - Secondary colors
      * @private
      */
     private static drawColoredText(
@@ -148,31 +163,167 @@ export class CanvasUtils {
         text: string,
         align: string,
         pos: [number, number],
-        replaceIndex: number,
-        coloredText: string,
+        replaceIndexes: number[],
+        coloredContents: string[],
         color: string,
-        color2: string
+        secondaryColors: string[]
     ): void {
-        const textPart1: string = text.substring(0, replaceIndex);
-        const textPart2: string = text.substring(replaceIndex+coloredText.length);
+        const priorNormText: string[] = [];
+        let textEnd = '';
+
+        for (let i=0; i<replaceIndexes.length; i++) {
+            if (i === 0) {
+                priorNormText.push(text.substring(0, replaceIndexes[i]));
+            } else {
+                priorNormText.push(text.substring(replaceIndexes[i-1] + coloredContents[i-1].length, replaceIndexes[i]));
+            }
+
+            if (i === replaceIndexes.length - 1) {
+                textEnd = text.substring(replaceIndexes[i] + coloredContents[i].length);
+            }
+        }
 
         if (align === 'center') {
-            ctx.fillText(textPart1, pos[0] - ctx.measureText(coloredText+textPart2).width/2, pos[1]);
-            ctx.fillStyle = color2;
-            ctx.fillText(
-                coloredText, pos[0] + ctx.measureText(textPart1).width/2 - ctx.measureText(textPart2).width/2, pos[1]
+            for (let i=0; i<replaceIndexes.length; i++) {
+                this.applyTextGradient(
+                    ctx, priorNormText[i], [
+                        pos[0] - ctx.measureText(text.substring(replaceIndexes[i])).width / 2 + (i > 0
+                            ? ctx.measureText(text.substring(0, replaceIndexes[i-1]) + coloredContents[i-1]).width / 2
+                            : 0),
+                        pos[1]
+                    ], color
+                );
+
+                if (replaceIndexes[i] === -1) break;
+
+                this.applyTextGradient(
+                    ctx, coloredContents[i], [
+                        pos[0] + ctx.measureText(text.substring(0, replaceIndexes[i])).width / 2 - ctx.measureText(
+                            text.substring(replaceIndexes[i] + coloredContents[i].length)
+                        ).width / 2,
+                        pos[1]
+                    ], secondaryColors[i]
+                );
+            }
+
+            this.applyTextGradient(
+                ctx, textEnd, [
+                    pos[0] + ctx.measureText(
+                        text.substring(
+                            0, replaceIndexes[replaceIndexes.length-1] +
+                            coloredContents[coloredContents.length-1].length
+                        )
+                    ).width / 2,
+                    pos[1]
+                ], color
             );
-            ctx.fillStyle = color;
-            ctx.fillText(textPart2, pos[0] + ctx.measureText(textPart1+coloredText).width/2, pos[1]);
         } else if (align === 'left') {
-            ctx.fillText(textPart1, pos[0], pos[1]);
-            ctx.fillStyle = color2;
-            ctx.fillText(
-                coloredText, pos[0] + ctx.measureText(textPart1).width, pos[1]
+            for (let i=0; i<replaceIndexes.length; i++) {
+                this.applyTextGradient(ctx, priorNormText[i], pos, color);
+
+                if (replaceIndexes[i] === -1) break;
+
+                this.applyTextGradient(
+                    ctx, coloredContents[i], [
+                        pos[0] + ctx.measureText(text.substring(0, replaceIndexes[i])).width, pos[1]
+                    ], secondaryColors[i]
+                );
+            }
+
+            this.applyTextGradient(
+                ctx, textEnd, [
+                    pos[0] + ctx.measureText(
+                        text.substring(
+                            0, replaceIndexes[replaceIndexes.length-1] +
+                            coloredContents[coloredContents.length-1].length
+                        )
+                    ).width,
+                    pos[1]
+                ], color
             );
-            ctx.fillStyle = color;
-            ctx.fillText(textPart2, pos[0] + ctx.measureText(textPart1+coloredText).width, pos[1]);
+        } else {
+            for (let i=0; i<replaceIndexes.length; i++) {
+                this.applyTextGradient(ctx, priorNormText[i], [
+                    pos[0] - ctx.measureText(text).width, pos[1]
+                ], color);
+
+                if (replaceIndexes[i] === -1) break;
+
+                this.applyTextGradient(
+                    ctx, coloredContents[i], [
+                        pos[0] - ctx.measureText(text.substring(0, replaceIndexes[i])).width, pos[1]
+                    ], secondaryColors[i]
+                );
+            }
+
+            this.applyTextGradient(
+                ctx, textEnd, [
+                    pos[0] - ctx.measureText(
+                        text.substring(
+                            0, replaceIndexes[replaceIndexes.length-1] +
+                            coloredContents[coloredContents.length-1].length
+                        )
+                    ).width,
+                    pos[1]
+                ], color
+            );
         }
+    }
+
+    private static applyTextGradient(
+        ctx: Canvas.CanvasRenderingContext2D, text: string, pos: [number, number], color: string
+    ) {
+        if (text.length === 0) return;
+
+        if (!color.includes(',')) {
+            ctx.fillStyle = color;
+            ctx.fillText(text, ...pos);
+            return;
+        }
+
+        const canvas: Canvas.Canvas = Canvas.createCanvas(ctx.canvas.width, ctx.canvas.height);
+        const newCtx = canvas.getContext('2d');
+
+        newCtx.font = ctx.font;
+        newCtx.textAlign = ctx.textAlign;
+        newCtx.textBaseline = ctx.textBaseline;
+
+        newCtx.fillText(text, ...pos);
+
+        newCtx.globalCompositeOperation = 'source-in';
+
+        const gradStartPos: [number, number] = [
+            newCtx.textAlign === 'center'
+                ? pos[0] - newCtx.measureText(text).width / 2
+                : newCtx.textAlign === 'left'
+                    ? pos[0]
+                    : pos[0] - newCtx.measureText(text).width,
+            newCtx.textBaseline === 'middle'
+                ? pos[1] - (newCtx.measureText('Sp').actualBoundingBoxAscent +
+                    newCtx.measureText('Sp').actualBoundingBoxDescent) / 2
+                : pos[1] - (newCtx.measureText('Sp').actualBoundingBoxAscent)
+        ];
+        const gradEndPos: [number, number] = [
+            gradStartPos[0] + newCtx.measureText(text).width,
+            gradStartPos[1] + (newCtx.measureText('Sp').actualBoundingBoxAscent +
+                newCtx.measureText('Sp').actualBoundingBoxDescent)
+        ];
+        const gradColors: string[] = color.split(',');
+
+        const gradient = newCtx.createLinearGradient(...gradStartPos, ...gradEndPos);
+        gradColors.forEach((gradColor, index) => {
+            gradient.addColorStop(index / (gradColors.length-1), gradColor);
+        });
+
+        newCtx.fillStyle = gradient;
+        newCtx.fillRect(
+            gradStartPos[0], gradStartPos[1], ctx.measureText(text).width,
+            (ctx.measureText('Sp').actualBoundingBoxAscent + ctx.measureText('Sp').actualBoundingBoxDescent)
+        );
+
+        Canvas.loadImage(canvas.toBuffer()).then((img) => {
+            ctx.drawImage(img, 0, 0);
+        });
     }
 
     /**
@@ -211,15 +362,22 @@ export class CanvasUtils {
      */
     public static drawLine(
         ctx: Canvas.CanvasRenderingContext2D,
-        pos1: number[],
-        pos2: number[],
+        pos1: [number, number],
+        pos2: [number, number],
         width: number,
         color: string
     ): void {
         ctx.lineWidth = width;
 
         ctx.beginPath();
-        ctx.strokeStyle = color;
+
+        const gradColors: string[] = color.split(',');
+        const gradient = ctx.createLinearGradient(...pos1, ...pos2);
+        gradColors.forEach((gradColor, index) => {
+            gradient.addColorStop(index / (gradColors.length-1), gradColor);
+        });
+
+        ctx.strokeStyle = gradient;
 
         ctx.moveTo(pos1[0], pos1[1]);
         ctx.lineTo(pos2[0], pos2[1]);
@@ -237,11 +395,17 @@ export class CanvasUtils {
      */
     public static drawRect(
         ctx: Canvas.CanvasRenderingContext2D,
-        pos: number[],
-        size: number[],
+        pos: [number, number],
+        size: [number, number],
         color: string
     ): void {
-        ctx.fillStyle = color;
-        ctx.fillRect(pos[0], pos[1], size[0], size[1]);
+        const gradColors: string[] = color.split(',');
+        const gradient = ctx.createLinearGradient(...pos, pos[0] + size[0], pos[1] + size[1]);
+        gradColors.forEach((gradColor, index) => {
+            gradient.addColorStop(index / (gradColors.length-1), gradColor);
+        });
+
+        ctx.fillStyle = gradient;
+        ctx.fillRect(...pos, ...size);
     }
 }

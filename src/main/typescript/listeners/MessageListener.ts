@@ -51,7 +51,7 @@ export default class MessageListener implements Listener {
 				} catch (err: unknown) {
 					await LogDebug.handleError(err);
 				}
-			}, message.id + message.author.id);
+			}, message.id + message.author.id).catch((err) => { LogDebug.handleError(err) });
 		}
 	}
 }

@@ -71,9 +71,9 @@ export default class DailySubcommand implements Subcommand {
         let boarUser: BoarUser = {} as BoarUser;
         let boarIDs: string[] = [''];
 
-        let usedBoost = false;
-        let usedExtra = false;
         let firstDaily = false;
+        let powTried = false;
+        let powCanUse = false;
 
         await Queue.addQueue(async () => {
             try {
@@ -83,32 +83,36 @@ export default class DailySubcommand implements Subcommand {
                 const canUseDaily: boolean = await this.canUseDaily(boarUser);
                 if (!canUseDaily) return;
 
-                // Gets whether to try to use boost
-                const boostInput: boolean = this.interaction.options.getBoolean(this.subcommandInfo.args[0].name)
-                    ? this.interaction.options.getBoolean(this.subcommandInfo.args[0].name) as boolean
-                    : false;
-
-                // Gets whether to try to use extra chance
-                const extraInput: boolean = this.interaction.options.getBoolean(this.subcommandInfo.args[1].name)
-                    ? this.interaction.options.getBoolean(this.subcommandInfo.args[1].name) as boolean
-                    : false;
+                // Gets powerup to be used
+                const powInput: string | null = this.interaction.options.getString(this.subcommandInfo.args[0].name);
+                powTried = powInput !== null;
+                powCanUse = powTried && boarUser.itemCollection.powerups.miracle.numTotal > 0;
 
                 // Map of rarity index keys and weight values
                 let rarityWeights: Map<number, number> = BoarUtils.getBaseRarityWeights(this.config);
-                let userMultiplier: number = boarUser.stats.general.multiplier;
+                let userMultiplier: number = boarUser.stats.general.multiplier + 1;
 
-                if (boostInput) {
-                    userMultiplier += boarUser.itemCollection.powerups.multiBoost.numTotal;
+                if (powCanUse) {
+                    (boarUser.itemCollection.powerups.miracle.numActive as number) +=
+                        boarUser.itemCollection.powerups.miracle.numTotal;
+                    boarUser.itemCollection.powerups.miracle.numTotal = 0;
                 }
 
-                usedBoost = boostInput && boarUser.itemCollection.powerups.multiBoost.numTotal > 0;
-                usedExtra = extraInput && boarUser.itemCollection.powerups.extraChance.numTotal > 0;
+                for (let i=0; i<(boarUser.itemCollection.powerups.miracle.numActive as number); i++) {
+                    userMultiplier += Math.min(
+                        Math.ceil(userMultiplier * 0.05), this.config.numberConfig.miracleIncreaseMax
+                    );
+                }
 
                 rarityWeights = this.applyMultiplier(userMultiplier, rarityWeights);
+                const extraVals = [
+                    Math.min(userMultiplier / 10, 100),
+                    Math.min(userMultiplier / 100, 100),
+                    Math.min(userMultiplier / 1000, 100)
+                ];
 
                 boarIDs = BoarUtils.getRandBoars(
-                    this.guildData, this.interaction, rarityWeights,
-                    extraInput, boarUser.itemCollection.powerups.extraChance.numTotal, this.config
+                    this.guildData, this.interaction, rarityWeights, this.config, extraVals
                 );
 
                 if (boarIDs.includes('')) {
@@ -116,30 +120,18 @@ export default class DailySubcommand implements Subcommand {
                     return;
                 }
 
-                if (boostInput && boarUser.itemCollection.powerups.multiBoost.numTotal > 0) {
+                if (boarUser.itemCollection.powerups.miracle.numActive as number > 0) {
                     LogDebug.log(
-                        `Used up all ${boarUser.itemCollection.powerups.multiBoost.numTotal}x Multiplier Boost`,
+                        `Used ${boarUser.itemCollection.powerups.miracle.numActive} Miracle Charm(s)`,
                         this.config, this.interaction, true
                     );
 
-                    boarUser.itemCollection.powerups.multiBoost.numTotal = 0;
-                    boarUser.itemCollection.powerups.multiBoost.numUsed++;
-                }
-
-                if (usedExtra && boarUser.itemCollection.powerups.extraChance.numTotal > 0) {
-                    LogDebug.log(
-                        `Used up all +${boarUser.itemCollection.powerups.extraChance.numTotal}% Extra Chance`,
-                        this.config, this.interaction, true
-                    );
-
-                    boarUser.itemCollection.powerups.extraChance.numTotal = 0;
-                    boarUser.itemCollection.powerups.extraChance.numUsed++;
+                    boarUser.itemCollection.powerups.miracle.numUsed +=
+                        (boarUser.itemCollection.powerups.miracle.numActive as number);
+                    boarUser.itemCollection.powerups.miracle.numActive = 0;
                 }
 
                 boarUser.stats.general.boarStreak++;
-
-                boarUser.stats.general.highestMulti =
-                    Math.max(boarUser.stats.general.multiplier, boarUser.stats.general.highestMulti);
 
                 boarUser.stats.general.lastDaily = Date.now();
                 boarUser.stats.general.numDailies++;
@@ -147,7 +139,7 @@ export default class DailySubcommand implements Subcommand {
                 if (boarUser.stats.general.firstDaily === 0) {
                     firstDaily = true;
                     boarUser.stats.general.firstDaily = Date.now();
-                    boarUser.itemCollection.powerups.multiBoost.numTotal += 50;
+                    boarUser.itemCollection.powerups.miracle.numTotal += 5;
                 }
 
                 boarUser.updateUserData();
@@ -193,7 +185,7 @@ export default class DailySubcommand implements Subcommand {
         if (firstDaily) {
             await Replies.handleReply(
                 this.interaction, strConfig.dailyFirstTime, colorConfig.font,
-                strConfig.dailyBonus, colorConfig.powerup, true, true
+                [strConfig.dailyBonus, '/boar help'], [colorConfig.powerup, colorConfig.silver], true, true
             );
         }
 
@@ -208,24 +200,18 @@ export default class DailySubcommand implements Subcommand {
             });
         }
 
-        let coloredText = '';
-
-        if (usedBoost) {
-            coloredText += powItemConfigs.multiBoost.name;
-        }
-
-        if (usedExtra) {
-            coloredText += coloredText === ''
-                ? powItemConfigs.extraChance.name
-                : ' and ' + powItemConfigs.extraChance.name
-        }
-
-        if (coloredText !== '') {
+        if (powCanUse) {
             await Replies.handleReply(
-                this.interaction, strConfig.dailyPowUsed, colorConfig.font, coloredText, colorConfig.powerup, true
+                this.interaction, strConfig.dailyPowUsed, colorConfig.font,
+                [powItemConfigs.miracle.pluralName], [colorConfig.powerup], true
+            );
+        } else if (powTried) {
+            await Replies.handleReply(
+                this.interaction, strConfig.dailyPowFailed, colorConfig.error,
+                [powItemConfigs.miracle.pluralName, 'Powerups', '/boar collection'],
+                [colorConfig.powerup, colorConfig.powerup, colorConfig.silver], true
             );
         }
-
     }
 
     /**
@@ -237,7 +223,7 @@ export default class DailySubcommand implements Subcommand {
      */
     private async canUseDaily(boarUser: BoarUser): Promise<boolean> {
         // Midnight of next day (UTC)
-        const nextBoarTime: number = Math.floor(new Date().setUTCHours(24,0,0,0));
+        const nextBoarTime: number = new Date().setUTCHours(24,0,0,0);
 
         const strConfig = this.config.stringConfig;
         const nums = this.config.numberConfig;
@@ -272,7 +258,7 @@ export default class DailySubcommand implements Subcommand {
                                 files: [
                                     await CustomEmbedGenerator.makeEmbed(
                                         strConfig.dailyUsed, colorConfig.font, this.config,
-                                        moment(nextBoarTime).fromNow().substring(3), colorConfig.silver
+                                        [moment(nextBoarTime).fromNow().substring(3)], [colorConfig.silver]
                                     )
                                 ],
                                 components: []
@@ -291,10 +277,7 @@ export default class DailySubcommand implements Subcommand {
                             );
                         } catch {
                             try {
-                                await Replies.handleReply(
-                                    inter, 'Failed to enable notifications! BoarBot is unable to send you DMs.',
-                                    colorConfig.error
-                                );
+                                await Replies.handleReply(inter, strConfig.notificationFailed, colorConfig.error);
                             } catch (err: unknown) {
                                 await LogDebug.handleError(err, this.interaction);
                             }
@@ -303,6 +286,7 @@ export default class DailySubcommand implements Subcommand {
                         LogDebug.handleError(err, this.interaction);
                     });
                 });
+
                 collector.once('end', async () => {
                     try {
                         await msg.delete();
@@ -315,7 +299,7 @@ export default class DailySubcommand implements Subcommand {
                     files: [
                         await CustomEmbedGenerator.makeEmbed(
                             strConfig.dailyUsedNotify, colorConfig.font, this.config,
-                            moment(nextBoarTime).fromNow().substring(3), colorConfig.silver
+                            [moment(nextBoarTime).fromNow().substring(3)], [colorConfig.silver]
                         )
                     ],
                     components: dailyComponentRows
@@ -323,9 +307,9 @@ export default class DailySubcommand implements Subcommand {
             } else {
                 const msg = await this.interaction.editReply({
                     files: [
-                        CustomEmbedGenerator.makeEmbed(
+                        await CustomEmbedGenerator.makeEmbed(
                             this.config.stringConfig.dailyUsed, this.config.colorConfig.font, this.config,
-                            moment(nextBoarTime).fromNow().substring(3), this.config.colorConfig.silver
+                            [moment(nextBoarTime).fromNow().substring(3)], [this.config.colorConfig.silver]
                         )
                     ]
                 });

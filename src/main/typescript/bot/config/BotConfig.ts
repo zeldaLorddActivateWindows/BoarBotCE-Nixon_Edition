@@ -7,6 +7,7 @@ import {RarityConfig} from './items/RarityConfig';
 import {ColorConfig} from './ColorConfig';
 import {PromptConfigs} from './prompts/PromptConfigs';
 import {AllItemConfigs} from './items/AllItemConfigs';
+import {QuestConfigs} from './quests/QuestConfigs';
 
 /**
  * {@link BotConfig BotConfig.ts}
@@ -33,6 +34,11 @@ export class BotConfig {
     public readonly reportsChannel: string = '';
 
     /**
+     * The {@link TextChannel} ID the bot sends update messages to
+     */
+    public readonly updatesChannel: string = '';
+
+    /**
      * The {@link PathConfig paths} of all files/folders the bot accesses
      */
     public readonly pathConfig: PathConfig = new PathConfig;
@@ -51,6 +57,11 @@ export class BotConfig {
      * Collection of information about powerups
      */
     public readonly promptConfigs: PromptConfigs = new PromptConfigs;
+
+    /**
+     * Collection of information about quests
+     */
+    public readonly questConfigs: QuestConfigs = new QuestConfigs;
 
     /**
      * Collection of {@link CommandConfig command configurations} the bot uses
@@ -86,6 +97,11 @@ export class BotConfig {
      * If the bot is in maintenance mode
      */
     public readonly maintenanceMode: boolean = false;
+
+    /**
+     * Whether to override the current state of maintenance mode to true
+     */
+    public readonly maintenanceOverride: boolean = false;
 
     /**
      * If the market can be opened using /boar market
