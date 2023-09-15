@@ -327,7 +327,7 @@ export class BoarBot implements Bot {
 				commitChannel?.send({ embeds: [commitEmbed] });
 			}
 		} catch (err: unknown) {
-			LogDebug.log(err, config);
+			LogDebug.handleError(err);
 		}
 	}
 

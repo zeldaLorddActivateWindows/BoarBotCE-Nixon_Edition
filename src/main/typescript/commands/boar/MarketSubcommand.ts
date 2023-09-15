@@ -2316,6 +2316,7 @@ export default class MarketSubcommand implements Subcommand {
             }
 
             minSellVal = Math.ceil(minSellVal);
+            minBuyVal = Math.ceil(minBuyVal);
 
             if (
                 isBuyOrder && minBuyVal > 0 && priceVal < minBuyVal ||
@@ -2667,6 +2668,7 @@ export default class MarketSubcommand implements Subcommand {
             }
 
             minSellVal = Math.ceil(minSellVal);
+            minBuyVal = Math.ceil(minBuyVal);
 
             if (
                 isBuyOrder && minBuyVal > 0 && priceVal < minBuyVal ||
