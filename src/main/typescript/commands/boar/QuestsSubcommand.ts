@@ -142,6 +142,7 @@ export default class QuestsSubcommand implements Subcommand {
                             : questConfig.higherReward;
 
                         if (questProgress >= numToComplete && questRewardLeft > 0) {
+                            const collectBucksIndex = questData.curQuestIDs.indexOf('collectBucks');
                             let roomLeft = nums.maxScore;
 
                             switch (rewardType) {
@@ -172,6 +173,10 @@ export default class QuestsSubcommand implements Subcommand {
                                 this.boarUser.stats.general.boarScore += amtToAdd;
                             } else {
                                 this.boarUser.itemCollection.powerups[rewardType].numTotal += amtToAdd;
+                            }
+
+                            if (rewardType === 'bucks' && collectBucksIndex > 0) {
+                                this.boarUser.stats.quests.progress[collectBucksIndex] += amtToAdd;
                             }
 
                             this.boarUser.stats.quests.claimed[index] += amtToAdd;

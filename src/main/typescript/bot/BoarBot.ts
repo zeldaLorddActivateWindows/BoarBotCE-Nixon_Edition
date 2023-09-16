@@ -308,7 +308,7 @@ export class BoarBot implements Bot {
 
 			const pullReqData = pullReq.data[0];
 
-			if (pullReqData && pullReqData.html_url !== githubData.lastURL) {
+			if (pullReqData && pullReqData.html_url !== githubData.lastURL && pullReqData.merged_at !== null) {
 				githubData.lastURL = pullReqData.html_url;
 				fs.writeFileSync(
 					config.pathConfig.globalDataFolder + config.pathConfig.githubFileName,
