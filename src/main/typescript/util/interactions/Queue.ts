@@ -32,7 +32,7 @@ export class Queue {
         return new Promise((resolve, reject) => {
             setTimeout(() => {
                 reject('Took too long to run queue item. ID: ' + id);
-            }, 30000);
+            }, 180000);
 
             setInterval(() => {
                 if (!Queue.queues[queueIndex][id])

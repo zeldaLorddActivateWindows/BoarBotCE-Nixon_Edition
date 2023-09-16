@@ -105,8 +105,8 @@ export class BoarUser {
 
         this.stats.quests.progress[dailyQuestIndex] += this.stats.general.numDailies -
             userData.stats.general.numDailies;
-        this.stats.quests.progress[cloneBoarsIndex] += this.itemCollection.powerups.clone.numUsed -
-            userData.itemCollection.powerups.clone.numUsed;
+        this.stats.quests.progress[cloneBoarsIndex] += (this.itemCollection.powerups.clone.numSuccess as number) -
+            (userData.itemCollection.powerups.clone.numSuccess as number);
         this.stats.quests.progress[cloneRarityIndex] += (this.itemCollection.powerups.clone.raritiesUsed as number[])[
                 Math.floor(cloneRarityIndex / 2)
             ] - userData.itemCollection.powerups.clone.raritiesUsed[Math.floor(cloneRarityIndex / 2)];

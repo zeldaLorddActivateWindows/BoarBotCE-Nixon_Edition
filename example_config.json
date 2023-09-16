@@ -292,7 +292,7 @@
     "imageName": "unknown",
     "fontName": "Minecraft",
     "commandDebugPrefix": "%@ [%@%@]\n",
-    "commitLink": "https://api.github.com/repos/WeslayCodes/BoarBot/commits/main",
+    "pullLink": "https://api.github.com/repos/WeslayCodes/BoarBot/pulls",
     "githubImg": "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
   },
   "numberConfig": {

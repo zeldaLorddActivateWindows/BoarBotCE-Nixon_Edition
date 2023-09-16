@@ -8,5 +8,5 @@
  */
 
 export class GitHubData {
-    public lastCommitSha = '';
+    public lastURL = '';
 }

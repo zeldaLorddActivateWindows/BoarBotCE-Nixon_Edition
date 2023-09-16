@@ -634,7 +634,7 @@ export default class CollectionSubcommand implements Subcommand {
         if (dataChanged) {
             LogDebug.log(
                 `Failed cloning of '${this.allBoars[this.curPage].id} due to data changing'`,
-                this.config, this.firstInter, true
+                this.config, this.firstInter
             );
 
             await Replies.handleReply(
@@ -658,7 +658,7 @@ export default class CollectionSubcommand implements Subcommand {
         } else {
             LogDebug.log(
                 `Failed cloning of '${this.allBoars[this.curPage].id}'`,
-                this.config, this.firstInter, true
+                this.config, this.firstInter
             );
 
             await Replies.handleReply(

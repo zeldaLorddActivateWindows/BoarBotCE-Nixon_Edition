@@ -29,12 +29,13 @@ gifter_user_tag = sys.argv[9]
 
 item_assets = path_config['itemAssets']
 other_assets = path_config['otherAssets']
+font_assets = path_config['fontAssets']
 temp_item_assets = path_config['tempItemAssets']
 
 # Configured asset file paths
 
 circle_mask_path = other_assets + path_config['circleMask']
-font_path = other_assets + path_config['mainFont']
+font_path = font_assets + path_config['mainFont']
 
 # Configured colors
 
