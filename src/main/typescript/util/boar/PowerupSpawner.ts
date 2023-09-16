@@ -115,7 +115,7 @@ export class PowerupSpawner {
             const nums: NumberConfig = config.numberConfig;
             const allBoarChannels: TextChannel[] = [];
 
-            let newInterval = Math.round(config.numberConfig.powInterval * (Math.random() * (1.05 - .95) + .95));
+            let newInterval = Math.round(config.numberConfig.powInterval * (Math.random() * (1.01 - .99) + .99));
             if (config.maintenanceMode) {
                 newInterval = 30000;
             }

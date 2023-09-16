@@ -722,6 +722,8 @@ export default class MarketSubcommand implements Subcommand {
 
                     this.boarUser.stats.quests.progress[collectBucksIndex] += numToReturn * orderInfo.data.price;
                     this.boarUser.stats.general.boarScore += numToReturn * orderInfo.data.price;
+                } else {
+                    this.boarUser.stats.general.boarScore += numToReturn * orderInfo.data.price;
                 }
 
                 await this.boarUser.orderBoars(this.compInter, this.config);

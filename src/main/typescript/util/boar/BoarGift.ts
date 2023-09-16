@@ -403,7 +403,7 @@ export class BoarGift {
         await Queue.addQueue(async () => {
             try {
                 this.giftedUser.refreshUserData();
-                this.boarUser.stats.quests.progress[collectBucksIndex] += numBucks;
+                this.giftedUser.stats.quests.progress[collectBucksIndex] += numBucks;
                 this.giftedUser.stats.general.boarScore += numBucks;
                 this.giftedUser.updateUserData();
             } catch (err: unknown) {
