@@ -302,26 +302,27 @@ export class BoarBot implements Bot {
 		try {
 			if (!githubData) return;
 
-			const commit = await axios.get(config.stringConfig.commitLink, {
+			const pullReq = await axios.get(config.stringConfig.pullLink, {
 				headers: { Authorization: 'Token ' + process.env.GITHUB_TOKEN as string }
 			});
-			const commitData = commit.data;
 
-			if (commitData.sha !== githubData.lastCommitSha) {
-				githubData.lastCommitSha = commitData.sha;
+			const pullReqData = pullReq.data[0];
+
+			if (pullReqData && pullReqData.html_url !== githubData.lastURL) {
+				githubData.lastURL = pullReqData.html_url;
 				fs.writeFileSync(
 					config.pathConfig.globalDataFolder + config.pathConfig.githubFileName,
 					JSON.stringify(githubData)
 				);
 
-				const commitMsg = commitData.commit.message;
-				const commitName = commitMsg.substring(0, commitMsg.indexOf('\n'));
+				const commitMsg = pullReqData.body;
+				const commitName = pullReqData.title;
 				const commitChannel = await InteractionUtils.getTextChannel(config.updatesChannel);
 				const commitEmbed = new EmbedBuilder()
 					.setColor(config.colorConfig.dark as ColorResolvable)
 					.setTitle(commitName)
-					.setURL(commitData.html_url)
-					.setDescription(commitMsg.replace(commitName, ''))
+					.setURL(pullReqData.html_url)
+					.setDescription(commitMsg.replace(commitName, '').substring(0, 500) + '...')
 					.setThumbnail(config.stringConfig.githubImg);
 
 				commitChannel?.send({ embeds: [commitEmbed] });

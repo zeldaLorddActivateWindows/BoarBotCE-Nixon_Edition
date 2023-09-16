@@ -322,8 +322,7 @@ export class PowerupSpawner {
                 );
             } else if (!hasClaimed && !fullyFailed) {
                 LogDebug.log(
-                    `${inter.user.username} (${inter.user.id}) guessed INCORRECT in Powerup Event`,
-                    config, undefined, true
+                    `${inter.user.username} (${inter.user.id}) guessed INCORRECT in Powerup Event`, config
                 );
 
                 if (this.failers.has(inter.user.id)) {
