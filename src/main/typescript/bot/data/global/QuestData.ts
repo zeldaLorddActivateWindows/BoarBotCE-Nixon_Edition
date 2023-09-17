@@ -9,5 +9,7 @@
 
 export class QuestData {
     questsStartTimestamp = 0;
+
+    // All 7 quests in ID form, with easiest coming first and hardest coming last
     curQuestIDs: [string, string, string, string, string, string, string] = ['', '', '', '', '', '', '']
 }
