@@ -2602,11 +2602,11 @@
         "blacklisted": false
       },
       "sphere": {
-        "name": "Sphere Boar",
-        "pluralName": "Sphere Boars",
-        "file": "SphereBoar.gif",
-        "staticFile": "SphereBoarSTATIC.png",
-        "description": "After many millennia of the concretion process, this boar took the form of a perfect sphere. What's at its core? Nobody knows.",
+        "name": "Boarb",
+        "pluralName": "Boarbs",
+        "file": "Boarb.gif",
+        "staticFile": "BoarbSTATIC.png",
+        "description": "This boar inside this orb is said to have time-warping abilities. Encased in crystals, its powers are limited to telling others their future.",
         "isSB": false,
         "blacklisted": false
       },
@@ -2651,15 +2651,6 @@
         "isSB": false,
         "blacklisted": false
       },
-      "gamebreaker": {
-        "name": "Gameboarker",
-        "pluralName": "Gameboarkers",
-        "file": "Gameboarker.gif",
-        "staticFile": "GameboarkerSTATIC.png",
-        "description": "The only thing on its mind is destruction. Its cells are infused with gunpowder, resulting in bigger and more powerful explosions.",
-        "isSB": false,
-        "blacklisted": false
-      },
       "bacteria": {
         "name": "Boarcterium",
         "pluralName": "Boarcteria",
@@ -2675,46 +2666,14 @@
         "description": "Children all around the world are disappointed when they open a gift excitedly just to get this boar. It appears as though it's been worn.",
         "isSB": false,
         "blacklisted": false
-      },
-      "spooky": {
-        "name": "Spooky Boar",
-        "pluralName": "Spooky Boars",
-        "file": "SpookyBoar.png",
-        "description": "The suspicious host of Boar-o-ween. He can't go a sentence without rhyming and always seems to have traces of pig hair on his coat.",
-        "isSB": false,
-        "blacklisted": false
-      },
-      "trophy": {
-        "name": "Trophy Boar",
-        "pluralName": "Trophy Boars",
-        "file": "TrophyBoar.png",
-        "description": "The arch rival of Golden Boar, outshining it in every aspect of life. It's hard not to stare at this boar in awe.",
-        "isSB": false,
-        "blacklisted": false
       }
     },
     "badges": {
-      "early_supporter": {
-        "name": "Early Subboarter",
-        "pluralName": "Early Subboarters",
-        "file": "EarlySupporter.png",
-        "description": "Given to users that helped support the bot in Alpha",
-        "isSB": false,
-        "blacklisted": false
-      },
       "hunter": {
         "name": "Boar Hunter",
         "pluralName": "Boar Hunters",
         "file": "Hunter.png",
         "description": "Given to users that have collected all non-Special boars",
-        "isSB": false,
-        "blacklisted": false
-      },
-      "artist": {
-        "name": "Boartist",
-        "pluralName": "Boartists",
-        "file": "Artist.png",
-        "description": "Given to users that made a boar that made it into the game",
         "isSB": false,
         "blacklisted": false
       },
@@ -2725,12 +2684,6 @@
         "description": "Given to users that are currently #1 on a leaderboard",
         "isSB": false,
         "blacklisted": false
-      },
-      "catnod": {
-        "name": "Catnod",
-        "pluralName": "Catnods",
-        "file": "Catnod.png",
-        "description": "Given to users that helped support the bot in Alpha"
       }
     },
     "powerups": {
@@ -2924,11 +2877,8 @@
       "fromDaily": false,
       "enhancersNeeded": 0,
       "boars": [
-        "gamebreaker",
         "bacteria",
-        "underwear",
-        "spooky",
-        "trophy"
+        "underwear"
       ]
     }
   ],

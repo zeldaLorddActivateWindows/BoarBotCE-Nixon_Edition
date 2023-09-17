@@ -205,6 +205,11 @@ export class ConfigHandler {
      */
     private removeTempFiles(): void {
         const tempItemFolder: string = this.config.pathConfig.tempItemAssets;
+
+        if (!fs.existsSync(tempItemFolder)) {
+            fs.mkdirSync(tempItemFolder);
+        }
+
         const tempItemFiles: string[] = fs.readdirSync(tempItemFolder);
 
         for (const file of tempItemFiles) {
