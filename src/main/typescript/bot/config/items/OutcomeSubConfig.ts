@@ -1,7 +1,7 @@
 /**
  * {@link OutcomeSubConfig OutcomeSubConfig.ts}
  *
- * Stores an outcome subconfiguration for a bot instance.
+ * Stores an outcome sub configuration for a bot instance.
  *
  * @license {@link http://www.apache.org/licenses/ Apache-2.0}
  * @copyright WeslayCodes 2023

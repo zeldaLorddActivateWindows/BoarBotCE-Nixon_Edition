@@ -14,5 +14,5 @@ export class BoarManageCommandConfig extends CommandConfig {
     /**
      * {@link SubcommandConfig Subcommand information} for {@link SetupSubcommand}
      */
-    public readonly setup: SubcommandConfig = new SubcommandConfig;
+    public readonly setup = new SubcommandConfig();
 }

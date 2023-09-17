@@ -11,5 +11,5 @@ import {QuestConfig} from './QuestConfig';
  */
 
 export class QuestConfigs {
-    [questKey: string]: QuestConfig;
+    readonly [questKey: string]: QuestConfig;
 }

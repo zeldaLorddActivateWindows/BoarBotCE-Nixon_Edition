@@ -21,21 +21,25 @@ export class ConfigHandler {
 
     /**
      * Loads config data from configuration file in project root
+     *
+     * @param firstLoad - Used to force maintenance mode for the first 10 seconds on initial load
      */
-    public async loadConfig(firstLoad = false): Promise<void> {
-        let parsedConfig: any;
+    public async loadConfig(
+        firstLoad = false
+    ): Promise<void> {
+        let parsedConfig: BotConfig;
 
         this.setRelativeTime();
 
         try {
             parsedConfig = JSON.parse(fs.readFileSync('config.json', 'utf-8'));
             if (firstLoad) {
+                const maintenanceActive = parsedConfig.maintenanceMode;
                 parsedConfig.maintenanceMode = true;
+
                 setTimeout(() => {
-                    if (!parsedConfig.maintenanceOverride) {
-                        parsedConfig.maintenanceMode = false;
-                        this.config = parsedConfig as BotConfig;
-                    }
+                    parsedConfig.maintenanceMode = maintenanceActive;
+                    this.config = parsedConfig as BotConfig;
                 }, 10000);
             }
         } catch {
@@ -56,15 +60,21 @@ export class ConfigHandler {
         this.loadFonts();
     }
 
-
     /**
-     * Validates the contents of the data in the configuration file
+     * Validates the contents of the data in the configuration file.
+     * Passes if in maintenance mode even if not valid
      *
      * @param parsedConfig - The newly parsed config file to validate
      * @return passed - Whether the config file passed validation
      * @private
      */
-    private async validateConfig(parsedConfig: BotConfig): Promise<boolean> {
+    private async validateConfig(
+        parsedConfig: BotConfig
+    ): Promise<boolean> {
+        if (parsedConfig.maintenanceMode) {
+            return true;
+        }
+
         const rarities: RarityConfig[] = parsedConfig.rarityConfigs;
         const boars: ItemConfigs = parsedConfig.itemConfigs.boars;
         const boarIDs: string[] = Object.keys(boars);
@@ -185,11 +195,11 @@ export class ConfigHandler {
             passed = false;
         }
 
-        return passed || parsedConfig.maintenanceMode;
+        return passed;
     }
 
     /**
-     * Removes temp files to allow config changes to show
+     * Removes temp files. This allows new config changes to show
      *
      * @private
      */
@@ -207,7 +217,9 @@ export class ConfigHandler {
     /**
      * Grabs {@link BotConfig config} data the bot uses
      */
-    public getConfig(): BotConfig { return this.config; }
+    public getConfig(): BotConfig {
+        return this.config;
+    }
 
     /**
      * Grabs the font file and loads it for Canvas if it exists

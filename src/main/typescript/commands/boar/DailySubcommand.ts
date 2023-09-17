@@ -13,19 +13,19 @@ import {Queue} from '../../util/interactions/Queue';
 import {InteractionUtils} from '../../util/interactions/InteractionUtils';
 import {LogDebug} from '../../util/logging/LogDebug';
 import {BotConfig} from '../../bot/config/BotConfig';
-import {SubcommandConfig} from '../../bot/config/commands/SubcommandConfig';
 import {Replies} from '../../util/interactions/Replies';
 import {BoarUtils} from '../../util/boar/BoarUtils';
 import {ItemImageGenerator} from '../../util/generators/ItemImageGenerator';
-import {GuildData} from '../../util/data/global/GuildData';
 import {StringConfig} from '../../bot/config/StringConfig';
 import {ColorConfig} from '../../bot/config/ColorConfig';
 import {ItemConfigs} from '../../bot/config/items/ItemConfigs';
 import {CollectorUtils} from '../../util/discord/CollectorUtils';
 import {CustomEmbedGenerator} from '../../util/generators/CustomEmbedGenerator';
 import {ComponentUtils} from '../../util/discord/ComponentUtils';
-import {RowConfig} from '../../bot/config/components/RowConfig';
+import {RowConfig} from '../../bot/config/commands/RowConfig';
 import {FormatStrings} from '../../util/discord/FormatStrings';
+import {GuildData} from '../../bot/data/global/GuildData';
+import {SubcommandConfig} from '../../bot/config/commands/SubcommandConfig';
 
 /**
  * {@link DailySubcommand DailySubcommand.ts}
@@ -329,7 +329,7 @@ export default class DailySubcommand implements Subcommand {
     }
 
     /**
-     * Applies the user multiplier to rarity weights using an arctan function
+     * Applies the user multiplier to rarity weights using an arc-tan function
      *
      * @param userMultiplier - Used to increase weight
      * @param rarityWeights - Map of weights and their indexes

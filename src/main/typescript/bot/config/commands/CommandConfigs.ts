@@ -10,21 +10,20 @@
 import {BoarCommandConfig} from './BoarCommandConfig';
 import {BoarDevCommandConfig} from './BoarDevCommandConfig';
 import {BoarManageCommandConfig} from './BoarManageCommandConfig';
-import {CommandConfig} from './CommandConfig';
 
 export class CommandConfigs {
     /**
      * {@link CommandConfig Command information} for {@link BoarCommand}
      */
-    public readonly boar: BoarCommandConfig = new BoarCommandConfig;
+    public readonly boar = new BoarCommandConfig();
 
     /**
      * {@link CommandConfig Command information} for {@link BoarDevCommand}
      */
-    public readonly boarDev: BoarDevCommandConfig = new BoarDevCommandConfig;
+    public readonly boarDev = new BoarDevCommandConfig();
 
     /**
      * {@link CommandConfig Command information} for {@link BoarManageCommand}
      */
-    public readonly boarManage: BoarManageCommandConfig = new BoarManageCommandConfig;
+    public readonly boarManage = new BoarManageCommandConfig();
 }

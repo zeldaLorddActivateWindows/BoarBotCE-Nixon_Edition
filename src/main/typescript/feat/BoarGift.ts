@@ -1,23 +1,23 @@
-import {BoarUser} from './BoarUser';
+import {BoarUser} from '../util/boar/BoarUser';
 import {
     ActionRowBuilder, ButtonBuilder, ButtonInteraction, ChatInputCommandInteraction, Collection, InteractionCollector,
     Message, MessageComponentInteraction, StringSelectMenuInteraction, TextChannel
 } from 'discord.js';
-import {CollectorUtils} from '../discord/CollectorUtils';
-import {BotConfig} from '../../bot/config/BotConfig';
-import {CollectionImageGenerator} from '../generators/CollectionImageGenerator';
-import {OutcomeConfig} from '../../bot/config/items/OutcomeConfig';
-import {OutcomeSubConfig} from '../../bot/config/items/OutcomeSubConfig';
-import {Queue} from '../interactions/Queue';
-import {BoarUtils} from './BoarUtils';
-import {DataHandlers} from '../data/DataHandlers';
-import {ItemImageGenerator} from '../generators/ItemImageGenerator';
-import {LogDebug} from '../logging/LogDebug';
-import {Replies} from '../interactions/Replies';
-import {RowConfig} from '../../bot/config/components/RowConfig';
-import {InteractionUtils} from '../interactions/InteractionUtils';
-import {ComponentConfig} from '../../bot/config/components/ComponentConfig';
-import {QuestData} from '../data/global/QuestData';
+import {CollectorUtils} from '../util/discord/CollectorUtils';
+import {BotConfig} from '../bot/config/BotConfig';
+import {CollectionImageGenerator} from '../util/generators/CollectionImageGenerator';
+import {OutcomeConfig} from '../bot/config/items/OutcomeConfig';
+import {OutcomeSubConfig} from '../bot/config/items/OutcomeSubConfig';
+import {Queue} from '../util/interactions/Queue';
+import {BoarUtils} from '../util/boar/BoarUtils';
+import {DataHandlers} from '../util/data/DataHandlers';
+import {ItemImageGenerator} from '../util/generators/ItemImageGenerator';
+import {LogDebug} from '../util/logging/LogDebug';
+import {Replies} from '../util/interactions/Replies';
+import {RowConfig} from '../bot/config/commands/RowConfig';
+import {InteractionUtils} from '../util/interactions/InteractionUtils';
+import {ComponentConfig} from '../bot/config/commands/ComponentConfig';
+import {QuestData} from '../bot/data/global/QuestData';
 
 /**
  * {@link BoarGift BoarGift.ts}

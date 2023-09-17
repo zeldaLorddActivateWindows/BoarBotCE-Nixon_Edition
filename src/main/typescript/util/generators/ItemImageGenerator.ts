@@ -131,7 +131,7 @@ export class ItemImageGenerator {
             await this.addStaticProfile(score);
         }
 
-        return new AttachmentBuilder(this.buffer, { name:`${strConfig.imageName}.${imageExtension}` });
+        return new AttachmentBuilder(this.buffer, { name:`${strConfig.defaultImageName}.${imageExtension}` });
     }
 
     /**

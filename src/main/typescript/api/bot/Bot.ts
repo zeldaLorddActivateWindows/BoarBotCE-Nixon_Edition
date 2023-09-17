@@ -2,7 +2,7 @@ import {BotConfig} from '../../bot/config/BotConfig';
 import {Command} from '../commands/Command';
 import {Client} from 'discord.js';
 import {Subcommand} from '../commands/Subcommand';
-import {PowerupSpawner} from '../../util/boar/PowerupSpawner';
+import {PowerupSpawner} from '../../feat/PowerupSpawner';
 
 /**
  * {@link Bot Bot.ts}

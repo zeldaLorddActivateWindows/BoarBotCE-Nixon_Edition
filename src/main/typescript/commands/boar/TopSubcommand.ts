@@ -2,8 +2,13 @@ import {
     ActionRowBuilder,
     ButtonBuilder,
     ButtonInteraction,
-    ChatInputCommandInteraction, Client, Events, Interaction, InteractionCollector,
-    MessageComponentInteraction, ModalBuilder,
+    ChatInputCommandInteraction,
+    Client,
+    Events,
+    Interaction,
+    InteractionCollector,
+    MessageComponentInteraction,
+    ModalBuilder,
     SelectMenuComponentOptionData,
     StringSelectMenuBuilder,
     StringSelectMenuInteraction,
@@ -13,20 +18,20 @@ import {
 import {BoarBotApp} from '../../BoarBotApp';
 import {Subcommand} from '../../api/commands/Subcommand';
 import {InteractionUtils} from '../../util/interactions/InteractionUtils';
-import {GuildData} from '../../util/data/global/GuildData';
-import {SubcommandConfig} from '../../bot/config/commands/SubcommandConfig';
 import {BotConfig} from '../../bot/config/BotConfig';
 import {DataHandlers} from '../../util/data/DataHandlers';
 import {LeaderboardImageGenerator} from '../../util/generators/LeaderboardImageGenerator';
 import {Replies} from '../../util/interactions/Replies';
 import {CollectorUtils} from '../../util/discord/CollectorUtils';
-import {RowConfig} from '../../bot/config/components/RowConfig';
+import {RowConfig} from '../../bot/config/commands/RowConfig';
 import {ComponentUtils} from '../../util/discord/ComponentUtils';
 import {LogDebug} from '../../util/logging/LogDebug';
-import {ModalConfig} from '../../bot/config/modals/ModalConfig';
-import {BoardData} from '../../util/data/global/BoardData';
+import {ModalConfig} from '../../bot/config/commands/ModalConfig';
 import {BoarUser} from '../../util/boar/BoarUser';
 import {Queue} from '../../util/interactions/Queue';
+import {GuildData} from '../../bot/data/global/GuildData';
+import {BoardData} from '../../bot/data/global/BoardData';
+import {SubcommandConfig} from '../../bot/config/commands/SubcommandConfig';
 
 enum Board {
     Bucks = 'bucks',
@@ -116,9 +121,9 @@ export default class TopSubcommand implements Subcommand {
         if (userInput === null || this.getUserIndex(userInput.id) === -1) {
             this.curPage = Math.max(Math.min(pageInput-1, this.maxPage), 0);
         } else {
-            this.curPage = Math.ceil(
-                this.getUserIndex(userInput.id) / this.config.numberConfig.leaderboardNumPlayers
-            ) - 1;
+            this.curPage = Math.max(
+                Math.ceil(this.getUserIndex(userInput.id) / this.config.numberConfig.leaderboardNumPlayers), 0
+            );
         }
 
         if (CollectorUtils.topCollectors[interaction.user.id]) {
@@ -240,6 +245,8 @@ export default class TopSubcommand implements Subcommand {
                     this.curPage = 0;
                     break;
             }
+
+            this.curPage = Math.max(Math.min(this.curPage, this.maxPage-1), 0);
 
             await this.showLeaderboard();
         } catch (err: unknown) {
@@ -422,7 +429,7 @@ export default class TopSubcommand implements Subcommand {
         for (const choice of this.config.commandConfigs.boar.top.args[0].choices) {
             selectOptions.push({
                 label: choice.name,
-                value: choice.value
+                value: choice.value as string
             });
         }
 

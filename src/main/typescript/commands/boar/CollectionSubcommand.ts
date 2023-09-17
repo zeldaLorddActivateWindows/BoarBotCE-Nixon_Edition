@@ -24,17 +24,17 @@ import {CollectionImageGenerator} from '../../util/generators/CollectionImageGen
 import {Replies} from '../../util/interactions/Replies';
 import {FormatStrings} from '../../util/discord/FormatStrings';
 import {RarityConfig} from '../../bot/config/items/RarityConfig';
-import {BoarGift} from '../../util/boar/BoarGift';
-import {GuildData} from '../../util/data/global/GuildData';
-import {RowConfig} from '../../bot/config/components/RowConfig';
+import {BoarGift} from '../../feat/BoarGift';
+import {RowConfig} from '../../bot/config/commands/RowConfig';
 import {StringConfig} from '../../bot/config/StringConfig';
-import {ModalConfig} from '../../bot/config/modals/ModalConfig';
-import {CollectedBoar} from '../../util/data/userdata/collectibles/CollectedBoar';
+import {ModalConfig} from '../../bot/config/commands/ModalConfig';
+import {CollectedBoar} from '../../bot/data/user/collectibles/CollectedBoar';
 import {ItemImageGenerator} from '../../util/generators/ItemImageGenerator';
 import {ItemConfig} from '../../bot/config/items/ItemConfig';
 import {DataHandlers} from '../../util/data/DataHandlers';
-import {BoardData} from '../../util/data/global/BoardData';
-import {QuestData} from '../../util/data/global/QuestData';
+import {GuildData} from '../../bot/data/global/GuildData';
+import {BoardData} from '../../bot/data/global/BoardData';
+import {QuestData} from '../../bot/data/global/QuestData';
 
 enum View {
     Normal,

@@ -32,11 +32,25 @@ export class NumberConfig {
     public readonly maxSmallPow: number = 0;
     public readonly maxPowPages: number = 0;
 
-    // A constant used to determine how quickly to increase rarity
-    public readonly rarityIncreaseConst: number = 0;
+    // Important constants
 
-    // A constant to prevent compounding miracles to go too high
+    public readonly rarityIncreaseConst: number = 0;
     public readonly miracleIncreaseMax: number = 0;
+
+    // General default values
+
+    public readonly border: number = 0;
+    public readonly embedMaxWidth: number = 0;
+    public readonly embedMinHeight: number = 0;
+
+    // Time constants
+
+    public readonly collectorIdle: number = 0;
+    public readonly orderExpire: number = 0;
+    public readonly oneDay: number = 0;
+    public readonly notificationButtonDelay: number = 0;
+
+    // Custom confirmation image positions, sizes, and values
 
     public readonly enhanceDetailsPos: [number, number] = [0, 0];
     public readonly enhanceDetailsWidth: number = 0;
@@ -265,6 +279,8 @@ export class NumberConfig {
     public readonly marketOrdClaimWidth: number = 0;
     public readonly marketRange: number = 0;
 
+    // Quest image positions, sizes, and values
+
     public readonly questFullAmt: number = 0;
     public readonly questImgSize: [number, number] = [0, 0];
     public readonly questDatesPos: [number, number] = [0, 0];
@@ -280,12 +296,4 @@ export class NumberConfig {
     public readonly questCompletionPos: [number, number] = [0, 0];
     public readonly questCompleteCheckPos: [number, number] = [0, 0];
     public readonly questCompleteStrPos: [number, number] = [0, 0];
-
-    public readonly border: number = 0;
-    public readonly embedMaxWidth: number = 0;
-    public readonly embedMinHeight: number = 0;
-    public readonly collectorIdle: number = 0;
-    public readonly orderExpire: number = 0;
-    public readonly oneDay: number = 0;
-    public readonly notificationButtonDelay: number = 0;
 }

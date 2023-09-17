@@ -1,7 +1,9 @@
 import Canvas from 'canvas';
 import {BotConfig} from '../../bot/config/BotConfig';
 import {CanvasUtils} from './CanvasUtils';
-import {AttachmentBuilder} from 'discord.js';
+import {
+    AttachmentBuilder
+} from 'discord.js';
 import {Queue} from '../interactions/Queue';
 import {DataHandlers} from '../data/DataHandlers';
 
@@ -175,6 +177,6 @@ export class LeaderboardImageGenerator {
             );
         }
 
-        return new AttachmentBuilder(canvas.toBuffer(), { name: `${strConfig.imageName}.png` })
+        return new AttachmentBuilder(canvas.toBuffer(), { name: `${strConfig.defaultImageName}.png` })
     }
 }

@@ -18,7 +18,7 @@ import {Queue} from '../util/interactions/Queue';
 import {BoarUser} from '../util/boar/BoarUser';
 import fs from 'fs';
 import {DataHandlers} from '../util/data/DataHandlers';
-import {ItemsData} from '../util/data/global/ItemsData';
+import {ItemsData} from '../bot/data/global/ItemsData';
 
 /**
  * {@link InteractionListener InteractionListener.ts}

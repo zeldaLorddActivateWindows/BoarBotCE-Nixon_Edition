@@ -1,5 +1,5 @@
 import {PromptTypeConfigs} from './PromptTypeConfigs';
-import {RowConfig} from '../components/RowConfig';
+import {RowConfig} from '../commands/RowConfig';
 
 /**
  * {@link PromptConfigs PromptConfigs.ts}

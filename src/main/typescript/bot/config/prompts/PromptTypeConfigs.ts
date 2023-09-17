@@ -10,5 +10,5 @@ import {PromptTypeConfig} from './PromptTypeConfig';
  */
 
 export class PromptTypeConfigs {
-    [promptKey: string]: PromptTypeConfig;
+    readonly [promptKey: string]: PromptTypeConfig;
 }

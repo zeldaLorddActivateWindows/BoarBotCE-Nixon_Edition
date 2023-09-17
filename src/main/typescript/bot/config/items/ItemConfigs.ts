@@ -9,5 +9,5 @@ import {ItemConfig} from './ItemConfig';
  * @copyright WeslayCodes 2023
  */
 export class ItemConfigs {
-    [itemKey: string]: ItemConfig;
+    readonly [itemKey: string]: ItemConfig;
 }

@@ -17,13 +17,13 @@ import {FormField} from '../../util/interactions/FormField';
 import {FormatStrings} from '../../util/discord/FormatStrings';
 import {LogDebug} from '../../util/logging/LogDebug';
 import {CollectorUtils} from '../../util/discord/CollectorUtils';
-import {SubcommandConfig} from '../../bot/config/commands/SubcommandConfig';
 import {ComponentUtils} from '../../util/discord/ComponentUtils';
 import {Replies} from '../../util/interactions/Replies';
-import {GuildData} from '../../util/data/global/GuildData';
-import {RowConfig} from '../../bot/config/components/RowConfig';
+import {RowConfig} from '../../bot/config/commands/RowConfig';
 import {StringConfig} from '../../bot/config/StringConfig';
-import {ModalConfig} from '../../bot/config/modals/ModalConfig';
+import {ModalConfig} from '../../bot/config/commands/ModalConfig';
+import {GuildData} from '../../bot/data/global/GuildData';
+import {SubcommandConfig} from '../../bot/config/commands/SubcommandConfig';
 
 /**
  * {@link SetupSubcommand SetupSubcommand.ts}
@@ -74,7 +74,8 @@ export default class SetupSubcommand implements Subcommand {
         this.staticRows = this.getStaticRows();
         this.setupFields = this.getSetupFields(this.staticRows);
 
-        this.guildDataPath = this.config.pathConfig.guildDataFolder + interaction.guild.id + '.json';
+        this.guildDataPath = this.config.pathConfig.databaseFolder +
+            this.config.pathConfig.guildDataFolder + interaction.guild.id + '.json';
         this.guildData = await DataHandlers.getGuildData(interaction.guild.id, interaction, true) as GuildData;
 
         if (CollectorUtils.setupCollectors[interaction.user.id]) {

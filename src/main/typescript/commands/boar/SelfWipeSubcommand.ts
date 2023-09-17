@@ -9,15 +9,15 @@ import {BoarBotApp} from '../../BoarBotApp';
 import {Subcommand} from '../../api/commands/Subcommand';
 import {InteractionUtils} from '../../util/interactions/InteractionUtils';
 import {BotConfig} from '../../bot/config/BotConfig';
-import {SubcommandConfig} from '../../bot/config/commands/SubcommandConfig';
-import {GuildData} from '../../util/data/global/GuildData';
 import {LogDebug} from '../../util/logging/LogDebug';
 import {Replies} from '../../util/interactions/Replies';
 import {CollectorUtils} from '../../util/discord/CollectorUtils';
-import {RowConfig} from '../../bot/config/components/RowConfig';
+import {RowConfig} from '../../bot/config/commands/RowConfig';
 import {ComponentUtils} from '../../util/discord/ComponentUtils';
 import {Queue} from '../../util/interactions/Queue';
 import {BoarUser} from '../../util/boar/BoarUser';
+import {GuildData} from '../../bot/data/global/GuildData';
+import {SubcommandConfig} from '../../bot/config/commands/SubcommandConfig';
 
 /**
  * {@link SelfWipeSubcommand SelfWipeSubcommand.ts}

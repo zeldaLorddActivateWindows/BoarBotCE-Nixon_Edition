@@ -1,20 +1,25 @@
 import {
-    ActionRowBuilder, ButtonBuilder, ButtonInteraction,
-    ChatInputCommandInteraction, InteractionCollector,
-    SelectMenuComponentOptionData, StringSelectMenuBuilder, StringSelectMenuInteraction,
+    ActionRowBuilder,
+    ButtonBuilder,
+    ButtonInteraction,
+    ChatInputCommandInteraction,
+    InteractionCollector,
+    SelectMenuComponentOptionData,
+    StringSelectMenuBuilder,
+    StringSelectMenuInteraction,
     TextChannel
 } from 'discord.js';
 import fs from 'fs';
 import {BoarBotApp} from '../../BoarBotApp';
 import {Subcommand} from '../../api/commands/Subcommand';
 import {InteractionUtils} from '../../util/interactions/InteractionUtils';
-import {GuildData} from '../../util/data/global/GuildData';
 import {CollectorUtils} from '../../util/discord/CollectorUtils';
-import {RowConfig} from '../../bot/config/components/RowConfig';
+import {RowConfig} from '../../bot/config/commands/RowConfig';
 import {ComponentUtils} from '../../util/discord/ComponentUtils';
 import {LogDebug} from '../../util/logging/LogDebug';
 import {Replies} from '../../util/interactions/Replies';
 import {PathConfig} from '../../bot/config/PathConfig';
+import {GuildData} from '../../bot/data/global/GuildData';
 
 enum Area {
     General = 0,

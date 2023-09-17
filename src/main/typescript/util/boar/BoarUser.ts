@@ -10,20 +10,20 @@ import {RarityConfig} from '../../bot/config/items/RarityConfig';
 import {Queue} from '../interactions/Queue';
 import {DataHandlers} from '../data/DataHandlers';
 import {LogDebug} from '../logging/LogDebug';
-import {CollectedBoar} from '../data/userdata/collectibles/CollectedBoar';
-import {PromptTypeData} from '../data/userdata/stats/PromptTypeData';
+import {CollectedBoar} from '../../bot/data/user/collectibles/CollectedBoar';
+import {PromptTypeData} from '../../bot/data/user/stats/PromptTypeData';
 import {BoarUtils} from './BoarUtils';
 import {NumberConfig} from '../../bot/config/NumberConfig';
 import {StringConfig} from '../../bot/config/StringConfig';
-import {CollectedItems} from '../data/userdata/collectibles/CollectedItems';
-import {UserStats} from '../data/userdata/stats/UserStats';
-import {CollectedBadge} from '../data/userdata/collectibles/CollectedBadge';
-import {CollectedPowerup} from '../data/userdata/collectibles/CollectedPowerup';
-import {ItemData} from '../data/global/ItemData';
-import {GuildData} from '../data/global/GuildData';
-import {ItemsData} from '../data/global/ItemsData';
-import {QuestStats} from '../data/userdata/stats/QuestStats';
-import {QuestData} from '../data/global/QuestData';
+import {CollectedItems} from '../../bot/data/user/collectibles/CollectedItems';
+import {UserStats} from '../../bot/data/user/stats/UserStats';
+import {CollectedBadge} from '../../bot/data/user/collectibles/CollectedBadge';
+import {CollectedPowerup} from '../../bot/data/user/collectibles/CollectedPowerup';
+import {QuestStats} from '../../bot/data/user/stats/QuestStats';
+import {QuestData} from '../../bot/data/global/QuestData';
+import {ItemsData} from '../../bot/data/global/ItemsData';
+import {ItemData} from '../../bot/data/global/ItemData';
+import {GuildData} from '../../bot/data/global/GuildData';
 
 /**
  * {@link BoarUser BoarUser.ts}
@@ -70,7 +70,8 @@ export class BoarUser {
     private getUserData(createFile?: boolean): any {
         let userDataJSON: string;
         const config: BotConfig = BoarBotApp.getBot().getConfig();
-        const userFile: string = config.pathConfig.userDataFolder + this.user.id + '.json';
+        const userFile: string = config.pathConfig.databaseFolder +
+            config.pathConfig.userDataFolder + this.user.id + '.json';
 
         try {
             userDataJSON = fs.readFileSync(userFile, 'utf-8');
@@ -156,7 +157,8 @@ export class BoarUser {
      */
     private fixUserData(userData: any): void {
         const config: BotConfig = BoarBotApp.getBot().getConfig();
-        const userFile: string = config.pathConfig.userDataFolder + this.user.id + '.json';
+        const userFile: string = config.pathConfig.databaseFolder +
+            config.pathConfig.userDataFolder + this.user.id + '.json';
 
         const boarsGottenIDs: string[] = Object.keys(this.itemCollection.boars);
         const twoDailiesAgo: number = new Date().setUTCHours(24,0,0,0) - config.numberConfig.oneDay * 2;

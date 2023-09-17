@@ -6,10 +6,10 @@
  * @license {@link http://www.apache.org/licenses/ Apache-2.0}
  * @copyright WeslayCodes 2023
  */
-import {LogDebug} from '../logging/LogDebug';
-import {BoarBotApp} from '../../BoarBotApp';
-import {Queue} from '../interactions/Queue';
-import {DataHandlers} from '../data/DataHandlers';
+import {LogDebug} from '../util/logging/LogDebug';
+import {BoarBotApp} from '../BoarBotApp';
+import {Queue} from '../util/interactions/Queue';
+import {DataHandlers} from '../util/data/DataHandlers';
 import fs from 'fs';
 import {
     ActionRowBuilder, AttachmentBuilder,
@@ -17,24 +17,24 @@ import {
     Client, InteractionCollector, Message, StringSelectMenuInteraction,
     TextChannel,
 } from 'discord.js';
-import {GuildData} from '../data/global/GuildData';
-import {CollectorUtils} from '../discord/CollectorUtils';
-import {BotConfig} from '../../bot/config/BotConfig';
-import {Replies} from '../interactions/Replies';
-import {PromptConfig} from '../../bot/config/prompts/PromptConfig';
-import {NumberConfig} from '../../bot/config/NumberConfig';
-import {RowConfig} from '../../bot/config/components/RowConfig';
-import {PowerupImageGenerator} from '../generators/PowerupImageGenerator';
-import {BoarUser} from './BoarUser';
-import {PromptData} from '../data/userdata/stats/PromptData';
-import {PromptTypeConfigs} from '../../bot/config/prompts/PromptTypeConfigs';
-import {StringConfig} from '../../bot/config/StringConfig';
-import {ItemConfig} from '../../bot/config/items/ItemConfig';
-import {PromptConfigs} from '../../bot/config/prompts/PromptConfigs';
-import {PowerupData} from '../data/global/PowerupData';
-import {InteractionUtils} from '../interactions/InteractionUtils';
-import {ColorConfig} from '../../bot/config/ColorConfig';
-import {QuestData} from '../data/global/QuestData';
+import {CollectorUtils} from '../util/discord/CollectorUtils';
+import {BotConfig} from '../bot/config/BotConfig';
+import {Replies} from '../util/interactions/Replies';
+import {PromptConfig} from '../bot/config/prompts/PromptConfig';
+import {NumberConfig} from '../bot/config/NumberConfig';
+import {RowConfig} from '../bot/config/commands/RowConfig';
+import {PowerupImageGenerator} from '../util/generators/PowerupImageGenerator';
+import {BoarUser} from '../util/boar/BoarUser';
+import {PromptData} from '../bot/data/user/stats/PromptData';
+import {PromptTypeConfigs} from '../bot/config/prompts/PromptTypeConfigs';
+import {StringConfig} from '../bot/config/StringConfig';
+import {ItemConfig} from '../bot/config/items/ItemConfig';
+import {PromptConfigs} from '../bot/config/prompts/PromptConfigs';
+import {InteractionUtils} from '../util/interactions/InteractionUtils';
+import {ColorConfig} from '../bot/config/ColorConfig';
+import {PowerupData} from '../bot/data/global/PowerupData';
+import {GuildData} from '../bot/data/global/GuildData';
+import {QuestData} from '../bot/data/global/QuestData';
 
 export class PowerupSpawner {
     private readonly initIntervalVal: number = 0;

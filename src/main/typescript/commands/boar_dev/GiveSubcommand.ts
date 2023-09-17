@@ -1,4 +1,9 @@
-import {AttachmentBuilder, AutocompleteInteraction, ChatInputCommandInteraction, User} from 'discord.js';
+import {
+    AttachmentBuilder,
+    AutocompleteInteraction,
+    ChatInputCommandInteraction,
+    User
+} from 'discord.js';
 import {BoarUser} from '../../util/boar/BoarUser';
 import {BoarBotApp} from '../../BoarBotApp';
 import {Subcommand} from '../../api/commands/Subcommand';
@@ -7,8 +12,8 @@ import {Replies} from '../../util/interactions/Replies';
 import {LogDebug} from '../../util/logging/LogDebug';
 import {ItemImageGenerator} from '../../util/generators/ItemImageGenerator';
 import {BoarUtils} from '../../util/boar/BoarUtils';
-import {GuildData} from '../../util/data/global/GuildData';
 import {StringConfig} from '../../bot/config/StringConfig';
+import {GuildData} from '../../bot/data/global/GuildData';
 
 /**
  * {@link GiveSubcommand GiveSubcommand.ts}
@@ -65,7 +70,7 @@ export default class GiveSubcommand implements Subcommand {
      * Handles when an argument has options that need to be
      * autocompleted
      *
-     * @param interaction - Used to get the entered value to autocomplate
+     * @param interaction - Used to get the entered value to autocomplete
      */
     public async autocomplete(interaction: AutocompleteInteraction): Promise<void> {
         const strConfig: StringConfig = this.config.stringConfig;

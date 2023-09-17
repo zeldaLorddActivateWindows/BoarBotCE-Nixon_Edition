@@ -11,18 +11,18 @@ import {BoarBotApp} from '../../BoarBotApp';
 import {Subcommand} from '../../api/commands/Subcommand';
 import {InteractionUtils} from '../../util/interactions/InteractionUtils';
 import {BotConfig} from '../../bot/config/BotConfig';
-import {SubcommandConfig} from '../../bot/config/commands/SubcommandConfig';
-import {GuildData} from '../../util/data/global/GuildData';
 import {BoarUser} from '../../util/boar/BoarUser';
 import {QuestsImageGenerator} from '../../util/generators/QuestsImageGenerator';
 import {CollectorUtils} from '../../util/discord/CollectorUtils';
-import {RowConfig} from '../../bot/config/components/RowConfig';
+import {RowConfig} from '../../bot/config/commands/RowConfig';
 import {LogDebug} from '../../util/logging/LogDebug';
 import {Replies} from '../../util/interactions/Replies';
 import {ComponentUtils} from '../../util/discord/ComponentUtils';
 import {DataHandlers} from '../../util/data/DataHandlers';
-import {QuestData} from '../../util/data/global/QuestData';
 import {Queue} from '../../util/interactions/Queue';
+import {QuestData} from '../../bot/data/global/QuestData';
+import {GuildData} from '../../bot/data/global/GuildData';
+import {SubcommandConfig} from '../../bot/config/commands/SubcommandConfig';
 
 /**
  * {@link QuestsSubcommand QuestsSubcommand.ts}

@@ -1,4 +1,4 @@
-import {TextChannel, ForumChannel} from 'discord.js';
+import {TextChannel, ForumChannel, User} from 'discord.js';
 import {PathConfig} from './PathConfig';
 import {StringConfig} from './StringConfig';
 import {NumberConfig} from './NumberConfig';
@@ -37,6 +37,11 @@ export class BotConfig {
      * The {@link TextChannel} ID the bot sends update messages to
      */
     public readonly updatesChannel: string = '';
+
+    /**
+     * The {@link TextChannel} ID the bot defaults to for notifications
+     */
+    public readonly defaultChannel: string = '';
 
     /**
      * The {@link PathConfig paths} of all files/folders the bot accesses
@@ -86,25 +91,20 @@ export class BotConfig {
     /**
      * If boars can be obtained without waiting for the next day
      */
-    public readonly unlimitedBoars: boolean = false;
+    public readonly unlimitedBoars = false;
 
     /**
-     * If debug messages should be sent to the console
+     * If debug messages should be sent to logs
      */
-    public readonly debugMode: boolean = true;
+    public readonly debugMode = true;
 
     /**
      * If the bot is in maintenance mode
      */
-    public readonly maintenanceMode: boolean = false;
-
-    /**
-     * Whether to override the current state of maintenance mode to true
-     */
-    public readonly maintenanceOverride: boolean = false;
+    public maintenanceMode = false;
 
     /**
      * If the market can be opened using /boar market
      */
-    public readonly marketOpen: boolean = false;
+    public readonly marketOpen = false;
 }

@@ -7,7 +7,7 @@
  * @license {@link http://www.apache.org/licenses/ Apache-2.0}
  * @copyright WeslayCodes 2023
  */
-export class ChoicesConfig {
+export class ChoicesConfig<T = string | number> {
     public readonly name: string = '';
-    public readonly value: any = '';
+    public readonly value: T = '' as T;
 }

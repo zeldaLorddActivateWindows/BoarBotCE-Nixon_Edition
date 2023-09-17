@@ -17,30 +17,30 @@ import {
 import {BoarBotApp} from '../../BoarBotApp';
 import {Subcommand} from '../../api/commands/Subcommand';
 import {InteractionUtils} from '../../util/interactions/InteractionUtils';
-import {GuildData} from '../../util/data/global/GuildData';
 import {SubcommandConfig} from '../../bot/config/commands/SubcommandConfig';
 import {BotConfig} from '../../bot/config/BotConfig';
 import {Replies} from '../../util/interactions/Replies';
 import {CollectorUtils} from '../../util/discord/CollectorUtils';
-import {RowConfig} from '../../bot/config/components/RowConfig';
 import {ComponentUtils} from '../../util/discord/ComponentUtils';
 import {LogDebug} from '../../util/logging/LogDebug';
 import {DataHandlers} from '../../util/data/DataHandlers';
-import {BuySellData} from '../../util/data/global/BuySellData';
 import {MarketImageGenerator} from '../../util/generators/MarketImageGenerator';
 import {BoarUser} from '../../util/boar/BoarUser';
-import {ModalConfig} from '../../bot/config/modals/ModalConfig';
 import {BoarUtils} from '../../util/boar/BoarUtils';
 import {Queue} from '../../util/interactions/Queue';
-import {CollectedBoar} from '../../util/data/userdata/collectibles/CollectedBoar';
 import {StringConfig} from '../../bot/config/StringConfig';
 import {ColorConfig} from '../../bot/config/ColorConfig';
 import {NumberConfig} from '../../bot/config/NumberConfig';
 import {RarityConfig} from '../../bot/config/items/RarityConfig';
-import {ItemData} from '../../util/data/global/ItemData';
-import {ItemsData} from '../../util/data/global/ItemsData';
-import {BoardData} from '../../util/data/global/BoardData';
-import {QuestData} from '../../util/data/global/QuestData';
+import {BuySellData} from '../../bot/data/global/BuySellData';
+import {GuildData} from '../../bot/data/global/GuildData';
+import {RowConfig} from '../../bot/config/commands/RowConfig';
+import {ItemsData} from '../../bot/data/global/ItemsData';
+import {QuestData} from '../../bot/data/global/QuestData';
+import {CollectedBoar} from '../../bot/data/user/collectibles/CollectedBoar';
+import {ItemData} from '../../bot/data/global/ItemData';
+import {ModalConfig} from '../../bot/config/commands/ModalConfig';
+import {BoardData} from '../../bot/data/global/BoardData';
 
 enum View {
     Overview,

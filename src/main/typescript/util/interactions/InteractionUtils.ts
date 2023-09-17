@@ -9,9 +9,9 @@ import {BotConfig} from '../../bot/config/BotConfig';
 import {DataHandlers} from '../data/DataHandlers';
 import {Replies} from './Replies';
 import {LogDebug} from '../logging/LogDebug';
-import {GuildData} from '../data/global/GuildData';
 import moment from 'moment';
 import {Queue} from './Queue';
+import {GuildData} from '../../bot/data/global/GuildData';
 
 /**
  * {@link InteractionUtils InteractionUtils.ts}
@@ -46,7 +46,7 @@ export class InteractionUtils {
         const acceptableChannels: string[] = [...guildData.channels];
 
         if (!acceptableChannels.includes(interaction.channel.id)) {
-            await Replies.wrongChannelReply(interaction, guildData, config);
+            await Replies.wrongChannelReply(interaction, config);
             return;
         }
 
@@ -58,7 +58,7 @@ export class InteractionUtils {
      *
      * @param interaction - Interaction to reply to
      * @param config - Used to get the string to reply with
-     * @param forceFollowup - Whether the reply should be a follow up
+     * @param forceFollowup - Whether the reply should be a followup
      * @return banned - Whether user is banned
      */
     public static async handleBanned(
@@ -112,7 +112,7 @@ export class InteractionUtils {
 
         const memberMe: GuildMember | null = channel.guild.members.me;
         if (!memberMe) {
-            LogDebug.handleError('Bot doesn\'t exist in the server the channel is in.');
+            LogDebug.handleError('Bot doesn\'t exist in the server the channel is in.', undefined, false);
             return;
         }
 

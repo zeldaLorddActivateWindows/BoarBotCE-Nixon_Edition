@@ -10,7 +10,7 @@ import {PromptConfig} from './PromptConfig';
  */
 
 export class PromptTypeConfig {
-    [promptKey: string]: PromptConfig | string | number;
+    readonly [promptKey: string]: PromptConfig | string | number;
 
     public readonly name: string = ' ';
     public readonly description: string = ' ';

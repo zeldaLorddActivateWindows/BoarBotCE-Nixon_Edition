@@ -1,10 +1,10 @@
 import Canvas from 'canvas';
 import {BotConfig} from '../../bot/config/BotConfig';
 import {AttachmentBuilder} from 'discord.js';
-import {BuySellData} from '../data/global/BuySellData';
 import {CanvasUtils} from './CanvasUtils';
 import {BoarUtils} from '../boar/BoarUtils';
 import moment from 'moment';
+import {BuySellData} from '../../bot/data/global/BuySellData';
 
 /**
  * {@link MarketImageGenerator MarketImageGenerator.ts}
@@ -192,7 +192,7 @@ export class MarketImageGenerator {
             );
         }
 
-        return new AttachmentBuilder(canvas.toBuffer(), { name: `${strConfig.imageName}.png` });
+        return new AttachmentBuilder(canvas.toBuffer(), { name: `${strConfig.defaultImageName}.png` });
     }
 
     public async makeBuySellImage(page: number, edition: number) {
@@ -333,7 +333,7 @@ export class MarketImageGenerator {
 
         ctx.drawImage(await Canvas.loadImage(overlay), ...nums.originPos);
 
-        return new AttachmentBuilder(canvas.toBuffer(), { name: `${strConfig.imageName}.png` });
+        return new AttachmentBuilder(canvas.toBuffer(), { name: `${strConfig.defaultImageName}.png` });
     }
 
     public async makeOrdersImage(page: number) {
@@ -435,6 +435,6 @@ export class MarketImageGenerator {
             ctx, claimText, nums.marketOrdClaimPos, smallMediumFont, 'center', rarityColor, nums.marketOrdClaimWidth
         );
 
-        return new AttachmentBuilder(canvas.toBuffer(), { name: `${strConfig.imageName}.png` });
+        return new AttachmentBuilder(canvas.toBuffer(), { name: `${strConfig.defaultImageName}.png` });
     }
 }

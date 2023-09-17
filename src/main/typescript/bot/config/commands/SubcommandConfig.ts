@@ -1,6 +1,6 @@
 import {SubcommandArgsConfig} from './SubcommandArgsConfig';
-import {RowConfig} from '../components/RowConfig';
-import {ModalConfig} from '../modals/ModalConfig';
+import {RowConfig} from './RowConfig';
+import {ModalConfig} from './ModalConfig';
 
 /**
  * {@link SubcommandConfig SubcommandConfig.ts}

@@ -3,16 +3,16 @@ import {ChatInputCommandInteraction, MessageComponentInteraction, User} from 'di
 import {BoarBotApp} from '../../BoarBotApp';
 import {LogDebug} from '../logging/LogDebug';
 import {Replies} from '../interactions/Replies';
-import {GuildData} from './global/GuildData';
 import {BotConfig} from '../../bot/config/BotConfig';
 import {StringConfig} from '../../bot/config/StringConfig';
 import {BoarUser} from '../boar/BoarUser';
-import {ItemData} from './global/ItemData';
-import {BoardData} from './global/BoardData';
-import {GitHubData} from './global/GitHubData';
-import {ItemsData} from './global/ItemsData';
-import {PowerupData} from './global/PowerupData';
-import {QuestData} from './global/QuestData';
+import {ItemsData} from '../../bot/data/global/ItemsData';
+import {BoardData} from '../../bot/data/global/BoardData';
+import {QuestData} from '../../bot/data/global/QuestData';
+import {PowerupData} from '../../bot/data/global/PowerupData';
+import {ItemData} from '../../bot/data/global/ItemData';
+import {GuildData} from '../../bot/data/global/GuildData';
+import {GitHubData} from '../../bot/data/global/GitHubData';
 
 enum GlobalFile {
     Items,
@@ -43,13 +43,19 @@ export class DataHandlers {
         ItemsData | Record<string, BoardData> | Record<string, number> | PowerupData | QuestData
     {
         const config: BotConfig = BoarBotApp.getBot().getConfig();
+        const pathConfig = config.pathConfig;
 
         const fileName = this.getGlobalFilename(file);
 
-        const dataFile: string = config.pathConfig.globalDataFolder + fileName;
+        const globalDataFolder = pathConfig.databaseFolder + pathConfig.globalDataFolder;
+        const dataFile: string = pathConfig.databaseFolder + pathConfig.globalDataFolder + fileName;
         let data: ItemsData | Record<string, BoardData> | Record<string, number> | PowerupData | QuestData | undefined;
 
         try {
+            if (!fs.existsSync(globalDataFolder)) {
+                fs.mkdirSync(globalDataFolder);
+            }
+
             data = JSON.parse(fs.readFileSync(dataFile, 'utf-8'));
         } catch {}
 
@@ -164,8 +170,12 @@ export class DataHandlers {
         data: ItemsData | Record<string, BoardData> | Record<string, number> | PowerupData | QuestData | undefined,
         file: GlobalFile
     ) {
-        const config: BotConfig = BoarBotApp.getBot().getConfig();
-        fs.writeFileSync(config.pathConfig.globalDataFolder + this.getGlobalFilename(file), JSON.stringify(data));
+        const pathConfig = BoarBotApp.getBot().getConfig().pathConfig;
+
+        fs.writeFileSync(
+            pathConfig.databaseFolder + pathConfig.globalDataFolder + this.getGlobalFilename(file),
+            JSON.stringify(data)
+        );
     }
 
     private static getGlobalFilename(file: GlobalFile): string {
@@ -209,14 +219,15 @@ export class DataHandlers {
                 : undefined;
 
             let uniques = 0;
+            let sbUniques = 0;
             for (let i=0; i<Object.keys(boarUser.itemCollection.boars).length; i++) {
                 const boarData = boarUser.itemCollection.boars[Object.keys(boarUser.itemCollection.boars)[i]];
                 const boarInfo = config.itemConfigs.boars[Object.keys(boarUser.itemCollection.boars)[i]];
 
-                if (boarInfo.isSB) continue;
-
-                if (boarData.num > 0) {
+                if (boarData.num > 0 && !boarInfo.isSB) {
                     uniques++;
+                } else if (boarData.num > 0) {
+                    sbUniques++;
                 }
             }
 
@@ -224,7 +235,7 @@ export class DataHandlers {
                 ? [username, uniques]
                 : undefined;
             boardsData.uniquesSB.userData[userID] = Object.keys(boarUser.itemCollection.boars).length > 0
-                ? [username, Object.keys(boarUser.itemCollection.boars).length]
+                ? [username, sbUniques]
                 : undefined;
             boardsData.streak.userData[userID] = boarUser.stats.general.boarStreak > 0
                 ? [username, boarUser.stats.general.boarStreak]
@@ -335,7 +346,8 @@ export class DataHandlers {
         const config: BotConfig = BoarBotApp.getBot().getConfig();
         const strConfig: StringConfig = config.stringConfig;
 
-        const guildDataPath: string = config.pathConfig.guildDataFolder + guildID + '.json';
+        const guildDataPath: string = config.pathConfig.databaseFolder +
+            config.pathConfig.guildDataFolder + guildID + '.json';
 
         try {
             return JSON.parse(fs.readFileSync(guildDataPath, 'utf-8'));

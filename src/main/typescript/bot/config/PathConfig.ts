@@ -7,15 +7,17 @@
  * @copyright WeslayCodes 2023
  */
 export class PathConfig {
-    [pathKey: string]: string;
+    readonly [pathKey: string]: string;
 
     // Path of folder storing all {@link Listener listeners}
     public readonly listeners: string = '';
+
     // Path of folder storing all {@link Command commands}
     public readonly commands: string = '';
 
     // Data folder/file paths
 
+    public readonly databaseFolder: string = '';
     public readonly guildDataFolder: string = '';
     public readonly userDataFolder: string = '';
     public readonly globalDataFolder: string = '';
@@ -26,6 +28,9 @@ export class PathConfig {
     public readonly questDataFileName: string = '';
     public readonly githubFileName: string = '';
     public readonly logsFolder: string = '';
+
+    // Production paths
+
     public readonly prodStartScript: string = '';
     public readonly prodRemotePath: string = '';
 
@@ -46,7 +51,7 @@ export class PathConfig {
     public readonly itemUnderlay: string = '';
     public readonly itemBackplate: string = '';
 
-    // Image/asset file names for collection attachments
+    // Image/asset file names for collection images
 
     public readonly collOverlay: string = '';
     public readonly collUnderlay: string = '';
@@ -69,17 +74,16 @@ export class PathConfig {
     public readonly cellDivine: string = '';
     public readonly favorite: string = '';
 
-    // Other image/asset file names
+    // Image/asset file names for market images
 
-    public readonly eventUnderlay: string = '';
-    public readonly questsUnderlay: string = '';
-    public readonly leaderboardUnderlay: string = '';
     public readonly marketOverviewUnderlay: string = '';
     public readonly marketOverviewOverlay: string = '';
     public readonly marketBuySellUnderlay: string = '';
     public readonly marketBuySellOverlay: string = '';
     public readonly marketOrdersUnderlay: string = '';
-    public readonly mainFont: string = '';
+
+    // Image/asset file names for help images
+
     public readonly helpGeneral1: string = '';
     public readonly helpGeneral2: string = '';
     public readonly helpPowerup1: string = '';
@@ -89,6 +93,13 @@ export class PathConfig {
     public readonly helpBadgeBoar1: string = '';
     public readonly helpBadgeBoar2: string = '';
     public readonly helpBadgeBoar3: string = '';
+
+    // Miscellaneous image/asset file names
+
+    public readonly eventUnderlay: string = '';
+    public readonly questsUnderlay: string = '';
+    public readonly leaderboardUnderlay: string = '';
+    public readonly mainFont: string = '';
     public readonly circleMask: string = '';
     public readonly bucks: string = '';
     public readonly powerup: string = '';

@@ -1,13 +1,16 @@
-import {ChatInputCommandInteraction, User} from 'discord.js';
+import {
+    ChatInputCommandInteraction,
+    User
+} from 'discord.js';
 import {BoarBotApp} from '../../BoarBotApp';
 import {Subcommand} from '../../api/commands/Subcommand';
 import {InteractionUtils} from '../../util/interactions/InteractionUtils';
 import {Replies} from '../../util/interactions/Replies';
-import {GuildData} from '../../util/data/global/GuildData';
 import {StringConfig} from '../../bot/config/StringConfig';
 import {Queue} from '../../util/interactions/Queue';
 import {LogDebug} from '../../util/logging/LogDebug';
 import {DataHandlers} from '../../util/data/DataHandlers';
+import {GuildData} from '../../bot/data/global/GuildData';
 
 /**
  * {@link BanSubcommand BanSubcommand.ts}

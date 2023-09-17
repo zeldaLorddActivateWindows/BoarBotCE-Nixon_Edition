@@ -9,11 +9,11 @@ import {BoarBotApp} from '../../BoarBotApp';
 import {Subcommand} from '../../api/commands/Subcommand';
 import {InteractionUtils} from '../../util/interactions/InteractionUtils';
 import {BotConfig} from '../../bot/config/BotConfig';
-import {SubcommandConfig} from '../../bot/config/commands/SubcommandConfig';
-import {GuildData} from '../../util/data/global/GuildData';
-import {ModalConfig} from '../../bot/config/modals/ModalConfig';
+import {ModalConfig} from '../../bot/config/commands/ModalConfig';
 import {LogDebug} from '../../util/logging/LogDebug';
 import {Replies} from '../../util/interactions/Replies';
+import {GuildData} from '../../bot/data/global/GuildData';
+import {SubcommandConfig} from '../../bot/config/commands/SubcommandConfig';
 
 /**
  * {@link ReportSubcommand ReportSubcommand.ts}

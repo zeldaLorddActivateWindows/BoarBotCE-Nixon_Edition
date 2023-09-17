@@ -15,20 +15,20 @@ import {BotConfig} from './config/BotConfig';
 import {Command} from '../api/commands/Command';
 import {Subcommand} from '../api/commands/Subcommand';
 import {LogDebug} from '../util/logging/LogDebug';
-import {PowerupSpawner} from '../util/boar/PowerupSpawner';
+import {PowerupSpawner} from '../feat/PowerupSpawner';
 import {Queue} from '../util/interactions/Queue';
 import {DataHandlers} from '../util/data/DataHandlers';
-import {GuildData} from '../util/data/global/GuildData';
 import {CronJob} from 'cron';
 import {BoarUser} from '../util/boar/BoarUser';
 import axios from 'axios';
 import {InteractionUtils} from '../util/interactions/InteractionUtils';
-import {GitHubData} from '../util/data/global/GitHubData';
 import * as crypto from 'crypto';
-import {PowerupData} from '../util/data/global/PowerupData';
 import {BoarUtils} from '../util/boar/BoarUtils';
-import {ItemsData} from '../util/data/global/ItemsData';
-import {QuestData} from '../util/data/global/QuestData';
+import {ItemsData} from './data/global/ItemsData';
+import {QuestData} from './data/global/QuestData';
+import {PowerupData} from './data/global/PowerupData';
+import {GitHubData} from './data/global/GitHubData';
+import {GuildData} from './data/global/GuildData';
 
 /**
  * {@link BoarBot BoarBot.ts}
@@ -72,8 +72,8 @@ export class BoarBot implements Bot {
 				Partials.Channel // For notifications
 			],
 			intents: [
-				GatewayIntentBits.Guilds,
-				GatewayIntentBits.DirectMessages
+				GatewayIntentBits.Guilds, // Enables bot to work in guilds
+				GatewayIntentBits.DirectMessages // Allows users to toggle notifications off
 			]
 		});
 	}
@@ -81,21 +81,35 @@ export class BoarBot implements Bot {
 	/**
 	 * Returns the client object associated with the bot
 	 */
-	public getClient(): Client { return this.client; }
+	public getClient(): Client {
+		return this.client;
+	}
 
 	/**
 	 * Finds config file and pulls it into the code
+	 *
+	 * @param firstLoad - Whether the config is being loaded for the first time
 	 */
-	public async loadConfig(firstLoad = false): Promise<void> { await this.configHandler.loadConfig(firstLoad); }
+	public async loadConfig(
+		firstLoad = false
+	): Promise<void> {
+		await this.configHandler.loadConfig(firstLoad);
+	}
 
 	/**
 	 * Returns config information that was gathered from config file
 	 */
-	public getConfig(): BotConfig { return this.configHandler.getConfig(); }
+	public getConfig(): BotConfig {
+		return this.configHandler.getConfig();
+	}
 
+	/**
+	 * Returns the SHA256 hash value of the config file
+	 */
 	public getConfigHash(): string {
 		const configFile = fs.readFileSync('config.json');
 		const hashSum = crypto.createHash('sha256');
+
 		hashSum.update(configFile);
 
 		return hashSum.digest('hex');
@@ -104,35 +118,47 @@ export class BoarBot implements Bot {
 	/**
 	 * Registers command and subcommand information from files
 	 */
-	public registerCommands(): void { this.commandHandler.registerCommands(); }
+	public registerCommands(): void {
+		this.commandHandler.registerCommands();
+	}
 
 	/**
 	 * Deploys both application and guild commands
 	 */
-	public async deployCommands(): Promise<void> { await this.commandHandler.deployCommands(); }
+	public async deployCommands(): Promise<void> {
+		await this.commandHandler.deployCommands();
+	}
 
 	/**
 	 * Returns command information like name, execute function, and more
 	 */
-	public getCommands(): Map<string, Command> { return this.commandHandler.getCommands(); }
+	public getCommands(): Map<string, Command> {
+		return this.commandHandler.getCommands();
+	}
 
 	/**
 	 * Returns subcommand information like name and execute function
 	 */
-	public getSubcommands(): Map<string, Subcommand> { return this.commandHandler.getSubcommands(); }
+	public getSubcommands(): Map<string, Subcommand> {
+		return this.commandHandler.getSubcommands();
+	}
 
 	/**
 	 * Registers event listeners from files
 	 */
-	public registerListeners(): void { this.eventHandler.registerListeners(); }
+	public registerListeners(): void {
+		this.eventHandler.registerListeners();
+	}
 
 	/**
 	 * Returns the powerup spawner object
 	 */
-	public getPowSpawner(): PowerupSpawner { return this.powSpawner; }
+	public getPowSpawner(): PowerupSpawner {
+		return this.powSpawner;
+	}
 
 	/**
-	 * Logs the bot in using token
+	 * Logs the bot in using token in env file
 	 */
 	public async login(): Promise<void> {
 		try {
@@ -212,7 +238,14 @@ export class BoarBot implements Bot {
 
 			LogDebug.log('All functions online!', this.getConfig(), undefined, true);
 
-			for (const userFile of fs.readdirSync(this.getConfig().pathConfig.userDataFolder)) {
+			const userDataFolder = this.getConfig().pathConfig.databaseFolder +
+				this.getConfig().pathConfig.userDataFolder;
+
+			if (!fs.existsSync(userDataFolder)) {
+				fs.mkdirSync(userDataFolder);
+			}
+
+			for (const userFile of fs.readdirSync(userDataFolder)) {
 				try {
 					this.getClient().users.fetch(userFile.split('.')[0]);
 					await LogDebug.sleep(1000);
@@ -226,7 +259,7 @@ export class BoarBot implements Bot {
 	}
 
 	/**
-	 * Starts CronJob that sends notifications for boar daily
+	 * Starts CronJob that sends notifications for /boar daily
 	 * @private
 	 */
 	private startNotificationCron(): void {
@@ -274,7 +307,7 @@ export class BoarBot implements Bot {
 
 					const notificationChannelID = boarUser.stats.general.notificationChannel
 						? boarUser.stats.general.notificationChannel
-						: process.env.LEGACY_CHANNEL as string;
+						: this.getConfig().defaultChannel;
 
 					await user.send(
 						randMsgStr + dailyReadyStr + '\n# ' +
@@ -285,7 +318,7 @@ export class BoarBot implements Bot {
 
 			try {
 				const pingChannel =
-					await this.client.channels.fetch(process.env.LEGACY_CHANNEL as string) as TextChannel;
+					await this.client.channels.fetch(this.getConfig().defaultChannel) as TextChannel;
 				pingChannel.send(
 					this.getConfig().stringConfig.notificationDailyReady + ' ' +
 					this.getConfig().stringConfig.notificationServerPing
@@ -296,7 +329,15 @@ export class BoarBot implements Bot {
 		}, null, true, 'UTC');
 	}
 
-	private async sendUpdateInfo(githubData: GitHubData | undefined): Promise<void> {
+	/**
+	 * Attempts to send GitHub update information to the updates channel
+	 *
+	 * @param githubData - The data including the last update PR URL
+	 * @private
+	 */
+	private async sendUpdateInfo(
+		githubData: GitHubData | undefined
+	): Promise<void> {
 		const config = this.getConfig();
 
 		try {
@@ -332,7 +373,13 @@ export class BoarBot implements Bot {
 		}
 	}
 
-	private updateAllData(): void {
+	/**
+	 * Updates global data files to the state they should be in for the
+	 * current version
+	 *
+	 * @private
+	 */
+	private async updateAllData(): Promise<void> {
 		const itemsData = DataHandlers.getGlobalData(DataHandlers.GlobalFile.Items, true) as ItemsData;
 		BoarUtils.orderGlobalBoars(itemsData, this.getConfig());
 		DataHandlers.saveGlobalData(itemsData, DataHandlers.GlobalFile.Items);
@@ -349,14 +396,23 @@ export class BoarBot implements Bot {
 	 * @private
 	 */
 	private fixGuildData(): void {
-		let guildDataFolder: string;
+		const pathConfig = this.getConfig().pathConfig;
+		const databaseFolder = pathConfig.databaseFolder;
+		const guildDataFolder = databaseFolder + pathConfig.guildDataFolder;
 		let guildDataFiles: string[];
 
 		try {
-			guildDataFolder = this.getConfig().pathConfig.guildDataFolder;
+			if (!fs.existsSync(databaseFolder)) {
+				fs.mkdirSync(databaseFolder);
+			}
+
+			if (!fs.existsSync(guildDataFolder)) {
+				fs.mkdirSync(guildDataFolder);
+			}
+
 			guildDataFiles = fs.readdirSync(guildDataFolder);
-		} catch {
-			LogDebug.handleError('Unable to find guild data directory provided in \'config.json\'!');
+		} catch (err: unknown) {
+			LogDebug.handleError(err);
 			process.exit(-1);
 		}
 

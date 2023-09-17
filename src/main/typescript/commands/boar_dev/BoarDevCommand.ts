@@ -55,8 +55,8 @@ export default class BoarDevCommand implements Command {
 
         if (!subcommand) return;
 
-        const exports: any = require(subcommand.data.path);
-        const commandClass: any = new exports.default();
+        const exports = require(subcommand.data.path);
+        const commandClass = new exports.default();
 
         if (interaction.isAutocomplete()) {
             try {

@@ -177,7 +177,7 @@ export class StringConfig {
     public readonly marketOrdFillLabel: string = ' ';
     public readonly marketOrdClaimLabel: string = ' ';
 
-    // Miscellaneous strings
+    // Powerup strings
 
     public readonly giftConfirm: string = ' ';
     public readonly giftFail: string = ' ';
@@ -191,10 +191,9 @@ export class StringConfig {
     public readonly miracleSuccess: string = ' ';
     public readonly cloneConfirm: string = ' ';
     public readonly cloneFail: string = ' ';
-    public readonly notInBoard: string = ' ';
-    public readonly boardHeader: string = ' ';
-    public readonly boardFooter: string = ' ';
-    public readonly deletedUsername: string = ' ';
+
+    // Notification strings
+
     public readonly notificationSuccess: string = ' ';
     public readonly notificationFailed: string = ' ';
     public readonly notificationSuccessReply: string = ' ';
@@ -202,21 +201,37 @@ export class StringConfig {
     public readonly notificationStopStr: string = ' ';
     public readonly notificationExtras: string[] = [];
     public readonly notificationServerPing: string = ' ';
+
+    // Leaderboard strings
+
+    public readonly notInBoard: string = ' ';
+    public readonly boardHeader: string = ' ';
+    public readonly boardFooter: string = ' ';
+    public readonly deletedUsername: string = ' ';
+
+    // Quest strings
+
     public readonly questCompletionBonus: string = ' ';
     public readonly questFullyComplete: string = ' ';
     public readonly questInvFull: string = ' ';
-    public readonly noParentChannel: string = ' ';
-    public readonly notValidChannel: string = ' ';
+
+    // Report/Self-wipe strings
+
     public readonly sentReport: string = ' ';
     public readonly deletedData: string = ' ';
     public readonly cancelDelete: string = ' ';
     public readonly deleteMsgOne: string = ' ';
     public readonly deleteMsgTwo: string = ' ';
+
+    // Miscellaneous strings
+
+    public readonly noParentChannel: string = ' ';
+    public readonly notValidChannel: string = ' ';
     public readonly defaultSelectPlaceholder: string = ' ';
     public readonly emptySelect: string = ' ';
     public readonly channelOptionLabel: string = ' ';
     public readonly unavailable: string = ' ';
-    public readonly imageName: string = ' ';
+    public readonly defaultImageName: string = ' ';
     public readonly fontName: string = ' ';
     public readonly commandDebugPrefix: string = ' ';
     public readonly pullLink: string = ' ';

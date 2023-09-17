@@ -1,4 +1,4 @@
-import {RowConfig} from '../components/RowConfig';
+import {RowConfig} from './RowConfig';
 
 /**
  * {@link ModalConfig ModalConfig.ts}

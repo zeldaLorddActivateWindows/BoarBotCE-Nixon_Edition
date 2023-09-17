@@ -11,7 +11,7 @@ import {PromptStats} from './PromptStats';
 
 export class PowerupStats {
     public attempts = 0;
-    public oneAttempts = 0;
+    public oneAttempts = 0; // Number of first place attempts
     public fastestTime = 0;
-    public prompts: PromptStats = new PromptStats;
+    public prompts: PromptStats = new PromptStats; // Average placements for each prompt
 }

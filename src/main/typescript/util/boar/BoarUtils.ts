@@ -1,10 +1,10 @@
 import {RarityConfig} from '../../bot/config/items/RarityConfig';
 import {BotConfig} from '../../bot/config/BotConfig';
 import {ChatInputCommandInteraction, MessageComponentInteraction} from 'discord.js';
-import {GuildData} from '../data/global/GuildData';
 import {ItemConfigs} from '../../bot/config/items/ItemConfigs';
-import {ItemsData} from '../data/global/ItemsData';
-import {ItemData} from '../data/global/ItemData';
+import {GuildData} from '../../bot/data/global/GuildData';
+import {ItemsData} from '../../bot/data/global/ItemsData';
+import {ItemData} from '../../bot/data/global/ItemData';
 
 /**
  * {@link BoarUtils BoarUtils.ts}

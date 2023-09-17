@@ -7,7 +7,6 @@ import {
 import {BotConfig} from '../../bot/config/BotConfig';
 import {LogDebug} from '../logging/LogDebug';
 import {BoarBotApp} from '../../BoarBotApp';
-import {GuildData} from '../data/global/GuildData';
 import {CustomEmbedGenerator} from '../generators/CustomEmbedGenerator';
 
 /**
@@ -37,13 +36,11 @@ export class Replies {
     /**
      * Handles when user sends command in channel not chosen in config
      *
-     * @param config - Used to get the string to reply with
      * @param interaction - Interaction to reply to
-     * @param guildData - Used to get the channels that can be used
+     * @param config - Used to get the string to reply with
      */
     public static async wrongChannelReply(
         interaction: ChatInputCommandInteraction,
-        guildData: GuildData | undefined,
         config: BotConfig
     ): Promise<void> {
         LogDebug.log('Used in the wrong channel', config, interaction);

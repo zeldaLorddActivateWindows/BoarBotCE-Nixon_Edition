@@ -14,15 +14,10 @@ export class BoarDevCommandConfig extends CommandConfig {
     /**
      * {@link SubcommandConfig Subcommand information} for {@link GiveSubcommand}
      */
-    public readonly give: SubcommandConfig = new SubcommandConfig;
-
-    /**
-     * {@link SubcommandConfig Subcommand information} for {@link ConfigRefreshSubcommand}
-     */
-    public readonly configRefresh: SubcommandConfig = new SubcommandConfig;
+    public readonly give = new SubcommandConfig();
 
     /**
      * {@link SubcommandConfig Subcommand information} for {@link BanSubcommand}
      */
-    public readonly ban: SubcommandConfig = new SubcommandConfig;
+    public readonly ban = new SubcommandConfig();
 }

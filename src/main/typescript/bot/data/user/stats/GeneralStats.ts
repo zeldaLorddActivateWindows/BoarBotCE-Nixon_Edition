@@ -21,6 +21,6 @@ export class GeneralStats {
     public highestMulti = 0;
     public notificationsOn = false;
     public notificationChannel = '';
-    public unbanTime: number | undefined; // No longer supported
+    public unbanTime: number | undefined; // No longer used, now stored globally
     public deletionTime: number | undefined;
 }

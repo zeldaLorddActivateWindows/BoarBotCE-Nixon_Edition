@@ -9,8 +9,13 @@
 
 export class QuestStats {
     public questWeekStart = 0;
+
+    // User's progress for all seven quests
     public progress: [number, number, number, number, number, number, number] = [0, 0, 0, 0, 0, 0, 0];
+
+    // User's claim status for all seven quests (last is bonus reward claim status)
     public claimed: [number, number, number, number, number, number, number, number] = [0, 0, 0, 0, 0, 0, 0, 0];
+
     public totalCompleted = 0;
     public totalFullCompleted = 0;
 }

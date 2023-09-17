@@ -11,9 +11,9 @@ export class CollectedPowerup {
     public highestTotal = 0;
     public numClaimed = 0;
     public numUsed = 0;
-    public numActive?: number;
-    public numOpened?: number;
-    public curOut?: number;
-    public numSuccess?: number;
-    public raritiesUsed?: number[];
+    public numActive?: number; // For miracle charms
+    public numOpened?: number; // For gifts
+    public curOut?: number; // For gifts
+    public numSuccess?: number; // For clones
+    public raritiesUsed?: number[]; // For clones and transmutations
 }

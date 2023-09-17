@@ -55,6 +55,7 @@ export class BoarBotApp {
         configData.logChannel = process.env.LOG_CHANNEL as string;
         configData.reportsChannel = process.env.REPORTS_CHANNEL as string;
         configData.updatesChannel = process.env.UPDATES_CHANNEL as string;
+        configData.defaultChannel = process.env.DEFAULT_CHANNEL as string;
         configData.unlimitedBoars = false;
         configData.maintenanceMode = true;
 

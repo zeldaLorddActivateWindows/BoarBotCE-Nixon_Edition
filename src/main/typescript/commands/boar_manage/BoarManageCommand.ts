@@ -34,8 +34,8 @@ export default class BoarManageCommand implements Command {
             .get(interaction.options.getSubcommand());
 
         if (subcommand) {
-            const exports: any = require(subcommand.data.path);
-            const commandClass: any = new exports.default();
+            const exports = require(subcommand.data.path);
+            const commandClass = new exports.default();
 
             try {
                 await commandClass.execute(interaction);

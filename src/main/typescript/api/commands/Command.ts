@@ -15,5 +15,5 @@ import {
  */
 export interface Command {
     data: SlashCommandBuilder | SlashCommandSubcommandsOnlyBuilder;
-    execute(interaction: ChatInputCommandInteraction | AutocompleteInteraction): void;
+    execute(interaction: ChatInputCommandInteraction | AutocompleteInteraction): Promise<void>;
 }

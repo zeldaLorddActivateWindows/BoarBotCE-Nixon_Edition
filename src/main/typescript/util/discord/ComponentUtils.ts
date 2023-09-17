@@ -3,8 +3,8 @@ import {
     ButtonBuilder,
     ComponentType, SelectMenuComponentOptionData, StringSelectMenuBuilder
 } from 'discord.js';
-import {RowConfig} from '../../bot/config/components/RowConfig';
-import {ComponentConfig} from '../../bot/config/components/ComponentConfig';
+import {RowConfig} from '../../bot/config/commands/RowConfig';
+import {ComponentConfig} from '../../bot/config/commands/ComponentConfig';
 
 /**
  * {@link ComponentUtils ComponentUtils.ts}

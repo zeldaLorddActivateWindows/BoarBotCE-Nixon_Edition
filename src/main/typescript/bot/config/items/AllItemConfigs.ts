@@ -10,8 +10,8 @@ import {ItemConfigs} from './ItemConfigs';
  */
 
 export class AllItemConfigs {
-    [itemType: string]: ItemConfigs;
-    public boars: ItemConfigs = new ItemConfigs;
-    public badges: ItemConfigs = new ItemConfigs;
-    public powerups: ItemConfigs = new ItemConfigs;
+    readonly [itemType: string]: ItemConfigs;
+    public readonly boars: ItemConfigs = new ItemConfigs;
+    public readonly badges: ItemConfigs = new ItemConfigs;
+    public readonly powerups: ItemConfigs = new ItemConfigs;
 }

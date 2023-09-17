@@ -8,9 +8,9 @@ import {ColorConfig} from '../../bot/config/ColorConfig';
 import {PathConfig} from '../../bot/config/PathConfig';
 import {BoarUser} from '../boar/BoarUser';
 import {DataHandlers} from '../data/DataHandlers';
-import {QuestData} from '../data/global/QuestData';
 import {QuestConfigs} from '../../bot/config/quests/QuestConfigs';
 import {ItemConfigs} from '../../bot/config/items/ItemConfigs';
+import {QuestData} from '../../bot/data/global/QuestData';
 
 /**
  * {@link QuestsImageGenerator QuestsImageGenerator.ts}
@@ -186,6 +186,6 @@ export class QuestsImageGenerator {
             );
         }
 
-        return new AttachmentBuilder(canvas.toBuffer(), { name: `${strConfig.imageName}.png` });
+        return new AttachmentBuilder(canvas.toBuffer(), { name: `${strConfig.defaultImageName}.png` });
     }
 }

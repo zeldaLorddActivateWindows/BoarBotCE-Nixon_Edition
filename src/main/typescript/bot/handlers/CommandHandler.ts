@@ -25,7 +25,7 @@ export class CommandHandler {
      * Sets up all the {@link Command commands} the bot can use
      */
     public registerCommands(): void {
-        const config: BotConfig = BoarBotApp.getBot().getConfig();
+        const config = BoarBotApp.getBot().getConfig();
 
         let commandFolders: string[];
 
@@ -36,7 +36,7 @@ export class CommandHandler {
             process.exit(-1);
         }
 
-        const allFiles: string[][] = this.findCommandFiles(commandFolders, config);
+        const allFiles = this.findCommandFiles(commandFolders, config);
         this.registerCommandFiles(allFiles, config);
     }
 
@@ -48,14 +48,17 @@ export class CommandHandler {
      * @return allFiles - All command and subcommand files
      * @private
      */
-    private findCommandFiles(commandFolders: string[], config: BotConfig): string[][] {
+    private findCommandFiles(
+        commandFolders: string[],
+        config: BotConfig
+    ): string[][] {
         let allCommandFiles: string[] = [];
         let allSubcommandFiles: string[] = [];
 
         for (const commandFolder of commandFolders) {
-            const folderFiles: string[] = fs.readdirSync(config.pathConfig.commands + commandFolder);
+            const folderFiles = fs.readdirSync(config.pathConfig.commands + commandFolder);
 
-            const subcommandFiles: string[] = folderFiles.filter(fileName => {
+            const subcommandFiles = folderFiles.filter(fileName => {
                 return fileName.toLowerCase().includes('subcommand');
             });
 
@@ -65,7 +68,7 @@ export class CommandHandler {
 
             allSubcommandFiles = allSubcommandFiles.concat(subcommandFiles);
 
-            const commandFile: string | undefined = folderFiles.find(fileName => {
+            const commandFile = folderFiles.find(fileName => {
                 return !subcommandFiles.includes(fileName);
             });
 
@@ -91,19 +94,22 @@ export class CommandHandler {
      * @param allFiles - All command and subcommand files
      * @private
      */
-    private registerCommandFiles(allFiles: string[][], config: BotConfig): void {
-        const commandFiles: string[] = allFiles[0];
-        const subcommandFiles: string[] = allFiles[1];
+    private registerCommandFiles(
+        allFiles: string[][],
+        config: BotConfig
+    ): void {
+        const commandFiles = allFiles[0];
+        const subcommandFiles = allFiles[1];
 
         for (const commandFile of commandFiles) {
             try {
-                const exports: any = require('../../commands/' + commandFile);
-                const commandClass: any = new exports.default();
+                const exports = require('../../commands/' + commandFile);
+                const commandClass = new exports.default();
 
                 if (!subcommandFiles.includes(commandFile)) {
-                    this.commands.set(commandClass.data.name, commandClass);
+                    this.commands.set(commandClass.data.name, commandClass as Command);
                 } else {
-                    this.subcommands.set(commandClass.data.name, commandClass);
+                    this.subcommands.set(commandClass.data.name, commandClass as Subcommand);
                 }
 
                 LogDebug.log('Successfully found and set command: ' + commandClass.data.name, config);
@@ -117,18 +123,22 @@ export class CommandHandler {
     /**
      * Grabs the {@link Map} storing {@link Command} data
      */
-    public getCommands(): Map<string, Command> { return this.commands; }
+    public getCommands(): Map<string, Command> {
+        return this.commands;
+    }
 
     /**
      * Grabs the {@link Map} storing {@link Subcommand} data
      */
-    public getSubcommands(): Map<string, Subcommand> { return this.subcommands; }
+    public getSubcommands(): Map<string, Subcommand> {
+        return this.subcommands;
+    }
 
     /**
      * Deploys application commands to Discord's API
      */
     public async deployCommands(): Promise<void> {
-        const config: BotConfig = BoarBotApp.getBot().getConfig();
+        const config = BoarBotApp.getBot().getConfig();
         const applicationCommandData: (SlashCommandBuilder | SlashCommandSubcommandsOnlyBuilder)[] = [];
         const guildCommandData: (SlashCommandBuilder | SlashCommandSubcommandsOnlyBuilder)[]  = [];
 
@@ -141,7 +151,7 @@ export class CommandHandler {
             applicationCommandData.push(command.data);
         }
 
-        const rest: REST = new REST({ version: '10' }).setToken(process.env.TOKEN as string);
+        const rest = new REST({ version: '10' }).setToken(process.env.TOKEN as string);
         await this.deployApplicationCommands(rest, applicationCommandData, config);
         await this.deployGuildCommands(rest, guildCommandData, config);
     }

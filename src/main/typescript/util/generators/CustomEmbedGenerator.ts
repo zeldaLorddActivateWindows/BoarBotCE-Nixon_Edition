@@ -77,6 +77,6 @@ export class CustomEmbedGenerator {
             true, coloredContents, secondaryColors
         );
 
-        return new AttachmentBuilder(canvas.toBuffer(), { name: `${strConfig.imageName}.png` });
+        return new AttachmentBuilder(canvas.toBuffer(), { name: `${strConfig.defaultImageName}.png` });
     }
 }

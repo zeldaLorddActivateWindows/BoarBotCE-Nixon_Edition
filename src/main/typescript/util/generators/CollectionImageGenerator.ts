@@ -14,8 +14,8 @@ import {PathConfig} from '../../bot/config/PathConfig';
 import {ItemConfig} from '../../bot/config/items/ItemConfig';
 import {PromptConfigs} from '../../bot/config/prompts/PromptConfigs';
 import {ItemConfigs} from '../../bot/config/items/ItemConfigs';
-import {PowerupStats} from '../data/userdata/stats/PowerupStats';
-import {CollectedPowerup} from '../data/userdata/collectibles/CollectedPowerup';
+import {PowerupStats} from '../../bot/data/user/stats/PowerupStats';
+import {CollectedPowerup} from '../../bot/data/user/collectibles/CollectedPowerup';
 
 /**
  * {@link CollectionImageGenerator CollectionImageGenerator.ts}
@@ -246,7 +246,7 @@ export class CollectionImageGenerator {
             'center', lastBoarRarity[0] === 0 ? colorConfig.font : colorConfig['rarity' + lastBoarRarity[0]]
         );
 
-        return new AttachmentBuilder(canvas.toBuffer(), { name:`${strConfig.imageName}.png` });
+        return new AttachmentBuilder(canvas.toBuffer(), { name:`${strConfig.defaultImageName}.png` });
     }
 
     /**
@@ -386,7 +386,7 @@ export class CollectionImageGenerator {
 
         ctx.drawImage(await Canvas.loadImage(collectionOverlay), ...nums.originPos, ...nums.collImageSize);
 
-        return new AttachmentBuilder(canvas.toBuffer(), { name:`${strConfig.imageName}.png` });
+        return new AttachmentBuilder(canvas.toBuffer(), { name:`${strConfig.defaultImageName}.png` });
     }
 
     /**
@@ -765,7 +765,7 @@ export class CollectionImageGenerator {
 
         ctx.drawImage(await Canvas.loadImage(collectionOverlay), ...nums.originPos, ...nums.collImageSize);
 
-        return new AttachmentBuilder(canvas.toBuffer(), { name:`${this.config.stringConfig.imageName}.png` });
+        return new AttachmentBuilder(canvas.toBuffer(), { name:`${this.config.stringConfig.defaultImageName}.png` });
     }
 
     /**
@@ -881,7 +881,7 @@ export class CollectionImageGenerator {
             [this.allBoars[page].color, nextRarityColor, colorConfig.bucks, colorConfig.powerup]
         );
 
-        return new AttachmentBuilder(canvas.toBuffer(), { name:`${this.config.stringConfig.imageName}.png` });
+        return new AttachmentBuilder(canvas.toBuffer(), { name:`${this.config.stringConfig.defaultImageName}.png` });
     }
 
     /**
@@ -907,6 +907,6 @@ export class CollectionImageGenerator {
             nums.giftFromPos, fontBig, 'center', this.config.colorConfig.silver, nums.giftFromWidth
         );
 
-        return new AttachmentBuilder(canvas.toBuffer(), { name:`${this.config.stringConfig.imageName}.png` });
+        return new AttachmentBuilder(canvas.toBuffer(), { name:`${this.config.stringConfig.defaultImageName}.png` });
     }
 }

@@ -57,7 +57,7 @@ export class PowerupImageGenerator {
             colorConfig.font, nums.powSpawnDescriptionWidth, true, coloredContent, [config.colorConfig.silver]
         );
 
-        return new AttachmentBuilder(canvas.toBuffer(), { name: `${config.stringConfig.imageName}.png` });
+        return new AttachmentBuilder(canvas.toBuffer(), { name: `${config.stringConfig.defaultImageName}.png` });
     }
 
     /**
@@ -134,7 +134,7 @@ export class PowerupImageGenerator {
             );
         }
 
-        return new AttachmentBuilder(canvas.toBuffer(), { name: `${config.stringConfig.imageName}.png` });
+        return new AttachmentBuilder(canvas.toBuffer(), { name: `${config.stringConfig.defaultImageName}.png` });
     }
 
     private static async makeBaseHeaderFooter(

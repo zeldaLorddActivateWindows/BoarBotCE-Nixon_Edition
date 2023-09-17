@@ -14,45 +14,45 @@ export class BoarCommandConfig extends CommandConfig {
     /**
      * {@link SubcommandConfig Subcommand information} for {@link HelpSubcommand}
      */
-    public readonly help: SubcommandConfig = new SubcommandConfig;
+    public readonly help = new SubcommandConfig();
 
     /**
      * {@link SubcommandConfig Subcommand information} for {@link DailySubcommand}
      */
-    public readonly daily: SubcommandConfig = new SubcommandConfig;
+    public readonly daily = new SubcommandConfig();
 
     /**
      * {@link SubcommandConfig Subcommand information} for {@link CollectionSubcommand}
      */
-    public readonly collection: SubcommandConfig = new SubcommandConfig;
+    public readonly collection = new SubcommandConfig();
 
     /**
      * {@link SubcommandConfig Subcommand information} for {@link TopSubcommand}
      */
-    public readonly top: SubcommandConfig = new SubcommandConfig;
+    public readonly top = new SubcommandConfig();
 
     /**
      * {@link SubcommandConfig Subcommand information} for {@link MarketSubcommand}
      */
-    public readonly market: SubcommandConfig = new SubcommandConfig;
+    public readonly market = new SubcommandConfig();
 
     /**
      * {@link SubcommandConfig Subcommand information} for {@link ReportSubcommand}
      */
-    public readonly report: SubcommandConfig = new SubcommandConfig;
+    public readonly report = new SubcommandConfig();
 
     /**
      * {@link SubcommandConfig Subcommand information} for {@link SelfWipeSubcommand}
      */
-    public readonly selfWipe: SubcommandConfig = new SubcommandConfig;
+    public readonly selfWipe = new SubcommandConfig();
 
     /**
      * {@link SubcommandConfig Subcommand information} for {@link GiftSubcommand}
      */
-    public readonly gift: SubcommandConfig = new SubcommandConfig;
+    public readonly gift = new SubcommandConfig();
 
     /**
      * {@link SubcommandConfig Subcommand information} for {@link QuestsSubcommand}
      */
-    public readonly quests: SubcommandConfig = new SubcommandConfig;
+    public readonly quests = new SubcommandConfig();
 }

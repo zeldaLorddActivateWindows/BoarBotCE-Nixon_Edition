@@ -8,6 +8,8 @@
  */
 
 export class TopUserData {
-    // User ID as key, username and data value as value
-    [userID: string]: [string, number] | undefined;
+    [userID: string]: [
+        username: string,
+        value: number
+    ] | undefined;
 }
