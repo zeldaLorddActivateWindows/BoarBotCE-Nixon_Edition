@@ -43,7 +43,7 @@ export class ConfigHandler {
                 }, 10000);
             }
         } catch {
-            await LogDebug.handleError('Unable to parse config file. Is \'config.json\' in the project root?');
+            await LogDebug.handleError('Unable to parse config file. Is \'config.json\' in the project root? Try renaming example_config.json to config.json');
             process.exit(-1);
         }
 

@@ -204,12 +204,6 @@ export class BoarBot implements Bot {
 				const config = this.getConfig();
 				LogDebug.log('Interaction Listeners: ' + this.client.listenerCount(Events.InteractionCreate), config);
 				await this.sendUpdateInfo(DataHandlers.getGithubData());
-
-				const questData = DataHandlers.getGlobalData(DataHandlers.GlobalFile.Quest) as QuestData;
-
-				if (questData.questsStartTimestamp + config.numberConfig.oneDay * 7 < Date.now()) {
-					DataHandlers.updateQuestData(config);
-				}
 			}, 120000);
 
 			// Powerup spawning
@@ -263,6 +257,15 @@ export class BoarBot implements Bot {
 	 * @private
 	 */
 	private startNotificationCron(): void {
+		// Refreshes quests on Saturdays, 23:59 UTC
+		new CronJob('59 23 * * 6', async () => {
+			const questData = DataHandlers.getGlobalData(DataHandlers.GlobalFile.Quest) as QuestData;
+			if (questData.questsStartTimestamp + this.getConfig().numberConfig.oneDay * 7 < Date.now()) {
+				DataHandlers.updateQuestData(this.getConfig());
+			}
+		});
+
+		// Notifies players with notifications enabled at 0:00 UTC
 		new CronJob('0 0 * * *', async () => {
 			fs.readdirSync(this.getConfig().pathConfig.userDataFolder).forEach(async userFile => {
 				const user: User | undefined = this.getClient().users.cache.get(userFile.split('.')[0]);

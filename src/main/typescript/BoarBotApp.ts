@@ -5,6 +5,7 @@ import fs from 'fs';
 import * as ftp from 'basic-ftp';
 import dotenv from 'dotenv';
 import {exec} from 'child_process'
+import {BotConfig} from './bot/config/BotConfig';
 
 dotenv.config();
 
@@ -49,8 +50,8 @@ export class BoarBotApp {
     private static async deployProd(): Promise<void> {
         this.bot.loadConfig(true);
 
-        const configData = JSON.parse(fs.readFileSync('config.json', 'utf-8'));
-        const origConfig = JSON.parse(JSON.stringify(configData));
+        const configData = JSON.parse(fs.readFileSync('config.json', 'utf-8')) as BotConfig;
+        const origConfig = JSON.parse(JSON.stringify(configData)) as BotConfig;
 
         configData.logChannel = process.env.LOG_CHANNEL as string;
         configData.reportsChannel = process.env.REPORTS_CHANNEL as string;
@@ -61,25 +62,18 @@ export class BoarBotApp {
 
         fs.writeFileSync('config.json', JSON.stringify(configData));
 
-        const client = new ftp.Client();
+        const client = await this.startFTPClient();
 
-        await client.access({
-            host: process.env.FTP_HOST,
-            user: process.env.FTP_USER,
-            password: process.env.FTP_PASS
-        });
-
-        await client.cd(this.bot.getConfig().pathConfig.prodRemotePath);
         await client.uploadFrom('config.json', 'config.json');
 
         client.close();
 
         fs.writeFileSync('config.json', JSON.stringify(origConfig));
 
-        await this.doFilePush();
+        await this.doFilePush(configData, origConfig);
     }
 
-    private static async doFilePush() {
+    private static async doFilePush(configData: BotConfig, origConfig: BotConfig): Promise<void> {
         const config = this.bot.getConfig();
         const pathConfig = config.pathConfig;
 
@@ -94,15 +88,15 @@ export class BoarBotApp {
             process.stdout.cursorTo(0);
             process.stdout.write(`${LogDebug.Colors.Yellow}Pushing...${LogDebug.Colors.White}`);
 
-            const client = new ftp.Client();
+            configData.maintenanceMode = origConfig.maintenanceMode;
 
-            await client.access({
-                host: process.env.FTP_HOST,
-                user: process.env.FTP_USER,
-                password: process.env.FTP_PASS
-            });
+            fs.writeFileSync('config.json', JSON.stringify(configData));
 
-            await client.cd(this.bot.getConfig().pathConfig.prodRemotePath);
+            const client = await this.startFTPClient();
+
+            await client.uploadFrom('config.json', 'config.json');
+
+            fs.writeFileSync('config.json', JSON.stringify(origConfig));
 
             await this.pushToDir(client, 'src/main/typescript');
             await this.pushToDir(client, 'src/main/python');
@@ -149,6 +143,20 @@ export class BoarBotApp {
         await client.clearWorkingDir();
         await client.uploadFromDir(from);
         await client.cd(this.bot.getConfig().pathConfig.prodRemotePath);
+    }
+
+    private static async startFTPClient(): Promise<ftp.Client> {
+        const client = new ftp.Client();
+
+        await client.access({
+            host: process.env.FTP_HOST,
+            user: process.env.FTP_USER,
+            password: process.env.FTP_PASS
+        });
+
+        await client.cd(this.bot.getConfig().pathConfig.prodRemotePath);
+
+        return client;
     }
 }
 

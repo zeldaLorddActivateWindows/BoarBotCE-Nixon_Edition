@@ -146,28 +146,25 @@ export class ItemImageGenerator {
         const tempAnimBasePath = this.config.pathConfig.tempItemAssets + this.id + this.colorKey + 'animbase.png';
         fs.writeFileSync(tempAnimBasePath, this.buffer);
 
-        // Waits for python code to execute before continuing
-        await new Promise((resolve) => {
-            const scriptOptions: Options = {
-                args: [
-                    JSON.stringify(this.config.pathConfig),
-                    JSON.stringify(this.config.numberConfig),
-                    this.imageFilePath,
-                    tempAnimBasePath
-                ]
-            };
+        const scriptOptions: Options = {
+            args: [
+                JSON.stringify(this.config.pathConfig),
+                JSON.stringify(this.config.numberConfig),
+                this.imageFilePath,
+                tempAnimBasePath
+            ]
+        };
 
-            // Sends python all dynamic image data and receives final animated image
-            PythonShell.run(script, scriptOptions, (err, data) => {
-                if (!data) {
-                    LogDebug.handleError(err);
-                    return;
-                }
+        // Sends python all dynamic image data and receives final animated image
+        let data: string[];
+        try {
+            data = await PythonShell.run(script, scriptOptions);
+        } catch (err: unknown) {
+            LogDebug.handleError(err);
+            return;
+        }
 
-                this.buffer = Buffer.from(data[0], 'base64');
-                resolve('Success');
-            });
-        });
+        this.buffer = Buffer.from(data[0], 'base64');
 
         fs.rmSync(tempAnimBasePath);
     }
@@ -239,33 +236,30 @@ export class ItemImageGenerator {
     private async addAnimatedProfile(score?: number): Promise<void> {
         const script: string = this.config.pathConfig.userOverlayScript;
 
-        // Waits for python code to execute before continuing
-        await new Promise((resolve, reject) => {
-            const scriptOptions: Options = {
-                args: [
-                    JSON.stringify(this.config.pathConfig),
-                    JSON.stringify(this.config.colorConfig),
-                    JSON.stringify(this.config.numberConfig),
-                    this.tempPath,
-                    this.userAvatar,
-                    this.userTag,
-                    score === undefined ? '' : score.toLocaleString(),
-                    this.giftingUserAvatar === undefined ? '' : this.giftingUserAvatar,
-                    this.giftingUserTag === undefined ? '' : this.giftingUserTag
-                ]
-            };
+        const scriptOptions: Options = {
+            args: [
+                JSON.stringify(this.config.pathConfig),
+                JSON.stringify(this.config.colorConfig),
+                JSON.stringify(this.config.numberConfig),
+                this.tempPath,
+                this.userAvatar,
+                this.userTag,
+                score === undefined ? '' : score.toLocaleString(),
+                this.giftingUserAvatar === undefined ? '' : this.giftingUserAvatar,
+                this.giftingUserTag === undefined ? '' : this.giftingUserTag
+            ]
+        };
 
-            // Sends python all dynamic image data and receives final animated image
-            PythonShell.run(script, scriptOptions, (err, data) => {
-                if (!data) {
-                    reject(err);
-                    return;
-                }
+        // Sends python all dynamic image data and receives final animated image
+        let data: string[];
+        try {
+            data = await PythonShell.run(script, scriptOptions);
+        } catch (err: unknown) {
+            LogDebug.handleError(err);
+            return;
+        }
 
-                this.buffer = Buffer.from(data[0], 'base64');
-                resolve('Script ran successfully!');
-            });
-        }).catch((err) => { LogDebug.handleError(err); });
+        this.buffer = Buffer.from(data[0], 'base64');
     }
 
     /**

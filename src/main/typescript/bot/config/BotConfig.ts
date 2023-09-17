@@ -26,72 +26,72 @@ export class BotConfig {
     /**
      * The {@link TextChannel} ID the bot sends certain logs to
      */
-    public readonly logChannel: string = '';
+    public logChannel = '';
 
     /**
      * The {@link ForumChannel} ID the bot sends reports to
      */
-    public readonly reportsChannel: string = '';
+    public reportsChannel = '';
 
     /**
      * The {@link TextChannel} ID the bot sends update messages to
      */
-    public readonly updatesChannel: string = '';
+    public updatesChannel = '';
 
     /**
      * The {@link TextChannel} ID the bot defaults to for notifications
      */
-    public readonly defaultChannel: string = '';
+    public defaultChannel = '';
 
     /**
      * The {@link PathConfig paths} of all files/folders the bot accesses
      */
-    public readonly pathConfig: PathConfig = new PathConfig;
+    public readonly pathConfig = new PathConfig();
 
     /**
      * {@link StringConfig String constants} the bot uses for responses and more
      */
-    public readonly stringConfig: StringConfig = new StringConfig;
+    public readonly stringConfig = new StringConfig();
 
     /**
      * Non-intuitive number constants the bot uses
      */
-    public readonly numberConfig: NumberConfig = new NumberConfig;
+    public readonly numberConfig = new NumberConfig();
 
     /**
      * Collection of information about powerups
      */
-    public readonly promptConfigs: PromptConfigs = new PromptConfigs;
+    public readonly promptConfigs = new PromptConfigs();
 
     /**
      * Collection of information about quests
      */
-    public readonly questConfigs: QuestConfigs = new QuestConfigs;
+    public readonly questConfigs = new QuestConfigs();
 
     /**
      * Collection of {@link CommandConfig command configurations} the bot uses
      */
-    public readonly commandConfigs: CommandConfigs = new CommandConfigs;
+    public readonly commandConfigs = new CommandConfigs();
 
     /**
      * Collection of {@link ItemConfigs sets of item configurations}
      */
-    public readonly itemConfigs: AllItemConfigs = new AllItemConfigs;
+    public readonly itemConfigs = new AllItemConfigs();
 
     /**
      * Array of {@link RarityConfig rarity configurations}
      */
-    public readonly rarityConfigs: RarityConfig[] = [];
+    public readonly rarityConfigs = [] as RarityConfig[];
 
     /**
      * {@link ColorConfig Color configurations} used by the bot
      */
-    public readonly colorConfig: ColorConfig = new ColorConfig;
+    public readonly colorConfig = new ColorConfig();
 
     /**
      * If boars can be obtained without waiting for the next day
      */
-    public readonly unlimitedBoars = false;
+    public unlimitedBoars = false;
 
     /**
      * If debug messages should be sent to logs
