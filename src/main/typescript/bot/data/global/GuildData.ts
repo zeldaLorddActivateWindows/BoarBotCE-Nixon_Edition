@@ -10,5 +10,5 @@
 export class GuildData {
     public fullySetup = false;
     public isSBServer = false;
-    public channels: string[] = [];
+    public channels = [] as string[];
 }

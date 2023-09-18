@@ -11,7 +11,7 @@ import {ItemConfigs} from './ItemConfigs';
 
 export class AllItemConfigs {
     readonly [itemType: string]: ItemConfigs;
-    public readonly boars: ItemConfigs = new ItemConfigs;
-    public readonly badges: ItemConfigs = new ItemConfigs;
-    public readonly powerups: ItemConfigs = new ItemConfigs;
+    public readonly boars = new ItemConfigs();
+    public readonly badges = new ItemConfigs();
+    public readonly powerups = new ItemConfigs();
 }

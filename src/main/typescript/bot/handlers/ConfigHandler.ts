@@ -3,9 +3,6 @@ import fs from 'fs';
 import {registerFont} from 'canvas';
 import moment from 'moment/moment';
 import {LogDebug} from '../../util/logging/LogDebug';
-import {RarityConfig} from '../config/items/RarityConfig';
-import {PathConfig} from '../config/PathConfig';
-import {ItemConfigs} from '../config/items/ItemConfigs';
 
 /**
  * {@link ConfigHandler ConfigHandler.ts}
@@ -17,7 +14,7 @@ import {ItemConfigs} from '../config/items/ItemConfigs';
  * @copyright WeslayCodes 2023
  */
 export class ConfigHandler {
-    private config: BotConfig = new BotConfig;
+    private config = new BotConfig();
 
     /**
      * Loads config data from configuration file in project root
@@ -75,31 +72,31 @@ export class ConfigHandler {
             return true;
         }
 
-        const rarities: RarityConfig[] = parsedConfig.rarityConfigs;
-        const boars: ItemConfigs = parsedConfig.itemConfigs.boars;
-        const boarIDs: string[] = Object.keys(boars);
-        const badges: ItemConfigs = parsedConfig.itemConfigs.badges;
-        const badgeIDs: string[] = Object.keys(badges);
-        const powerups: ItemConfigs = parsedConfig.itemConfigs.powerups;
-        const powerupIDs: string[] = Object.keys(powerups);
-        const foundBoars: string[] = [];
+        const rarities = parsedConfig.rarityConfigs;
+        const boars = parsedConfig.itemConfigs.boars;
+        const boarIDs = Object.keys(boars);
+        const badges = parsedConfig.itemConfigs.badges;
+        const badgeIDs = Object.keys(badges);
+        const powerups = parsedConfig.itemConfigs.powerups;
+        const powerupIDs = Object.keys(powerups);
+        const foundBoars = [] as string[];
 
-        const pathConfig: PathConfig = parsedConfig.pathConfig;
-        const boarImages: string = pathConfig.boars;
-        const badgeImages: string = pathConfig.badges;
-        const powerupImages: string = pathConfig.powerups;
-        const itemAssets: string = pathConfig.itemAssets;
-        const collAssets: string = pathConfig.collAssets;
-        const otherAssets: string = pathConfig.otherAssets;
+        const pathConfig = parsedConfig.pathConfig;
+        const boarImages = pathConfig.boars;
+        const badgeImages = pathConfig.badges;
+        const powerupImages = pathConfig.powerups;
+        const itemAssets = pathConfig.itemAssets;
+        const collAssets = pathConfig.collAssets;
+        const otherAssets = pathConfig.otherAssets;
 
-        const globalFileNames: string[] | undefined[] = [
+        const globalFileNames = [
             pathConfig.itemDataFileName,
             pathConfig.leaderboardsFileName,
             pathConfig.bannedUsersFileName,
             pathConfig.powerupDataFileName
-        ];
+        ] as string[];
 
-        const allPaths: string[] = [
+        const allPaths = [
             pathConfig.listeners,
             pathConfig.commands,
             pathConfig.guildDataFolder,
@@ -139,12 +136,12 @@ export class ConfigHandler {
             otherAssets + pathConfig.circleMask,
             pathConfig.dynamicImageScript,
             pathConfig.userOverlayScript
-        ];
+        ] as string[];
 
         let passed = true;
 
         for (const rarity in rarities) {
-            const rarityInfo: RarityConfig = rarities[rarity];
+            const rarityInfo = rarities[rarity];
             for (const boar of rarityInfo.boars) {
                 if (boarIDs.includes(boar) && !foundBoars.includes(boar)) {
                     foundBoars.push(boar);
@@ -189,7 +186,7 @@ export class ConfigHandler {
         }
 
         for (const file of globalFileNames) {
-            if (file !== undefined) continue;
+            if (file) continue;
 
             LogDebug.log(`Global file name '${file}' is invalid`, this.config);
             passed = false;
@@ -204,13 +201,13 @@ export class ConfigHandler {
      * @private
      */
     private removeTempFiles(): void {
-        const tempItemFolder: string = this.config.pathConfig.tempItemAssets;
+        const tempItemFolder = this.config.pathConfig.tempItemAssets;
 
         if (!fs.existsSync(tempItemFolder)) {
             fs.mkdirSync(tempItemFolder);
         }
 
-        const tempItemFiles: string[] = fs.readdirSync(tempItemFolder);
+        const tempItemFiles = fs.readdirSync(tempItemFolder);
 
         for (const file of tempItemFiles) {
             fs.rmSync(tempItemFolder + file);
@@ -231,7 +228,7 @@ export class ConfigHandler {
      */
     public loadFonts(): void {
         try {
-            const mcFont: string = this.config.pathConfig.fontAssets + this.config.pathConfig.mainFont;
+            const mcFont = this.config.pathConfig.fontAssets + this.config.pathConfig.mainFont;
 
             registerFont(mcFont, { family: this.config.stringConfig.fontName });
         } catch {

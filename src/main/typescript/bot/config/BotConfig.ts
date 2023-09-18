@@ -21,27 +21,27 @@ export class BotConfig {
     /**
      * All {@link User} IDs associated with developers
      */
-    public readonly devs: string[] = [];
+    public readonly devs = [] as string[];
 
     /**
      * The {@link TextChannel} ID the bot sends certain logs to
      */
-    public logChannel = '';
+    public logChannel = '' as string;
 
     /**
      * The {@link ForumChannel} ID the bot sends reports to
      */
-    public reportsChannel = '';
+    public reportsChannel = '' as string;
 
     /**
      * The {@link TextChannel} ID the bot sends update messages to
      */
-    public updatesChannel = '';
+    public updatesChannel = '' as string;
 
     /**
      * The {@link TextChannel} ID the bot defaults to for notifications
      */
-    public defaultChannel = '';
+    public defaultChannel = '' as string;
 
     /**
      * The {@link PathConfig paths} of all files/folders the bot accesses
@@ -91,20 +91,20 @@ export class BotConfig {
     /**
      * If boars can be obtained without waiting for the next day
      */
-    public unlimitedBoars = false;
+    public unlimitedBoars = false as boolean;
 
     /**
      * If debug messages should be sent to logs
      */
-    public readonly debugMode = true;
+    public readonly debugMode = true as boolean;
 
     /**
      * If the bot is in maintenance mode
      */
-    public maintenanceMode = false;
+    public maintenanceMode = false as boolean;
 
     /**
      * If the market can be opened using /boar market
      */
-    public readonly marketOpen = false;
+    public readonly marketOpen = false as boolean;
 }

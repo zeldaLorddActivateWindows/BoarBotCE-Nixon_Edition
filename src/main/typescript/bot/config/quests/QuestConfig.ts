@@ -8,10 +8,10 @@
  */
 
 export class QuestConfig {
-    public readonly description: string = ' ';
-    public readonly descriptionAlt: string = ' ';
-    public readonly lowerReward: string = ' ';
-    public readonly higherReward: string = ' ';
-    public readonly valType: string = ' ';
-    public readonly questVals: [number, number][] = [];
+    public readonly description = '' as string;
+    public readonly descriptionAlt = '' as string;
+    public readonly lowerReward = '' as string;
+    public readonly higherReward = '' as string;
+    public readonly valType = '' as string;
+    public readonly questVals = [] as [number, number][];
 }

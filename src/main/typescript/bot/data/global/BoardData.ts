@@ -1,5 +1,3 @@
-import {TopUserData} from './TopUserData';
-
 /**
  * {@link BoardData BoardData.ts}
  *
@@ -10,6 +8,6 @@ import {TopUserData} from './TopUserData';
  */
 
 export class BoardData {
-    public topUser: string | undefined; // ID of top user
-    public userData: TopUserData = new TopUserData; // Leaderboard data for all users
+    public topUser?: string; // ID of top user
+    public userData = {} as Record<string, [userID: string, value: number]>; // Leaderboard data for all users
 }

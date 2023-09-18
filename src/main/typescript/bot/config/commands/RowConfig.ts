@@ -11,6 +11,6 @@ import {ComponentConfig} from './ComponentConfig';
  * @copyright WeslayCodes 2023
  */
 export class RowConfig {
-    public readonly type: ComponentType.ActionRow = ComponentType.ActionRow;
-    public readonly components: ComponentConfig[] = [];
+    public readonly type = ComponentType.ActionRow;
+    public readonly components = [] as ComponentConfig[];
 }

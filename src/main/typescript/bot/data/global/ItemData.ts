@@ -11,8 +11,16 @@ import {BuySellData} from './BuySellData';
 
 export class ItemData {
     public curEdition?: number;
-    public buyers: BuySellData[] = [];
-    public sellers: BuySellData[] = [];
-    public lastBuys: [number, number, string] = [0, 0, ''];
-    public lastSells: [number, number, string] = [0, 0, ''];
+    public buyers = [] as BuySellData[];
+    public sellers = [] as BuySellData[];
+    public lastBuys = [0, 0, ''] as [
+        curBestPrice: number,
+        lastBestPrice: number,
+        curBestUser: string
+    ];
+    public lastSells = [0, 0, ''] as [
+        curBestPrice: number,
+        lastBestPrice: number,
+        curBestUser: string
+    ];
 }

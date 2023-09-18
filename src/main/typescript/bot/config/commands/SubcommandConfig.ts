@@ -12,17 +12,16 @@ import {ModalConfig} from './ModalConfig';
  * @copyright WeslayCodes 2023
  */
 export class SubcommandConfig {
-    public readonly name: string = '';
-    public readonly description: string = '';
+    public readonly name = '' as string;
+    public readonly description = '' as string;
 
     // Arguments the command uses
-
-    public readonly args: SubcommandArgsConfig[] = [];
+    public readonly args = [] as SubcommandArgsConfig[];
 
     // Components and modals associated with a command
     // NOTE: Types should expand as more commands with Components and Modals are added
 
-    public readonly componentFields: RowConfig[][] = [];
-    public readonly modals: ModalConfig[] = [];
+    public readonly componentFields = [] as RowConfig[][];
+    public readonly modals = [] as ModalConfig[];
 
 }

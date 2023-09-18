@@ -8,7 +8,7 @@
  * @copyright WeslayCodes 2023
  */
 export class CommandConfig {
-    public readonly name: string = '';
-    public readonly description: string = '';
-    public readonly perms: bigint | undefined = undefined;
+    public readonly name= '' as string;
+    public readonly description = '' as string;
+    public readonly perms?: bigint;
 }

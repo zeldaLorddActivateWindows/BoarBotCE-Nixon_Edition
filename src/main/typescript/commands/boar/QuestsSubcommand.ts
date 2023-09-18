@@ -109,8 +109,11 @@ export default class QuestsSubcommand implements Subcommand {
 
                     const numFullClaimed =
                         this.boarUser.stats.quests.claimed[this.boarUser.stats.quests.claimed.length-1];
+
                     if (numFullClaimed < nums.questFullAmt) {
                         itemsNotFit = true;
+                    } else {
+                        this.boarUser.stats.quests.totalFullCompleted++;
                     }
 
                     this.boarUser.updateUserData();
@@ -183,6 +186,8 @@ export default class QuestsSubcommand implements Subcommand {
 
                             if (this.boarUser.stats.quests.claimed[index] < questConfig.questVals[valIndex][1]) {
                                 itemsNotFit = true;
+                            } else {
+                                this.boarUser.stats.quests.totalCompleted++;
                             }
                         }
 

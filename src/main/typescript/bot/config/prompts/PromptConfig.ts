@@ -10,12 +10,12 @@ import {RowConfig} from '../commands/RowConfig';
  */
 
 export class PromptConfig {
-    public readonly name: string = ' ';
-    public readonly description: string = ' ';
-    public readonly rows: RowConfig[] = [];
-    public readonly emoji1: string = ' ';
-    public readonly emoji2: string = ' ';
-    public readonly choices: string[] = [' ', ' ', ' ', ' '];
-    public readonly numButtons: number = 0;
-    public readonly rightClock: string = ' ';
+    public readonly name = '' as string;
+    public readonly description = '' as string;
+    public readonly rows = [] as RowConfig[];
+    public readonly emoji1 = '' as string;
+    public readonly emoji2 = '' as string;
+    public readonly choices = ['', '', '', ''];
+    public readonly numButtons = 0 as number;
+    public readonly rightClock = '' as string;
 }

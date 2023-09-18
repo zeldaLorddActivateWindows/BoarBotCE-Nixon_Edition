@@ -10,7 +10,7 @@ import {RowConfig} from './RowConfig';
  * @copyright WeslayCodes 2023
  */
 export class ModalConfig {
-    public readonly title: string = '';
-    public readonly customId: string = '';
-    public readonly components: RowConfig[] = [];
+    public readonly title = '' as string;
+    public readonly customId = '' as string;
+    public readonly components = [] as RowConfig[];
 }

@@ -12,8 +12,8 @@ import {PromptConfig} from './PromptConfig';
 export class PromptTypeConfig {
     readonly [promptKey: string]: PromptConfig | string | number;
 
-    public readonly name: string = ' ';
-    public readonly description: string = ' ';
-    public readonly rightStyle: number = 0;
-    public readonly wrongStyle: number = 0;
+    public readonly name = '' as string;
+    public readonly description = '' as string;
+    public readonly rightStyle = 0 as number;
+    public readonly wrongStyle = 0 as number;
 }

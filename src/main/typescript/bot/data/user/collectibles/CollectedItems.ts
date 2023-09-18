@@ -13,8 +13,8 @@ import {CollectedTheme} from './CollectedTheme';
  */
 
 export class CollectedItems {
-    public boars: Record<string, CollectedBoar> = {};
-    public badges: Record<string, CollectedBadge> = {};
-    public powerups: Record<string, CollectedPowerup> = {};
-    public themes: Record<string, CollectedTheme> = {};
+    public boars = {} as Record<string, CollectedBoar>;
+    public badges = {} as Record<string, CollectedBadge>;
+    public powerups = {} as Record<string, CollectedPowerup>;
+    public themes = {} as Record<string, CollectedTheme>;
 }

@@ -8,12 +8,12 @@
  * @copyright WeslayCodes 2023
  */
 export class RarityConfig {
-    public readonly name: string = '';
-    public readonly pluralName: string = '';
-    public readonly weight: number = 0;
-    public readonly baseScore: number = 0;
-    public readonly fromDaily: boolean = false;
-    public readonly enhancersNeeded: number = 0;
-    public readonly avgClones: number = 0;
-    public readonly boars: string[] = [];
+    public readonly name = '' as string;
+    public readonly pluralName = '' as string;
+    public readonly weight = 0 as number;
+    public readonly baseScore = 0 as number;
+    public readonly fromDaily = false as boolean;
+    public readonly enhancersNeeded = 0 as number;
+    public readonly avgClones = 0 as number;
+    public readonly boars = [] as string[];
 }

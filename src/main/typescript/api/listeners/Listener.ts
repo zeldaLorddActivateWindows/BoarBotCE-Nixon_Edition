@@ -1,4 +1,4 @@
-import {Events} from 'discord.js';
+import {Events, Interaction, Message} from 'discord.js';
 
 /**
  * {@link Listener Listener.ts}
@@ -10,5 +10,9 @@ import {Events} from 'discord.js';
  */
 export interface Listener {
     eventName: Events;
-    execute(...args: any[]): void;
+    execute(
+        ...args:
+            | Interaction[]
+            | Message[]
+    ): Promise<void>;
 }

@@ -11,6 +11,6 @@ import {RowConfig} from '../commands/RowConfig';
  */
 
 export class PromptConfigs {
-    public readonly types: PromptTypeConfigs = new PromptTypeConfigs;
-    public readonly rows: RowConfig[] = [];
+    public readonly types = new PromptTypeConfigs();
+    public readonly rows = [] as RowConfig[];
 }

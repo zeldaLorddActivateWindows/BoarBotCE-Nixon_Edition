@@ -10,7 +10,7 @@ import {OutcomeSubConfig} from './OutcomeSubConfig';
  */
 
 export class OutcomeConfig {
-    public readonly weight: number = 0;
-    public readonly category: string = ' ';
-    public readonly suboutcomes: OutcomeSubConfig[] = []
+    public readonly weight = 0 as number;
+    public readonly category = '' as string;
+    public readonly suboutcomes = [] as OutcomeSubConfig[];
 }

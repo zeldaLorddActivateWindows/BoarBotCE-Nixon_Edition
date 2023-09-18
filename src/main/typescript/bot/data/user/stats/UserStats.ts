@@ -12,7 +12,7 @@ import {QuestStats} from './QuestStats';
  */
 
 export class UserStats {
-    public general: GeneralStats = new GeneralStats;
-    public powerups: PowerupStats = new PowerupStats;
-    public quests: QuestStats = new QuestStats;
+    public general = new GeneralStats();
+    public powerups = new PowerupStats();
+    public quests = new QuestStats();
 }

@@ -3,8 +3,7 @@ import {
 	Client, ClientUser, ColorResolvable, EmbedBuilder,
 	Events,
 	GatewayIntentBits,
-	Partials, TextChannel,
-	User
+	Partials, TextChannel
 } from 'discord.js';
 import {Bot} from '../api/bot/Bot';
 import {FormatStrings} from '../util/discord/FormatStrings';
@@ -272,7 +271,7 @@ export class BoarBot implements Bot {
 				this.getConfig().pathConfig.userDataFolder;
 
 			fs.readdirSync(userDataFolder).forEach(async userFile => {
-				const user: User | undefined = this.getClient().users.cache.get(userFile.split('.')[0]);
+				const user = this.getClient().users.cache.get(userFile.split('.')[0]);
 
 				if (!user) return;
 
@@ -347,14 +346,12 @@ export class BoarBot implements Bot {
 	 * @private
 	 */
 	private async sendUpdateInfo(
-		githubData: GitHubData | undefined
+		githubData?: GitHubData
 	): Promise<void> {
 		const config = this.getConfig();
 
 		try {
-			if (!githubData) {
-				return;
-			}
+			if (!githubData) return;
 
 			const pullReq = await axios.get(config.stringConfig.pullLink, {
 				headers: { Authorization: 'Token ' + process.env.GITHUB_TOKEN as string }
@@ -431,7 +428,7 @@ export class BoarBot implements Bot {
 		}
 
 		for (const guildFile of guildDataFiles) {
-			const guildData: GuildData = JSON.parse(fs.readFileSync(guildDataFolder + guildFile, 'utf-8')) as GuildData;
+			const guildData = JSON.parse(fs.readFileSync(guildDataFolder + guildFile, 'utf-8')) as GuildData;
 			if (guildData.fullySetup) continue;
 
 			fs.rmSync(guildDataFolder + guildFile);

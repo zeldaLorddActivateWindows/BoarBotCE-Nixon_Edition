@@ -8,6 +8,6 @@
  */
 
 export class OutcomeSubConfig {
-    public readonly weight: number = 0;
-    public readonly name: string = ' ';
+    public readonly weight = 0 as number;
+    public readonly name = '' as string;
 }

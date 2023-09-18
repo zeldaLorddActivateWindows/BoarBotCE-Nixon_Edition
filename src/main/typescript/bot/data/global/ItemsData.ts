@@ -11,6 +11,6 @@ import {ItemData} from './ItemData';
 
 export class ItemsData {
     [itemType: string]: Record<string, ItemData>
-    public powerups: Record<string, ItemData> = {};
-    public boars: Record<string, ItemData> = {};
+    public powerups = {} as Record<string, ItemData>;
+    public boars = {} as Record<string, ItemData>;
 }

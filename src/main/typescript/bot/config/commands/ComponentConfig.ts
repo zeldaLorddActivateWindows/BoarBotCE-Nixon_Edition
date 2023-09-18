@@ -8,12 +8,12 @@
  * @copyright WeslayCodes 2023
  */
 export class ComponentConfig {
-    public readonly type: number = 2;
-    public readonly customId: string = '';
-    public readonly label: string = '';
+    public readonly type = 2 as number;
+    public readonly customId = '' as string;
+    public readonly label = '' as string;
     public readonly emoji?: string;
     public readonly placeholder?: string;
-    public readonly style: number = 2;
-    public readonly required: boolean = false;
-    public readonly disabled: boolean = false;
+    public readonly style = 2 as number;
+    public readonly required = false as boolean;
+    public readonly disabled = false as boolean;
 }

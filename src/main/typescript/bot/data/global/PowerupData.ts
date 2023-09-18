@@ -9,5 +9,5 @@
 
 export class PowerupData {
     nextPowerup = 0;
-    messagesInfo: Record<string, string[]> = {};
+    messagesInfo = {} as Record<string, string[]>;
 }

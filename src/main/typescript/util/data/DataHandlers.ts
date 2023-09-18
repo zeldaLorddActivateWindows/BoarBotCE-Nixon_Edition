@@ -211,12 +211,17 @@ export class DataHandlers {
             const userID = boarUser.user.id;
             const username = boarUser.user.username;
 
-            boardsData.bucks.userData[userID] = boarUser.stats.general.boarScore > 0
-                ? [username, boarUser.stats.general.boarScore]
-                : undefined;
-            boardsData.total.userData[userID] = boarUser.stats.general.totalBoars > 0
-                ? [username, boarUser.stats.general.totalBoars]
-                : undefined;
+            if (boarUser.stats.general.boarScore > 0) {
+                boardsData.bucks.userData[userID] = [username, boarUser.stats.general.boarScore];
+            } else {
+                delete boardsData.bucks.userData[userID];
+            }
+
+            if (boarUser.stats.general.totalBoars > 0) {
+                boardsData.total.userData[userID] = [username, boarUser.stats.general.totalBoars];
+            } else {
+                delete boardsData.total.userData[userID];
+            }
 
             let uniques = 0;
             let sbUniques = 0;
@@ -231,36 +236,58 @@ export class DataHandlers {
                 }
             }
 
-            boardsData.uniques.userData[userID] = uniques > 0
-                ? [username, uniques]
-                : undefined;
-            boardsData.uniquesSB.userData[userID] = Object.keys(boarUser.itemCollection.boars).length > 0
-                ? [username, sbUniques]
-                : undefined;
-            boardsData.streak.userData[userID] = boarUser.stats.general.boarStreak > 0
-                ? [username, boarUser.stats.general.boarStreak]
-                : undefined;
-            boardsData.attempts.userData[userID] = boarUser.stats.powerups.attempts > 0
-                ? [username, boarUser.stats.powerups.attempts]
-                : undefined;
-            boardsData.topAttempts.userData[userID] = boarUser.stats.powerups.oneAttempts > 0
-                ? [username, boarUser.stats.powerups.oneAttempts]
-                : undefined;
-            boardsData.giftsUsed.userData[userID] = boarUser.itemCollection.powerups.gift.numUsed > 0
-                ? [username, boarUser.itemCollection.powerups.gift.numUsed]
-                : undefined;
+            if (uniques > 0) {
+                boardsData.uniques.userData[userID] = [username, uniques];
+            } else {
+                delete boardsData.uniques.userData[userID];
+            }
+
+            if (sbUniques > 0) {
+                boardsData.uniquesSB.userData[userID] = [username, sbUniques];
+            } else {
+                delete boardsData.uniquesSB.userData[userID];
+            }
+
+            if (boarUser.stats.general.boarStreak > 0) {
+                boardsData.streak.userData[userID] = [username, boarUser.stats.general.boarStreak];
+            } else {
+                delete boardsData.streak.userData[userID];
+            }
+
+            if (boarUser.stats.powerups.attempts > 0) {
+                boardsData.attempts.userData[userID] = [username, boarUser.stats.powerups.attempts];
+            } else {
+                delete boardsData.attempts.userData[userID];
+            }
+
+            if (boarUser.stats.powerups.oneAttempts > 0) {
+                boardsData.topAttempts.userData[userID] = [username, boarUser.stats.powerups.oneAttempts];
+            } else {
+                delete boardsData.topAttempts.userData[userID];
+            }
+
+            if (boarUser.itemCollection.powerups.gift.numUsed > 0) {
+                boardsData.giftsUsed.userData[userID] = [username, boarUser.itemCollection.powerups.gift.numUsed];
+            } else {
+                delete boardsData.giftsUsed.userData[userID];
+            }
 
             let multiplier = boarUser.stats.general.multiplier;
             for (let i=0; i<(boarUser.itemCollection.powerups.miracle.numActive as number); i++) {
                 multiplier += Math.min(Math.ceil(multiplier * 0.05), config.numberConfig.miracleIncreaseMax);
             }
 
-            boardsData.multiplier.userData[userID] = multiplier > 0
-                ? [username, multiplier]
-                : undefined;
-            boardsData.fastest.userData[userID] = boarUser.stats.powerups.fastestTime > 0
-                ? [username, boarUser.stats.powerups.fastestTime]
-                : undefined;
+            if (multiplier > 0) {
+                boardsData.multiplier.userData[userID] = [username, multiplier];
+            } else {
+                delete boardsData.multiplier.userData[userID];
+            }
+
+            if (boarUser.stats.powerups.fastestTime > 0) {
+                boardsData.fastest.userData[userID] = [username, boarUser.stats.powerups.fastestTime];
+            } else {
+                delete boardsData.fastest.userData[userID];
+            }
 
             this.saveGlobalData(boardsData, GlobalFile.Leaderboards);
         } catch (err: unknown) {

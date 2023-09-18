@@ -9,13 +9,13 @@ import {OutcomeConfig} from './OutcomeConfig';
  * @copyright WeslayCodes 2023
  */
 export class ItemConfig {
-    public readonly name: string = '';
-    public readonly pluralName: string = '';
-    public readonly description: string = '';
-    public readonly file: string = '';
+    public readonly name = '' as string;
+    public readonly pluralName = '' as string;
+    public readonly description = '' as string;
+    public readonly file = '' as string;
     public readonly staticFile?: string;
-    public readonly isSB: boolean = false;
-    public readonly blacklisted: boolean = false;
+    public readonly isSB = false as boolean;
+    public readonly blacklisted = false as boolean;
     public readonly rewardAmt?: number;
     public readonly outcomes?: OutcomeConfig[];
 }

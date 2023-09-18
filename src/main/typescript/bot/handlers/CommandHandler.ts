@@ -18,8 +18,8 @@ import {LogDebug} from '../../util/logging/LogDebug';
  * @copyright WeslayCodes 2023
  */
 export class CommandHandler {
-    private commands: Map<string, Command> = new Map();
-    private subcommands: Map<string, Subcommand> = new Map();
+    private commands = new Map<string, Command>();
+    private subcommands = new Map<string, Subcommand>();
 
     /**
      * Sets up all the {@link Command commands} the bot can use
@@ -139,8 +139,14 @@ export class CommandHandler {
      */
     public async deployCommands(): Promise<void> {
         const config = BoarBotApp.getBot().getConfig();
-        const applicationCommandData: (SlashCommandBuilder | SlashCommandSubcommandsOnlyBuilder)[] = [];
-        const guildCommandData: (SlashCommandBuilder | SlashCommandSubcommandsOnlyBuilder)[]  = [];
+        const applicationCommandData = [] as (
+            | SlashCommandBuilder
+            | SlashCommandSubcommandsOnlyBuilder
+        )[];
+        const guildCommandData  = [] as (
+            | SlashCommandBuilder
+            | SlashCommandSubcommandsOnlyBuilder
+        )[];
 
         for (const command of [...this.commands.values()]) {
             if (command.data.toJSON().default_member_permissions?.includes('0')) {
@@ -166,7 +172,9 @@ export class CommandHandler {
      */
     private async deployApplicationCommands(
         rest: REST,
-        commandData: SlashCommandBuilder | SlashCommandSubcommandsOnlyBuilder[],
+        commandData:
+            | SlashCommandBuilder
+            | SlashCommandSubcommandsOnlyBuilder[],
         config: BotConfig
     ): Promise<void> {
         try {
@@ -187,7 +195,9 @@ export class CommandHandler {
      */
     private async deployGuildCommands(
         rest: REST,
-        commandData: SlashCommandBuilder | SlashCommandSubcommandsOnlyBuilder[],
+        commandData:
+            | SlashCommandBuilder
+            | SlashCommandSubcommandsOnlyBuilder[],
         config: BotConfig
     ): Promise<void> {
         try {

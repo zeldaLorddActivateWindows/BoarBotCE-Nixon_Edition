@@ -11,36 +11,36 @@ export class ColorConfig {
 
     // Colors used in custom images
 
-    public readonly dark: string = '#000000';
-    public readonly mid: string = '#000000';
-    public readonly light: string = '#000000';
-    public readonly font: string = '#000000';
+    public readonly dark = '#000000' as string;
+    public readonly mid = '#000000' as string;
+    public readonly light = '#000000' as string;
+    public readonly font = '#000000' as string;
 
     // Colors for different item types
 
-    public readonly badge: string = '#000000';
-    public readonly powerup: string = '#000000';
-    public readonly bucks: string = '#000000';
+    public readonly badge = '#000000' as string;
+    public readonly powerup = '#000000' as string;
+    public readonly bucks = '#000000' as string;
 
     // Leaderboard colors
 
-    public readonly gold: string = '#000000';
-    public readonly silver: string = '#000000'; // Used for slight emphasis too
-    public readonly bronze: string = '#000000';
+    public readonly gold = '#000000' as string;
+    public readonly silver = '#000000' as string; // Used for slight emphasis too
+    public readonly bronze = '#000000' as string;
 
     // General purpose colors
 
-    public readonly green: string = '#000000';
-    public readonly maintenance: string = '#000000';
-    public readonly error: string = '#000000';
+    public readonly green = '#000000' as string;
+    public readonly maintenance = '#000000' as string;
+    public readonly error = '#000000' as string;
 
     // Boar rarity colors
 
-    public readonly rarity1: string = '#000000';
-    public readonly rarity2: string = '#000000';
-    public readonly rarity3: string = '#000000';
-    public readonly rarity4: string = '#000000';
-    public readonly rarity5: string = '#000000';
-    public readonly rarity6: string = '#000000';
-    public readonly rarity7: string = '#000000';
+    public readonly rarity1 = '#000000' as string;
+    public readonly rarity2 = '#000000' as string;
+    public readonly rarity3 = '#000000' as string;
+    public readonly rarity4 = '#000000' as string;
+    public readonly rarity5 = '#000000' as string;
+    public readonly rarity6 = '#000000' as string;
+    public readonly rarity7 = '#000000' as string;
 }

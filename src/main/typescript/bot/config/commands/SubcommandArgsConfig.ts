@@ -10,9 +10,9 @@
 import {ChoicesConfig} from './ChoicesConfig';
 
 export class SubcommandArgsConfig {
-    public readonly name: string = '';
-    public readonly description: string = '';
-    public readonly required: boolean = false;
-    public readonly autocomplete: boolean = false;
-    public readonly choices: ChoicesConfig[] = [];
+    public readonly name = '' as string;
+    public readonly description = '' as string;
+    public readonly required = false as boolean;
+    public readonly autocomplete = false as boolean;
+    public readonly choices = [] as ChoicesConfig[];
 }
