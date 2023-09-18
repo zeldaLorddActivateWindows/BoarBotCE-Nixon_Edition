@@ -7,7 +7,7 @@
   "updatesChannel": "1234567890",
   "unlimitedBoars": false,
   "debugMode": true,
-  "maintenanceMode": true,
+  "maintenanceMode": false,
   "marketOpen": true,
   "pathConfig": {
     "listeners": "src/main/typescript/listeners/",

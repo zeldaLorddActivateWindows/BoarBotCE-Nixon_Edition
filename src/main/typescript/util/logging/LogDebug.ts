@@ -141,7 +141,7 @@ export class LogDebug {
 
             await Replies.handleReply(interaction, errResponse, config.colorConfig.error);
         } catch (err: unknown) {
-            await this.handleError(err);
+            await this.handleError(err, undefined, false);
         }
 
         return true;
@@ -185,6 +185,10 @@ export class LogDebug {
             const curFolderName = new Date(curTime).toLocaleDateString().replaceAll('/','-');
             const oldFolderName =
                 new Date(curTime - config.numberConfig.oneDay).toLocaleDateString().replaceAll('/','-');
+
+            if (!fs.existsSync(config.pathConfig.logsFolder)) {
+                fs.mkdirSync(config.pathConfig.logsFolder);
+            }
 
             if (fs.existsSync(config.pathConfig.logsFolder + oldFolderName)) {
                 const zip = new AdmZip();

@@ -67,8 +67,11 @@ export default class InteractionListener implements Listener {
                         boarUser.stats.general.deletionTime !== undefined &&
                         boarUser.stats.general.deletionTime < Date.now()
                     ) {
+                        const userDataFolder = this.config.pathConfig.databaseFolder +
+                            this.config.pathConfig.userDataFolder;
+
                         try {
-                            fs.rmSync(this.config.pathConfig.userDataFolder + interaction.user.id + '.json');
+                            fs.rmSync(userDataFolder + interaction.user.id + '.json');
                         } catch {}
 
                         await Queue.addQueue(async () => {

@@ -137,8 +137,10 @@ export class PowerupSpawner {
 
             if (config.maintenanceMode) return;
 
+            const guildDataFolder = config.pathConfig.databaseFolder + config.pathConfig.guildDataFolder;
+
             // Get all channels to send powerups in
-            for (const guildFile of fs.readdirSync(config.pathConfig.guildDataFolder)) {
+            for (const guildFile of fs.readdirSync(guildDataFolder)) {
                 const guildID = guildFile.split('.')[0];
                 const guildData: GuildData | undefined = await DataHandlers.getGuildData(guildID);
                 if (!guildData) continue;
@@ -159,7 +161,7 @@ export class PowerupSpawner {
 
                     if (this.failedServers[guildID] && this.failedServers[guildID] >= 3) {
                         try {
-                            fs.rmSync(config.pathConfig.guildDataFolder + guildFile);
+                            fs.rmSync(guildDataFolder + guildFile);
                             delete this.failedServers[guildID];
                         } catch {}
                     }

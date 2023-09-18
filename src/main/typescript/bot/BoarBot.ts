@@ -179,13 +179,14 @@ export class BoarBot implements Bot {
 
 			let lastHit = Date.now();
 			this.client.rest.on('rateLimited', () => {
+				const userDataFolder = this.getConfig().pathConfig.databaseFolder +
+					this.getConfig().pathConfig.userDataFolder;
 				const shouldSend = Date.now() > lastHit + 30000 &&
-					this.client.users.cache.size >= fs.readdirSync(this.getConfig().pathConfig.userDataFolder).length;
+					this.client.users.cache.size >= fs.readdirSync(userDataFolder).length;
 
 				LogDebug.log(
 					'Hit Limit! Cached Users: ' + this.client.users.cache.size + '/' +
-					fs.readdirSync(this.getConfig().pathConfig.userDataFolder).length,
-					this.getConfig(), undefined, shouldSend
+					fs.readdirSync(userDataFolder).length, this.getConfig(), undefined, shouldSend
 				);
 
 				lastHit = Date.now();
@@ -203,7 +204,7 @@ export class BoarBot implements Bot {
 
 				const config = this.getConfig();
 				LogDebug.log('Interaction Listeners: ' + this.client.listenerCount(Events.InteractionCreate), config);
-				await this.sendUpdateInfo(DataHandlers.getGithubData());
+				await this.sendUpdateInfo(await DataHandlers.getGithubData());
 			}, 120000);
 
 			// Powerup spawning
@@ -267,7 +268,10 @@ export class BoarBot implements Bot {
 
 		// Notifies players with notifications enabled at 0:00 UTC
 		new CronJob('0 0 * * *', async () => {
-			fs.readdirSync(this.getConfig().pathConfig.userDataFolder).forEach(async userFile => {
+			const userDataFolder = this.getConfig().pathConfig.databaseFolder +
+				this.getConfig().pathConfig.userDataFolder;
+
+			fs.readdirSync(userDataFolder).forEach(async userFile => {
 				const user: User | undefined = this.getClient().users.cache.get(userFile.split('.')[0]);
 
 				if (!user) return;
@@ -286,6 +290,11 @@ export class BoarBot implements Bot {
 						randMsgStr = '## ' + randMsgStr + '\n';
 					}
 
+					const userDataFolder = this.getConfig().pathConfig.databaseFolder +
+						this.getConfig().pathConfig.userDataFolder;
+					const guildDataFolder = this.getConfig().pathConfig.databaseFolder +
+						this.getConfig().pathConfig.guildDataFolder;
+
 					switch (randMsgIndex) {
 						case 5:
 							randMsgStr = randMsgStr.replace(
@@ -294,13 +303,12 @@ export class BoarBot implements Bot {
 							break;
 						case 7:
 							randMsgStr = randMsgStr.replace(
-								'%@', fs.readdirSync(this.getConfig().pathConfig.userDataFolder).length.toLocaleString()
+								'%@', fs.readdirSync(userDataFolder).length.toLocaleString()
 							);
 							break;
 						case 16:
 							randMsgStr = randMsgStr.replace(
-								'%@',
-								fs.readdirSync(this.getConfig().pathConfig.guildDataFolder).length.toLocaleString()
+								'%@', fs.readdirSync(guildDataFolder).length.toLocaleString()
 							);
 							break;
 						case 17:
@@ -344,7 +352,9 @@ export class BoarBot implements Bot {
 		const config = this.getConfig();
 
 		try {
-			if (!githubData) return;
+			if (!githubData) {
+				return;
+			}
 
 			const pullReq = await axios.get(config.stringConfig.pullLink, {
 				headers: { Authorization: 'Token ' + process.env.GITHUB_TOKEN as string }
@@ -355,7 +365,8 @@ export class BoarBot implements Bot {
 			if (pullReqData && pullReqData.html_url !== githubData.lastURL && pullReqData.merged_at !== null) {
 				githubData.lastURL = pullReqData.html_url;
 				fs.writeFileSync(
-					config.pathConfig.globalDataFolder + config.pathConfig.githubFileName,
+					config.pathConfig.databaseFolder + config.pathConfig.globalDataFolder +
+					config.pathConfig.githubFileName,
 					JSON.stringify(githubData)
 				);
 

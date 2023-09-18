@@ -380,10 +380,11 @@ export class DataHandlers {
         }
     }
 
-    public static getGithubData(): GitHubData | undefined {
+    public static async getGithubData(): Promise<GitHubData | undefined> {
         const config: BotConfig = BoarBotApp.getBot().getConfig();
 
-        const githubFile: string = config.pathConfig.globalDataFolder + config.pathConfig.githubFileName;
+        const githubFile: string = config.pathConfig.databaseFolder +
+            config.pathConfig.globalDataFolder + config.pathConfig.githubFileName;
         let githubData: GitHubData | undefined;
 
         try {
@@ -391,6 +392,9 @@ export class DataHandlers {
         } catch {
             if (config.pathConfig.githubFileName) {
                 try {
+                    // Prevents file creation if updates channel isn't set
+                    await BoarBotApp.getBot().getClient().channels.fetch(config.updatesChannel);
+
                     githubData = new GitHubData();
                     fs.writeFileSync(githubFile, JSON.stringify(githubData));
                 } catch {}
