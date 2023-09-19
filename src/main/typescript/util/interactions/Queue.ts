@@ -15,7 +15,8 @@ export class Queue {
     private static queueRunning = [false, false, false, false, false, false, false, false, false, false];
 
     /**
-     * Adds a function to a queue based on its ID number
+     * Adds a function to a queue based on its ID number.
+     * Used to prevent premature writing/reading
      *
      * @param func - Function to add to queue
      * @param id - ID of queue item
