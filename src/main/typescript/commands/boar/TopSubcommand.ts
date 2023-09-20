@@ -32,6 +32,7 @@ import {Queue} from '../../util/interactions/Queue';
 import {GuildData} from '../../bot/data/global/GuildData';
 import {BoardData} from '../../bot/data/global/BoardData';
 import {SubcommandConfig} from '../../bot/config/commands/SubcommandConfig';
+import {ChoicesConfig} from '../../bot/config/commands/ChoicesConfig';
 
 enum Board {
     Bucks = 'bucks',
@@ -426,7 +427,9 @@ export default class TopSubcommand implements Subcommand {
         const leaderFieldConfigs: RowConfig[][] = this.config.commandConfigs.boar.top.componentFields;
         const selectOptions: SelectMenuComponentOptionData[] = [];
 
-        for (const choice of this.config.commandConfigs.boar.top.args[0].choices) {
+        const choices = this.config.commandConfigs.boar.top.args[0].choices as ChoicesConfig[];
+
+        for (const choice of choices) {
             selectOptions.push({
                 label: choice.name,
                 value: choice.value as string

@@ -14,12 +14,10 @@ import {BoarBotApp} from '../../BoarBotApp';
 import {Subcommand} from '../../api/commands/Subcommand';
 import {InteractionUtils} from '../../util/interactions/InteractionUtils';
 import {CollectorUtils} from '../../util/discord/CollectorUtils';
-import {RowConfig} from '../../bot/config/commands/RowConfig';
 import {ComponentUtils} from '../../util/discord/ComponentUtils';
 import {LogDebug} from '../../util/logging/LogDebug';
 import {Replies} from '../../util/interactions/Replies';
-import {PathConfig} from '../../bot/config/PathConfig';
-import {GuildData} from '../../bot/data/global/GuildData';
+import {ChoicesConfig} from '../../bot/config/commands/ChoicesConfig';
 
 enum Area {
     General = 0,
@@ -39,18 +37,22 @@ enum Area {
 export default class HelpSubcommand implements Subcommand {
     private config = BoarBotApp.getBot().getConfig();
     private subcommandInfo = this.config.commandConfigs.boar.help;
-    private firstInter: ChatInputCommandInteraction = {} as ChatInputCommandInteraction;
-    private helpImages: string[][] = [];
-    private curArea: Area = Area.General;
+    private firstInter = {} as ChatInputCommandInteraction;
+    private helpImages = [] as string[][];
+    private curArea = Area.General;
     private curPage = 0;
-    private rows: ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>[] =
-        {} as ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>[];
+    private rows = [] as ActionRowBuilder<
+        | ButtonBuilder
+        | StringSelectMenuBuilder
+    >[];
     private timerVars = {
         timeUntilNextCollect: 0,
         updateTime: setTimeout(() => {})
     };
-    private collector: InteractionCollector<ButtonInteraction | StringSelectMenuInteraction> =
-        {} as InteractionCollector<ButtonInteraction | StringSelectMenuInteraction>;
+    private collector = {} as InteractionCollector<
+        | ButtonInteraction
+        | StringSelectMenuInteraction
+    >;
     private hasStopped = false;
     public readonly data = { name: this.subcommandInfo.name, path: __filename };
 
@@ -59,51 +61,66 @@ export default class HelpSubcommand implements Subcommand {
      *
      * @param interaction - The interaction that called the subcommand
      */
-    public async execute(interaction: ChatInputCommandInteraction): Promise<void> {
-        const guildData: GuildData | undefined = await InteractionUtils.handleStart(interaction, this.config);
+    public async execute(
+        interaction: ChatInputCommandInteraction
+    ): Promise<void> {
+        const guildData = await InteractionUtils.handleStart(interaction, this.config);
         if (!guildData) return;
 
         await interaction.deferReply({ ephemeral: true });
 
         this.firstInter = interaction;
 
-        const pathConfig: PathConfig = this.config.pathConfig;
-        const otherAssets: string = pathConfig.otherAssets;
+        const pathConfig = this.config.pathConfig;
+        const otherAssets = pathConfig.otherAssets;
 
         this.helpImages = [
             [otherAssets + pathConfig.helpGeneral1, otherAssets + pathConfig.helpGeneral2],
             [otherAssets + pathConfig.helpPowerup1, otherAssets + pathConfig.helpPowerup2],
             [otherAssets + pathConfig.helpMarket1, otherAssets + pathConfig.helpMarket2],
             [
-                otherAssets + pathConfig.helpBadgeBoar1, otherAssets + pathConfig.helpBadgeBoar2,
+                otherAssets + pathConfig.helpBadgeBoar1,
+                otherAssets + pathConfig.helpBadgeBoar2,
                 otherAssets + pathConfig.helpBadgeBoar3
             ]
         ];
 
         // The help area to start out in
-        this.curArea = interaction.options.getInteger(this.subcommandInfo.args[0].name)
-            ?? Area.General;
+        this.curArea = interaction.options.getInteger(this.subcommandInfo.args[0].name) ?? Area.General;
 
         // The page to start out on
-        this.curPage = interaction.options.getInteger(this.subcommandInfo.args[1].name)
-            ?? 0;
+        this.curPage = interaction.options.getInteger(this.subcommandInfo.args[1].name) ?? 0;
 
         this.curPage = Math.max(0, this.curPage);
         this.curPage = Math.min(this.helpImages[this.curArea].length-1, this.curPage);
 
         if (CollectorUtils.helpCollectors[interaction.user.id]) {
             const oldCollector = CollectorUtils.helpCollectors[interaction.user.id];
-            setTimeout(() => { oldCollector.stop(CollectorUtils.Reasons.Expired) }, 1000);
+
+            setTimeout(() => {
+                oldCollector.stop(CollectorUtils.Reasons.Expired)
+            }, 1000);
         }
 
-        this.collector = CollectorUtils.helpCollectors[interaction.user.id] = await CollectorUtils.createCollector(
+        this.collector = await CollectorUtils.createCollector(
             interaction.channel as TextChannel, interaction.id, this.config.numberConfig
         );
 
-        this.collector.on('collect', async (inter: ButtonInteraction | StringSelectMenuInteraction) =>
-            await this.handleCollect(inter)
-        );
-        this.collector.once('end', async (collected, reason) => await this.handleEndCollect(reason));
+        CollectorUtils.helpCollectors[interaction.user.id] = this.collector;
+
+        this.collector.on('collect', async (
+            inter:
+                | ButtonInteraction
+                | StringSelectMenuInteraction
+            ) => {
+                await this.handleCollect(inter);
+        });
+
+        this.collector.once('end', async (
+            reason: string
+        ) => {
+            await this.handleEndCollect(reason);
+        });
 
         await this.showHelp(true);
     }
@@ -114,9 +131,13 @@ export default class HelpSubcommand implements Subcommand {
      * @param inter - The button interaction
      * @private
      */
-    private async handleCollect(inter: ButtonInteraction | StringSelectMenuInteraction): Promise<void> {
+    private async handleCollect(
+        inter:
+            | ButtonInteraction
+            | StringSelectMenuInteraction
+    ): Promise<void> {
         try {
-            const canInteract: boolean = await CollectorUtils.canInteract(this.timerVars, inter);
+            const canInteract = await CollectorUtils.canInteract(this.timerVars, inter);
             if (!canInteract) return;
 
             if (!inter.isMessageComponent()) return;
@@ -130,7 +151,7 @@ export default class HelpSubcommand implements Subcommand {
                 this.config, this.firstInter
             );
 
-            const helpRowConfig: RowConfig[][] = this.config.commandConfigs.boar.help.componentFields;
+            const helpRowConfig = this.config.commandConfigs.boar.help.componentFields;
             const helpComponents = {
                 leftPage: helpRowConfig[0][0].components[0],
                 rightPage: helpRowConfig[0][0].components[1],
@@ -141,25 +162,31 @@ export default class HelpSubcommand implements Subcommand {
 
             switch (inter.customId.split('|')[0]) {
                 // User wants to go to previous page
-                case helpComponents.leftPage.customId:
+
+                case helpComponents.leftPage.customId: {
                     this.curPage--;
                     break;
+                }
 
                 // User wants to go to the next page
-                case helpComponents.rightPage.customId:
+
+                case helpComponents.rightPage.customId: {
                     this.curPage++;
                     break;
+                }
 
                 // User wants to change what area of help to view
-                case helpComponents.areaSelect.customId:
+
+                case helpComponents.areaSelect.customId: {
                     this.curArea = Number.parseInt((inter as StringSelectMenuInteraction).values[0]) as Area;
                     this.curPage = 0;
                     break;
+                }
             }
 
             await this.showHelp();
         } catch (err: unknown) {
-            const canStop: boolean = await LogDebug.handleError(err, this.firstInter);
+            const canStop = await LogDebug.handleError(err, this.firstInter);
             if (canStop) {
                 this.collector.stop(CollectorUtils.Reasons.Error);
             }
@@ -174,7 +201,9 @@ export default class HelpSubcommand implements Subcommand {
      * @param reason - Why the collection ended
      * @private
      */
-    private async handleEndCollect(reason: string): Promise<void> {
+    private async handleEndCollect(
+        reason: string
+    ): Promise<void> {
         try {
             this.hasStopped = true;
 
@@ -223,7 +252,7 @@ export default class HelpSubcommand implements Subcommand {
                 components: this.rows
             });
         } catch (err: unknown) {
-            const canStop: boolean = await LogDebug.handleError(err, this.firstInter);
+            const canStop = await LogDebug.handleError(err, this.firstInter);
             if (canStop) {
                 this.collector.stop(CollectorUtils.Reasons.Error);
             }
@@ -236,10 +265,12 @@ export default class HelpSubcommand implements Subcommand {
      * @private
      */
     private initButtons(): void {
-        const helpFieldConfigs: RowConfig[][] = this.config.commandConfigs.boar.help.componentFields;
-        const selectOptions: SelectMenuComponentOptionData[] = [];
+        const helpFieldConfigs = this.config.commandConfigs.boar.help.componentFields;
+        const selectOptions = [] as SelectMenuComponentOptionData[];
 
-        for (const choice of this.config.commandConfigs.boar.help.args[0].choices) {
+        const choices = this.config.commandConfigs.boar.help.args[0].choices as ChoicesConfig[];
+
+        for (const choice of choices) {
             selectOptions.push({
                 label: choice.name,
                 value: choice.value.toString()
@@ -247,12 +278,12 @@ export default class HelpSubcommand implements Subcommand {
         }
 
         for (let i=0; i<helpFieldConfigs.length; i++) {
-            const newRows: ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>[] =
-                ComponentUtils.makeRows(helpFieldConfigs[i]);
+            const newRows = ComponentUtils.makeRows(helpFieldConfigs[i]);
 
             ComponentUtils.addToIDs(
                 helpFieldConfigs[i], newRows, this.firstInter.id, this.firstInter.user.id, selectOptions
             );
+
             this.rows = newRows;
         }
     }

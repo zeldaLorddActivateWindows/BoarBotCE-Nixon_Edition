@@ -106,7 +106,8 @@ export class LogDebug {
             if (
                 errString && (errString.includes('Unknown interaction') ||
                 errString.includes('Unknown Message') ||
-                errString.includes('Missing Access'))
+                errString.includes('Missing Access') ||
+                errString.includes('ChannelNotCached'))
             ) {
                 LogDebug.log(errString, config);
                 return false;

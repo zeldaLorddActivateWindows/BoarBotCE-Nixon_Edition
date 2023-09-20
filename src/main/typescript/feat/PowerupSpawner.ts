@@ -98,10 +98,13 @@ export class PowerupSpawner {
             }
         }, 'powDelMsgs' + 'global').catch((err) => { throw err });
 
-        arrCopy.forEach(async (msg, index) => {
-            LogDebug.log('Deleting message ' + (index + 1) + '/' + arrCopy.length, BoarBotApp.getBot().getConfig());
-            await msg.delete().catch((err) => LogDebug.handleError(err));
-        });
+        for (let i=0; i<arrCopy.length; i++) {
+            LogDebug.log('Deleting message ' + (i + 1) + '/' + arrCopy.length, BoarBotApp.getBot().getConfig());
+
+            await arrCopy[i].delete().catch((err) => {
+                LogDebug.handleError(err);
+            });
+        }
     }
 
     /**

@@ -226,6 +226,10 @@ export class BoarGift {
 
         this.giftedUser = new BoarUser(inter.user, true);
 
+        if (!inter.deferred) {
+            await inter.deferUpdate().catch(() => {});
+        }
+
         await inter.editReply({
             components: [new ActionRowBuilder<ButtonBuilder>().addComponents(claimedButton)]
         }).catch(() => {});
@@ -257,7 +261,7 @@ export class BoarGift {
         const timeToOpen = (this.interTimes[0] - this.editedTime).toLocaleString() + 'ms';
 
         await Replies.handleReply(
-            this.compInters[0], strConfig.giftOpened, colorConfig.font, [strConfig.giftOpenedWow, timeToOpen],
+            inter, strConfig.giftOpened, colorConfig.font, [strConfig.giftOpenedWow, timeToOpen],
             [colorConfig.green, colorConfig.silver], true, true
         );
 

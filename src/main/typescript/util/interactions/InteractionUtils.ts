@@ -66,7 +66,7 @@ export class InteractionUtils {
     ): Promise<boolean> {
         const bannedUserData: Record<string, number> =
             DataHandlers.getGlobalData(DataHandlers.GlobalFile.BannedUsers) as Record<string, number>;
-        const unbanTime: number | undefined = bannedUserData[interaction.user.id];
+        const unbanTime = bannedUserData[interaction.user.id];
 
         if (unbanTime && unbanTime > Date.now()) {
             await Replies.handleReply(
@@ -123,5 +123,15 @@ export class InteractionUtils {
         }
 
         return channel;
+    }
+
+    public static toBoolean(
+        val:
+            | boolean
+            | undefined
+    ): boolean {
+        return val === undefined
+            ? false
+            : val;
     }
 }

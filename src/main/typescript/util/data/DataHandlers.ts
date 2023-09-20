@@ -13,6 +13,7 @@ import {PowerupData} from '../../bot/data/global/PowerupData';
 import {ItemData} from '../../bot/data/global/ItemData';
 import {GuildData} from '../../bot/data/global/GuildData';
 import {GitHubData} from '../../bot/data/global/GitHubData';
+import {ChoicesConfig} from '../../bot/config/commands/ChoicesConfig';
 
 enum GlobalFile {
     Items,
@@ -71,15 +72,18 @@ export class DataHandlers {
                     }
 
                     break;
-                case GlobalFile.Leaderboards:
+                case GlobalFile.Leaderboards: {
                     data = {};
 
-                    for (let i=0; i<config.commandConfigs.boar.top.args[0].choices.length; i++) {
-                        const boardID = config.commandConfigs.boar.top.args[0].choices[i].value;
+                    const choices = config.commandConfigs.boar.top.args[0].choices as ChoicesConfig[];
+
+                    for (let i=0; i<choices.length; i++) {
+                        const boardID = choices[i].value;
                         data[boardID] = new BoardData;
                     }
 
                     break;
+                }
                 case GlobalFile.BannedUsers:
                     data = {};
                     break;
@@ -130,10 +134,13 @@ export class DataHandlers {
                     }
 
                     break;
-                case GlobalFile.Leaderboards:
+                case GlobalFile.Leaderboards: {
                     data = data as Record<string, BoardData>;
-                    for (let i=0; i<config.commandConfigs.boar.top.args[0].choices.length; i++) {
-                        const boardID = config.commandConfigs.boar.top.args[0].choices[i].value;
+
+                    const choices = config.commandConfigs.boar.top.args[0].choices as ChoicesConfig[];
+
+                    for (let i=0; i<choices.length; i++) {
+                        const boardID = choices[i].value;
 
                         if (!data[boardID]) {
                             data[boardID] = new BoardData;
@@ -141,7 +148,7 @@ export class DataHandlers {
                     }
 
                     for (const boardID of Object.keys(data)) {
-                        const boardChoices = config.commandConfigs.boar.top.args[0].choices;
+                        const boardChoices = config.commandConfigs.boar.top.args[0].choices as ChoicesConfig[];
                         const boardValues = boardChoices.map((choice) => { return choice.value; });
 
                         if (!boardValues.includes(boardID)) {
@@ -150,6 +157,7 @@ export class DataHandlers {
                     }
 
                     break;
+                }
                 case GlobalFile.Quest:
                     data = data as QuestData;
 

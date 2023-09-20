@@ -3,6 +3,7 @@ import {BoarBotApp} from '../../BoarBotApp';
 import {Command} from '../../api/commands/Command';
 import {LogDebug} from '../../util/logging/LogDebug';
 import {Subcommand} from '../../api/commands/Subcommand';
+import {InteractionUtils} from '../../util/interactions/InteractionUtils';
 
 /**
  * {@link BoarDevCommand BoarDevCommand.ts}
@@ -24,23 +25,23 @@ export default class BoarDevCommand implements Command {
             .setDescription(this.commandInfo.give.description)
             .addUserOption(option => option.setName(this.commandInfo.give.args[0].name)
                 .setDescription(this.commandInfo.give.args[0].description)
-                .setRequired(this.commandInfo.give.args[0].required as boolean)
+                .setRequired(InteractionUtils.toBoolean(this.commandInfo.give.args[0].required))
             )
             .addStringOption(option => option.setName(this.commandInfo.give.args[1].name)
                 .setDescription(this.commandInfo.give.args[1].description)
-                .setRequired(this.commandInfo.give.args[1].required as boolean)
-                .setAutocomplete(this.commandInfo.give.args[1].autocomplete as boolean)
+                .setRequired(InteractionUtils.toBoolean(this.commandInfo.give.args[1].required))
+                .setAutocomplete(InteractionUtils.toBoolean(this.commandInfo.give.args[1].autocomplete))
             )
         )
         .addSubcommand(sub => sub.setName(this.commandInfo.ban.name)
             .setDescription(this.commandInfo.ban.description)
             .addUserOption(option => option.setName(this.commandInfo.ban.args[0].name)
                 .setDescription(this.commandInfo.ban.args[0].description)
-                .setRequired(this.commandInfo.ban.args[0].required as boolean)
+                .setRequired(InteractionUtils.toBoolean(this.commandInfo.ban.args[0].required))
             )
             .addIntegerOption(option => option.setName(this.commandInfo.ban.args[1].name)
                 .setDescription(this.commandInfo.ban.args[1].description)
-                .setRequired(this.commandInfo.ban.args[1].required as boolean)
+                .setRequired(InteractionUtils.toBoolean(this.commandInfo.ban.args[1].required))
             )
         );
 

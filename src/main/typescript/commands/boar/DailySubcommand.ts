@@ -1,8 +1,6 @@
 import {
-    ActionRowBuilder,
-    AttachmentBuilder, ButtonBuilder, ButtonInteraction,
-    ChatInputCommandInteraction, InteractionCollector, Message,
-    StringSelectMenuBuilder, StringSelectMenuInteraction,
+    AttachmentBuilder, ButtonInteraction,
+    ChatInputCommandInteraction,
     TextChannel
 } from 'discord.js';
 import {BoarUser} from '../../util/boar/BoarUser';
@@ -12,20 +10,14 @@ import {Subcommand} from '../../api/commands/Subcommand';
 import {Queue} from '../../util/interactions/Queue';
 import {InteractionUtils} from '../../util/interactions/InteractionUtils';
 import {LogDebug} from '../../util/logging/LogDebug';
-import {BotConfig} from '../../bot/config/BotConfig';
 import {Replies} from '../../util/interactions/Replies';
 import {BoarUtils} from '../../util/boar/BoarUtils';
 import {ItemImageGenerator} from '../../util/generators/ItemImageGenerator';
-import {StringConfig} from '../../bot/config/StringConfig';
-import {ColorConfig} from '../../bot/config/ColorConfig';
-import {ItemConfigs} from '../../bot/config/items/ItemConfigs';
 import {CollectorUtils} from '../../util/discord/CollectorUtils';
 import {CustomEmbedGenerator} from '../../util/generators/CustomEmbedGenerator';
 import {ComponentUtils} from '../../util/discord/ComponentUtils';
-import {RowConfig} from '../../bot/config/commands/RowConfig';
 import {FormatStrings} from '../../util/discord/FormatStrings';
 import {GuildData} from '../../bot/data/global/GuildData';
-import {SubcommandConfig} from '../../bot/config/commands/SubcommandConfig';
 
 /**
  * {@link DailySubcommand DailySubcommand.ts}
@@ -36,10 +28,10 @@ import {SubcommandConfig} from '../../bot/config/commands/SubcommandConfig';
  * @copyright WeslayCodes 2023
  */
 export default class DailySubcommand implements Subcommand {
-    private config: BotConfig = BoarBotApp.getBot().getConfig();
-    private subcommandInfo: SubcommandConfig = this.config.commandConfigs.boar.daily;
-    private guildData: GuildData | undefined;
-    private interaction: ChatInputCommandInteraction = {} as ChatInputCommandInteraction;
+    private config = BoarBotApp.getBot().getConfig();
+    private subcommandInfo = this.config.commandConfigs.boar.daily;
+    private guildData?: GuildData;
+    private interaction = {} as ChatInputCommandInteraction;
     public readonly data = { name: this.subcommandInfo.name, path: __filename };
 
     /**
@@ -47,7 +39,9 @@ export default class DailySubcommand implements Subcommand {
      *
      * @param interaction - The interaction that called the subcommand
      */
-    public async execute(interaction: ChatInputCommandInteraction): Promise<void> {
+    public async execute(
+        interaction: ChatInputCommandInteraction
+    ): Promise<void> {
         this.guildData = await InteractionUtils.handleStart(interaction, this.config);
         if(!this.guildData) return;
 
@@ -64,12 +58,12 @@ export default class DailySubcommand implements Subcommand {
      * @private
      */
     private async doDaily(): Promise<void> {
-        const strConfig: StringConfig = this.config.stringConfig;
-        const colorConfig: ColorConfig = this.config.colorConfig;
-        const powItemConfigs: ItemConfigs = this.config.itemConfigs.powerups;
+        const strConfig = this.config.stringConfig;
+        const colorConfig = this.config.colorConfig;
+        const powItemConfigs = this.config.itemConfigs.powerups;
 
-        let boarUser: BoarUser = {} as BoarUser;
-        let boarIDs: string[] = [''];
+        let boarUser = {} as BoarUser;
+        let boarIDs = [''];
 
         let firstDaily = false;
         let powTried = false;
@@ -80,17 +74,19 @@ export default class DailySubcommand implements Subcommand {
                 // New boar user object used for easier manipulation of data
                 boarUser = new BoarUser(this.interaction.user, true);
 
-                const canUseDaily: boolean = await this.canUseDaily(boarUser);
+                const canUseDaily = await this.canUseDaily(boarUser);
                 if (!canUseDaily) return;
 
                 // Gets powerup to be used
-                const powInput: string | null = this.interaction.options.getString(this.subcommandInfo.args[0].name);
+
+                const powInput = this.interaction.options.getString(this.subcommandInfo.args[0].name);
                 powTried = powInput !== null;
                 powCanUse = powTried && boarUser.itemCollection.powerups.miracle.numTotal > 0;
 
                 // Map of rarity index keys and weight values
-                let rarityWeights: Map<number, number> = BoarUtils.getBaseRarityWeights(this.config);
-                let userMultiplier: number = boarUser.stats.general.multiplier + 1;
+
+                let rarityWeights = BoarUtils.getBaseRarityWeights(this.config);
+                let userMultiplier = boarUser.stats.general.multiplier + 1;
 
                 if (powCanUse) {
                     (boarUser.itemCollection.powerups.miracle.numActive as number) +=
@@ -146,14 +142,17 @@ export default class DailySubcommand implements Subcommand {
             } catch (err: unknown) {
                 await LogDebug.handleError(err, this.interaction);
             }
-        }, this.interaction.id + this.interaction.user.id).catch((err) => { throw err });
+        }, this.interaction.id + this.interaction.user.id).catch((err: unknown) => {
+            throw err;
+        });
 
         if (boarIDs.includes('')) return;
 
-        const randScores: number[] = [];
-        const attachments: AttachmentBuilder[] = [];
+        const randScores = [] as number[];
+        const attachments = [] as AttachmentBuilder[];
 
         // Gets slightly deviated scores for each boar
+
         for (let i=0; i<boarIDs.length; i++) {
             randScores.push(
                 Math.round(
@@ -163,9 +162,10 @@ export default class DailySubcommand implements Subcommand {
             );
         }
 
-        const editions: number[] = await boarUser.addBoars(boarIDs, this.interaction, this.config, randScores);
+        const editions = await boarUser.addBoars(boarIDs, this.interaction, this.config, randScores);
 
         // Gets item images for each boar
+
         for (let i=0; i<boarIDs.length; i++) {
             attachments.push(
                 await new ItemImageGenerator(
@@ -221,9 +221,11 @@ export default class DailySubcommand implements Subcommand {
      * @param boarUser - User's boar information
      * @private
      */
-    private async canUseDaily(boarUser: BoarUser): Promise<boolean> {
+    private async canUseDaily(
+        boarUser: BoarUser
+    ): Promise<boolean> {
         // Midnight of next day (UTC)
-        const nextBoarTime: number = new Date().setUTCHours(24,0,0,0);
+        const nextBoarTime = new Date().setUTCHours(24,0,0,0);
 
         const strConfig = this.config.stringConfig;
         const nums = this.config.numberConfig;
@@ -231,19 +233,19 @@ export default class DailySubcommand implements Subcommand {
 
         if (boarUser.stats.general.lastDaily >= nextBoarTime - nums.oneDay && !this.config.unlimitedBoars) {
             if (!boarUser.stats.general.notificationsOn) {
-                const dailyRows: RowConfig[] = this.config.commandConfigs.boar.daily.componentFields[0];
-                const dailyComponentRows: ActionRowBuilder<StringSelectMenuBuilder | ButtonBuilder>[] =
-                    ComponentUtils.makeRows(dailyRows);
+                const dailyRows = this.config.commandConfigs.boar.daily.componentFields[0];
+                const dailyComponentRows = ComponentUtils.makeRows(dailyRows);
 
                 ComponentUtils.addToIDs(dailyRows, dailyComponentRows, this.interaction.id, this.interaction.user.id);
 
-                const collector: InteractionCollector<ButtonInteraction | StringSelectMenuInteraction> =
-                    await CollectorUtils.createCollector(
-                        this.interaction.channel as TextChannel, this.interaction.id, nums, false,
-                        nums.notificationButtonDelay
-                    );
+                const collector = await CollectorUtils.createCollector(
+                    this.interaction.channel as TextChannel, this.interaction.id, nums, false,
+                    nums.notificationButtonDelay
+                );
 
-                collector.on('collect', async (inter: ButtonInteraction) => {
+                collector.on('collect', async (
+                    inter: ButtonInteraction
+                ) => {
                     await Queue.addQueue(async () => {
                         try {
                             await this.interaction.user.send(
@@ -295,7 +297,7 @@ export default class DailySubcommand implements Subcommand {
                     }
                 });
 
-                const msg: Message = await this.interaction.editReply({
+                const msg = await this.interaction.editReply({
                     files: [
                         await CustomEmbedGenerator.makeEmbed(
                             strConfig.dailyUsedNotify, colorConfig.font, this.config,
@@ -335,20 +337,25 @@ export default class DailySubcommand implements Subcommand {
      * @param rarityWeights - Map of weights and their indexes
      * @private
      */
-    private applyMultiplier(userMultiplier: number, rarityWeights: Map<number, number>): Map<number, number> {
+    private applyMultiplier(
+        userMultiplier: number,
+        rarityWeights: Map<number, number>
+    ): Map<number, number> {
         // Sorts from the highest weight to the lowest weight
-        const newWeights: Map<number, number> = new Map([...rarityWeights.entries()]
-            .sort((a,b) => { return b[1] - a[1]; })
+
+        const newWeights = new Map<number, number>(
+            [...rarityWeights.entries()].sort((a,b) => { return b[1] - a[1]; })
         );
 
-        const highestWeight: number = newWeights.values().next().value;
-        const rarityIncreaseConst: number = this.config.numberConfig.rarityIncreaseConst;
+        const highestWeight = newWeights.values().next().value;
+        const rarityIncreaseConst = this.config.numberConfig.rarityIncreaseConst;
 
         // Increases probability by increasing weight
         // https://www.desmos.com/calculator/74inrkixxa | x = multiplier, o = weight
+
         for (const weightInfo of newWeights) {
-            const rarityIndex: number = weightInfo[0];
-            const oldWeight: number = weightInfo[1];
+            const rarityIndex = weightInfo[0];
+            const oldWeight = weightInfo[1];
 
             if (oldWeight == 0) continue;
 

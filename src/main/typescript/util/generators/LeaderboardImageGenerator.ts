@@ -6,6 +6,7 @@ import {
 } from 'discord.js';
 import {Queue} from '../interactions/Queue';
 import {DataHandlers} from '../data/DataHandlers';
+import {ChoicesConfig} from '../../bot/config/commands/ChoicesConfig';
 
 enum Board {
     Bucks = 'bucks',
@@ -62,7 +63,7 @@ export class LeaderboardImageGenerator {
     public async makeLeaderboardImage(page: number): Promise<AttachmentBuilder> {
         const strConfig = this.config.stringConfig;
         const nums = this.config.numberConfig;
-        const topChoices = this.config.commandConfigs.boar.top.args[0].choices;
+        const topChoices = this.config.commandConfigs.boar.top.args[0].choices as ChoicesConfig[];
         const colorConfig = this.config.colorConfig;
 
         const underlay = this.config.pathConfig.otherAssets + this.config.pathConfig.leaderboardUnderlay;

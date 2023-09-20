@@ -158,7 +158,9 @@ export default class CollectionSubcommand implements Subcommand {
             } catch (err: unknown) {
                 LogDebug.handleError(err, this.firstInter);
             }
-        }, interaction.id + userInput.id).catch((err) => { throw err });
+        }, interaction.id + userInput.id).catch((err: unknown) => {
+            throw err;
+        });
 
         await this.getUserInfo();
 
@@ -267,6 +269,7 @@ export default class CollectionSubcommand implements Subcommand {
             };
 
             // User wants to input a page manually
+
             if (inter.customId.startsWith(collComponents.inputPage.customId)) {
                 await this.modalHandle(inter);
 
@@ -283,41 +286,54 @@ export default class CollectionSubcommand implements Subcommand {
 
             switch (inter.customId.split('|')[0]) {
                 // User wants to go to previous page
-                case collComponents.leftPage.customId:
+
+                case collComponents.leftPage.customId: {
                     this.curPage--;
                     break;
+                }
 
                 // User wants to go to the next page
-                case collComponents.rightPage.customId:
+
+                case collComponents.rightPage.customId: {
                     this.curPage++;
                     break;
+                }
 
                 // User wants to view normal view
-                case collComponents.normalView.customId:
+
+                case collComponents.normalView.customId: {
                     this.curView = View.Normal;
                     this.curPage = 0;
                     break;
+                }
 
                 // User wants to refresh data
-                case collComponents.refresh.customId:
+
+                case collComponents.refresh.customId: {
                     await this.getUserInfo();
                     this.collectionImage.updateInfo(this.boarUser, this.allBoars, this.config);
                     break;
+                }
 
                 // User wants to view detailed view
-                case collComponents.detailedView.customId:
+
+                case collComponents.detailedView.customId: {
                     this.curView = View.Detailed;
                     this.curPage = 0;
                     break;
+                }
 
                 // User wants to view powerup view
-                case collComponents.powerupView.customId:
+
+                case collComponents.powerupView.customId: {
                     this.curView = View.Powerups;
                     this.curPage = 0;
                     break;
+                }
 
                 // User wants to favorite a boar in detailed view
-                case collComponents.favorite.customId:
+
+                case collComponents.favorite.customId: {
                     await Queue.addQueue(async () => {
                         try {
                             this.boarUser.refreshUserData();
@@ -326,33 +342,46 @@ export default class CollectionSubcommand implements Subcommand {
                         } catch (err: unknown) {
                             await LogDebug.handleError(err, inter);
                         }
-                    }, inter.id + this.boarUser.user.id).catch((err) => { throw err });
+                    }, inter.id + this.boarUser.user.id).catch((err: unknown) => {
+                        throw err;
+                    });
                     break;
+                }
 
                 // User wants to view editions of a special in detailed view
-                case collComponents.editions.customId:
+
+                case collComponents.editions.customId: {
                     await this.doEditions();
                     break;
+                }
 
                 // User wants to enhance a boar in detailed view
-                case collComponents.enhance.customId:
+
+                case collComponents.enhance.customId: {
                     await this.doEnhance();
                     break;
+                }
 
                 // User wants to send a gift in powerup view
-                case collComponents.gift.customId:
+
+                case collComponents.gift.customId: {
                     await this.doGift();
                     break;
+                }
 
                 // User wants to activate miracles in powerup view
-                case collComponents.miracle.customId:
+
+                case collComponents.miracle.customId: {
                     await this.doMiracles();
                     break;
+                }
 
                 // User wants to clone a boar in detailed view
-                case collComponents.clone.customId:
+
+                case collComponents.clone.customId: {
                     await this.doClone();
                     break;
+                }
             }
 
             this.enhanceStage--;
@@ -462,7 +491,9 @@ export default class CollectionSubcommand implements Subcommand {
             } catch (err: unknown) {
                 await LogDebug.handleError(err, this.compInter);
             }
-        }, this.compInter.id + this.boarUser.user.id).catch((err) => { throw err });
+        }, this.compInter.id + this.boarUser.user.id).catch((err: unknown) => {
+            throw err;
+        });
 
         if (dataChanged || noMoney) {
             LogDebug.log(
@@ -562,10 +593,12 @@ export default class CollectionSubcommand implements Subcommand {
                         this.compInter, strConfig.giftNone, colorConfig.error, undefined, undefined, true
                     );
                 }
-            } catch (err) {
+            } catch (err: unknown) {
                 LogDebug.handleError(err, this.compInter);
             }
-        }, this.compInter.id + this.compInter.user.id).catch((err) => { throw err });
+        }, this.compInter.id + this.compInter.user.id).catch((err: unknown) => {
+            throw err;
+        });
     }
 
     /**
@@ -613,10 +646,12 @@ export default class CollectionSubcommand implements Subcommand {
                     this.boarUser.itemCollection.powerups.miracle.numTotal;
                 this.boarUser.itemCollection.powerups.miracle.numTotal = 0;
                 this.boarUser.updateUserData();
-            } catch (err) {
+            } catch (err: unknown) {
                 LogDebug.handleError(err, this.compInter);
             }
-        }, this.compInter.id + this.compInter.user.id).catch((err) => { throw err });
+        }, this.compInter.id + this.compInter.user.id).catch((err: unknown) => {
+            throw err;
+        });
 
         await Replies.handleReply(
             this.compInter, strConfig.miracleSuccess, colorConfig.font,
@@ -676,10 +711,12 @@ export default class CollectionSubcommand implements Subcommand {
                 }
 
                 this.boarUser.updateUserData();
-            } catch (err) {
+            } catch (err: unknown) {
                 LogDebug.handleError(err, this.compInter);
             }
-        }, this.compInter.id + this.compInter.user.id).catch((err) => { throw err });
+        }, this.compInter.id + this.compInter.user.id).catch((err: unknown) => {
+            throw err;
+        });
 
         if (dataChanged) {
             LogDebug.log(
@@ -1009,6 +1046,7 @@ export default class CollectionSubcommand implements Subcommand {
             }
 
             // Enables clone button for viable boars
+
             if (this.curView === View.Detailed && this.allBoars[this.curPage].rarity[1].avgClones > 0) {
                 optionalRow.addComponents((this.optionalButtons.components[5] as ButtonBuilder)
                     .setDisabled(
@@ -1020,6 +1058,7 @@ export default class CollectionSubcommand implements Subcommand {
             }
 
             // Gift & Miracle Activation button enabling
+
             if (this.curView === View.Powerups) {
                 optionalRow.addComponents((this.optionalButtons.components[1] as ButtonBuilder)
                     .setDisabled(
