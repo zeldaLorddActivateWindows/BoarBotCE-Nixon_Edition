@@ -1,7 +1,6 @@
 import {ChatInputCommandInteraction, SlashCommandBuilder} from 'discord.js';
 import {BoarBotApp} from '../../BoarBotApp';
 import {Command} from '../../api/commands/Command';
-import {LogDebug} from '../../util/logging/LogDebug';
 import {ChoicesConfig} from '../../bot/config/commands/ChoicesConfig';
 import {InteractionUtils} from '../../util/interactions/InteractionUtils';
 
@@ -98,25 +97,7 @@ export default class BoarCommand implements Command {
             .setDescription(this.commandInfo.quests.description)
         );
 
-    /**
-     * Executes the called subcommand if it exists
-     *
-     * @param interaction - An interaction that could've called a boar subcommand
-     */
-    public async execute(
-        interaction: ChatInputCommandInteraction
-    ): Promise<void> {
-        const subcommand = BoarBotApp.getBot().getSubcommands().get(interaction.options.getSubcommand());
-
-        if (subcommand) {
-            const exports = require(subcommand.data.path);
-            const commandClass = new exports.default();
-
-            try {
-                await commandClass.execute(interaction);
-            } catch (err: unknown) {
-                await LogDebug.handleError(err, interaction);
-            }
-        }
+    public async execute(interaction: ChatInputCommandInteraction): Promise<void> {
+        InteractionUtils.executeSubcommand(interaction);
     }
 }

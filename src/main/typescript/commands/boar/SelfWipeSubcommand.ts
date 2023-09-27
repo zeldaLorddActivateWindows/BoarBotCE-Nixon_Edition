@@ -2,22 +2,19 @@ import {
     ActionRowBuilder, ButtonBuilder,
     ButtonInteraction,
     ChatInputCommandInteraction,
-    InteractionCollector, MessageComponentInteraction,
+    InteractionCollector,
     StringSelectMenuBuilder, StringSelectMenuInteraction, TextChannel
 } from 'discord.js';
 import {BoarBotApp} from '../../BoarBotApp';
 import {Subcommand} from '../../api/commands/Subcommand';
 import {InteractionUtils} from '../../util/interactions/InteractionUtils';
-import {BotConfig} from '../../bot/config/BotConfig';
 import {LogDebug} from '../../util/logging/LogDebug';
 import {Replies} from '../../util/interactions/Replies';
 import {CollectorUtils} from '../../util/discord/CollectorUtils';
-import {RowConfig} from '../../bot/config/commands/RowConfig';
 import {ComponentUtils} from '../../util/discord/ComponentUtils';
 import {Queue} from '../../util/interactions/Queue';
-import {BoarUser} from '../../util/boar/BoarUser';
 import {GuildData} from '../../bot/data/global/GuildData';
-import {SubcommandConfig} from '../../bot/config/commands/SubcommandConfig';
+import {DataHandlers} from "../../util/data/DataHandlers";
 
 /**
  * {@link SelfWipeSubcommand SelfWipeSubcommand.ts}
@@ -28,15 +25,13 @@ import {SubcommandConfig} from '../../bot/config/commands/SubcommandConfig';
  * @copyright WeslayCodes 2023
  */
 export default class SelfWipeSubcommand implements Subcommand {
-    private config: BotConfig = BoarBotApp.getBot().getConfig();
-    private subcommandInfo: SubcommandConfig = this.config.commandConfigs.boar.selfWipe;
-    private guildData: GuildData | undefined;
-    private firstInter: ChatInputCommandInteraction = {} as ChatInputCommandInteraction;
-    private compInter: MessageComponentInteraction = {} as MessageComponentInteraction;
+    private config = BoarBotApp.getBot().getConfig();
+    private subcommandInfo = this.config.commandConfigs.boar.selfWipe;
+    private guildData?: GuildData;
+    private firstInter = {} as ChatInputCommandInteraction;
     private canDelete = false;
-    private baseRows: ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>[] = [];
-    private collector: InteractionCollector<ButtonInteraction | StringSelectMenuInteraction> =
-        {} as InteractionCollector<ButtonInteraction | StringSelectMenuInteraction>;
+    private baseRows = [] as ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>[];
+    private collector = {} as InteractionCollector<ButtonInteraction | StringSelectMenuInteraction>;
     private hasStopped = false;
     public readonly data = { name: this.subcommandInfo.name, path: __filename };
 
@@ -52,17 +47,28 @@ export default class SelfWipeSubcommand implements Subcommand {
         await interaction.deferReply({ ephemeral: true });
         this.firstInter = interaction;
 
+        // Stop prior collector that user may have open still to reduce number of listeners
         if (CollectorUtils.selfWipeCollectors[interaction.user.id]) {
             const oldCollector = CollectorUtils.selfWipeCollectors[interaction.user.id];
-            setTimeout(() => { oldCollector.stop(CollectorUtils.Reasons.Expired) }, 1000);
+
+            setTimeout(() => {
+                oldCollector.stop(CollectorUtils.Reasons.Expired)
+            }, 1000);
         }
 
-        this.collector = CollectorUtils.selfWipeCollectors[interaction.user.id] = await CollectorUtils.createCollector(
+        this.collector = await CollectorUtils.createCollector(
             interaction.channel as TextChannel, interaction.id, this.config.numberConfig
         );
 
-        this.collector.on('collect', async (inter: ButtonInteraction) => await this.handleCollect(inter));
-        this.collector.once('end', async (collected, reason) => await this.handleEndCollect(reason));
+        CollectorUtils.selfWipeCollectors[interaction.user.id] = this.collector;
+
+        this.collector.on('collect', async (inter: ButtonInteraction) => {
+            await this.handleCollect(inter);
+        });
+
+        this.collector.once('end', async (_, reason: string) => {
+            await this.handleEndCollect(reason);
+        });
 
         this.showSelfWipe(true);
     }
@@ -75,9 +81,7 @@ export default class SelfWipeSubcommand implements Subcommand {
      */
     private async handleCollect(inter: ButtonInteraction): Promise<void> {
         try {
-            this.compInter = inter;
-
-            const selfWipeRowConfig: RowConfig[][] = this.config.commandConfigs.boar.selfWipe.componentFields;
+            const selfWipeRowConfig = this.config.commandConfigs.boar.selfWipe.componentFields;
             const selfWipeComponents = {
                 delete: selfWipeRowConfig[0][0].components[0],
                 cancel: selfWipeRowConfig[0][0].components[1]
@@ -87,17 +91,19 @@ export default class SelfWipeSubcommand implements Subcommand {
 
             switch (inter.customId.split('|')[0]) {
                 // User wants to delete their data
-                case selfWipeComponents.delete.customId:
+                case selfWipeComponents.delete.customId: {
                     this.showSelfWipe();
                     break;
+                }
 
                 // User wants to cancel deletion process
-                case selfWipeComponents.cancel.customId:
+                case selfWipeComponents.cancel.customId: {
                     this.collector.stop();
                     break;
+                }
             }
         } catch (err: unknown) {
-            const canStop: boolean = await LogDebug.handleError(err, this.firstInter);
+            const canStop = await LogDebug.handleError(err, this.firstInter);
             if (canStop) {
                 this.collector.stop(CollectorUtils.Reasons.Error);
             }
@@ -118,22 +124,28 @@ export default class SelfWipeSubcommand implements Subcommand {
 
             if (reason === CollectorUtils.Reasons.Error) {
                 await Replies.handleReply(
-                    this.firstInter, this.config.stringConfig.setupError,
-                    this.config.colorConfig.error
+                    this.firstInter, this.config.stringConfig.setupError, this.config.colorConfig.error
                 );
             }
 
             if (reason === CollectorUtils.Reasons.Finished) {
-                await Queue.addQueue(() => {
-                    const boarUser = new BoarUser(this.firstInter.user);
-                    boarUser.stats.general.deletionTime = Date.now() + this.config.numberConfig.oneDay;
-                    boarUser.updateUserData();
-                }, this.firstInter.id + this.firstInter.user.id).catch((err) => { throw err });
+                await Queue.addQueue(async () => {
+                    const wipeUsers = DataHandlers.getGlobalData(
+                        DataHandlers.GlobalFile.WipeUsers
+                    ) as Record<string, number>;
+
+                    wipeUsers[this.firstInter.user.id] = Date.now() + 60000;
+
+                    DataHandlers.saveGlobalData(wipeUsers, DataHandlers.GlobalFile.WipeUsers);
+                }, 'self_wipe' + this.firstInter.id + 'global').catch((err: unknown) => {
+                    throw err;
+                });
 
                 await this.firstInter.editReply({
                     content: this.config.stringConfig.deletedData,
                     components: []
                 });
+
                 return;
             }
 
@@ -176,12 +188,12 @@ export default class SelfWipeSubcommand implements Subcommand {
 
             await this.firstInter.editReply({ content: contentStr, components: this.baseRows });
 
+            // Waits five seconds before enabling delete button
             setTimeout(async () => {
                 if (this.collector.ended) return;
+
                 this.baseRows[0].components[0].setDisabled(false);
-                try {
-                    await this.firstInter.editReply({ content: contentStr, components: this.baseRows });
-                } catch {}
+                await this.firstInter.editReply({ content: contentStr, components: this.baseRows }).catch(() => {});
             }, 5000);
         } catch (err: unknown) {
             const canStop = await LogDebug.handleError(err, this.firstInter);
@@ -197,9 +209,8 @@ export default class SelfWipeSubcommand implements Subcommand {
      * @private
      */
     private initButtons(): void {
-        const selfWipeFieldConfigs: RowConfig[][] = this.config.commandConfigs.boar.selfWipe.componentFields;
-        const newRows: ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>[] =
-            ComponentUtils.makeRows(selfWipeFieldConfigs[0]);
+        const selfWipeFieldConfigs = this.config.commandConfigs.boar.selfWipe.componentFields;
+        const newRows = ComponentUtils.makeRows(selfWipeFieldConfigs[0]);
 
         ComponentUtils.addToIDs(selfWipeFieldConfigs[0], newRows, this.firstInter.id, this.firstInter.user.id);
 

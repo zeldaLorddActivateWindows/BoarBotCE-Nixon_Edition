@@ -14,12 +14,6 @@ import {
  * @copyright WeslayCodes 2023
  */
 export interface Command {
-    data:
-        | SlashCommandBuilder
-        | SlashCommandSubcommandsOnlyBuilder;
-    execute(
-        interaction:
-            | ChatInputCommandInteraction
-            | AutocompleteInteraction
-    ): Promise<void>;
+    data: SlashCommandBuilder | SlashCommandSubcommandsOnlyBuilder;
+    execute(interaction: ChatInputCommandInteraction | AutocompleteInteraction): Promise<void>;
 }

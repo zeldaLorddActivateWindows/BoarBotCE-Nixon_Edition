@@ -41,18 +41,9 @@ export default class HelpSubcommand implements Subcommand {
     private helpImages = [] as string[][];
     private curArea = Area.General;
     private curPage = 0;
-    private rows = [] as ActionRowBuilder<
-        | ButtonBuilder
-        | StringSelectMenuBuilder
-    >[];
-    private timerVars = {
-        timeUntilNextCollect: 0,
-        updateTime: setTimeout(() => {})
-    };
-    private collector = {} as InteractionCollector<
-        | ButtonInteraction
-        | StringSelectMenuInteraction
-    >;
+    private rows = [] as ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>[];
+    private timerVars = { timeUntilNextCollect: 0, updateTime: setTimeout(() => {}) };
+    private collector = {} as InteractionCollector<ButtonInteraction | StringSelectMenuInteraction>;
     private hasStopped = false;
     public readonly data = { name: this.subcommandInfo.name, path: __filename };
 
@@ -61,9 +52,7 @@ export default class HelpSubcommand implements Subcommand {
      *
      * @param interaction - The interaction that called the subcommand
      */
-    public async execute(
-        interaction: ChatInputCommandInteraction
-    ): Promise<void> {
+    public async execute(interaction: ChatInputCommandInteraction): Promise<void> {
         const guildData = await InteractionUtils.handleStart(interaction, this.config);
         if (!guildData) return;
 
@@ -94,6 +83,7 @@ export default class HelpSubcommand implements Subcommand {
         this.curPage = Math.max(0, this.curPage);
         this.curPage = Math.min(this.helpImages[this.curArea].length-1, this.curPage);
 
+        // Stop prior collector that user may have open still to reduce number of listeners
         if (CollectorUtils.helpCollectors[interaction.user.id]) {
             const oldCollector = CollectorUtils.helpCollectors[interaction.user.id];
 
@@ -108,17 +98,11 @@ export default class HelpSubcommand implements Subcommand {
 
         CollectorUtils.helpCollectors[interaction.user.id] = this.collector;
 
-        this.collector.on('collect', async (
-            inter:
-                | ButtonInteraction
-                | StringSelectMenuInteraction
-            ) => {
-                await this.handleCollect(inter);
+        this.collector.on('collect', async (inter: ButtonInteraction | StringSelectMenuInteraction) => {
+            await this.handleCollect(inter);
         });
 
-        this.collector.once('end', async (
-            reason: string
-        ) => {
+        this.collector.once('end', async (_, reason: string) => {
             await this.handleEndCollect(reason);
         });
 
@@ -131,11 +115,7 @@ export default class HelpSubcommand implements Subcommand {
      * @param inter - The button interaction
      * @private
      */
-    private async handleCollect(
-        inter:
-            | ButtonInteraction
-            | StringSelectMenuInteraction
-    ): Promise<void> {
+    private async handleCollect(inter: ButtonInteraction | StringSelectMenuInteraction): Promise<void> {
         try {
             const canInteract = await CollectorUtils.canInteract(this.timerVars, inter);
             if (!canInteract) return;
@@ -148,7 +128,8 @@ export default class HelpSubcommand implements Subcommand {
 
             LogDebug.log(
                 `${inter.customId.split('|')[0]} on page ${this.curPage} in area ${this.curArea}`,
-                this.config, this.firstInter
+                this.config,
+                this.firstInter
             );
 
             const helpRowConfig = this.config.commandConfigs.boar.help.componentFields;
@@ -162,21 +143,18 @@ export default class HelpSubcommand implements Subcommand {
 
             switch (inter.customId.split('|')[0]) {
                 // User wants to go to previous page
-
                 case helpComponents.leftPage.customId: {
                     this.curPage--;
                     break;
                 }
 
                 // User wants to go to the next page
-
                 case helpComponents.rightPage.customId: {
                     this.curPage++;
                     break;
                 }
 
                 // User wants to change what area of help to view
-
                 case helpComponents.areaSelect.customId: {
                     this.curArea = Number.parseInt((inter as StringSelectMenuInteraction).values[0]) as Area;
                     this.curPage = 0;
@@ -201,13 +179,13 @@ export default class HelpSubcommand implements Subcommand {
      * @param reason - Why the collection ended
      * @private
      */
-    private async handleEndCollect(
-        reason: string
-    ): Promise<void> {
+    private async handleEndCollect(reason: string): Promise<void> {
         try {
             this.hasStopped = true;
 
             LogDebug.log('Ended collection with reason: ' + reason, this.config, this.firstInter);
+
+            clearInterval(this.timerVars.updateTime);
 
             if (reason == CollectorUtils.Reasons.Error) {
                 await Replies.handleReply(
@@ -215,6 +193,7 @@ export default class HelpSubcommand implements Subcommand {
                 );
             }
 
+            // Clears components from interaction
             await this.firstInter.editReply({
                 components: []
             });
@@ -235,18 +214,25 @@ export default class HelpSubcommand implements Subcommand {
                 this.initButtons();
             }
 
+            // Disables all buttons
             for (const row of this.rows) {
                 for (const component of row.components) {
                     component.setDisabled(true);
                 }
             }
 
+            // Enables back button if not on first page
             this.rows[0].components[0].setDisabled(this.curPage === 0);
+
+            // Enables next button if not on last page of area
             this.rows[0].components[1].setDisabled(this.curPage === this.helpImages[this.curArea].length - 1);
+
+            // Enables area select menu
             this.rows[1].components[0].setDisabled(false);
 
             if (this.hasStopped) return;
 
+            // Edits the help image with the currently selected one
             await this.firstInter.editReply({
                 files: [fs.readFileSync(this.helpImages[this.curArea][this.curPage])],
                 components: this.rows

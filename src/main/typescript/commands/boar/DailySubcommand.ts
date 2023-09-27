@@ -39,9 +39,7 @@ export default class DailySubcommand implements Subcommand {
      *
      * @param interaction - The interaction that called the subcommand
      */
-    public async execute(
-        interaction: ChatInputCommandInteraction
-    ): Promise<void> {
+    public async execute(interaction: ChatInputCommandInteraction): Promise<void> {
         this.guildData = await InteractionUtils.handleStart(interaction, this.config);
         if(!this.guildData) return;
 
@@ -63,63 +61,69 @@ export default class DailySubcommand implements Subcommand {
         const powItemConfigs = this.config.itemConfigs.powerups;
 
         let boarUser = {} as BoarUser;
-        let boarIDs = [''];
+        let boarIDs = ['']; // Stores IDs of boars gotten
 
-        let firstDaily = false;
-        let powTried = false;
-        let powCanUse = false;
+        let firstDaily = false; // Stores if this is the first daily a user has done
+        let powTried = false; // Stores if user attempted to use a powerup
+        let powCanUse = false; // Stores if user attempted to and can use a powerup
 
         await Queue.addQueue(async () => {
             try {
-                // New boar user object used for easier manipulation of data
                 boarUser = new BoarUser(this.interaction.user, true);
 
                 const canUseDaily = await this.canUseDaily(boarUser);
                 if (!canUseDaily) return;
 
-                // Gets powerup to be used
+                // Gets powerup usage input from user
 
                 const powInput = this.interaction.options.getString(this.subcommandInfo.args[0].name);
                 powTried = powInput !== null;
                 powCanUse = powTried && boarUser.itemCollection.powerups.miracle.numTotal > 0;
 
                 // Map of rarity index keys and weight values
-
                 let rarityWeights = BoarUtils.getBaseRarityWeights(this.config);
+
                 let userMultiplier = boarUser.stats.general.multiplier + 1;
 
+                // Uses powerup if user attempted to and they can do so
                 if (powCanUse) {
                     (boarUser.itemCollection.powerups.miracle.numActive as number) +=
                         boarUser.itemCollection.powerups.miracle.numTotal;
                     boarUser.itemCollection.powerups.miracle.numTotal = 0;
                 }
 
+                // Gets modified multiplier value after applying active miracle charms
                 for (let i=0; i<(boarUser.itemCollection.powerups.miracle.numActive as number); i++) {
                     userMultiplier += Math.min(
                         Math.ceil(userMultiplier * 0.05), this.config.numberConfig.miracleIncreaseMax
                     );
                 }
 
+                // Adjusts weights in accordance to multiplier
                 rarityWeights = this.applyMultiplier(userMultiplier, rarityWeights);
+
+                // Probability of rolling extra boars
                 const extraVals = [
                     Math.min(userMultiplier / 10, 100),
                     Math.min(userMultiplier / 100, 100),
                     Math.min(userMultiplier / 1000, 100)
                 ];
 
-                boarIDs = BoarUtils.getRandBoars(
-                    this.guildData, this.interaction, rarityWeights, this.config, extraVals
-                );
+                // Gets the boars gotten based on multiplier
+                boarIDs = BoarUtils.getRandBoars(this.guildData, rarityWeights, this.config, extraVals);
 
                 if (boarIDs.includes('')) {
                     await LogDebug.handleError(this.config.stringConfig.dailyNoBoarFound, this.interaction);
                     return;
                 }
 
+                // Adjusts miracle charms stats if there were some active
                 if (boarUser.itemCollection.powerups.miracle.numActive as number > 0) {
                     LogDebug.log(
                         `Used ${boarUser.itemCollection.powerups.miracle.numActive} Miracle Charm(s)`,
-                        this.config, this.interaction, true
+                        this.config,
+                        this.interaction,
+                        true
                     );
 
                     boarUser.itemCollection.powerups.miracle.numUsed +=
@@ -128,21 +132,20 @@ export default class DailySubcommand implements Subcommand {
                 }
 
                 boarUser.stats.general.boarStreak++;
-
                 boarUser.stats.general.lastDaily = Date.now();
                 boarUser.stats.general.numDailies++;
 
                 if (boarUser.stats.general.firstDaily === 0) {
                     firstDaily = true;
                     boarUser.stats.general.firstDaily = Date.now();
-                    boarUser.itemCollection.powerups.miracle.numTotal += 5;
+                    boarUser.itemCollection.powerups.miracle.numTotal += 5; // Bonus for new users
                 }
 
                 boarUser.updateUserData();
             } catch (err: unknown) {
                 await LogDebug.handleError(err, this.interaction);
             }
-        }, this.interaction.id + this.interaction.user.id).catch((err: unknown) => {
+        }, 'daily_main' + this.interaction.id + this.interaction.user.id).catch((err: unknown) => {
             throw err;
         });
 
@@ -152,7 +155,6 @@ export default class DailySubcommand implements Subcommand {
         const attachments = [] as AttachmentBuilder[];
 
         // Gets slightly deviated scores for each boar
-
         for (let i=0; i<boarIDs.length; i++) {
             randScores.push(
                 Math.round(
@@ -162,10 +164,10 @@ export default class DailySubcommand implements Subcommand {
             );
         }
 
+        // Adds boars to collection and gathers the editions for each boar
         const editions = await boarUser.addBoars(boarIDs, this.interaction, this.config, randScores);
 
         // Gets item images for each boar
-
         for (let i=0; i<boarIDs.length; i++) {
             attachments.push(
                 await new ItemImageGenerator(
@@ -174,6 +176,7 @@ export default class DailySubcommand implements Subcommand {
             );
         }
 
+        // Sends all images of boars gotten
         for (let i=0; i<attachments.length; i++) {
             if (i === 0) {
                 await this.interaction.editReply({ files: [attachments[i]] })
@@ -182,13 +185,20 @@ export default class DailySubcommand implements Subcommand {
             }
         }
 
+        // Tells user if they got a new user bonus and what the bonus is
         if (firstDaily) {
             await Replies.handleReply(
-                this.interaction, strConfig.dailyFirstTime, colorConfig.font,
-                [strConfig.dailyBonus, '/boar help'], [colorConfig.powerup, colorConfig.silver], true, true
+                this.interaction,
+                strConfig.dailyFirstTime,
+                colorConfig.font,
+                [strConfig.dailyBonus, '/boar help'],
+                [colorConfig.powerup, colorConfig.silver],
+                true,
+                true
             );
         }
 
+        // Sends bacteria boar images if edition one gotten
         for (const edition of editions) {
             if (edition !== 1) continue;
             await this.interaction.followUp({
@@ -201,15 +211,24 @@ export default class DailySubcommand implements Subcommand {
         }
 
         if (powCanUse) {
+            // Tells user they used their powerup
             await Replies.handleReply(
-                this.interaction, strConfig.dailyPowUsed, colorConfig.font,
-                [powItemConfigs.miracle.pluralName], [colorConfig.powerup], true
+                this.interaction,
+                strConfig.dailyPowUsed,
+                colorConfig.font,
+                [powItemConfigs.miracle.pluralName],
+                [colorConfig.powerup],
+                true
             );
         } else if (powTried) {
+            // Tells user their attempt to use their powerup failed
             await Replies.handleReply(
-                this.interaction, strConfig.dailyPowFailed, colorConfig.error,
+                this.interaction,
+                strConfig.dailyPowFailed,
+                colorConfig.error,
                 [powItemConfigs.miracle.pluralName, 'Powerups', '/boar collection'],
-                [colorConfig.powerup, colorConfig.powerup, colorConfig.silver], true
+                [colorConfig.powerup, colorConfig.powerup, colorConfig.silver],
+                true
             );
         }
     }
@@ -219,11 +238,10 @@ export default class DailySubcommand implements Subcommand {
      * takes in user notification choice
      *
      * @param boarUser - User's boar information
+     * @return Whether user can use their daily boar
      * @private
      */
-    private async canUseDaily(
-        boarUser: BoarUser
-    ): Promise<boolean> {
+    private async canUseDaily(boarUser: BoarUser): Promise<boolean> {
         // Midnight of next day (UTC)
         const nextBoarTime = new Date().setUTCHours(24,0,0,0);
 
@@ -231,103 +249,122 @@ export default class DailySubcommand implements Subcommand {
         const nums = this.config.numberConfig;
         const colorConfig = this.config.colorConfig;
 
-        if (boarUser.stats.general.lastDaily >= nextBoarTime - nums.oneDay && !this.config.unlimitedBoars) {
-            if (!boarUser.stats.general.notificationsOn) {
-                const dailyRows = this.config.commandConfigs.boar.daily.componentFields[0];
-                const dailyComponentRows = ComponentUtils.makeRows(dailyRows);
+        if (boarUser.stats.general.lastDaily < nextBoarTime - nums.oneDay || this.config.unlimitedBoars) {
+            return true;
+        }
 
-                ComponentUtils.addToIDs(dailyRows, dailyComponentRows, this.interaction.id, this.interaction.user.id);
+        // Tells user they already used /boar daily without asking to enable notifications
+        if (boarUser.stats.general.notificationsOn) {
+            const msg = await this.interaction.editReply({
+                files: [
+                    await CustomEmbedGenerator.makeEmbed(
+                        this.config.stringConfig.dailyUsed,
+                        this.config.colorConfig.font,
+                        this.config,
+                        [moment(nextBoarTime).fromNow().substring(3)],
+                        [this.config.colorConfig.silver]
+                    )
+                ]
+            });
 
-                const collector = await CollectorUtils.createCollector(
-                    this.interaction.channel as TextChannel, this.interaction.id, nums, false,
-                    nums.notificationButtonDelay
-                );
+            setTimeout(async () => {
+                try {
+                    await msg.delete();
+                } catch (err: unknown) {
+                    LogDebug.handleError(err);
+                }
+            }, this.config.numberConfig.notificationButtonDelay);
 
-                collector.on('collect', async (
-                    inter: ButtonInteraction
-                ) => {
-                    await Queue.addQueue(async () => {
-                        try {
-                            await this.interaction.user.send(
-                                strConfig.notificationSuccess + '\n# ' +
-                                FormatStrings.toBasicChannel(this.interaction.channel?.id) +
-                                strConfig.notificationStopStr
-                            );
-
-                            await Replies.handleReply(inter, strConfig.notificationSuccessReply, colorConfig.green);
-
-                            await msg.edit({
-                                files: [
-                                    await CustomEmbedGenerator.makeEmbed(
-                                        strConfig.dailyUsed, colorConfig.font, this.config,
-                                        [moment(nextBoarTime).fromNow().substring(3)], [colorConfig.silver]
-                                    )
-                                ],
-                                components: []
-                            });
-
-                            boarUser.refreshUserData();
-                            boarUser.stats.general.notificationsOn = true;
-                            boarUser.stats.general.notificationChannel = this.interaction.channel
-                                ? this.interaction.channel.id
-                                : '0';
-                            boarUser.updateUserData();
-
-                            LogDebug.log(
-                                `${inter.user.username} (${inter.user.id}) turned ON notifications`,
-                                this.config, undefined, true
-                            );
-                        } catch {
-                            try {
-                                await Replies.handleReply(inter, strConfig.notificationFailed, colorConfig.error);
-                            } catch (err: unknown) {
-                                await LogDebug.handleError(err, this.interaction);
-                            }
-                        }
-                    }, this.interaction + this.interaction.id).catch((err: unknown) => {
-                        LogDebug.handleError(err, this.interaction);
-                    });
-                });
-
-                collector.once('end', async () => {
-                    try {
-                        await msg.delete();
-                    } catch (err: unknown) {
-                        await LogDebug.handleError(err, this.interaction);
-                    }
-                });
-
-                const msg = await this.interaction.editReply({
-                    files: [
-                        await CustomEmbedGenerator.makeEmbed(
-                            strConfig.dailyUsedNotify, colorConfig.font, this.config,
-                            [moment(nextBoarTime).fromNow().substring(3)], [colorConfig.silver]
-                        )
-                    ],
-                    components: dailyComponentRows
-                });
-            } else {
-                const msg = await this.interaction.editReply({
-                    files: [
-                        await CustomEmbedGenerator.makeEmbed(
-                            this.config.stringConfig.dailyUsed, this.config.colorConfig.font, this.config,
-                            [moment(nextBoarTime).fromNow().substring(3)], [this.config.colorConfig.silver]
-                        )
-                    ]
-                });
-
-                setTimeout(async () => {
-                    try {
-                        await msg.delete();
-                    } catch (err: unknown) {
-                        await LogDebug.handleError(err, this.interaction);
-                    }
-                }, this.config.numberConfig.notificationButtonDelay)
-            }
             return false;
         }
 
-        return true
+        const dailyRows = this.config.commandConfigs.boar.daily.componentFields[0];
+        const dailyComponentRows = ComponentUtils.makeRows(dailyRows);
+
+        ComponentUtils.addToIDs(dailyRows, dailyComponentRows, this.interaction.id, this.interaction.user.id);
+
+        const collector = await CollectorUtils.createCollector(
+            this.interaction.channel as TextChannel, this.interaction.id, nums, false, nums.notificationButtonDelay
+        );
+
+        // Tells user they already used /boar daily and asks if they want to enable notifications
+        const msg = await this.interaction.editReply({
+            files: [
+                await CustomEmbedGenerator.makeEmbed(
+                    strConfig.dailyUsedNotify,
+                    colorConfig.font,
+                    this.config,
+                    [moment(nextBoarTime).fromNow().substring(3)],
+                    [colorConfig.silver]
+                )
+            ],
+            components: dailyComponentRows
+        });
+
+        // Handles user clicking button to enable notifications
+        collector.on('collect', async (inter: ButtonInteraction) => {
+            await Queue.addQueue(async () => {
+                try {
+                    // Tells user they've successfully enabled notifications in DMs
+                    await this.interaction.user.send(
+                        strConfig.notificationSuccess + '\n# ' +
+                        FormatStrings.toBasicChannel(this.interaction.channel?.id) +
+                        strConfig.notificationStopStr
+                    );
+
+                    // Tells user they've successfully enabled notifications in channel they used /boar daily in
+                    await Replies.handleReply(inter, strConfig.notificationSuccessReply, colorConfig.green);
+
+                    // Edits the message, removing the part asking about notifications
+                    await msg.edit({
+                        files: [
+                            await CustomEmbedGenerator.makeEmbed(
+                                strConfig.dailyUsed,
+                                colorConfig.font,
+                                this.config,
+                                [moment(nextBoarTime).fromNow().substring(3)],
+                                [colorConfig.silver]
+                            )
+                        ],
+                        components: []
+                    });
+
+                    boarUser.refreshUserData();
+                    boarUser.stats.general.notificationsOn = true;
+                    boarUser.stats.general.notificationChannel = this.interaction.channel
+                        ? this.interaction.channel.id
+                        : '0';
+                    boarUser.updateUserData();
+
+                    LogDebug.log(
+                        `${inter.user.username} (${inter.user.id}) turned ON notifications`,
+                        this.config,
+                        undefined,
+                        true
+                    );
+                } catch {
+                    try {
+                        // Tells user the bot is unable to DM them
+                        await Replies.handleReply(inter, strConfig.notificationFailed, colorConfig.error);
+                    } catch (err: unknown) {
+                        await LogDebug.handleError(err, this.interaction);
+                    }
+                }
+            }, 'daily_notify' + this.interaction + this.interaction.id).catch((err: unknown) => {
+                LogDebug.handleError(err, this.interaction);
+            });
+        });
+
+        // Deletes /boar daily fail message after 30 seconds
+        collector.once('end', async () => {
+            try {
+                await msg.delete();
+            } catch (err: unknown) {
+                await LogDebug.handleError(err, this.interaction);
+            }
+        });
+
+        return false;
     }
 
     /**
@@ -337,14 +374,12 @@ export default class DailySubcommand implements Subcommand {
      * @param rarityWeights - Map of weights and their indexes
      * @private
      */
-    private applyMultiplier(
-        userMultiplier: number,
-        rarityWeights: Map<number, number>
-    ): Map<number, number> {
+    private applyMultiplier(userMultiplier: number, rarityWeights: Map<number, number>): Map<number, number> {
         // Sorts from the highest weight to the lowest weight
-
         const newWeights = new Map<number, number>(
-            [...rarityWeights.entries()].sort((a,b) => { return b[1] - a[1]; })
+            [...rarityWeights.entries()].sort((a: [number, number], b: [number, number]) => {
+                return b[1] - a[1];
+            })
         );
 
         const highestWeight = newWeights.values().next().value;
@@ -352,7 +387,6 @@ export default class DailySubcommand implements Subcommand {
 
         // Increases probability by increasing weight
         // https://www.desmos.com/calculator/74inrkixxa | x = multiplier, o = weight
-
         for (const weightInfo of newWeights) {
             const rarityIndex = weightInfo[0];
             const oldWeight = weightInfo[1];
@@ -367,6 +401,8 @@ export default class DailySubcommand implements Subcommand {
         }
 
         // Restores the original order of the Map
-        return new Map([...newWeights.entries()].sort((a,b) => { return a[0] - b[0]; }));
+        return new Map([...newWeights.entries()].sort((a: [number, number], b: [number, number]) => {
+            return a[0] - b[0];
+        }));
     }
 }

@@ -21,15 +21,14 @@ export class ConfigHandler {
      *
      * @param firstLoad - Used to force maintenance mode for the first 10 seconds on initial load
      */
-    public async loadConfig(
-        firstLoad = false
-    ): Promise<void> {
+    public async loadConfig(firstLoad = false): Promise<void> {
         let parsedConfig: BotConfig;
 
         this.setRelativeTime();
 
         try {
             parsedConfig = JSON.parse(fs.readFileSync('config.json', 'utf-8'));
+
             if (firstLoad) {
                 const maintenanceActive = parsedConfig.maintenanceMode;
                 parsedConfig.maintenanceMode = true;
@@ -40,7 +39,10 @@ export class ConfigHandler {
                 }, 10000);
             }
         } catch {
-            await LogDebug.handleError('Unable to parse config file. Is \'config.json\' in the project root? Try renaming example_config.json to config.json');
+            await LogDebug.handleError(
+                'Unable to parse config file. Is \'config.json\' in the project root? ' +
+                'Try renaming example_config.json to config.json'
+            );
             process.exit(-1);
         }
 
@@ -62,12 +64,10 @@ export class ConfigHandler {
      * Passes if in maintenance mode even if not valid
      *
      * @param parsedConfig - The newly parsed config file to validate
-     * @return passed - Whether the config file passed validation
+     * @return Whether the config file passed validation
      * @private
      */
-    private async validateConfig(
-        parsedConfig: BotConfig
-    ): Promise<boolean> {
+    private async validateConfig(parsedConfig: BotConfig): Promise<boolean> {
         if (parsedConfig.maintenanceMode) {
             return true;
         }
@@ -229,7 +229,6 @@ export class ConfigHandler {
     public loadFonts(): void {
         try {
             const mcFont = this.config.pathConfig.fontAssets + this.config.pathConfig.mainFont;
-
             registerFont(mcFont, { family: this.config.stringConfig.fontName });
         } catch {
             LogDebug.handleError('Unable to load custom font. Verify its path in \'config.json\'.');

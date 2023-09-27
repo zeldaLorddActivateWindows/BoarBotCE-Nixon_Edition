@@ -3,18 +3,16 @@ import {
     ButtonInteraction,
     ChatInputCommandInteraction,
     InteractionCollector,
-    MessageComponentInteraction, StringSelectMenuBuilder,
+    StringSelectMenuBuilder,
     StringSelectMenuInteraction,
     TextChannel
 } from 'discord.js';
 import {BoarBotApp} from '../../BoarBotApp';
 import {Subcommand} from '../../api/commands/Subcommand';
 import {InteractionUtils} from '../../util/interactions/InteractionUtils';
-import {BotConfig} from '../../bot/config/BotConfig';
 import {BoarUser} from '../../util/boar/BoarUser';
 import {QuestsImageGenerator} from '../../util/generators/QuestsImageGenerator';
 import {CollectorUtils} from '../../util/discord/CollectorUtils';
-import {RowConfig} from '../../bot/config/commands/RowConfig';
 import {LogDebug} from '../../util/logging/LogDebug';
 import {Replies} from '../../util/interactions/Replies';
 import {ComponentUtils} from '../../util/discord/ComponentUtils';
@@ -22,7 +20,6 @@ import {DataHandlers} from '../../util/data/DataHandlers';
 import {Queue} from '../../util/interactions/Queue';
 import {QuestData} from '../../bot/data/global/QuestData';
 import {GuildData} from '../../bot/data/global/GuildData';
-import {SubcommandConfig} from '../../bot/config/commands/SubcommandConfig';
 
 /**
  * {@link QuestsSubcommand QuestsSubcommand.ts}
@@ -33,15 +30,13 @@ import {SubcommandConfig} from '../../bot/config/commands/SubcommandConfig';
  * @copyright WeslayCodes 2023
  */
 export default class QuestsSubcommand implements Subcommand {
-    private config: BotConfig = BoarBotApp.getBot().getConfig();
-    private subcommandInfo: SubcommandConfig = this.config.commandConfigs.boar.quests;
-    private guildData: GuildData | undefined;
-    private firstInter: ChatInputCommandInteraction = {} as ChatInputCommandInteraction;
-    private compInter: MessageComponentInteraction = {} as MessageComponentInteraction;
-    private boarUser: BoarUser = {} as BoarUser;
-    private baseRows: ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>[] = [];
-    private collector: InteractionCollector<ButtonInteraction | StringSelectMenuInteraction> =
-        {} as InteractionCollector<ButtonInteraction | StringSelectMenuInteraction>;
+    private config = BoarBotApp.getBot().getConfig();
+    private subcommandInfo = this.config.commandConfigs.boar.quests;
+    private guildData?: GuildData;
+    private firstInter = {} as ChatInputCommandInteraction;
+    private boarUser = {} as BoarUser;
+    private baseRows = [] as ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>[];
+    private collector = {} as InteractionCollector<ButtonInteraction | StringSelectMenuInteraction>;
     private hasStopped = false;
     public readonly data = { name: this.subcommandInfo.name, path: __filename };
 
@@ -57,37 +52,50 @@ export default class QuestsSubcommand implements Subcommand {
         await interaction.deferReply({ ephemeral: true });
         this.firstInter = interaction;
 
+        // Stop prior collector that user may have open still to reduce number of listeners
         if (CollectorUtils.questsCollectors[interaction.user.id]) {
             const oldCollector = CollectorUtils.questsCollectors[interaction.user.id];
-            setTimeout(() => { oldCollector.stop(CollectorUtils.Reasons.Expired) }, 1000);
+
+            setTimeout(() => {
+                oldCollector.stop(CollectorUtils.Reasons.Expired);
+            }, 1000);
         }
 
-        this.collector = CollectorUtils.questsCollectors[interaction.user.id] = await CollectorUtils.createCollector(
+        this.collector = await CollectorUtils.createCollector(
             interaction.channel as TextChannel, interaction.id, this.config.numberConfig
         );
 
-        this.collector.on('collect', async (inter: ButtonInteraction) => await this.handleCollect(inter));
-        this.collector.once('end', async (collected, reason) => await this.handleEndCollect(reason));
+        CollectorUtils.questsCollectors[interaction.user.id] = this.collector;
+
+        this.collector.on('collect', async (inter: ButtonInteraction) => {
+            await this.handleCollect(inter);
+        });
+
+        this.collector.once('end', async (_, reason: string) => {
+            await this.handleEndCollect(reason);
+        });
 
         this.boarUser = new BoarUser(interaction.user);
 
         this.showQuests(true);
     }
 
+    /**
+     * Handles when user claims rewards
+     *
+     * @param inter - The button interaction
+     * @private
+     */
     public async handleCollect(inter: ButtonInteraction) {
         try {
-            this.compInter = inter;
-
-            const questsRowConfig: RowConfig[][] = this.config.commandConfigs.boar.quests.componentFields;
-            const questsComponents = {
-                claim: questsRowConfig[0][0].components[0]
-            };
+            const questsRowConfig = this.config.commandConfigs.boar.quests.componentFields;
+            const questsComponents = { claim: questsRowConfig[0][0].components[0] };
 
             await inter.deferUpdate();
 
-            const shouldClaimFull =
-                (this.baseRows[0].components[0] as ButtonBuilder).data.label === 'Claim Full Completion Bonus';
-            const claimAmts: Record<string, number> = {};
+            const buttonLabel = (this.baseRows[0].components[0] as ButtonBuilder).data.label;
+            const shouldClaimFull = buttonLabel === 'Claim Full Completion Bonus';
+            const claimAmts = {} as Record<string, number>; // Stores amount of each item claimed
             let itemsNotFit = false;
 
             if (inter.customId.split('|')[0] === questsComponents.claim.customId && shouldClaimFull) {
@@ -107,8 +115,8 @@ export default class QuestsSubcommand implements Subcommand {
                         claimAmts.enhancer = amtToAdd;
                     }
 
-                    const numFullClaimed =
-                        this.boarUser.stats.quests.claimed[this.boarUser.stats.quests.claimed.length-1];
+                    const fullClaimIndex = this.boarUser.stats.quests.claimed.length-1;
+                    const numFullClaimed = this.boarUser.stats.quests.claimed[fullClaimIndex];
 
                     if (numFullClaimed < nums.questFullAmt) {
                         itemsNotFit = true;
@@ -117,13 +125,17 @@ export default class QuestsSubcommand implements Subcommand {
                     }
 
                     this.boarUser.updateUserData();
-                }, inter.id + inter.user.id).catch((err) => { throw err });
+                }, 'quest_full' + inter.id + inter.user.id).catch((err: unknown) => {
+                    throw err;
+                });
             } else if (inter.customId.split('|')[0] === questsComponents.claim.customId) {
                 const questConfigs = this.config.questConfigs;
                 const nums = this.config.numberConfig;
                 const questData = DataHandlers.getGlobalData(DataHandlers.GlobalFile.Quest) as QuestData;
 
                 let index = 0;
+
+                // Loops through each quest and gives rewards that fit in inventory
                 for (const id of questData.curQuestIDs) {
                     const questConfig = questConfigs[id];
                     const valIndex = Math.floor(index / 2);
@@ -144,24 +156,29 @@ export default class QuestsSubcommand implements Subcommand {
                             ? questConfig.lowerReward
                             : questConfig.higherReward;
 
+                        // Try to give user items if there's still rewards left to claim for quest
                         if (questProgress >= numToComplete && questRewardLeft > 0) {
                             const collectBucksIndex = questData.curQuestIDs.indexOf('collectBucks');
                             let roomLeft = nums.maxScore;
 
                             switch (rewardType) {
-                                case 'enhancer':
+                                case 'enhancer': {
                                     roomLeft = nums.maxEnhancers -
                                         this.boarUser.itemCollection.powerups[rewardType].numTotal;
                                     break;
-                                case 'gift':
-                                case 'clone':
+                                }
+
+                                case 'gift': case 'clone': {
                                     roomLeft = nums.maxSmallPow -
                                         this.boarUser.itemCollection.powerups[rewardType].numTotal;
                                     break;
-                                case 'miracle':
+                                }
+
+                                case 'miracle': {
                                     roomLeft = nums.maxPowBase -
                                         this.boarUser.itemCollection.powerups[rewardType].numTotal;
                                     break;
+                                }
                             }
 
                             const amtToAdd = Math.min(roomLeft, questRewardLeft);
@@ -178,6 +195,7 @@ export default class QuestsSubcommand implements Subcommand {
                                 this.boarUser.itemCollection.powerups[rewardType].numTotal += amtToAdd;
                             }
 
+                            // Counts toward collect bucks quest if claiming bucks
                             if (rewardType === 'bucks' && collectBucksIndex > 0) {
                                 this.boarUser.stats.quests.progress[collectBucksIndex] += amtToAdd;
                             }
@@ -192,29 +210,36 @@ export default class QuestsSubcommand implements Subcommand {
                         }
 
                        this.boarUser.updateUserData();
-                    }, inter.id + inter.user.id).catch((err) => { throw err });
+                    }, 'quest_claim' + inter.id + inter.user.id).catch((err: unknown) => {
+                        throw err;
+                    });
 
                     index++;
                 }
             }
 
             let claimString = 'You claimed';
-            const coloredParts: string[] = [];
-            const colors: string[] = [];
+            const coloredParts = [] as string[];
+            const colors = [] as string[];
 
-            Object.keys(claimAmts).forEach((rewardType, index, rewardTypes) => {
+            // Gets proper sentence structure and coloring based on rewards for response
+            Object.keys(claimAmts).forEach((rewardType: string, index: number, rewardTypes: string[]) => {
                 if (index === 0) {
                     claimString += ' %@';
                 }
+
                 if (index !== 0 && index !== rewardTypes.length-1) {
                     claimString += ', %@';
                 }
+
                 if (index === rewardTypes.length-1 && index === 1) {
                     claimString += ' and %@';
                 }
+
                 if (index === rewardTypes.length-1 && index > 1) {
                     claimString += ', and %@';
                 }
+
                 if (index === rewardTypes.length-1) {
                     claimString += '!';
                 }
@@ -230,28 +255,40 @@ export default class QuestsSubcommand implements Subcommand {
                 }
             });
 
+            // Tells user what they claimed
             if (coloredParts.length > 0) {
                 await Replies.handleReply(
                     inter, claimString, this.config.colorConfig.font, coloredParts, colors, true
                 );
             }
 
+            // Tells user their inventory is full of the item they're trying to claim
             if (itemsNotFit) {
                 await Replies.handleReply(
-                    inter, this.config.stringConfig.questInvFull, this.config.colorConfig.error,
-                    undefined, undefined, true
+                    inter,
+                    this.config.stringConfig.questInvFull,
+                    this.config.colorConfig.error,
+                    undefined,
+                    undefined,
+                    true
                 );
             }
 
             await this.showQuests();
         } catch (err: unknown) {
-            const canStop: boolean = await LogDebug.handleError(err, this.firstInter);
+            const canStop = await LogDebug.handleError(err, this.firstInter);
             if (canStop) {
                 this.collector.stop(CollectorUtils.Reasons.Error);
             }
         }
     }
 
+    /**
+     * Handles when the collection for quests ends
+     *
+     * @param reason - Why the collection ended
+     * @private
+     */
     public async handleEndCollect(reason: string) {
         try {
             this.hasStopped = true;
@@ -264,6 +301,7 @@ export default class QuestsSubcommand implements Subcommand {
                 );
             }
 
+            // Clears components from interaction
             await this.firstInter.editReply({
                 components: []
             });
@@ -277,7 +315,7 @@ export default class QuestsSubcommand implements Subcommand {
      *
      * @private
      */
-    private async showQuests(firstRun = false) {
+    private async showQuests(firstRun = false): Promise<void> {
         try {
             this.disableButtons();
 
@@ -286,6 +324,8 @@ export default class QuestsSubcommand implements Subcommand {
             if (firstRun) {
                 this.initButtons();
             }
+
+            // Changes label and style of claim button back to default
 
             (this.baseRows[0].components[0] as ButtonBuilder).setStyle(2);
             (this.baseRows[0].components[0] as ButtonBuilder).setLabel(
@@ -302,7 +342,7 @@ export default class QuestsSubcommand implements Subcommand {
                 : nums.questFullAmt;
 
             let fullComplete = true;
-            questData.curQuestIDs.every((id, index) => {
+            questData.curQuestIDs.every((id: string, index: number) => {
                 if (fullCompleteRewardLeft < nums.questFullAmt) return false;
 
                 const questConfig = questConfigs[id];
@@ -318,9 +358,12 @@ export default class QuestsSubcommand implements Subcommand {
                     : questConfig.questVals[valIndex][1];
 
                 if (questProgress >= numToComplete && questRewardLeft > 0) {
+                    // Turns claim button green and enables it if there's stuff to claim
+
                     this.baseRows[0].components[0].setDisabled(false);
                     (this.baseRows[0].components[0] as ButtonBuilder).setStyle(3);
                     fullComplete = false;
+
                     return false;
                 } else if (questRewardLeft > 0) {
                     fullComplete = false;
@@ -330,6 +373,8 @@ export default class QuestsSubcommand implements Subcommand {
             });
 
             if (fullComplete && fullCompleteRewardLeft > 0) {
+                // Turns claim button green, enables it, and says it's for full completion bonus
+
                 this.baseRows[0].components[0].setDisabled(false);
                 (this.baseRows[0].components[0] as ButtonBuilder).setStyle(3);
                 (this.baseRows[0].components[0] as ButtonBuilder).setLabel('Claim Full Completion Bonus');
@@ -355,9 +400,8 @@ export default class QuestsSubcommand implements Subcommand {
      * @private
      */
     private initButtons(): void {
-        const selfWipeFieldConfigs: RowConfig[][] = this.config.commandConfigs.boar.quests.componentFields;
-        const newRows: ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>[] =
-            ComponentUtils.makeRows(selfWipeFieldConfigs[0]);
+        const selfWipeFieldConfigs = this.config.commandConfigs.boar.quests.componentFields;
+        const newRows = ComponentUtils.makeRows(selfWipeFieldConfigs[0]);
 
         ComponentUtils.addToIDs(selfWipeFieldConfigs[0], newRows, this.firstInter.id, this.firstInter.user.id);
 

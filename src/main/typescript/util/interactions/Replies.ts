@@ -1,5 +1,4 @@
 import {
-    AttachmentBuilder,
     ChatInputCommandInteraction,
     MessageComponentInteraction,
     ModalSubmitInteraction
@@ -25,10 +24,7 @@ export class Replies {
      * @param config - Used to get the string to reply with
      * @param interaction - Interaction to reply to
      */
-    public static async currentConfigReply(
-        interaction: ChatInputCommandInteraction,
-        config: BotConfig
-    ): Promise<void> {
+    public static async currentConfigReply(interaction: ChatInputCommandInteraction, config: BotConfig): Promise<void> {
         LogDebug.log('Tried to run command while setup being configured', config, interaction);
         await Replies.handleReply(interaction, config.stringConfig.doingSetup, config.colorConfig.error);
     }
@@ -39,10 +35,7 @@ export class Replies {
      * @param interaction - Interaction to reply to
      * @param config - Used to get the string to reply with
      */
-    public static async wrongChannelReply(
-        interaction: ChatInputCommandInteraction,
-        config: BotConfig
-    ): Promise<void> {
+    public static async wrongChannelReply(interaction: ChatInputCommandInteraction, config: BotConfig): Promise<void> {
         LogDebug.log('Used in the wrong channel', config, interaction);
         await Replies.handleReply(interaction, config.stringConfig.wrongChannel, config.colorConfig.error);
     }
@@ -53,10 +46,7 @@ export class Replies {
      * @param config - Used to get the string to reply with
      * @param interaction - Interaction to reply to
      */
-    public static async noPermsReply(
-        interaction: ChatInputCommandInteraction,
-        config: BotConfig
-    ): Promise<void> {
+    public static async noPermsReply(interaction: ChatInputCommandInteraction, config: BotConfig): Promise<void> {
         LogDebug.log('Not a developer', config, interaction);
         await Replies.handleReply(interaction, config.stringConfig.noPermission, config.colorConfig.error);
     }
@@ -67,10 +57,7 @@ export class Replies {
      * @param config - Used to get the string to reply with
      * @param interaction - Interaction to reply to
      */
-    public static async onCooldownReply(
-        interaction: ChatInputCommandInteraction,
-        config: BotConfig
-    ): Promise<void> {
+    public static async onCooldownReply(interaction: ChatInputCommandInteraction, config: BotConfig): Promise<void> {
         LogDebug.log('Currently on cooldown', config, interaction);
         await Replies.handleReply(interaction, config.stringConfig.onCooldown, config.colorConfig.error);
     }
@@ -95,7 +82,7 @@ export class Replies {
         forceFollowup = false,
         ephemeral = true
     ): Promise<void> {
-        const embedImage: AttachmentBuilder = await CustomEmbedGenerator.makeEmbed(
+        const embedImage = await CustomEmbedGenerator.makeEmbed(
             content, color, BoarBotApp.getBot().getConfig(), coloredContents, secondaryColors
         );
 

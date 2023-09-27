@@ -3,17 +3,14 @@ import {
     Client,
     Events, ForumChannel,
     Interaction,
-    ModalBuilder, ThreadChannel
+    ModalBuilder
 } from 'discord.js';
 import {BoarBotApp} from '../../BoarBotApp';
 import {Subcommand} from '../../api/commands/Subcommand';
 import {InteractionUtils} from '../../util/interactions/InteractionUtils';
-import {BotConfig} from '../../bot/config/BotConfig';
-import {ModalConfig} from '../../bot/config/commands/ModalConfig';
 import {LogDebug} from '../../util/logging/LogDebug';
 import {Replies} from '../../util/interactions/Replies';
 import {GuildData} from '../../bot/data/global/GuildData';
-import {SubcommandConfig} from '../../bot/config/commands/SubcommandConfig';
 
 /**
  * {@link ReportSubcommand ReportSubcommand.ts}
@@ -25,12 +22,12 @@ import {SubcommandConfig} from '../../bot/config/commands/SubcommandConfig';
  * @copyright WeslayCodes 2023
  */
 export default class ReportSubcommand implements Subcommand {
-    private config: BotConfig = BoarBotApp.getBot().getConfig();
-    private subcommandInfo: SubcommandConfig = this.config.commandConfigs.boar.report;
-    private guildData: GuildData | undefined;
-    private interaction: ChatInputCommandInteraction = {} as ChatInputCommandInteraction;
-    private modalShowing: ModalBuilder = {} as ModalBuilder;
-    private curModalListener: ((submittedModal: Interaction) => Promise<void>) | undefined;
+    private config = BoarBotApp.getBot().getConfig();
+    private subcommandInfo = this.config.commandConfigs.boar.report;
+    private guildData?: GuildData;
+    private interaction = {} as ChatInputCommandInteraction;
+    private modalShowing = {} as ModalBuilder;
+    private curModalListener?: (submittedModal: Interaction) => Promise<void>;
     public readonly data = { name: this.subcommandInfo.name, path: __filename };
 
     /**
@@ -56,7 +53,7 @@ export default class ReportSubcommand implements Subcommand {
      * @private
      */
     private async modalHandle(inter: ChatInputCommandInteraction): Promise<void> {
-        const modals: ModalConfig[] = this.config.commandConfigs.boar.report.modals;
+        const modals = this.config.commandConfigs.boar.report.modals;
 
         this.modalShowing = new ModalBuilder(modals[0]);
         this.modalShowing.setCustomId(modals[0].customId + '|' + inter.id);
@@ -66,9 +63,10 @@ export default class ReportSubcommand implements Subcommand {
 
         inter.client.on(Events.InteractionCreate, this.curModalListener);
 
+        // Forces the modal listener to end after two minutes
         setTimeout(() => {
             this.endModalListener(inter.client);
-        }, 60000);
+        }, 120000);
     }
 
     /**
@@ -81,17 +79,18 @@ export default class ReportSubcommand implements Subcommand {
         try  {
             if (submittedModal.user.id !== this.interaction.user.id) return;
 
-            if (
-                BoarBotApp.getBot().getConfig().maintenanceMode && !this.config.devs.includes(this.interaction.user.id)
-            ) {
+            const maintenanceBlocked = this.config.maintenanceMode &&
+                !this.config.devs.includes(this.interaction.user.id);
+
+            if (maintenanceBlocked) {
                 this.endModalListener(submittedModal.client);
                 return;
             }
 
-            if (
-                !submittedModal.isModalSubmit() || !submittedModal.guild ||
-                submittedModal.customId !== this.modalShowing.data.custom_id
-            ) {
+            const invalidSubmittedModal = !submittedModal.isModalSubmit() ||
+                !submittedModal.guild || submittedModal.customId !== this.modalShowing.data.custom_id;
+
+            if (invalidSubmittedModal) {
                 this.endModalListener(submittedModal.client);
                 return;
             }
@@ -101,16 +100,21 @@ export default class ReportSubcommand implements Subcommand {
             const submittedTitle: string = submittedModal.fields.getTextInputValue(
                 this.modalShowing.components[0].components[0].data.custom_id as string
             );
+
             const submittedDetails: string = submittedModal.fields.getTextInputValue(
                 this.modalShowing.components[1].components[0].data.custom_id as string
             );
+
             const submittedLink: string = submittedModal.fields.getTextInputValue(
                 this.modalShowing.components[2].components[0].data.custom_id as string
             );
 
+            // Tells user their report has been recorded
             await Replies.handleReply(
                 submittedModal, this.config.stringConfig.sentReport, undefined, undefined, undefined, true, true
             );
+
+            // Sends report to reports channel
             await this.sendReport(submittedTitle, submittedDetails, submittedLink);
         } catch (err: unknown) {
             await LogDebug.handleError(err, this.interaction);
@@ -132,22 +136,32 @@ export default class ReportSubcommand implements Subcommand {
         }
     }
 
-    private async sendReport(title: string, post: string, link: string) {
+    /**
+     * Sends report information to reports forum channel
+     *
+     * @param title - Title of forum post
+     * @param post - Content of forum post
+     * @param link - Relevant link for report
+     * @private
+     */
+    private async sendReport(title: string, post: string, link: string): Promise<void> {
         try {
-            const reportsChannelID: string = this.config.reportsChannel;
-            const reportsChannel: ForumChannel =
-                await this.interaction.client.channels.fetch(reportsChannelID) as ForumChannel;
+            const reportsChannelID = this.config.reportsChannel;
+            const reportsChannel = await this.interaction.client.channels.fetch(reportsChannelID) as ForumChannel;
 
-            const postDivided: RegExpMatchArray = post.match(/[\s\S]{1,1800}/g) as RegExpMatchArray;
+            // Sections post so the full report can be sent
+            const postDivided = post.match(/[\s\S]{1,1800}/g) as string[];
 
-            const newThreadChannel: ThreadChannel = await reportsChannel.threads.create({
+            // Sends report with user who made the report and the content
+            const newThreadChannel = await reportsChannel.threads.create({
                 name: title.substring(0, 100),
                 message: {
-                    content: '**Report from <@' + this.interaction.user.id + '>**\n\n' + postDivided[0] +
-                        (link !== '' && postDivided.length === 1 ? '\n\n' + link : '')
+                    content: '**Report from <@' + this.interaction.user.id + '> ' + this.interaction.user.username +
+                        ' **\n\n' + postDivided[0] + (link !== '' && postDivided.length === 1 ? '\n\n' + link : '')
                 }
             });
 
+            // Sends each section of the post to avoid text limit
             for (let i=1; i<postDivided.length; i++) {
                 await newThreadChannel.send(postDivided[i] +
                     (link !== '' && i === postDivided.length - 1 ? '\n\n**Link:** ' + link : '')

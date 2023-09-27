@@ -222,8 +222,9 @@ export class NumberConfig {
     public readonly triviaRows = 0 as number;
     public readonly triviaCols = 0 as number;
     public readonly fastCols = 0 as number;
-    public readonly powInterval = 0 as number;
-    public readonly powDuration = 0 as number;
+    public readonly powPlusMinusMins = 0 as number;
+    public readonly powIntervalHours = 0 as number;
+    public readonly powDurationMillis = 0 as number;
     public readonly powExperiencedNum = 0 as number;
 
     // Leaderboard image positions, sizes, and values

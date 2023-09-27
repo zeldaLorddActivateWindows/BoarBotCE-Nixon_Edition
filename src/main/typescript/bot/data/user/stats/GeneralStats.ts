@@ -22,5 +22,5 @@ export class GeneralStats {
     public notificationsOn = false;
     public notificationChannel = '';
     public unbanTime?: number; // No longer used, now stored globally
-    public deletionTime?: number;
+    public deletionTime?: number; // No longer used, now stored globally
 }

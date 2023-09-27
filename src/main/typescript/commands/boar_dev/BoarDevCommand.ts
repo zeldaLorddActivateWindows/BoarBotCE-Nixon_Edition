@@ -1,8 +1,6 @@
 import {AutocompleteInteraction, ChatInputCommandInteraction, SlashCommandBuilder} from 'discord.js';
 import {BoarBotApp} from '../../BoarBotApp';
 import {Command} from '../../api/commands/Command';
-import {LogDebug} from '../../util/logging/LogDebug';
-import {Subcommand} from '../../api/commands/Subcommand';
 import {InteractionUtils} from '../../util/interactions/InteractionUtils';
 
 /**
@@ -45,35 +43,7 @@ export default class BoarDevCommand implements Command {
             )
         );
 
-    /**
-     * Executes the called subcommand if it exists
-     *
-     * @param interaction - An interaction that could've called a boar-dev subcommand
-     */
     public async execute(interaction: AutocompleteInteraction | ChatInputCommandInteraction): Promise<void> {
-        const subcommand: Subcommand | undefined = BoarBotApp.getBot().getSubcommands()
-            .get(interaction.options.getSubcommand());
-
-        if (!subcommand) return;
-
-        const exports = require(subcommand.data.path);
-        const commandClass = new exports.default();
-
-        if (interaction.isAutocomplete()) {
-            try {
-                await commandClass.autocomplete(interaction);
-            } catch (err: unknown) {
-                await LogDebug.handleError(err, interaction);
-            }
-        } else if (interaction.isChatInputCommand()) {
-            try {
-                await commandClass.execute(interaction);
-            } catch (err: unknown) {
-                await LogDebug.handleError(err, interaction);
-            }
-        }
-
-
-
+        InteractionUtils.executeSubcommand(interaction);
     }
 }

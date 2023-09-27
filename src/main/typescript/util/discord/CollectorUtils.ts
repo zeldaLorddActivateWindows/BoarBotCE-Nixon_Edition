@@ -25,20 +25,27 @@ enum Reasons {
  */
 export class CollectorUtils {
     public static readonly Reasons = Reasons;
-    public static marketCollectors:
-        Record<string, InteractionCollector<ButtonInteraction | StringSelectMenuInteraction>> = {};
-    public static collectionCollectors:
-        Record<string, InteractionCollector<ButtonInteraction | StringSelectMenuInteraction>> = {};
-    public static topCollectors:
-        Record<string, InteractionCollector<ButtonInteraction | StringSelectMenuInteraction>> = {};
-    public static setupCollectors:
-        Record<string, InteractionCollector<ButtonInteraction | StringSelectMenuInteraction>> = {};
-    public static helpCollectors:
-        Record<string, InteractionCollector<ButtonInteraction | StringSelectMenuInteraction>> = {};
-    public static selfWipeCollectors:
-        Record<string, InteractionCollector<ButtonInteraction | StringSelectMenuInteraction>> = {};
-    public static questsCollectors:
-        Record<string, InteractionCollector<ButtonInteraction | StringSelectMenuInteraction>> = {};
+    public static marketCollectors = {} as Record<
+        string, InteractionCollector<ButtonInteraction | StringSelectMenuInteraction>
+    >;
+    public static collectionCollectors = {} as Record<
+        string, InteractionCollector<ButtonInteraction | StringSelectMenuInteraction>
+    >;
+    public static topCollectors = {} as Record<
+        string, InteractionCollector<ButtonInteraction | StringSelectMenuInteraction>
+    >;
+    public static setupCollectors = {} as Record<
+        string, InteractionCollector<ButtonInteraction | StringSelectMenuInteraction>
+    >;
+    public static helpCollectors = {} as Record<
+        string, InteractionCollector<ButtonInteraction | StringSelectMenuInteraction>
+    >;
+    public static selfWipeCollectors = {} as Record<
+        string, InteractionCollector<ButtonInteraction | StringSelectMenuInteraction>
+    >;
+    public static questsCollectors = {} as Record<
+        string, InteractionCollector<ButtonInteraction | StringSelectMenuInteraction>
+    >;
 
     /**
      * Determines whether the interaction should be processed
@@ -62,8 +69,8 @@ export class CollectorUtils {
             return false;
         }
 
-        // Updates time to collect every 100ms, preventing
-        // users from clicking too fast
+        // Updates time to collect every 100ms, preventing users from clicking too fast
+
         timerVars.timeUntilNextCollect = Date.now() + 300;
         timerVars.updateTime = setInterval(() => {
             timerVars.timeUntilNextCollect = Date.now() + 300;
@@ -91,25 +98,26 @@ export class CollectorUtils {
     ): Promise<InteractionCollector<ButtonInteraction | StringSelectMenuInteraction>> {
         // Only allows button presses from current interaction
         const filter = async (compInter: MessageComponentInteraction) => {
-            const modifiers: string[] = compInter.customId.split('|').slice(1);
+            const modifiers = compInter.customId.split('|').slice(1);
             const returnVal = modifiers[0] === id;
 
-            if (
-                compInter.customId.toLowerCase().startsWith('gift') && returnVal &&
-                excludeUser && modifiers[1] === compInter.user.id
-            ) {
+            const claimingOwnGift = compInter.customId.toLowerCase().startsWith('gift') && returnVal &&
+                excludeUser && modifiers[1] === compInter.user.id;
+            const notUsersInter = returnVal && modifiers.length > 1 &&
+                excludeUser && modifiers[1] === compInter.user.id ||
+                returnVal && modifiers.length > 1 && !excludeUser && modifiers[1] !== compInter.user.id;
+
+            if (claimingOwnGift) {
                 try {
                     await Replies.handleReply(
                         compInter, 'You can\'t claim your own gift!', BoarBotApp.getBot().getConfig().colorConfig.error
                     );
                 } catch {}
-            } else if (
-                returnVal && modifiers.length > 1 && excludeUser && modifiers[1] === compInter.user.id ||
-                returnVal && modifiers.length > 1 && !excludeUser && modifiers[1] !== compInter.user.id
-            ) {
+            } else if (notUsersInter) {
                 try {
                     await Replies.handleReply(
-                        compInter, 'This isn\'t yours to interact with!',
+                        compInter,
+                        'This isn\'t yours to interact with!',
                         BoarBotApp.getBot().getConfig().colorConfig.error
                     );
                 } catch {}

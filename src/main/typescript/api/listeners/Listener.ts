@@ -10,9 +10,5 @@ import {Events, Interaction, Message} from 'discord.js';
  */
 export interface Listener {
     eventName: Events;
-    execute(
-        ...args:
-            | Interaction[]
-            | Message[]
-    ): Promise<void>;
+    execute(...args: Interaction[] | Message[]): Promise<void>;
 }

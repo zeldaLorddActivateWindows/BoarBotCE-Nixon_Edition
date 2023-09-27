@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import {TextChannel, ForumChannel, User} from 'discord.js';
 import {PathConfig} from './PathConfig';
 import {StringConfig} from './StringConfig';

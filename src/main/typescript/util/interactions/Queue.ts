@@ -11,7 +11,7 @@
 export class Queue {
     // [1-10] are queues for users based on last digit of ID
     // [0] is a queue for global changes
-    private static queues: Record<string, () => void>[] = [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}];
+    private static queues = [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}] as Record<string, () => void>[];
     private static queueRunning = [false, false, false, false, false, false, false, false, false, false];
 
     /**
@@ -22,7 +22,7 @@ export class Queue {
      * @param id - ID of queue item
      */
     public static async addQueue(func: () => void, id: string): Promise<unknown> {
-        const queueIndex: number = id.endsWith('global') ? 0 : parseInt(id[id.length-1]) + 1;
+        const queueIndex = id.endsWith('global') ? 0 : parseInt(id[id.length-1]) + 1;
         Queue.queues[queueIndex][id] = func;
 
         if (!Queue.queueRunning[queueIndex]) {
@@ -35,9 +35,11 @@ export class Queue {
                 reject('Took too long to run queue item. ID: ' + id);
             }, 180000);
 
-            setInterval(() => {
-                if (!Queue.queues[queueIndex][id])
+            const processInterval = setInterval(() => {
+                if (!Queue.queues[queueIndex][id]) {
+                    clearInterval(processInterval);
                     resolve('Queue item successfully processed.');
+                }
             }, 100);
         })
     }

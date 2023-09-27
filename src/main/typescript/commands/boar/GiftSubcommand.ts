@@ -31,9 +31,7 @@ export default class GiftSubcommand implements Subcommand {
      *
      * @param interaction - The interaction that called the subcommand
      */
-    public async execute(
-        interaction: ChatInputCommandInteraction
-    ): Promise<void> {
+    public async execute(interaction: ChatInputCommandInteraction): Promise<void> {
         this.guildData = await InteractionUtils.handleStart(interaction, this.config);
         if (!this.guildData) return;
 
@@ -56,32 +54,38 @@ export default class GiftSubcommand implements Subcommand {
             try {
                 const boarUser = new BoarUser(this.interaction.user);
 
-                if (boarUser.itemCollection.powerups.gift.numTotal > 0) {
-                    const curOutVal = boarUser.itemCollection.powerups.gift.curOut;
-
-                    if (!curOutVal || curOutVal + 30000 < Date.now()) {
-                        boarUser.itemCollection.powerups.gift.curOut = Date.now();
-                        boarUser.updateUserData();
-
-                        await new BoarGift(boarUser, this.config).sendMessage(this.interaction);
-
-                        await Replies.handleReply(
-                            this.interaction, this.config.stringConfig.giftSent, this.config.colorConfig.green
-                        );
-                    } else {
-                        await Replies.handleReply(
-                            this.interaction, this.config.stringConfig.giftOut, this.config.colorConfig.error
-                        );
-                    }
-                } else {
+                // Tells user they don't have any gifts
+                if (boarUser.itemCollection.powerups.gift.numTotal <= 0) {
                     await Replies.handleReply(
                         this.interaction, this.config.stringConfig.giftNone, this.config.colorConfig.error
                     );
+                    return;
                 }
+
+                const curOutVal = boarUser.itemCollection.powerups.gift.curOut;
+
+                // Tells user they currently have a gift sent out
+                if (curOutVal && curOutVal + 30000 >= Date.now()) {
+                    await Replies.handleReply(
+                        this.interaction, this.config.stringConfig.giftOut, this.config.colorConfig.error
+                    );
+                    return;
+                }
+
+                boarUser.itemCollection.powerups.gift.curOut = Date.now();
+                boarUser.updateUserData();
+
+                // Sends gift message out to current channel
+                await new BoarGift(boarUser, this.config).sendMessage(this.interaction);
+
+                // Tells user they successfully sent the gift
+                await Replies.handleReply(
+                    this.interaction, this.config.stringConfig.giftSent, this.config.colorConfig.green
+                );
             } catch (err: unknown) {
                 LogDebug.handleError(err, this.interaction);
             }
-        }, this.interaction.id + this.interaction.user.id).catch((err: unknown) => {
+        }, 'gift_send' + this.interaction.id + this.interaction.user.id).catch((err: unknown) => {
             throw err;
         });
     }

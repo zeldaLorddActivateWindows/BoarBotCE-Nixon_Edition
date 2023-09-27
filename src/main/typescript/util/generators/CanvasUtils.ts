@@ -41,7 +41,7 @@ export class CanvasUtils {
         ctx.textBaseline = 'alphabetic';
         ctx.fillStyle = color;
 
-        const replaceIndexes: number[] = [];
+        const replaceIndexes = [] as number[];
 
         for (let i=0; i<coloredContents.length; i++) {
             replaceIndexes.push(text.indexOf('%@', i === 0
@@ -54,16 +54,16 @@ export class CanvasUtils {
         let heightDiff = 0;
 
         if (width != undefined && wrap) {
-            const words: string[] = text.split(' ');
-            const lineHeight: number = (ctx.measureText('Sp').actualBoundingBoxAscent +
+            const words = text.split(' ');
+            const lineHeight = (ctx.measureText('Sp').actualBoundingBoxAscent +
                 ctx.measureText('Sp').actualBoundingBoxDescent) * 1.1;
-            let newHeight: number = pos[1];
-            const lines: string[] = [];
+            let newHeight = pos[1];
+            const lines = [] as string[];
             let curLine = '';
 
             let totalChars = 0;
             for (let i=0; i<words.length; i++) {
-                const word: string = words[i];
+                const word = words[i];
 
                 if (ctx.measureText(curLine + word).width < width) {
                     curLine += word + ' ';
@@ -105,7 +105,9 @@ export class CanvasUtils {
                 }
 
                 const relReplaceIndexes = lastIndex >= 0
-                    ? replaceIndexes.slice(firstIndex, lastIndex+1).map(val => val - prevCharIndex)
+                    ? replaceIndexes.slice(firstIndex, lastIndex+1).map((val: number) => {
+                        return val - prevCharIndex;
+                    })
                     : [-1];
                 const contentToReplace = lastIndex >= 0
                     ? coloredContents.slice(firstIndex, lastIndex+1)
@@ -124,8 +126,14 @@ export class CanvasUtils {
                 }
 
                 this.drawColoredText(
-                    ctx, line, 'center', [pos[0], newHeight], relReplaceIndexes,
-                    contentToReplace, color, colorsToUse
+                    ctx,
+                    line,
+                    'center',
+                    [pos[0], newHeight],
+                    relReplaceIndexes,
+                    contentToReplace,
+                    color,
+                    colorsToUse
                 );
 
                 newHeight += lineHeight;
@@ -168,7 +176,7 @@ export class CanvasUtils {
         color: string,
         secondaryColors: string[]
     ): void {
-        const priorNormText: string[] = [];
+        const priorNormText = [] as string[];
         let textEnd = '';
 
         for (let i=0; i<replaceIndexes.length; i++) {
@@ -281,7 +289,7 @@ export class CanvasUtils {
             return;
         }
 
-        const canvas: Canvas.Canvas = Canvas.createCanvas(ctx.canvas.width, ctx.canvas.height);
+        const canvas = Canvas.createCanvas(ctx.canvas.width, ctx.canvas.height);
         const newCtx = canvas.getContext('2d');
 
         newCtx.font = ctx.font;
@@ -292,7 +300,7 @@ export class CanvasUtils {
 
         newCtx.globalCompositeOperation = 'source-in';
 
-        const gradStartPos: [number, number] = [
+        const gradStartPos = [
             newCtx.textAlign === 'center'
                 ? pos[0] - newCtx.measureText(text).width / 2
                 : newCtx.textAlign === 'left'
@@ -302,13 +310,13 @@ export class CanvasUtils {
                 ? pos[1] - (newCtx.measureText('Sp').actualBoundingBoxAscent +
                     newCtx.measureText('Sp').actualBoundingBoxDescent) / 2
                 : pos[1] - (newCtx.measureText('Sp').actualBoundingBoxAscent)
-        ];
-        const gradEndPos: [number, number] = [
+        ] as [number, number];
+        const gradEndPos = [
             gradStartPos[0] + newCtx.measureText(text).width,
             gradStartPos[1] + (newCtx.measureText('Sp').actualBoundingBoxAscent +
                 newCtx.measureText('Sp').actualBoundingBoxDescent)
-        ];
-        const gradColors: string[] = color.split(',');
+        ] as [number, number];
+        const gradColors = color.split(',');
 
         const gradient = newCtx.createLinearGradient(...gradStartPos, ...gradEndPos);
         gradColors.forEach((gradColor, index) => {
@@ -340,7 +348,7 @@ export class CanvasUtils {
         pos: number[],
         diameter: number
     ): void {
-        const radius: number = diameter / 2;
+        const radius = diameter / 2;
 
         ctx.beginPath();
         ctx.arc(pos[0] + radius, pos[1] + radius, radius, 0, Math.PI * 2);
@@ -371,7 +379,7 @@ export class CanvasUtils {
 
         ctx.beginPath();
 
-        const gradColors: string[] = color.split(',');
+        const gradColors = color.split(',');
         const gradient = ctx.createLinearGradient(...pos1, ...pos2);
         gradColors.forEach((gradColor, index) => {
             gradient.addColorStop(index / (gradColors.length-1), gradColor);
@@ -399,7 +407,7 @@ export class CanvasUtils {
         size: [number, number],
         color: string
     ): void {
-        const gradColors: string[] = color.split(',');
+        const gradColors = color.split(',');
         const gradient = ctx.createLinearGradient(...pos, pos[0] + size[0], pos[1] + size[1]);
         gradColors.forEach((gradColor, index) => {
             gradient.addColorStop(index / (gradColors.length-1), gradColor);

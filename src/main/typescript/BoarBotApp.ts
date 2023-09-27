@@ -2,7 +2,7 @@ import {BoarBot} from './bot/BoarBot';
 import {Bot} from './api/bot/Bot';
 import {LogDebug} from './util/logging/LogDebug';
 import fs from 'fs';
-import * as ftp from 'basic-ftp';
+import ftp from 'basic-ftp';
 import dotenv from 'dotenv';
 import {exec} from 'child_process'
 import {BotConfig} from './bot/config/BotConfig';
@@ -22,11 +22,17 @@ export class BoarBotApp {
     private static bot: Bot;
 
     public static async main(): Promise<void> {
-        const boarBot: BoarBot = new BoarBot();
+        const boarBot = new BoarBot();
         this.bot = boarBot;
 
         process.title = 'BoarBot - Process';
+
         process.on('uncaughtException', async (e) => {
+            LogDebug.handleError(e);
+            process.exit();
+        });
+
+        process.on('unhandledRejection', async (e) => {
             LogDebug.handleError(e);
             process.exit();
         });
@@ -43,10 +49,18 @@ export class BoarBotApp {
         }
     }
 
+    /**
+     * Returns the bot that has methods for grabbing config, subcommands, etc.
+     */
     public static getBot(): Bot {
         return this.bot;
     }
 
+    /**
+     * Deploys dev code to prod environment
+     *
+     * @private
+     */
     private static async deployProd(): Promise<void> {
         this.bot.loadConfig(true);
 
@@ -73,6 +87,13 @@ export class BoarBotApp {
         await this.doFilePush(configData, origConfig);
     }
 
+    /**
+     * Pushes all needed files to remote prod server
+     *
+     * @param configData
+     * @param origConfig
+     * @private
+     */
     private static async doFilePush(configData: BotConfig, origConfig: BotConfig): Promise<void> {
         const config = this.bot.getConfig();
         const pathConfig = config.pathConfig;
@@ -138,6 +159,14 @@ export class BoarBotApp {
         }, 1000);
     }
 
+    /**
+     * Pushes a specific directory to remote prod
+     *
+     * @param client - FTP client
+     * @param from - Dev directory path
+     * @param to - Prod directory path
+     * @private
+     */
     private static async pushToDir(client: ftp.Client, from: string, to?: string) {
         await client.ensureDir(to ? to : from);
         await client.clearWorkingDir();
@@ -145,6 +174,11 @@ export class BoarBotApp {
         await client.cd(this.bot.getConfig().pathConfig.prodRemotePath);
     }
 
+    /**
+     * Starts the FTP client that connects to remote prod server
+     *
+     * @private
+     */
     private static async startFTPClient(): Promise<ftp.Client> {
         const client = new ftp.Client();
 
@@ -160,6 +194,7 @@ export class BoarBotApp {
     }
 }
 
+// Starts the bot
 try {
     BoarBotApp.main();
 } catch (err: unknown) {

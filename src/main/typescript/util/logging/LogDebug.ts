@@ -41,7 +41,7 @@ export class LogDebug {
      * @param sendToChannel
      */
     public static log(
-        debugMessage: any,
+        debugMessage: unknown,
         config: BotConfig,
         interaction?: ChatInputCommandInteraction | AutocompleteInteraction | MessageComponentInteraction,
         sendToChannel = false
@@ -61,7 +61,7 @@ export class LogDebug {
                 .replace('%@', interaction.commandName + ' ')
                 .replace('%@', interaction.options.getSubcommand()) +
                 debugMessage
-        } else if (interaction) {
+        } else if (interaction && interaction.isMessageComponent()) {
             debugMessage = config.stringConfig.commandDebugPrefix
                 .replace('%@', interaction.user.username + ' (' + interaction.user.id + ')')
                 .replace('%@', interaction.customId.split('|')[0])
@@ -93,27 +93,30 @@ export class LogDebug {
      */
     public static async handleError(
         err: unknown | string,
-        interaction?: ChatInputCommandInteraction | ModalSubmitInteraction |
-            AutocompleteInteraction | MessageComponentInteraction,
+        interaction?:
+            | ChatInputCommandInteraction
+            | ModalSubmitInteraction
+            | AutocompleteInteraction
+            | MessageComponentInteraction,
         sendToChannel = true
     ): Promise<boolean> {
         try {
-            const errString: string | undefined = typeof err === 'string' ? err : (err as Error).stack;
+            const errString = typeof err === 'string' ? err : (err as Error).stack;
             const prefix = `[${Colors.Red}CAUGHT ERROR${Colors.White}] `;
-            const time: string = LogDebug.getPrefixTime();
-            const config: BotConfig = BoarBotApp.getBot().getConfig();
+            const time = LogDebug.getPrefixTime();
+            const config = BoarBotApp.getBot().getConfig();
 
-            if (
-                errString && (errString.includes('Unknown interaction') ||
+            const onlyLogNoSend = errString && (errString.includes('Unknown interaction') ||
                 errString.includes('Unknown Message') ||
                 errString.includes('Missing Access') ||
-                errString.includes('ChannelNotCached'))
-            ) {
+                errString.includes('ChannelNotCached'));
+
+            if (onlyLogNoSend) {
                 LogDebug.log(errString, config);
                 return false;
             }
 
-            let completeString: string = prefix + time;
+            let completeString = prefix + time;
             if (interaction && interaction.isChatInputCommand()) {
                 completeString += config.stringConfig.commandDebugPrefix
                     .replace('%@', interaction.user.username + ' (' + interaction.user.id + ')')
@@ -180,12 +183,20 @@ export class LogDebug {
         }
     }
 
+    /**
+     * Writes a string to the current log file
+     *
+     * @param completeString - String to write to log file
+     * @param config - Used to get log file path
+     * @private
+     */
     private static writeToLogFile(completeString: string, config: BotConfig): void {
         if (BoarBotApp.getBot().getClient().isReady()) {
             const curTime = Date.now();
             const curFolderName = new Date(curTime).toLocaleDateString().replaceAll('/','-');
-            const oldFolderName =
-                new Date(curTime - config.numberConfig.oneDay).toLocaleDateString().replaceAll('/','-');
+            const oldFolderName = new Date(
+                curTime - config.numberConfig.oneDay
+            ).toLocaleDateString().replaceAll('/','-');
 
             if (!fs.existsSync(config.pathConfig.logsFolder)) {
                 fs.mkdirSync(config.pathConfig.logsFolder);
@@ -204,9 +215,10 @@ export class LogDebug {
 
             fs.appendFileSync(
                 config.pathConfig.logsFolder + curFolderName + '/' + BoarBotApp.getBot().getClient().readyTimestamp +
-                '.log', completeString.replace(
-                /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, ''
-            ) + '\n'
+                    '.log',
+                completeString.replace(
+                    /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, ''
+                ) + '\n'
             );
         }
     }

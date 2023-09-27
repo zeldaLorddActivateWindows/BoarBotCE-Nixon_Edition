@@ -11,7 +11,7 @@ import {Replies} from './Replies';
  * @copyright WeslayCodes 2023
  */
 export class Cooldown {
-    public static cooldowns: Set<string> = new Set();
+    public static cooldowns = new Set<string>();
 
     /**
      * Handles cooldowns for users
@@ -19,10 +19,7 @@ export class Cooldown {
      * @param config - Used to get the string to reply with
      * @param interaction - Interaction to reply to
      */
-    public static async handleCooldown(
-        interaction: ChatInputCommandInteraction,
-        config: BotConfig
-    ): Promise<boolean> {
+    public static async handleCooldown(interaction: ChatInputCommandInteraction, config: BotConfig): Promise<boolean> {
         if (this.cooldowns.has(interaction.user.id)) {
             await Replies.onCooldownReply(interaction, config);
             return true;

@@ -45,31 +45,30 @@ export class CommandHandler {
      *
      * @param config - The config file to use. Parameterized to prevent bugs when updating config
      * @param commandFolders - All folders that store commands
-     * @return allFiles - All command and subcommand files
+     * @return All command and subcommand files
      * @private
      */
-    private findCommandFiles(
-        commandFolders: string[],
-        config: BotConfig
-    ): string[][] {
-        let allCommandFiles: string[] = [];
-        let allSubcommandFiles: string[] = [];
+    private findCommandFiles(commandFolders: string[], config: BotConfig): string[][] {
+        let allCommandFiles = [] as string[];
+        let allSubcommandFiles = [] as string[];
 
         for (const commandFolder of commandFolders) {
-            const folderFiles = fs.readdirSync(config.pathConfig.commands + commandFolder);
-
-            const subcommandFiles = folderFiles.filter(fileName => {
-                return fileName.toLowerCase().includes('subcommand');
+            const folderFiles = fs.readdirSync(config.pathConfig.commands + commandFolder).filter((fname: string) => {
+                return fname.endsWith('.js');
             });
 
-            subcommandFiles.forEach((fileName, index, arr) => {
-                arr[index] = commandFolder + '/' + fileName;
+            const subcommandFiles = folderFiles.filter((fname: string) => {
+                return fname.toLowerCase().includes('subcommand');
+            });
+
+            subcommandFiles.forEach((fname: string, index: number, arr: string[]) => {
+                arr[index] = commandFolder + '/' + fname;
             });
 
             allSubcommandFiles = allSubcommandFiles.concat(subcommandFiles);
 
-            const commandFile = folderFiles.find(fileName => {
-                return !subcommandFiles.includes(fileName);
+            const commandFile = folderFiles.find((fname: string) => {
+                return !subcommandFiles.includes(fname);
             });
 
             if (!commandFile) {
@@ -77,8 +76,8 @@ export class CommandHandler {
                 process.exit(-1);
             }
 
-            folderFiles.forEach((fileName, index, arr) => {
-                arr[index] = commandFolder + '/' + fileName;
+            folderFiles.forEach((fname: string, index: number, arr: string[]) => {
+                arr[index] = commandFolder + '/' + fname;
             });
 
             allCommandFiles = allCommandFiles.concat(folderFiles);
@@ -94,10 +93,7 @@ export class CommandHandler {
      * @param allFiles - All command and subcommand files
      * @private
      */
-    private registerCommandFiles(
-        allFiles: string[][],
-        config: BotConfig
-    ): void {
+    private registerCommandFiles(allFiles: string[][], config: BotConfig): void {
         const commandFiles = allFiles[0];
         const subcommandFiles = allFiles[1];
 
@@ -139,14 +135,9 @@ export class CommandHandler {
      */
     public async deployCommands(): Promise<void> {
         const config = BoarBotApp.getBot().getConfig();
-        const applicationCommandData = [] as (
-            | SlashCommandBuilder
-            | SlashCommandSubcommandsOnlyBuilder
-        )[];
-        const guildCommandData  = [] as (
-            | SlashCommandBuilder
-            | SlashCommandSubcommandsOnlyBuilder
-        )[];
+
+        const applicationCommandData = [] as (SlashCommandBuilder | SlashCommandSubcommandsOnlyBuilder)[];
+        const guildCommandData  = [] as (SlashCommandBuilder | SlashCommandSubcommandsOnlyBuilder)[];
 
         for (const command of [...this.commands.values()]) {
             if (command.data.toJSON().default_member_permissions?.includes('0')) {
@@ -172,13 +163,12 @@ export class CommandHandler {
      */
     private async deployApplicationCommands(
         rest: REST,
-        commandData:
-            | SlashCommandBuilder
-            | SlashCommandSubcommandsOnlyBuilder[],
+        commandData: SlashCommandBuilder | SlashCommandSubcommandsOnlyBuilder[],
         config: BotConfig
     ): Promise<void> {
         try {
             await rest.put(Routes.applicationCommands(process.env.CLIENT_ID as string), { body: commandData });
+
             LogDebug.log('Application commands have successfully been registered!', config);
         } catch (err: unknown) {
             await LogDebug.handleError(err);
@@ -195,9 +185,7 @@ export class CommandHandler {
      */
     private async deployGuildCommands(
         rest: REST,
-        commandData:
-            | SlashCommandBuilder
-            | SlashCommandSubcommandsOnlyBuilder[],
+        commandData: SlashCommandBuilder | SlashCommandSubcommandsOnlyBuilder[],
         config: BotConfig
     ): Promise<void> {
         try {
@@ -205,6 +193,7 @@ export class CommandHandler {
                 Routes.applicationGuildCommands(process.env.CLIENT_ID as string, process.env.GUILD_ID as string),
                 { body: commandData }
             );
+
             LogDebug.log('Guild commands have successfully been registered!', config);
         } catch (err: unknown) {
             await LogDebug.handleError(err);

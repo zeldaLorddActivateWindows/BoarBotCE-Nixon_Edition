@@ -4,7 +4,6 @@ import {BoarBotApp} from '../../BoarBotApp';
 import {LogDebug} from '../logging/LogDebug';
 import {Replies} from '../interactions/Replies';
 import {BotConfig} from '../../bot/config/BotConfig';
-import {StringConfig} from '../../bot/config/StringConfig';
 import {BoarUser} from '../boar/BoarUser';
 import {ItemsData} from '../../bot/data/global/ItemsData';
 import {BoardData} from '../../bot/data/global/BoardData';
@@ -20,7 +19,8 @@ enum GlobalFile {
     Leaderboards,
     BannedUsers,
     Powerups,
-    Quest
+    Quest,
+    WipeUsers
 }
 
 /**
@@ -36,14 +36,19 @@ export class DataHandlers {
     public static GlobalFile = GlobalFile;
 
     /**
-     * Gets data from items data JSON file
+     * Gets global data from a file. Can also update the file if it's not properly formatted
      *
-     * @return itemsData - Items data parsed from JSON
+     * @param file - Type of global file to get
+     * @param updating - Whether to update the file
      */
     public static getGlobalData(file: GlobalFile, updating = false):
-        ItemsData | Record<string, BoardData> | Record<string, number> | PowerupData | QuestData
+        | ItemsData
+        | Record<string, BoardData>
+        | Record<string, number>
+        | PowerupData
+        | QuestData
     {
-        const config: BotConfig = BoarBotApp.getBot().getConfig();
+        const config = BoarBotApp.getBot().getConfig();
         const pathConfig = config.pathConfig;
 
         const fileName = this.getGlobalFilename(file);
@@ -64,14 +69,16 @@ export class DataHandlers {
             LogDebug.log('Creating global data file \'' + fileName + '\'...', config);
 
             switch (file) {
-                case GlobalFile.Items:
+                case GlobalFile.Items: {
                     data = new ItemsData();
 
                     for (const powerupID of Object.keys(config.itemConfigs.powerups)) {
-                        data.powerups[powerupID] = new ItemData;
+                        data.powerups[powerupID] = new ItemData();
                     }
 
                     break;
+                }
+
                 case GlobalFile.Leaderboards: {
                     data = {};
 
@@ -79,20 +86,31 @@ export class DataHandlers {
 
                     for (let i=0; i<choices.length; i++) {
                         const boardID = choices[i].value;
-                        data[boardID] = new BoardData;
+                        data[boardID] = new BoardData();
                     }
 
                     break;
                 }
-                case GlobalFile.BannedUsers:
+
+                case GlobalFile.BannedUsers: {
                     data = {};
                     break;
-                case GlobalFile.Powerups:
+                }
+
+                case GlobalFile.Powerups: {
                     data = new PowerupData();
                     break;
-                case GlobalFile.Quest:
+                }
+
+                case GlobalFile.Quest: {
                     data = new QuestData();
                     break;
+                }
+
+                case GlobalFile.WipeUsers: {
+                    data = {};
+                    break;
+                }
             }
 
             this.saveGlobalData(data, file);
@@ -102,11 +120,11 @@ export class DataHandlers {
 
         if (updating) {
             switch (file) {
-                case GlobalFile.Items:
+                case GlobalFile.Items: {
                     data = data as ItemsData;
                     for (const powerupID of Object.keys(config.itemConfigs.powerups)) {
                         if (!data.powerups[powerupID]) {
-                            data.powerups[powerupID] = new ItemData;
+                            data.powerups[powerupID] = new ItemData();
                         }
                     }
 
@@ -134,6 +152,8 @@ export class DataHandlers {
                     }
 
                     break;
+                }
+
                 case GlobalFile.Leaderboards: {
                     data = data as Record<string, BoardData>;
 
@@ -143,13 +163,15 @@ export class DataHandlers {
                         const boardID = choices[i].value;
 
                         if (!data[boardID]) {
-                            data[boardID] = new BoardData;
+                            data[boardID] = new BoardData();
                         }
                     }
 
                     for (const boardID of Object.keys(data)) {
                         const boardChoices = config.commandConfigs.boar.top.args[0].choices as ChoicesConfig[];
-                        const boardValues = boardChoices.map((choice) => { return choice.value; });
+                        const boardValues = boardChoices.map((choice: ChoicesConfig) => {
+                            return choice.value;
+                        });
 
                         if (!boardValues.includes(boardID)) {
                             delete data[boardID];
@@ -158,7 +180,8 @@ export class DataHandlers {
 
                     break;
                 }
-                case GlobalFile.Quest:
+
+                case GlobalFile.Quest: {
                     data = data as QuestData;
 
                     if (data.questsStartTimestamp + config.numberConfig.oneDay * 7 < Date.now()) {
@@ -166,6 +189,7 @@ export class DataHandlers {
                     }
 
                     break;
+                }
             }
 
             this.saveGlobalData(data, file);
@@ -174,8 +198,20 @@ export class DataHandlers {
         return data;
     }
 
+    /**
+     * Saves data to one of the global files
+     *
+     * @param data - The data to save
+     * @param file - The file to save the data in
+     */
     public static saveGlobalData(
-        data: ItemsData | Record<string, BoardData> | Record<string, number> | PowerupData | QuestData | undefined,
+        data:
+            | ItemsData
+            | Record<string, BoardData>
+            | Record<string, number>
+            | PowerupData
+            | QuestData
+            | undefined,
         file: GlobalFile
     ) {
         const pathConfig = BoarBotApp.getBot().getConfig().pathConfig;
@@ -186,33 +222,62 @@ export class DataHandlers {
         );
     }
 
+    /**
+     * Gets global filename from {@link GlobalFile} enum
+     *
+     * @param file - The file type
+     * @private
+     */
     private static getGlobalFilename(file: GlobalFile): string {
-        const config: BotConfig = BoarBotApp.getBot().getConfig();
+        const config = BoarBotApp.getBot().getConfig();
         let fileName = '';
 
         switch (file) {
-            case GlobalFile.Items:
+            case GlobalFile.Items: {
                 fileName = config.pathConfig.itemDataFileName;
                 break;
-            case GlobalFile.Leaderboards:
+            }
+
+            case GlobalFile.Leaderboards: {
                 fileName = config.pathConfig.leaderboardsFileName;
                 break;
-            case GlobalFile.BannedUsers:
+            }
+
+            case GlobalFile.BannedUsers: {
                 fileName = config.pathConfig.bannedUsersFileName;
                 break;
-            case GlobalFile.Powerups:
+            }
+
+            case GlobalFile.Powerups: {
                 fileName = config.pathConfig.powerupDataFileName;
                 break;
-            case GlobalFile.Quest:
+            }
+
+            case GlobalFile.Quest: {
                 fileName = config.pathConfig.questDataFileName;
                 break;
+            }
+
+            case GlobalFile.WipeUsers: {
+                fileName = config.pathConfig.wipeUsersFileName;
+                break;
+            }
         }
 
         return fileName;
     }
 
+    /**
+     * Updates all leaderboard data for a user
+     *
+     * @param boarUser - The user to update leaderboard data for
+     * @param config - Used to get boar and leaderboard config info
+     * @param inter - Used to respond to user if exception occurs
+     */
     public static updateLeaderboardData(
-        boarUser: BoarUser, config: BotConfig, inter?: MessageComponentInteraction | ChatInputCommandInteraction
+        boarUser: BoarUser,
+        config: BotConfig,
+        inter?: MessageComponentInteraction | ChatInputCommandInteraction
     ): void {
         try {
             const boardsData = this.getGlobalData(GlobalFile.Leaderboards) as Record<string, BoardData>;
@@ -303,6 +368,11 @@ export class DataHandlers {
         }
     }
 
+    /**
+     * Removes a user from the leaderboards
+     *
+     * @param userID - The ID of the user to remove
+     */
     public static async removeLeaderboardUser(userID: string) {
         try {
             const boardsData = this.getGlobalData(GlobalFile.Leaderboards) as Record<string, BoardData>;
@@ -347,6 +417,11 @@ export class DataHandlers {
         }
     }
 
+    /**
+     * Gets new quests
+     *
+     * @param config - Used to get quest configurations
+     */
     public static updateQuestData(config: BotConfig) {
         const data = this.getGlobalData(GlobalFile.Quest) as QuestData;
         const questIDs = Object.keys(config.questConfigs);
@@ -369,7 +444,7 @@ export class DataHandlers {
      * @param interaction - Interaction to reply to
      * @param create - Whether to create the guildData file if it doesn't exist
      * @param guildID - Used as replacement for interaction
-     * @return guildData - Guild data parsed from JSON (or undefined if it doesn't exist)
+     * @return Guild data parsed from JSON (or undefined if it doesn't exist)
      */
     public static async getGuildData(
         guildID: string | undefined,
@@ -378,8 +453,8 @@ export class DataHandlers {
     ): Promise<GuildData | undefined> {
         if (!guildID) return;
 
-        const config: BotConfig = BoarBotApp.getBot().getConfig();
-        const strConfig: StringConfig = config.stringConfig;
+        const config = BoarBotApp.getBot().getConfig();
+        const strConfig = config.stringConfig;
 
         const guildDataPath: string = config.pathConfig.databaseFolder +
             config.pathConfig.guildDataFolder + guildID + '.json';
@@ -415,10 +490,13 @@ export class DataHandlers {
         }
     }
 
+    /**
+     * Gets parsed GitHub information from file
+     */
     public static async getGithubData(): Promise<GitHubData | undefined> {
-        const config: BotConfig = BoarBotApp.getBot().getConfig();
+        const config = BoarBotApp.getBot().getConfig();
 
-        const githubFile: string = config.pathConfig.databaseFolder +
+        const githubFile = config.pathConfig.databaseFolder +
             config.pathConfig.globalDataFolder + config.pathConfig.githubFileName;
         let githubData: GitHubData | undefined;
 

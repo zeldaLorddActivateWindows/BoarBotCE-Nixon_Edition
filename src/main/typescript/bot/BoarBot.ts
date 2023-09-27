@@ -2,7 +2,7 @@ import fs from 'fs';
 import {
 	Client, ClientUser, ColorResolvable, EmbedBuilder,
 	Events,
-	GatewayIntentBits,
+	GatewayIntentBits, Options,
 	Partials, TextChannel
 } from 'discord.js';
 import {Bot} from '../api/bot/Bot';
@@ -14,18 +14,17 @@ import {BotConfig} from './config/BotConfig';
 import {Command} from '../api/commands/Command';
 import {Subcommand} from '../api/commands/Subcommand';
 import {LogDebug} from '../util/logging/LogDebug';
-import {PowerupSpawner} from '../feat/PowerupSpawner';
+import {PowerupEvent} from '../feat/PowerupEvent';
 import {Queue} from '../util/interactions/Queue';
 import {DataHandlers} from '../util/data/DataHandlers';
 import {CronJob} from 'cron';
 import {BoarUser} from '../util/boar/BoarUser';
 import axios from 'axios';
 import {InteractionUtils} from '../util/interactions/InteractionUtils';
-import * as crypto from 'crypto';
+import crypto from 'crypto';
 import {BoarUtils} from '../util/boar/BoarUtils';
 import {ItemsData} from './data/global/ItemsData';
 import {QuestData} from './data/global/QuestData';
-import {PowerupData} from './data/global/PowerupData';
 import {GitHubData} from './data/global/GitHubData';
 import {GuildData} from './data/global/GuildData';
 
@@ -40,11 +39,10 @@ import {GuildData} from './data/global/GuildData';
  * @copyright WeslayCodes 2023
  */
 export class BoarBot implements Bot {
-	private client: Client = new Client({ intents:[] });
-	private configHandler: ConfigHandler = new ConfigHandler;
-	private commandHandler: CommandHandler = new CommandHandler();
-	private eventHandler: EventHandler = new EventHandler();
-	private powSpawner: PowerupSpawner = {} as PowerupSpawner;
+	private client = new Client({ intents:[] });
+	private configHandler = new ConfigHandler();
+	private commandHandler = new CommandHandler();
+	private eventHandler = new EventHandler();
 
 	/**
 	 * Creates the bot by loading and registering global information
@@ -73,7 +71,14 @@ export class BoarBot implements Bot {
 			intents: [
 				GatewayIntentBits.Guilds, // Enables bot to work in guilds
 				GatewayIntentBits.DirectMessages // Allows users to toggle notifications off
-			]
+			],
+			sweepers: {
+				...Options.DefaultSweeperSettings,
+				messages: {
+					interval: 10800,
+					lifetime: 1800
+				}
+			}
 		});
 	}
 
@@ -89,9 +94,7 @@ export class BoarBot implements Bot {
 	 *
 	 * @param firstLoad - Whether the config is being loaded for the first time
 	 */
-	public async loadConfig(
-		firstLoad = false
-	): Promise<void> {
+	public async loadConfig(firstLoad = false): Promise<void> {
 		await this.configHandler.loadConfig(firstLoad);
 	}
 
@@ -150,13 +153,6 @@ export class BoarBot implements Bot {
 	}
 
 	/**
-	 * Returns the powerup spawner object
-	 */
-	public getPowSpawner(): PowerupSpawner {
-		return this.powSpawner;
-	}
-
-	/**
 	 * Logs the bot in using token in env file
 	 */
 	public async login(): Promise<void> {
@@ -176,51 +172,10 @@ export class BoarBot implements Bot {
 		try {
 			LogDebug.log('Successfully logged in! Bot online!', this.getConfig());
 
-			let lastHit = Date.now();
-			this.client.rest.on('rateLimited', () => {
-				const userDataFolder = this.getConfig().pathConfig.databaseFolder +
-					this.getConfig().pathConfig.userDataFolder;
-				const shouldSend = Date.now() > lastHit + 30000 &&
-					this.client.users.cache.size >= fs.readdirSync(userDataFolder).length;
-
-				LogDebug.log(
-					'Hit Limit! Cached Users: ' + this.client.users.cache.size + '/' +
-					fs.readdirSync(userDataFolder).length, this.getConfig(), undefined, shouldSend
-				);
-
-				lastHit = Date.now();
-			});
-
 			this.startNotificationCron();
-
-			let configHash = this.getConfigHash();
-
-			setInterval(async () => {
-				if (configHash !== this.getConfigHash()) {
-					configHash = this.getConfigHash();
-					await this.loadConfig();
-				}
-
-				const config = this.getConfig();
-				LogDebug.log('Interaction Listeners: ' + this.client.listenerCount(Events.InteractionCreate), config);
-				await this.sendUpdateInfo(await DataHandlers.getGithubData());
-			}, 120000);
-
-			// Powerup spawning
-
-			let timeUntilPow = 0;
-
-			await Queue.addQueue(async () => {
-				try {
-					const powerupData = DataHandlers.getGlobalData(DataHandlers.GlobalFile.Powerups) as PowerupData;
-					timeUntilPow = powerupData.nextPowerup;
-				} catch (err: unknown) {
-					await LogDebug.handleError(err);
-				}
-			}, 'start' + 'global').catch((err) => { throw err });
-
-			this.powSpawner = new PowerupSpawner(timeUntilPow);
-			this.powSpawner.startSpawning();
+			this.startQuestRefreshCron();
+			this.startPowCron();
+			this.startGlobalInterval();
 
 			(this.client.user as ClientUser).setPresence({
 				activities: [{
@@ -232,40 +187,17 @@ export class BoarBot implements Bot {
 
 			LogDebug.log('All functions online!', this.getConfig(), undefined, true);
 
-			const userDataFolder = this.getConfig().pathConfig.databaseFolder +
-				this.getConfig().pathConfig.userDataFolder;
-
-			if (!fs.existsSync(userDataFolder)) {
-				fs.mkdirSync(userDataFolder);
-			}
-
-			for (const userFile of fs.readdirSync(userDataFolder)) {
-				try {
-					this.getClient().users.fetch(userFile.split('.')[0]);
-					await LogDebug.sleep(1000);
-				} catch {
-					LogDebug.handleError('Failed to find user ' + userFile.split('.')[0]);
-				}
-			}
+			this.fetchAllUsers();
 		} catch (err: unknown) {
 			await LogDebug.handleError(err);
 		}
 	}
 
 	/**
-	 * Starts CronJob that sends notifications for /boar daily
+	 * Starts CronJob that sends notifications for /boar daily at 0:00 UTC
 	 * @private
 	 */
 	private startNotificationCron(): void {
-		// Refreshes quests on Saturdays, 23:59 UTC
-		new CronJob('59 23 * * 6', async () => {
-			const questData = DataHandlers.getGlobalData(DataHandlers.GlobalFile.Quest) as QuestData;
-			if (questData.questsStartTimestamp + this.getConfig().numberConfig.oneDay * 7 < Date.now()) {
-				DataHandlers.updateQuestData(this.getConfig());
-			}
-		});
-
-		// Notifies players with notifications enabled at 0:00 UTC
 		new CronJob('0 0 * * *', async () => {
 			const userDataFolder = this.getConfig().pathConfig.databaseFolder +
 				this.getConfig().pathConfig.userDataFolder;
@@ -319,24 +251,84 @@ export class BoarBot implements Bot {
 						? boarUser.stats.general.notificationChannel
 						: this.getConfig().defaultChannel;
 
-					await user.send(
-						randMsgStr + dailyReadyStr + '\n# ' +
-						FormatStrings.toBasicChannel(notificationChannelID) + stopStr
-					).catch(() => {});
+					try {
+						await user.send(
+							randMsgStr + dailyReadyStr + '\n# ' +
+							FormatStrings.toBasicChannel(notificationChannelID) + stopStr
+						);
+					} catch (err: unknown) {
+						LogDebug.handleError(err);
+					}
 				}
 			});
 
 			try {
-				const pingChannel =
-					await this.client.channels.fetch(this.getConfig().defaultChannel) as TextChannel;
+				const pingChannel = await this.client.channels.fetch(this.getConfig().defaultChannel) as TextChannel;
 				pingChannel.send(
 					this.getConfig().stringConfig.notificationDailyReady + ' ' +
 					this.getConfig().stringConfig.notificationServerPing
 				);
-			} catch (err) {
+			} catch (err: unknown) {
 				LogDebug.handleError(err);
 			}
 		}, null, true, 'UTC');
+	}
+
+	/**
+	 * Starts CronJob that refreshes weekly quests at 23:59 on Saturday UTC
+	 *
+	 * @private
+	 */
+	private startQuestRefreshCron() {
+		new CronJob('59 23 * * 6', async () => {
+			const questData = DataHandlers.getGlobalData(DataHandlers.GlobalFile.Quest) as QuestData;
+
+			if (questData.questsStartTimestamp + this.getConfig().numberConfig.oneDay * 7 < Date.now()) {
+				DataHandlers.updateQuestData(this.getConfig());
+			}
+		}, null, true, 'UTC');
+	}
+
+	/**
+	 * Starts CronJob that automatically spawns Powerup Events
+	 *
+	 * @private
+	 */
+	private startPowCron() {
+		const startMin = 60 - this.getConfig().numberConfig.powPlusMinusMins;
+		const hourInterval = this.getConfig().numberConfig.powIntervalHours;
+
+		new CronJob(`${startMin} */${hourInterval} * * *`, async () => {
+			const delay = Math.floor(Math.random() * this.getConfig().numberConfig.powPlusMinusMins * 2 * 60000);
+
+			await LogDebug.sleep(delay);
+
+			new PowerupEvent();
+		}, null, true);
+	}
+
+	/**
+	 * Starts interval that's called every two minutes for general purpose tasks such
+	 * as refreshing the config file, sending update information, and removing wiped user data
+	 *
+	 * @private
+	 */
+	private startGlobalInterval(): void {
+		let configHash = this.getConfigHash();
+
+		setInterval(async () => {
+			if (configHash !== this.getConfigHash()) {
+				configHash = this.getConfigHash();
+				await this.loadConfig();
+			}
+
+			const config = this.getConfig();
+
+			LogDebug.log('Interaction Listeners: ' + this.client.listenerCount(Events.InteractionCreate), config);
+
+			await this.sendUpdateInfo(await DataHandlers.getGithubData());
+			this.removeWipeUsers();
+		}, 120000);
 	}
 
 	/**
@@ -345,22 +337,22 @@ export class BoarBot implements Bot {
 	 * @param githubData - The data including the last update PR URL
 	 * @private
 	 */
-	private async sendUpdateInfo(
-		githubData?: GitHubData
-	): Promise<void> {
+	private async sendUpdateInfo(githubData?: GitHubData): Promise<void> {
 		const config = this.getConfig();
 
 		try {
 			if (!githubData) return;
 
-			const pullReq = await axios.get(config.stringConfig.pullLink, {
-				headers: { Authorization: 'Token ' + process.env.GITHUB_TOKEN as string }
-			});
+			const pullReq = await axios.get(
+				config.stringConfig.pullLink,
+				{ headers: { Authorization: 'Token ' + process.env.GITHUB_TOKEN as string }}
+			);
 
 			const pullReqData = pullReq.data[0];
 
 			if (pullReqData && pullReqData.html_url !== githubData.lastURL && pullReqData.merged_at !== null) {
 				githubData.lastURL = pullReqData.html_url;
+
 				fs.writeFileSync(
 					config.pathConfig.databaseFolder + config.pathConfig.globalDataFolder +
 					config.pathConfig.githubFileName,
@@ -385,6 +377,80 @@ export class BoarBot implements Bot {
 	}
 
 	/**
+	 * Removes wiped user data if it's been 24 hours since they requested to be wiped
+	 *
+	 * @private
+	 */
+	private async removeWipeUsers() {
+		await Queue.addQueue(async () => {
+			const wipeUsers = DataHandlers.getGlobalData(DataHandlers.GlobalFile.WipeUsers) as Record<string, number>;
+			const itemsData = DataHandlers.getGlobalData(DataHandlers.GlobalFile.Items) as ItemsData;
+			const userDataFolder = this.getConfig().pathConfig.databaseFolder +
+				this.getConfig().pathConfig.userDataFolder;
+
+			for (const userID of Object.keys(wipeUsers)) {
+				if (wipeUsers[userID] < Date.now()) {
+					try {
+						fs.rmSync(userDataFolder + userID + '.json');
+					} catch (err: unknown) {
+						LogDebug.handleError(err);
+					}
+
+					for (const itemTypeID of Object.keys(itemsData)) {
+						for (const itemID of Object.keys(itemsData[itemTypeID])) {
+							const itemData = itemsData[itemTypeID][itemID];
+
+							for (let i=0; i<itemData.buyers.length; i++) {
+								const buyOrder = itemData.buyers[i];
+
+								if (buyOrder.userID === userID) {
+									itemsData[itemTypeID][itemID].buyers.splice(i, 1);
+								}
+							}
+
+							for (let i=0; i<itemData.sellers.length; i++) {
+								const sellOrder = itemData.sellers[i];
+
+								if (sellOrder.userID === userID) {
+									itemsData[itemTypeID][itemID].sellers.splice(i, 1);
+								}
+							}
+						}
+					}
+
+					delete wipeUsers[userID];
+
+					DataHandlers.saveGlobalData(itemsData, DataHandlers.GlobalFile.Items);
+					DataHandlers.saveGlobalData(wipeUsers, DataHandlers.GlobalFile.WipeUsers);
+				}
+			}
+		}, 'wipe_user_global');
+	}
+
+	/**
+	 * Fetches all user data from IDs to allow notifications to be sent
+	 *
+	 * @private
+	 */
+	private async fetchAllUsers() {
+		const userDataFolder = this.getConfig().pathConfig.databaseFolder +
+			this.getConfig().pathConfig.userDataFolder;
+
+		if (!fs.existsSync(userDataFolder)) {
+			fs.mkdirSync(userDataFolder);
+		}
+
+		for (const userFile of fs.readdirSync(userDataFolder)) {
+			try {
+				this.getClient().users.fetch(userFile.split('.')[0]);
+				await LogDebug.sleep(1000); // Cooldown to prevent hitting rate limit at bot start
+			} catch {
+				LogDebug.handleError('Failed to find user ' + userFile.split('.')[0]);
+			}
+		}
+	}
+
+	/**
 	 * Updates global data files to the state they should be in for the
 	 * current version
 	 *
@@ -392,6 +458,7 @@ export class BoarBot implements Bot {
 	 */
 	private async updateAllData(): Promise<void> {
 		const itemsData = DataHandlers.getGlobalData(DataHandlers.GlobalFile.Items, true) as ItemsData;
+
 		BoarUtils.orderGlobalBoars(itemsData, this.getConfig());
 		DataHandlers.saveGlobalData(itemsData, DataHandlers.GlobalFile.Items);
 
@@ -408,6 +475,7 @@ export class BoarBot implements Bot {
 	 */
 	private fixGuildData(): void {
 		const pathConfig = this.getConfig().pathConfig;
+
 		const databaseFolder = pathConfig.databaseFolder;
 		const guildDataFolder = databaseFolder + pathConfig.guildDataFolder;
 		let guildDataFiles: string[];

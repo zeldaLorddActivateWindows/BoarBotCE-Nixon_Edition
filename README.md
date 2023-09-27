@@ -2,7 +2,7 @@
     <a href="https://github.com/WeslayCodes/BoarBot"><img src="https://github.com/WeslayCodes/BoarBot/assets/60010287/ec7b2217-486c-44e5-b6a1-8814bcef9822" alt="BoarBot - Discord Bot"></a>
     <br><br>
     BoarBot - Discord Bot
-    <br><br>
+    <br>
 </h1>
 
 <h4 align="center">Gacha, Powerups, Quests, and Economy</h4>

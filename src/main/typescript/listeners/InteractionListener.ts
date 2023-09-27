@@ -10,15 +10,10 @@ import {BoarBotApp} from '../BoarBotApp';
 import {LogDebug} from '../util/logging/LogDebug';
 import {Cooldown} from '../util/interactions/Cooldown';
 import {Replies} from '../util/interactions/Replies';
-import {Command} from '../api/commands/Command';
-import {StringConfig} from '../bot/config/StringConfig';
 import {PermissionUtils} from '../util/discord/PermissionUtils';
 import {CustomEmbedGenerator} from '../util/generators/CustomEmbedGenerator';
 import {Queue} from '../util/interactions/Queue';
-import {BoarUser} from '../util/boar/BoarUser';
-import fs from 'fs';
 import {DataHandlers} from '../util/data/DataHandlers';
-import {ItemsData} from '../bot/data/global/ItemsData';
 
 /**
  * {@link InteractionListener InteractionListener.ts}
@@ -30,9 +25,9 @@ import {ItemsData} from '../bot/data/global/ItemsData';
  * @copyright WeslayCodes 2023
  */
 export default class InteractionListener implements Listener {
-    public readonly eventName: Events = Events.InteractionCreate;
-    private interaction: ChatInputCommandInteraction | AutocompleteInteraction | null = null;
-    private config: BotConfig = {} as BotConfig;
+    public readonly eventName = Events.InteractionCreate;
+    private interaction = null as ChatInputCommandInteraction | AutocompleteInteraction | null;
+    private config = {} as BotConfig;
 
     /**
      * Executes the called subcommand group if it exists
@@ -52,7 +47,7 @@ export default class InteractionListener implements Listener {
             return;
         }
 
-        const command: Command | undefined = BoarBotApp.getBot().getCommands().get(interaction.commandName);
+        const command = BoarBotApp.getBot().getCommands().get(interaction.commandName);
 
         if (command) {
             LogDebug.log('Started interaction', this.config, interaction);
@@ -60,57 +55,21 @@ export default class InteractionListener implements Listener {
             if (interaction.isChatInputCommand()) {
                 let onCooldown: boolean;
 
-                await Queue.addQueue(async () => {
-                    const boarUser = new BoarUser(interaction.user);
+                let wipeUsers = DataHandlers.getGlobalData(
+                    DataHandlers.GlobalFile.WipeUsers
+                ) as Record<string, number>;
 
-                    if (
-                        boarUser.stats.general.deletionTime !== undefined &&
-                        boarUser.stats.general.deletionTime < Date.now()
-                    ) {
-                        const userDataFolder = this.config.pathConfig.databaseFolder +
-                            this.config.pathConfig.userDataFolder;
+                if (wipeUsers[interaction.user.id] !== undefined) {
+                    await Queue.addQueue(async () => {
+                        wipeUsers = DataHandlers.getGlobalData(
+                            DataHandlers.GlobalFile.WipeUsers
+                        ) as Record<string, number>;
 
-                        try {
-                            fs.rmSync(userDataFolder + interaction.user.id + '.json');
-                        } catch {}
+                        delete wipeUsers[interaction.user.id];
 
-                        await Queue.addQueue(async () => {
-                            const itemsData: ItemsData =
-                                DataHandlers.getGlobalData(DataHandlers.GlobalFile.Items) as ItemsData;
-
-                            for (const itemTypeID of Object.keys(itemsData)) {
-                                for (const itemID of Object.keys(itemsData[itemTypeID])) {
-                                    const itemData = itemsData[itemTypeID][itemID];
-
-                                    for (let i=0; i<itemData.buyers.length; i++) {
-                                        const buyOrder = itemData.buyers[i];
-
-                                        if (buyOrder.userID === boarUser.user.id) {
-                                            itemsData[itemTypeID][itemID].buyers.splice(i, 1);
-                                        }
-                                    }
-
-                                    for (let i=0; i<itemData.sellers.length; i++) {
-                                        const sellOrder = itemData.sellers[i];
-
-                                        if (sellOrder.userID === boarUser.user.id) {
-                                            itemsData[itemTypeID][itemID].sellers.splice(i, 1);
-                                        }
-                                    }
-                                }
-                            }
-
-                            DataHandlers.saveGlobalData(itemsData, DataHandlers.GlobalFile.Items);
-                        }, interaction.id + 'global').catch((err) => {
-                            LogDebug.handleError(err, interaction);
-                        });
-                    } else if (boarUser.stats.general.deletionTime !== undefined) {
-                        boarUser.stats.general.deletionTime = undefined;
-                        boarUser.updateUserData();
-                    }
-                }, interaction.id + interaction.user.id).catch((err) => {
-                    LogDebug.handleError(err, interaction);
-                });
+                        DataHandlers.saveGlobalData(wipeUsers, DataHandlers.GlobalFile.WipeUsers);
+                    }, 'undo_wipe' + interaction.id + 'global');
+                }
 
                 try {
                     onCooldown = await Cooldown.handleCooldown(interaction as ChatInputCommandInteraction, this.config);
@@ -125,11 +84,12 @@ export default class InteractionListener implements Listener {
             try {
                 await command.execute(interaction);
 
-                if (
-                    interaction.isChatInputCommand() && (!PermissionUtils.hasPerm(interaction.guild, 'ViewChannel') ||
+                const missingPerms = interaction.isChatInputCommand() &&
+                    (!PermissionUtils.hasPerm(interaction.guild, 'ViewChannel') ||
                     !PermissionUtils.hasPerm(interaction.guild, 'SendMessages') ||
-                        !PermissionUtils.hasPerm(interaction.guild, 'AttachFiles')) && Math.random() < .01
-                ) {
+                    !PermissionUtils.hasPerm(interaction.guild, 'AttachFiles'));
+
+                if (missingPerms && Math.random() < .01) {
                     await interaction.followUp({
                         files: [
                             await CustomEmbedGenerator.makeEmbed(
@@ -155,13 +115,16 @@ export default class InteractionListener implements Listener {
     private async handleMaintenance(): Promise<boolean> {
         if (!this.interaction || !this.config) return false;
 
-        const strConfig: StringConfig = this.config.stringConfig;
+        const strConfig = this.config.stringConfig;
 
-        if (this.config.maintenanceMode && !this.interaction.isAutocomplete()
-            && !this.config.devs.includes(this.interaction.user.id)
-        ) {
+        const inMaintenance = this.config.maintenanceMode && !this.interaction.isAutocomplete()
+            && !this.config.devs.includes(this.interaction.user.id);
+
+        if (inMaintenance) {
             await Replies.handleReply(
-                this.interaction, strConfig.maintenance, this.config.colorConfig.maintenance
+                this.interaction as ChatInputCommandInteraction,
+                strConfig.maintenance,
+                this.config.colorConfig.maintenance
             );
             return false;
         }

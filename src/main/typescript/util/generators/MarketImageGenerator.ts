@@ -15,7 +15,7 @@ import {BuySellData} from '../../bot/data/global/BuySellData';
  * @copyright WeslayCodes 2023
  */
 export class MarketImageGenerator {
-    private config: BotConfig = {} as BotConfig;
+    private config = {} as BotConfig;
     private itemPricing: {
         id: string,
         type: string,
@@ -141,10 +141,10 @@ export class MarketImageGenerator {
                 ? this.config.itemConfigs[item.type][item.id].staticFile
                 : this.config.itemConfigs[item.type][item.id].file);
 
-            const imagePos: [number, number] = [
+            const imagePos = [
                 nums.marketOverImgStart[0] + i % nums.marketOverCols * nums.marketOverIncX,
                 nums.marketOverImgStart[1] + Math.floor(i / nums.marketOverCols) * nums.marketOverIncY
-            ];
+            ] as [number, number];
 
             ctx.drawImage(await Canvas.loadImage(file), ...imagePos, ...nums.marketOverImgSize);
         }
@@ -154,39 +154,58 @@ export class MarketImageGenerator {
         for (let i=0; i<curShowing.length; i++) {
             const item = curShowing[i];
 
-            const buyPos: [number, number] = [
+            const buyPos = [
                 nums.marketOverBuyStart[0] + i % nums.marketOverCols * nums.marketOverIncX,
                 nums.marketOverBuyStart[1] + Math.floor(i / nums.marketOverCols) * nums.marketOverIncY
-            ];
-            const sellPos: [number, number] = [
+            ] as [number, number];
+            const sellPos = [
                 nums.marketOverSellStart[0] + i % nums.marketOverCols * nums.marketOverIncX,
                 nums.marketOverSellStart[1] + Math.floor(i / nums.marketOverCols) * nums.marketOverIncY
-            ];
+            ] as [number, number];
 
             let buyNowVal = strConfig.unavailable;
             let sellNowVal = strConfig.unavailable;
 
             for (const sellOrder of item.sellers) {
-                if (sellOrder.num === sellOrder.filledAmount || sellOrder.listTime + nums.orderExpire < Date.now())
-                    continue;
+                const orderHidden = sellOrder.num === sellOrder.filledAmount ||
+                    sellOrder.listTime + nums.orderExpire < Date.now();
+
+                if (orderHidden) continue;
+
                 buyNowVal = sellOrder.price.toLocaleString();
                 break;
             }
 
             for (const buyOrder of item.buyers) {
-                if (buyOrder.num === buyOrder.filledAmount || buyOrder.listTime + nums.orderExpire < Date.now())
-                    continue;
+                const orderHidden = buyOrder.num === buyOrder.filledAmount ||
+                    buyOrder.listTime + nums.orderExpire < Date.now();
+
+                if (orderHidden) continue;
+
                 sellNowVal = buyOrder.price.toLocaleString();
                 break;
             }
 
             await CanvasUtils.drawText(
-                ctx, 'B: %@', buyPos, font, 'center', colorConfig.font, nums.marketOverTextWidth, false,
+                ctx,
+                'B: %@',
+                buyPos,
+                font,
+                'center',
+                colorConfig.font,
+                nums.marketOverTextWidth,
+                false,
                 [buyNowVal !== 'N/A' ? '$' + buyNowVal : buyNowVal],
                 [buyNowVal !== 'N/A' ? colorConfig.bucks : colorConfig.font]
             );
             await CanvasUtils.drawText(
-                ctx, 'S: %@', sellPos, font, 'center', colorConfig.font, nums.marketOverTextWidth, false,
+                ctx,
+                'S: %@',
+                sellPos, font,
+                'center',
+                colorConfig.font,
+                nums.marketOverTextWidth,
+                false,
                 [sellNowVal !== 'N/A' ? '$' + sellNowVal : sellNowVal],
                 [sellNowVal !== 'N/A' ? colorConfig.bucks : colorConfig.font]
             );
@@ -303,7 +322,12 @@ export class MarketImageGenerator {
             ctx, strConfig.marketBSBuyNowLabel, nums.marketBSBuyNowLabelPos, mediumFont, 'center', colorConfig.font
         );
         await CanvasUtils.drawText(
-            ctx, buyNowVal, nums.marketBSBuyNowPos, smallMediumFont, 'center', buyNowVal.includes('$')
+            ctx,
+            buyNowVal,
+            nums.marketBSBuyNowPos,
+            smallMediumFont,
+            'center',
+            buyNowVal.includes('$')
                 ? colorConfig.bucks
                 : colorConfig.font
         );
@@ -312,7 +336,12 @@ export class MarketImageGenerator {
             ctx, strConfig.marketBSSellNowLabel, nums.marketBSSellNowLabelPos, mediumFont, 'center', colorConfig.font
         );
         await CanvasUtils.drawText(
-            ctx, sellNowVal, nums.marketBSSellNowPos, smallMediumFont, 'center', sellNowVal.includes('$')
+            ctx,
+            sellNowVal,
+            nums.marketBSSellNowPos,
+            smallMediumFont,
+            'center',
+            sellNowVal.includes('$')
                 ? colorConfig.bucks
                 : colorConfig.font
         );
@@ -395,20 +424,38 @@ export class MarketImageGenerator {
         ctx.drawImage(await Canvas.loadImage(file), ...nums.marketOrdImgPos, ...nums.marketOrdImgSize);
 
         await CanvasUtils.drawText(
-            ctx, isSell ? strConfig.marketOrdSell : strConfig.marketOrdBuy, nums.marketOrdNamePos, mediumFont, 'center',
-            colorConfig.font, nums.marketOrdNameWidth, true,
-            [this.config.itemConfigs[orderInfo.type][orderInfo.id].name + (isSpecial
+            ctx,
+            isSell
+                ? strConfig.marketOrdSell
+                : strConfig.marketOrdBuy,
+            nums.marketOrdNamePos,
+            mediumFont,
+            'center',
+            colorConfig.font,
+            nums.marketOrdNameWidth,
+            true,
+            [
+                this.config.itemConfigs[orderInfo.type][orderInfo.id].name + (isSpecial
                 ? ' #' + orderInfo.data.editions[0]
-                : '')],
+                : '')
+            ],
             [rarityColor]
         );
 
         await CanvasUtils.drawText(
-            ctx, strConfig.marketOrdList.replace('%@',moment(orderInfo.data.listTime).fromNow()), nums.marketOrdListPos,
-            mediumFont, 'center', colorConfig.font, nums.marketOrdNameWidth, true,
-            [(Date.now() > orderInfo.data.listTime + nums.oneDay * 7)
+            ctx,
+            strConfig.marketOrdList.replace('%@',moment(orderInfo.data.listTime).fromNow()),
+            nums.marketOrdListPos,
+            mediumFont,
+            'center',
+            colorConfig.font,
+            nums.marketOrdNameWidth,
+            true,
+            [
+                (Date.now() > orderInfo.data.listTime + nums.oneDay * 7)
                 ? strConfig.marketOrdExpire
-                : ''],
+                : ''
+            ],
             [colorConfig.error]
         );
 
@@ -416,7 +463,11 @@ export class MarketImageGenerator {
             ctx, strConfig.marketOrdPriceLabel, nums.marketOrdPriceLabelPos, mediumFont, 'center', colorConfig.font
         );
         await CanvasUtils.drawText(
-            ctx, '$' + orderInfo.data.price.toLocaleString(), nums.marketOrdPricePos, smallMediumFont, 'center',
+            ctx,
+            '$' + orderInfo.data.price.toLocaleString(),
+            nums.marketOrdPricePos,
+            smallMediumFont,
+            'center',
             colorConfig.bucks
         );
 
@@ -424,8 +475,12 @@ export class MarketImageGenerator {
             ctx, strConfig.marketOrdFillLabel, nums.marketOrdFillLabelPos, mediumFont, 'center', colorConfig.font
         );
         await CanvasUtils.drawText(
-            ctx, orderInfo.data.filledAmount.toLocaleString() + '/' + orderInfo.data.num.toLocaleString(),
-            nums.marketOrdFillPos, smallMediumFont, 'center', colorConfig.font
+            ctx,
+            orderInfo.data.filledAmount.toLocaleString() + '/' + orderInfo.data.num.toLocaleString(),
+            nums.marketOrdFillPos,
+            smallMediumFont,
+            'center',
+            colorConfig.font
         );
 
         await CanvasUtils.drawText(

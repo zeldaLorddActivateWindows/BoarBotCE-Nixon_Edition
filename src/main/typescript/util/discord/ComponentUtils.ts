@@ -24,7 +24,7 @@ export class ComponentUtils {
      * @param id - The ID to append to the custom ID
      * @param userID - A user ID to append
      * @param options - Options to add to a select menu
-     * @return row - Updated row with addition to ids
+     * @return Updated row with addition to ids
      */
     public static addToIDs(
         rowsConfig: RowConfig[],
@@ -38,7 +38,7 @@ export class ComponentUtils {
         for (const row of rows) {
             for (const component in row.components) {
                 const componentConfig: ComponentConfig = rowsConfig[rowIndex].components[component];
-                let curID: string = componentConfig.customId + '|' + id;
+                let curID = componentConfig.customId + '|' + id;
 
                 if (userID) {
                     curID += '|' + userID;
@@ -72,8 +72,13 @@ export class ComponentUtils {
         return row;
     }
 
+    /**
+     * Makes rows from row configuration data
+     *
+     * @param rowsConfig - Row configuration data
+     */
     public static makeRows(rowsConfig: RowConfig[]): ActionRowBuilder<StringSelectMenuBuilder | ButtonBuilder>[] {
-        const newRows: ActionRowBuilder<StringSelectMenuBuilder | ButtonBuilder>[] = [];
+        const newRows = [] as ActionRowBuilder<StringSelectMenuBuilder | ButtonBuilder>[];
 
         for (const rowConfig of rowsConfig) {
             newRows.push(new ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>(rowConfig));

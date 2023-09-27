@@ -24,7 +24,6 @@ export class FormField {
      */
     constructor(content: string, components: ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>[]) {
         this.defaultContent = content;
-
         this.content = content;
         this.components = components ? components : [];
     }
@@ -35,7 +34,11 @@ export class FormField {
      * @param interaction - Interaction to be edited
      */
     public async editReply(
-        interaction: ChatInputCommandInteraction | StringSelectMenuInteraction | ButtonInteraction | ModalSubmitInteraction
+        interaction:
+            | ChatInputCommandInteraction
+            | StringSelectMenuInteraction
+            | ButtonInteraction
+            | ModalSubmitInteraction
     ): Promise<void> {
         await interaction.editReply({
             content: this.content,

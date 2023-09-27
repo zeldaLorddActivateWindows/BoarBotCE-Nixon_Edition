@@ -1,7 +1,7 @@
 import {
+    AutocompleteInteraction,
     ChatInputCommandInteraction,
-    GuildMember, MessageComponentInteraction,
-    PermissionsString,
+    MessageComponentInteraction,
     TextChannel
 } from 'discord.js';
 import {BoarBotApp} from '../../BoarBotApp';
@@ -23,11 +23,39 @@ import {GuildData} from '../../bot/data/global/GuildData';
  */
 export class InteractionUtils {
     /**
+     * Executes a called subcommand if it exists
+     *
+     * @param interaction - An interaction that could've called a subcommand
+     */
+    public static async executeSubcommand(interaction: ChatInputCommandInteraction | AutocompleteInteraction) {
+        const subcommand = BoarBotApp.getBot().getSubcommands().get(interaction.options.getSubcommand());
+
+        if (!subcommand) return;
+
+        const exports = require(subcommand.data.path);
+        const commandClass = new exports.default();
+
+        if (interaction.isAutocomplete()) {
+            try {
+                await commandClass.autocomplete(interaction);
+            } catch (err: unknown) {
+                await LogDebug.handleError(err, interaction);
+            }
+        } else if (interaction.isChatInputCommand()) {
+            try {
+                await commandClass.execute(interaction);
+            } catch (err: unknown) {
+                await LogDebug.handleError(err, interaction);
+            }
+        }
+    }
+
+    /**
      * Handles the beginning of most command interactions to prevent duplicate code
      *
      * @param config - Used to get the string to reply with
      * @param interaction - Interaction to reply to
-     * @return guildData - Guild data parsed from JSON
+     * @return Guild data parsed from JSON
      */
     public static async handleStart(
         interaction: ChatInputCommandInteraction,
@@ -35,7 +63,7 @@ export class InteractionUtils {
     ): Promise<GuildData | undefined> {
         if (!interaction.guild || !interaction.channel) return;
 
-        const guildData: GuildData | undefined = await DataHandlers.getGuildData(interaction.guild.id, interaction);
+        const guildData = await DataHandlers.getGuildData(interaction.guild.id, interaction);
         if (!guildData) return;
 
         if (!guildData.fullySetup) {
@@ -59,26 +87,31 @@ export class InteractionUtils {
      * @param interaction - Interaction to reply to
      * @param config - Used to get the string to reply with
      * @param forceFollowup - Whether the reply should be a followup
-     * @return banned - Whether user is banned
+     * @return Whether user is banned
      */
     public static async handleBanned(
         interaction: ChatInputCommandInteraction | MessageComponentInteraction, config: BotConfig, forceFollowup = false
     ): Promise<boolean> {
-        const bannedUserData: Record<string, number> =
-            DataHandlers.getGlobalData(DataHandlers.GlobalFile.BannedUsers) as Record<string, number>;
+        const bannedUserData = DataHandlers.getGlobalData(
+            DataHandlers.GlobalFile.BannedUsers
+        ) as Record<string, number>;
         const unbanTime = bannedUserData[interaction.user.id];
 
         if (unbanTime && unbanTime > Date.now()) {
             await Replies.handleReply(
-                interaction, config.stringConfig.bannedString.replace('%@', moment(unbanTime).fromNow()),
-                config.colorConfig.error, undefined, undefined, forceFollowup
+                interaction,
+                config.stringConfig.bannedString.replace('%@', moment(unbanTime).fromNow()),
+                config.colorConfig.error,
+                undefined,
+                undefined,
+                forceFollowup
             );
 
             return true;
         } else if (unbanTime && unbanTime <= Date.now()) {
             await Queue.addQueue(async () => {
                 try {
-                    const bannedUserData: Record<string, number> = DataHandlers.getGlobalData(
+                    const bannedUserData = DataHandlers.getGlobalData(
                         DataHandlers.GlobalFile.BannedUsers
                     ) as Record<string, number>;
                     delete bannedUserData[interaction.user.id];
@@ -86,7 +119,9 @@ export class InteractionUtils {
                 } catch (err: unknown) {
                     await LogDebug.handleError(err, interaction);
                 }
-            }, interaction.id + 'global').catch((err) => { throw err });
+            }, 'unban_user' + interaction.id + 'global').catch((err: unknown) => {
+                throw err;
+            });
         }
 
         return false;
@@ -110,13 +145,13 @@ export class InteractionUtils {
             return;
         }
 
-        const memberMe: GuildMember | null = channel.guild.members.me;
+        const memberMe = channel.guild.members.me;
         if (!memberMe) {
             LogDebug.handleError('Bot doesn\'t exist in the server the channel is in.', undefined, false);
             return;
         }
 
-        const memberMePerms: PermissionsString[] = memberMe.permissions.toArray();
+        const memberMePerms = memberMe.permissions.toArray();
         if (!memberMePerms.includes('SendMessages')) {
             LogDebug.handleError('Bot doesn\'t have permission to send messages to channel.', undefined, false);
             return;
@@ -125,11 +160,12 @@ export class InteractionUtils {
         return channel;
     }
 
-    public static toBoolean(
-        val:
-            | boolean
-            | undefined
-    ): boolean {
+    /**
+     * Converts a boolean or undefined type to a true boolean
+     *
+     * @param val - Value to convert to true boolean
+     */
+    public static toBoolean(val: boolean | undefined): boolean {
         return val === undefined
             ? false
             : val;

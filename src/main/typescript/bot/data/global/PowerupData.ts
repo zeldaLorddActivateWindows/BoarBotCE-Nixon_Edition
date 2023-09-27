@@ -8,6 +8,6 @@
  */
 
 export class PowerupData {
-    nextPowerup = 0;
     messagesInfo = {} as Record<string, string[]>;
+    failedServers = {} as Record<string, number>;
 }

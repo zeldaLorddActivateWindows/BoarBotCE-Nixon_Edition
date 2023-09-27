@@ -26,6 +26,7 @@ export class PathConfig {
     public readonly bannedUsersFileName = '' as string;
     public readonly powerupDataFileName = '' as string;
     public readonly questDataFileName = '' as string;
+    public readonly wipeUsersFileName = '' as string;
     public readonly githubFileName = '' as string;
     public readonly logsFolder = '' as string;
 

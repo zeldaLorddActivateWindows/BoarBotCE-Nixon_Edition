@@ -9,11 +9,6 @@ import {ChatInputCommandInteraction} from 'discord.js';
  * @copyright WeslayCodes 2023
  */
 export interface Subcommand {
-    data: {
-        name: string,
-        path: string
-    };
-    execute(
-        interaction: ChatInputCommandInteraction
-    ): Promise<void>;
+    data: { name: string, path: string };
+    execute(interaction: ChatInputCommandInteraction): Promise<void>;
 }

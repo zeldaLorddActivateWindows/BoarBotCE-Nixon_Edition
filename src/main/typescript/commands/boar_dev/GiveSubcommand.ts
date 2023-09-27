@@ -12,8 +12,6 @@ import {Replies} from '../../util/interactions/Replies';
 import {LogDebug} from '../../util/logging/LogDebug';
 import {ItemImageGenerator} from '../../util/generators/ItemImageGenerator';
 import {BoarUtils} from '../../util/boar/BoarUtils';
-import {StringConfig} from '../../bot/config/StringConfig';
-import {GuildData} from '../../bot/data/global/GuildData';
 
 /**
  * {@link GiveSubcommand GiveSubcommand.ts}
@@ -25,8 +23,8 @@ import {GuildData} from '../../bot/data/global/GuildData';
  */
 export default class GiveSubcommand implements Subcommand {
     private config = BoarBotApp.getBot().getConfig();
-    private interaction: ChatInputCommandInteraction = {} as ChatInputCommandInteraction;
-    private userInput: User = {} as User;
+    private interaction = {} as ChatInputCommandInteraction;
+    private userInput = {} as User;
     private idInput = '';
     private subcommandInfo = this.config.commandConfigs.boarDev.give;
     public readonly data = { name: this.subcommandInfo.name, path: __filename };
@@ -39,7 +37,7 @@ export default class GiveSubcommand implements Subcommand {
     public async execute(interaction: ChatInputCommandInteraction): Promise<void> {
         this.config = BoarBotApp.getBot().getConfig();
 
-        const guildData: GuildData | undefined = await InteractionUtils.handleStart(interaction, this.config);
+        const guildData = await InteractionUtils.handleStart(interaction, this.config);
         if (!guildData) return;
 
         if (!this.config.devs.includes(interaction.user.id)) {
@@ -50,10 +48,13 @@ export default class GiveSubcommand implements Subcommand {
         await interaction.deferReply({ ephemeral: true });
         this.interaction = interaction;
 
-        const strConfig: StringConfig = this.config.stringConfig;
+        const strConfig = this.config.stringConfig;
 
-        const userInput: User | null = interaction.options.getUser(this.subcommandInfo.args[0].name);
-        const idInput: string | null = interaction.options.getString(this.subcommandInfo.args[1].name);
+        // The user to give the item to
+        const userInput = interaction.options.getUser(this.subcommandInfo.args[0].name);
+
+        // The id of the item
+        const idInput = interaction.options.getString(this.subcommandInfo.args[1].name);
 
         if (!userInput || !idInput) {
             await Replies.handleReply(interaction, strConfig.nullFound);
@@ -73,19 +74,27 @@ export default class GiveSubcommand implements Subcommand {
      * @param interaction - Used to get the entered value to autocomplete
      */
     public async autocomplete(interaction: AutocompleteInteraction): Promise<void> {
-        const strConfig: StringConfig = this.config.stringConfig;
+        const strConfig = this.config.stringConfig;
 
-        const focusedValue: string = interaction.options.getFocused().toLowerCase();
-        const boarChoices: string[] = Object.keys(this.config.itemConfigs.boars)
-            .map(val => (val + ' | ' + strConfig.giveBoarChoiceTag));
-        const badgeChoices: string[] = Object.keys(this.config.itemConfigs.badges)
-            .map(val => (val + ' | ' + strConfig.giveBadgeChoiceTag));
-        const choices: string[] = boarChoices.concat(badgeChoices);
-        const possibleChoices: string[] = choices.filter(choice => choice.toLowerCase().includes(focusedValue));
+        const focusedValue = interaction.options.getFocused().toLowerCase();
 
+        const boarChoices = Object.keys(this.config.itemConfigs.boars).map((val: string) => {
+            return val + ' | ' + strConfig.giveBoarChoiceTag;
+        });
+
+        const badgeChoices = Object.keys(this.config.itemConfigs.badges).map((val: string) => {
+            return val + ' | ' + strConfig.giveBadgeChoiceTag;
+        });
+
+        const choices = boarChoices.concat(badgeChoices);
+        const possibleChoices = choices.filter((choice: string) => {
+            return choice.toLowerCase().includes(focusedValue);
+        });
+
+        // Shows choices that match input
         await interaction.respond(
-            possibleChoices.map(choice => {
-                return { name: choice, value: choice }
+            possibleChoices.map((choice: string) => {
+                return { name: choice, value: choice };
             }).slice(0, 25)
         );
     }
@@ -96,24 +105,24 @@ export default class GiveSubcommand implements Subcommand {
      * @private
      */
     private async doGive(): Promise<void> {
-        const strConfig: StringConfig = this.config.stringConfig;
+        const strConfig = this.config.stringConfig;
 
-        const boarUser: BoarUser =  new BoarUser(this.userInput, true);
+        const boarUser = new BoarUser(this.userInput, true);
 
         LogDebug.log(
             'Gave \'' + this.idInput + '\' to ' + this.userInput.username + '(' + this.userInput.id + ')',
             this.config, this.interaction, true
         );
 
-        const inputID: string = this.idInput.split(' ')[0];
-        const tag: string = this.idInput.split(' ')[2];
+        const inputID = this.idInput.split(' ')[0];
+        const tag = this.idInput.split(' ')[2];
         let attachment: AttachmentBuilder | undefined;
-        let replyString: string = strConfig.giveBoar;
+        let replyString = strConfig.giveBoar;
 
-        if (
-            !tag || tag === strConfig.giveBoarChoiceTag && !BoarUtils.findRarity(inputID, this.config) ||
-            tag === strConfig.giveBadgeChoiceTag && !this.config.itemConfigs.badges[inputID]
-        ) {
+        const idNoExist = !tag || tag === strConfig.giveBoarChoiceTag && !BoarUtils.findRarity(inputID, this.config) ||
+            tag === strConfig.giveBadgeChoiceTag && !this.config.itemConfigs.badges[inputID];
+
+        if (idNoExist) {
             await Replies.handleReply(this.interaction, strConfig.giveBadID);
             return;
         }
@@ -124,11 +133,12 @@ export default class GiveSubcommand implements Subcommand {
             attachment = await new ItemImageGenerator(boarUser.user, inputID, strConfig.giveTitle, this.config)
                 .handleImageCreate(false, this.interaction.user);
         } else if (tag === strConfig.giveBadgeChoiceTag) {
-            const hasBadge: boolean = await boarUser.addBadge(this.idInput.split(' ')[0], this.interaction);
+            const hasBadge = await boarUser.addBadge(this.idInput.split(' ')[0], this.interaction);
 
             if (!hasBadge) {
                 attachment = await new ItemImageGenerator(boarUser.user, inputID, strConfig.giveBadgeTitle, this.config)
                     .handleImageCreate(true, this.interaction.user);
+
                 replyString = strConfig.giveBadge;
             } else {
                 replyString = strConfig.giveBadgeHas;

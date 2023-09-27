@@ -30,9 +30,9 @@ enum Board {
  * @copyright WeslayCodes 2023
  */
 export class LeaderboardImageGenerator {
-    private config: BotConfig = {} as BotConfig;
-    private curBoard: Board = Board.Bucks;
-    private boardData: [string, [string, number]][] = [];
+    private config = {} as BotConfig;
+    private curBoard = Board.Bucks;
+    private boardData = [] as [string, [string, number]][];
 
     /**
      * Creates a new leaderboard image generator
@@ -74,36 +74,55 @@ export class LeaderboardImageGenerator {
         let leaderboardTypeStr = '';
 
         switch(this.curBoard) {
-            case (Board.Bucks):
+            case (Board.Bucks): {
                 leaderboardTypeStr = topChoices[0].name;
                 break;
-            case (Board.Total):
+            }
+
+            case (Board.Total): {
                 leaderboardTypeStr = topChoices[1].name;
                 break;
-            case (Board.Uniques):
+            }
+
+            case (Board.Uniques): {
                 leaderboardTypeStr = topChoices[2].name;
                 break;
-            case (Board.UniquesSB):
+            }
+
+            case (Board.UniquesSB): {
                 leaderboardTypeStr = topChoices[3].name;
                 break;
-            case (Board.Streak):
+            }
+
+            case (Board.Streak): {
                 leaderboardTypeStr = topChoices[4].name;
                 break;
-            case (Board.Attempts):
+            }
+
+            case (Board.Attempts): {
                 leaderboardTypeStr = topChoices[5].name;
                 break;
-            case (Board.TopAttempts):
+            }
+
+            case (Board.TopAttempts): {
                 leaderboardTypeStr = topChoices[6].name;
                 break;
-            case (Board.GiftsUsed):
+            }
+
+            case (Board.GiftsUsed): {
                 leaderboardTypeStr = topChoices[7].name;
                 break;
-            case (Board.Multiplier):
+            }
+
+            case (Board.Multiplier): {
                 leaderboardTypeStr = topChoices[8].name;
                 break;
-            case (Board.Fastest):
+            }
+
+            case (Board.Fastest): {
                 leaderboardTypeStr = topChoices[9].name;
                 break;
+            }
         }
 
         const numUsers = this.boardData.length;
@@ -118,8 +137,13 @@ export class LeaderboardImageGenerator {
         ctx.drawImage(await Canvas.loadImage(underlay), ...nums.originPos);
 
         await CanvasUtils.drawText(
-            ctx, strConfig.boardHeader.replace('%@', leaderboardTypeStr.toUpperCase()),
-            nums.leaderboardHeaderPos, bigFont, 'left', colorConfig.font, nums.leaderboardTopBotWidth
+            ctx,
+            strConfig.boardHeader.replace('%@', leaderboardTypeStr.toUpperCase()),
+            nums.leaderboardHeaderPos,
+            bigFont,
+            'left',
+            colorConfig.font,
+            nums.leaderboardTopBotWidth
         );
 
         await CanvasUtils.drawText(
@@ -130,21 +154,24 @@ export class LeaderboardImageGenerator {
                 .replace('%@', (maxPages+1).toLocaleString())
                 .replace('%@', (page * nums.leaderboardNumPlayers + 1).toLocaleString())
                 .replace('%@', Math.min(((page+1) * nums.leaderboardNumPlayers), numUsers).toLocaleString()),
-            nums.leaderboardFooterPos, mediumFont, 'center',
-            colorConfig.font, nums.leaderboardTopBotWidth
+            nums.leaderboardFooterPos,
+            mediumFont,
+            'center',
+            colorConfig.font,
+            nums.leaderboardTopBotWidth
         );
 
         for (let i=0; i<curShowing.length; i++) {
-            const userPos: [number, number] = [
+            const userPos = [
                 nums.leaderboardStart[0] + Math.floor(i / nums.leaderboardRows) * nums.leaderboardIncX,
                 nums.leaderboardStart[1] + i % nums.leaderboardRows * nums.leaderboardIncY
-            ];
+            ] as [number, number];
             const userID = curShowing[i][0];
             const userVal = curShowing[i][1][1].toLocaleString() + (this.curBoard === Board.Fastest
                 ? 'ms'
                 : '');
             let username = curShowing[i][1][0];
-            const position: number = (page*nums.leaderboardNumPlayers)+1+i;
+            const position = (page * nums.leaderboardNumPlayers) + 1 + i;
             const bannedUserIDs = Object.keys(
                 DataHandlers.getGlobalData(DataHandlers.GlobalFile.BannedUsers) as Record<string, number>
             );
@@ -153,28 +180,44 @@ export class LeaderboardImageGenerator {
             if (bannedUserIDs.includes(userID)) {
                 username = strConfig.deletedUsername;
                 await Queue.addQueue(async () => await DataHandlers.removeLeaderboardUser(userID),
-                    userID + 'global'
-                ).catch((err) => { throw err });
+                    'top_rem_banned' + userID + 'global'
+                ).catch((err: unknown) => {
+                    throw err;
+                });
             }
 
             switch (position) {
-                case 1:
+                case 1: {
                     positionColor = colorConfig.gold;
                     break;
-                case 2:
+                }
+
+                case 2: {
                     positionColor = colorConfig.silver;
                     break;
-                case 3:
+                }
+
+                case 3: {
                     positionColor = colorConfig.bronze;
                     break;
-                default:
+                }
+
+                default: {
                     positionColor = colorConfig.font;
+                }
             }
 
             await CanvasUtils.drawText(
-                ctx, '%@ ' + username + ' - ' + userVal, userPos,
-                mediumFont, 'center', colorConfig.font, nums.leaderboardEntryWidth, false,
-                ['#' + position], [positionColor]
+                ctx,
+                '%@ ' + username + ' - ' + userVal,
+                userPos,
+                mediumFont,
+                'center',
+                colorConfig.font,
+                nums.leaderboardEntryWidth,
+                false,
+                ['#' + position],
+                [positionColor]
             );
         }
 

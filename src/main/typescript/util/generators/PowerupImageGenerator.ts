@@ -4,10 +4,6 @@ import {BotConfig} from '../../bot/config/BotConfig';
 import Canvas from 'canvas';
 import {CanvasUtils} from './CanvasUtils';
 import {AttachmentBuilder} from 'discord.js';
-import {StringConfig} from '../../bot/config/StringConfig';
-import {NumberConfig} from '../../bot/config/NumberConfig';
-import {ColorConfig} from '../../bot/config/ColorConfig';
-import {ItemConfig} from '../../bot/config/items/ItemConfig';
 import {BoarBotApp} from '../../BoarBotApp';
 
 /**
@@ -33,28 +29,36 @@ export class PowerupImageGenerator {
         promptType: PromptTypeConfig,
         prompt: PromptConfig,
         config: BotConfig
-    ) {
-        const strConfig: StringConfig = config.stringConfig;
-        const nums: NumberConfig = config.numberConfig;
-        const colorConfig: ColorConfig = config.colorConfig;
+    ): Promise<AttachmentBuilder> {
+        const strConfig = config.stringConfig;
+        const nums = config.numberConfig;
+        const colorConfig = config.colorConfig;
 
         const font = `${nums.fontBig}px ${strConfig.fontName}`;
 
-        const promptDescription: string = promptType.description ? promptType.description : prompt.description;
-        const coloredContent = [];
+        const promptDescription = promptType.description ? promptType.description : prompt.description;
+        const coloredContent = [] as string[];
 
         if (prompt.rightClock) {
             coloredContent.push(prompt.name);
         }
 
-        const canvas: Canvas.Canvas = Canvas.createCanvas(...nums.eventSpawnSize);
-        const ctx: Canvas.CanvasRenderingContext2D = canvas.getContext('2d');
+        const canvas = Canvas.createCanvas(...nums.eventSpawnSize);
+        const ctx = canvas.getContext('2d');
 
         await this.makeBaseHeaderFooter(ctx, powerupTypeID, strConfig.eventTitle.replace('%@', 'POWERUP'), config);
 
         await CanvasUtils.drawText(
-            ctx, promptDescription, nums.powSpawnDescriptionPos, font, 'center',
-            colorConfig.font, nums.powSpawnDescriptionWidth, true, coloredContent, [config.colorConfig.silver]
+            ctx,
+            promptDescription,
+            nums.powSpawnDescriptionPos,
+            font,
+            'center',
+            colorConfig.font,
+            nums.powSpawnDescriptionWidth,
+            true,
+            coloredContent,
+            [config.colorConfig.silver]
         );
 
         return new AttachmentBuilder(canvas.toBuffer(), { name: `${config.stringConfig.defaultImageName}.png` });
@@ -79,15 +83,15 @@ export class PowerupImageGenerator {
         promptID: string,
         promptTypeID: string,
         config: BotConfig
-    ) {
-        const strConfig: StringConfig = config.stringConfig;
-        const nums: NumberConfig = config.numberConfig;
-        const colorConfig: ColorConfig = config.colorConfig;
+    ): Promise<AttachmentBuilder> {
+        const strConfig = config.stringConfig;
+        const nums = config.numberConfig;
+        const colorConfig = config.colorConfig;
 
         const font = `${nums.fontBig}px ${strConfig.fontName}`;
 
-        const canvas: Canvas.Canvas = Canvas.createCanvas(...nums.eventSpawnSize);
-        const ctx: Canvas.CanvasRenderingContext2D = canvas.getContext('2d');
+        const canvas = Canvas.createCanvas(...nums.eventSpawnSize);
+        const ctx = canvas.getContext('2d');
 
         await this.makeBaseHeaderFooter(
             ctx, powerupTypeID, strConfig.eventEndedTitle.replace('%@', 'POWERUP'), config
@@ -103,34 +107,55 @@ export class PowerupImageGenerator {
 
             await CanvasUtils.drawText(ctx, strConfig.powTop, nums.powTopLabelPos, font, 'center', colorConfig.font);
             await CanvasUtils.drawText(
-                ctx, strConfig.powTopResult
+                ctx,
+                strConfig.powTopResult
                     .replace('%@', topClaimer[1].toLocaleString())
                     .replace('%@', topClaimerUsername),
-                nums.powTopPos, font, 'center', colorConfig.silver, nums.powDataWidth
+                nums.powTopPos,
+                font,
+                'center',
+                colorConfig.silver,
+                nums.powDataWidth
             );
 
             await CanvasUtils.drawText(ctx, strConfig.powAvg, nums.powAvgLabelPos, font, 'center', colorConfig.font);
             await CanvasUtils.drawText(
-                ctx, numUsers > 1
+                ctx,
+                numUsers > 1
                     ? strConfig.powAvgResultPlural
                         .replace('%@', avgTime.toLocaleString())
                         .replace('%@', numUsers.toLocaleString())
                     : strConfig.powAvgResult
                         .replace('%@', avgTime.toLocaleString())
                         .replace('%@', numUsers.toLocaleString()),
-                nums.powAvgPos, font, 'center', colorConfig.silver, nums.powDataWidth
+                nums.powAvgPos,
+                font,
+                'center',
+                colorConfig.silver,
+                nums.powDataWidth
             );
 
             await CanvasUtils.drawText(ctx, strConfig.powPrompt, nums.powPromptLabelPos, font, 'center', colorConfig.font);
             await CanvasUtils.drawText(
-                ctx, config.promptConfigs.types[promptTypeID].name + ' - ' +
-                (config.promptConfigs.types[promptTypeID][promptID] as PromptConfig).name,
-                nums.powPromptPos, font, 'center', colorConfig.silver, nums.powDataWidth
+                ctx,
+                config.promptConfigs.types[promptTypeID].name + ' - ' +
+                    (config.promptConfigs.types[promptTypeID][promptID] as PromptConfig).name,
+                nums.powPromptPos,
+                font,
+                'center',
+                colorConfig.silver,
+                nums.powDataWidth
             );
         } else {
             await CanvasUtils.drawText(
-                ctx, strConfig.eventNobody, nums.powSpawnDescriptionPos, font, 'center', colorConfig.font,
-                nums.powSpawnDescriptionWidth, true
+                ctx,
+                strConfig.eventNobody,
+                nums.powSpawnDescriptionPos,
+                font,
+                'center',
+                colorConfig.font,
+                nums.powSpawnDescriptionWidth,
+                true
             );
         }
 
@@ -148,8 +173,8 @@ export class PowerupImageGenerator {
         const fontTitle = `${nums.fontHuge}px ${strConfig.fontName}`;
         const font = `${nums.fontBig}px ${strConfig.fontName}`;
 
-        const powerupType: ItemConfig = config.itemConfigs.powerups[powerupTypeID];
-        const powRewardStr: string = powerupType.rewardAmt + ' ' + (powerupType.rewardAmt as number > 1
+        const powerupType = config.itemConfigs.powerups[powerupTypeID];
+        const powRewardStr = powerupType.rewardAmt + ' ' + (powerupType.rewardAmt as number > 1
             ? powerupType.pluralName
             : powerupType.name);
 
@@ -176,8 +201,16 @@ export class PowerupImageGenerator {
         ctx.restore();
 
         await CanvasUtils.drawText(
-            ctx, strConfig.powReward, nums.powSpawnRewardPos, font, 'center', colorConfig.font,
-            nums.powSpawnDescriptionWidth, false, [powRewardStr], [colorConfig.powerup]
+            ctx,
+            strConfig.powReward,
+            nums.powSpawnRewardPos,
+            font,
+            'center',
+            colorConfig.font,
+            nums.powSpawnDescriptionWidth,
+            false,
+            [powRewardStr],
+            [colorConfig.powerup]
         );
     }
 }
