@@ -50,7 +50,7 @@ Getting the bot up and running is easy! Just follow the instructions below. Anti
 
 ### Step 4: Running the Bot
 - Enter this command in the root of the project: `tsc -p .` to compile the project
-- Run the command `node dist/BoarBotApp.ts`
+- Run the command `node dist/BoarBotApp.js`
 - Congrats! The Bot should be running!
 
 ## Style guidelines
