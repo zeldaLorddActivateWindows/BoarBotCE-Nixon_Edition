@@ -1,6 +1,7 @@
 import fs from 'fs';
 import {BoarBotApp} from '../../BoarBotApp';
 import {LogDebug} from '../../util/logging/LogDebug';
+import * as path from "path";
 
 /**
  * {@link EventHandler EventHandler.ts}
@@ -21,9 +22,10 @@ export class EventHandler {
         let listenerFiles: string[];
 
         try {
-            listenerFiles = fs.readdirSync(config.pathConfig.listeners).filter((fname: string) => {
-                return fname.endsWith('.js');
-            });
+            listenerFiles = fs.readdirSync(path.resolve(__dirname, config.pathConfig.listeners))
+                .filter((fname: string) => {
+                    return fname.endsWith('.js');
+                });
         } catch {
             LogDebug.handleError('Unable to find listener directory provided in \'config.json\'!');
             process.exit(-1);

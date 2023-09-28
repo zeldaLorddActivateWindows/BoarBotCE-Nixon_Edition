@@ -46,8 +46,6 @@ export class LogDebug {
         interaction?: ChatInputCommandInteraction | AutocompleteInteraction | MessageComponentInteraction,
         sendToChannel = false
     ): void {
-        if (!config.debugMode) return;
-
         const prefix = `[${Colors.Yellow}LOG${Colors.White}] `;
         const time = LogDebug.getPrefixTime();
 
@@ -72,14 +70,14 @@ export class LogDebug {
         const completeString = prefix + time + debugMessage;
 
         try {
-            if (sendToChannel) {
-                this.sendLogToChannel(completeString, config);
-            } else {
+            if (config.debugMode) {
                 console.log(completeString);
             }
-        } catch {
-            console.log(completeString);
-        }
+
+            if (sendToChannel) {
+                this.sendLogToChannel(completeString, config);
+            }
+        } catch {}
 
         this.writeToLogFile(completeString, config);
     }
@@ -128,14 +126,11 @@ export class LogDebug {
             }
 
             try {
+                console.log(completeString);
                 if (sendToChannel) {
                     await this.sendLogToChannel(completeString, config, true);
-                } else {
-                    console.log(completeString);
                 }
-            } catch {
-                console.log(completeString);
-            }
+            } catch {}
 
             this.writeToLogFile(completeString, config);
 
@@ -170,8 +165,6 @@ export class LogDebug {
     }
 
     private static async sendLogToChannel(message: string, config: BotConfig, ping = false): Promise<void> {
-        console.log(message);
-
         if (BoarBotApp.getBot().getClient().isReady()) {
             const logChannel: TextChannel | undefined = await InteractionUtils.getTextChannel(config.logChannel);
             const pingMessage = ping

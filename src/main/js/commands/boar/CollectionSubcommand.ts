@@ -423,14 +423,16 @@ export default class CollectionSubcommand implements Subcommand {
         // The boar user will get if transmutation is successful
         const enhancedBoar = BoarUtils.findValid(this.allBoars[this.curPage].rarity[0], this.guildData, this.config);
 
-        if (enhancedBoar === '') {
+        if (enhancedBoar === '' || this.allBoars[this.curPage].rarity[0] >= 8) {
             await LogDebug.handleError(this.config.stringConfig.dailyNoBoarFound, this.firstInter);
             return;
         }
 
         LogDebug.log(
             `Attempting to enhance '${this.allBoars[this.curPage].id}' to '${enhancedBoar}'`,
-            this.config, this.firstInter, true
+            this.config,
+            this.firstInter,
+            true
         );
 
         let dataChanged = false;

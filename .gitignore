@@ -20,12 +20,11 @@ src/main/resources/photoshop
 src/main/resources/temp_items/*
 src/main/resources/unused
 /logs
+/build
 /database
 *.txt
 /website
-package.json
 package-lock.json
-tsconfig.json
 config.json
 *.cjs
 *.bat

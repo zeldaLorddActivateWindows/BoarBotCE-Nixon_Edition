@@ -10,8 +10,8 @@
   "maintenanceMode": false,
   "marketOpen": true,
   "pathConfig": {
-    "listeners": "src/main/typescript/listeners/",
-    "commands": "src/main/typescript/commands/",
+    "listeners": "../../listeners/",
+    "commands": "../../commands/",
     "databaseFolder": "database/",
     "guildDataFolder": "guilds/",
     "userDataFolder": "users/",

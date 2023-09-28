@@ -126,8 +126,9 @@ export default class DailySubcommand implements Subcommand {
                         true
                     );
 
-                    boarUser.itemCollection.powerups.miracle.numUsed +=
-                        (boarUser.itemCollection.powerups.miracle.numActive as number);
+                    const numActive = (boarUser.itemCollection.powerups.miracle.numActive as number);
+
+                    boarUser.itemCollection.powerups.miracle.numUsed += numActive;
                     boarUser.itemCollection.powerups.miracle.numActive = 0;
                 }
 
@@ -159,7 +160,7 @@ export default class DailySubcommand implements Subcommand {
             randScores.push(
                 Math.round(
                     this.config.rarityConfigs[BoarUtils.findRarity(boarIDs[i], this.config)[0]-1].baseScore *
-                    (Math.random() * (1.1 - .9) + .9)
+                        (Math.random() * (1.1 - .9) + .9)
                 )
             );
         }
@@ -383,7 +384,8 @@ export default class DailySubcommand implements Subcommand {
         );
 
         const highestWeight = newWeights.values().next().value;
-        const rarityIncreaseConst = this.config.numberConfig.rarityIncreaseConst;
+        const rarityIncreaseConst =
+            this.config.numberConfig.rarityIncreaseConst;
 
         // Increases probability by increasing weight
         // https://www.desmos.com/calculator/74inrkixxa | x = multiplier, o = weight

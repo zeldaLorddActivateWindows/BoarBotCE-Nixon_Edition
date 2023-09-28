@@ -213,7 +213,7 @@ export class DataHandlers {
             | QuestData
             | undefined,
         file: GlobalFile
-    ) {
+    ): void {
         const pathConfig = BoarBotApp.getBot().getConfig().pathConfig;
 
         fs.writeFileSync(

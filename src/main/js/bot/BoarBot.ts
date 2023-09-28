@@ -381,7 +381,7 @@ export class BoarBot implements Bot {
 	 *
 	 * @private
 	 */
-	private async removeWipeUsers() {
+	private async removeWipeUsers(): Promise<void> {
 		await Queue.addQueue(async () => {
 			const wipeUsers = DataHandlers.getGlobalData(DataHandlers.GlobalFile.WipeUsers) as Record<string, number>;
 			const itemsData = DataHandlers.getGlobalData(DataHandlers.GlobalFile.Items) as ItemsData;
@@ -432,7 +432,7 @@ export class BoarBot implements Bot {
 	 *
 	 * @private
 	 */
-	private async fetchAllUsers() {
+	private async fetchAllUsers(): Promise<void> {
 		const userDataFolder = this.getConfig().pathConfig.databaseFolder +
 			this.getConfig().pathConfig.userDataFolder;
 

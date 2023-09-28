@@ -119,7 +119,7 @@ export class BoarBotApp {
 
             fs.writeFileSync('config.json', JSON.stringify(origConfig));
 
-            await this.pushToDir(client, 'src/main/typescript');
+            await this.pushToDir(client, 'dist', 'src/main/js');
             await this.pushToDir(client, 'src/main/python');
             await this.pushToDir(client, pathConfig.otherAssets);
             await this.pushToDir(client, pathConfig.collAssets);

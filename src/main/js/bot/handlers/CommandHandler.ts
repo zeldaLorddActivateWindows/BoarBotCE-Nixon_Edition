@@ -7,6 +7,7 @@ import {BoarBotApp} from '../../BoarBotApp';
 import {Subcommand} from '../../api/commands/Subcommand';
 import {SlashCommandBuilder, SlashCommandSubcommandsOnlyBuilder} from 'discord.js';
 import {LogDebug} from '../../util/logging/LogDebug';
+import * as path from "path";
 
 /**
  * {@link CommandHandler CommandHandler.ts}
@@ -30,7 +31,7 @@ export class CommandHandler {
         let commandFolders: string[];
 
         try {
-            commandFolders = fs.readdirSync(config.pathConfig.commands);
+            commandFolders = fs.readdirSync(path.resolve(__dirname, config.pathConfig.commands));
         } catch {
             LogDebug.handleError('Unable to find command directory provided in \'config.json\'!');
             process.exit(-1);
@@ -53,9 +54,10 @@ export class CommandHandler {
         let allSubcommandFiles = [] as string[];
 
         for (const commandFolder of commandFolders) {
-            const folderFiles = fs.readdirSync(config.pathConfig.commands + commandFolder).filter((fname: string) => {
-                return fname.endsWith('.js');
-            });
+            const folderFiles = fs.readdirSync(path.resolve(__dirname, config.pathConfig.commands + commandFolder))
+                .filter((fname: string) => {
+                    return fname.endsWith('.js');
+                });
 
             const subcommandFiles = folderFiles.filter((fname: string) => {
                 return fname.toLowerCase().includes('subcommand');
