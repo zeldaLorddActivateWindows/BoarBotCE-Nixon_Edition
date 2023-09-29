@@ -8,19 +8,20 @@
   "unlimitedBoars": false,
   "debugMode": true,
   "maintenanceMode": false,
-  "maintenanceOverride": false,
   "marketOpen": true,
   "pathConfig": {
-    "listeners": "src/main/typescript/listeners/",
-    "commands": "src/main/typescript/commands/",
-    "guildDataFolder": "database/guilds/",
-    "userDataFolder": "database/users/",
-    "globalDataFolder": "database/global/",
+    "listeners": "../../listeners/",
+    "commands": "../../commands/",
+    "databaseFolder": "database/",
+    "guildDataFolder": "guilds/",
+    "userDataFolder": "users/",
+    "globalDataFolder": "global/",
     "itemDataFileName": "items.json",
     "leaderboardsFileName": "leaderboards.json",
     "bannedUsersFileName": "bannedUsers.json",
     "powerupDataFileName": "powerups.json",
     "questDataFileName": "quest.json",
+    "wipeUsersFileName": "wipeUsers.json",
     "githubFileName": "github.json",
     "logsFolder": "logs/",
     "prodStartScript": "StartBotBoar.bat",
@@ -143,7 +144,7 @@
     "collBestPromptLabel": "Best Prompt",
     "collBlessLabel": "Boar Blessings",
     "collGiftsLabel": "Gifts",
-    "collClonesLabel": "Serums",
+    "collClonesLabel": "Clones",
     "collCellLabel": "Transmutation Cell",
     "collMiraclesClaimedLabel": "Lifetime Miracles Collected",
     "collMiraclesUsedLabel": "Miracles Used",
@@ -153,10 +154,10 @@
     "collGiftsUsedLabel": "Gifts Given",
     "collGiftsOpenedLabel": "Gifts Opened",
     "collMostGiftsLabel": "Most Gifts Owned",
-    "collClonesClaimedLabel": "Lifetime Serums Collected",
-    "collClonesUsedLabel": "Serums Used",
+    "collClonesClaimedLabel": "Lifetime Clones Collected",
+    "collClonesUsedLabel": "Clones Used",
     "collClonesSuccLabel": "Successful Clones",
-    "collMostClonesLabel": "Most Serums Owned",
+    "collMostClonesLabel": "Most Clones Owned",
     "collEnhancersClaimedLabel": "Lifetime Charges Collected",
     "collEnhancedLabel": "Transmuted %@",
     "collDataChange": "Your data seems to have changed! Try again in a few minutes.",
@@ -166,7 +167,7 @@
     "collEnhanceBoarGain": "+1 %@ Boar",
     "collEditionTitle": "__Editions for %@__",
     "collEditionLine": "**Edition #%@:** %@\n",
-    "collDescriptionSB": " (SkyBlock Boar)",
+    "collDescriptionSB": "(SkyBlock Boar)",
     "giftConfirm": "Are you sure you want to send out a %@ in this channel? Once someone opens it, both you and the opener get rewards! Click \"Send Gift\" again to confirm.",
     "giftFail": "BoarBot is missing permissions needed to send gifts!",
     "giftOut": "You already have a gift that's sent out!",
@@ -242,8 +243,8 @@
     "marketBSSellOrdLabel": "Sell Offer Volume",
     "marketOrdSell": "Selling: %@",
     "marketOrdBuy": "Buying: %@",
-    "marketOrdList": "Listed %@%@",
-    "marketOrdExpire": " EXPIRED",
+    "marketOrdList": "Listed %@ %@",
+    "marketOrdExpire": "EXPIRED",
     "marketOrdPriceLabel": "Price per Unit",
     "marketOrdFillLabel": "Amount Filled",
     "marketOrdClaimLabel": "Items/Bucks to Claim",
@@ -289,7 +290,7 @@
     "emptySelect": "None",
     "channelOptionLabel": "#%@ [%@]",
     "unavailable": "N/A",
-    "imageName": "unknown",
+    "defaultImageName": "unknown",
     "fontName": "Minecraft",
     "commandDebugPrefix": "%@ [%@%@]\n",
     "pullLink": "https://api.github.com/repos/WeslayCodes/BoarBot/pulls?state=closed",
@@ -762,7 +763,7 @@
       [
         1594,
         1056
-    ],
+      ],
       [
         1287,
         1224
@@ -878,8 +879,9 @@
     "embedMaxWidth": 1500,
     "embedMinHeight": 204,
     "embedTextPadding": 50,
-    "powInterval": 7200000,
-    "powDuration": 30000,
+    "powPlusMinusMins": 1,
+    "powIntervalHours": 2,
+    "powDurationMillis": 30000,
     "powExperiencedNum": 10,
     "oneDay": 86400000,
     "collectorIdle": 120000,
@@ -1153,7 +1155,7 @@
             "name": "powerups",
             "description": "Choose which powerup to activate",
             "choices": [
-          {
+              {
                 "name": "Activate All Miracle Charms",
                 "value": "miracle"
               }
@@ -2602,11 +2604,11 @@
         "blacklisted": false
       },
       "sphere": {
-        "name": "Sphere Boar",
-        "pluralName": "Sphere Boars",
-        "file": "SphereBoar.gif",
-        "staticFile": "SphereBoarSTATIC.png",
-        "description": "After many millennia of the concretion process, this boar took the form of a perfect sphere. What's at its core? Nobody knows.",
+        "name": "Crystal Boarb",
+        "pluralName": "Crystal Boarbs",
+        "file": "Boarb.gif",
+        "staticFile": "BoarbSTATIC.png",
+        "description": "This boar inside this orb is said to have time-warping abilities. Encased in crystals, its powers are limited to telling others their future.",
         "isSB": false,
         "blacklisted": false
       },
@@ -2651,15 +2653,6 @@
         "isSB": false,
         "blacklisted": false
       },
-      "gamebreaker": {
-        "name": "Gameboarker",
-        "pluralName": "Gameboarkers",
-        "file": "Gameboarker.gif",
-        "staticFile": "GameboarkerSTATIC.png",
-        "description": "The only thing on its mind is destruction. Its cells are infused with gunpowder, resulting in bigger and more powerful explosions.",
-        "isSB": false,
-        "blacklisted": false
-      },
       "bacteria": {
         "name": "Boarcterium",
         "pluralName": "Boarcteria",
@@ -2675,46 +2668,14 @@
         "description": "Children all around the world are disappointed when they open a gift excitedly just to get this boar. It appears as though it's been worn.",
         "isSB": false,
         "blacklisted": false
-      },
-      "spooky": {
-        "name": "Spooky Boar",
-        "pluralName": "Spooky Boars",
-        "file": "SpookyBoar.png",
-        "description": "The suspicious host of Boar-o-ween. He can't go a sentence without rhyming and always seems to have traces of pig hair on his coat.",
-        "isSB": false,
-        "blacklisted": false
-      },
-      "trophy": {
-        "name": "Trophy Boar",
-        "pluralName": "Trophy Boars",
-        "file": "TrophyBoar.png",
-        "description": "The arch rival of Golden Boar, outshining it in every aspect of life. It's hard not to stare at this boar in awe.",
-        "isSB": false,
-        "blacklisted": false
       }
     },
     "badges": {
-      "early_supporter": {
-        "name": "Early Subboarter",
-        "pluralName": "Early Subboarters",
-        "file": "EarlySupporter.png",
-        "description": "Given to users that helped support the bot in Alpha",
-        "isSB": false,
-        "blacklisted": false
-      },
       "hunter": {
         "name": "Boar Hunter",
         "pluralName": "Boar Hunters",
         "file": "Hunter.png",
         "description": "Given to users that have collected all non-Special boars",
-        "isSB": false,
-        "blacklisted": false
-      },
-      "artist": {
-        "name": "Boartist",
-        "pluralName": "Boartists",
-        "file": "Artist.png",
-        "description": "Given to users that made a boar that made it into the game",
         "isSB": false,
         "blacklisted": false
       },
@@ -2725,12 +2686,6 @@
         "description": "Given to users that are currently #1 on a leaderboard",
         "isSB": false,
         "blacklisted": false
-      },
-      "catnod": {
-        "name": "Catnod",
-        "pluralName": "Catnods",
-        "file": "Catnod.png",
-        "description": "Given to users that helped support the bot in Alpha"
       }
     },
     "powerups": {
@@ -2924,11 +2879,8 @@
       "fromDaily": false,
       "enhancersNeeded": 0,
       "boars": [
-        "gamebreaker",
         "bacteria",
-        "underwear",
-        "spooky",
-        "trophy"
+        "underwear"
       ]
     }
   ],
