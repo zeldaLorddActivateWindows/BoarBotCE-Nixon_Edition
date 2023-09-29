@@ -138,7 +138,8 @@ export class ItemImageGenerator {
         const script = this.config.pathConfig.dynamicImageScript;
         await this.makeStatic(false);
 
-        const tempAnimBasePath = this.config.pathConfig.tempItemAssets + this.id + this.colorKey + 'animbase.png';
+        const tempAnimBasePath = this.config.pathConfig.tempItemAssets + this.id + this.colorKey + Date.now() +
+            'animbase.png';
         fs.writeFileSync(tempAnimBasePath, this.buffer);
 
         const scriptOptions = {

@@ -95,7 +95,7 @@ export default class DailySubcommand implements Subcommand {
                 // Gets modified multiplier value after applying active miracle charms
                 for (let i=0; i<(boarUser.itemCollection.powerups.miracle.numActive as number); i++) {
                     userMultiplier += Math.min(
-                        Math.ceil(userMultiplier * 0.05), this.config.numberConfig.miracleIncreaseMax
+                        Math.ceil(userMultiplier * 0.1), this.config.numberConfig.miracleIncreaseMax
                     );
                 }
 

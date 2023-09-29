@@ -54,7 +54,7 @@ export class LeaderboardImageGenerator {
      * @param board
      * @param config - Used to get strings, paths, and other information
      */
-    public updateInfo(boardData: [string, [string, number]][], board: Board, config: BotConfig): void {
+    public async updateInfo(boardData: [string, [string, number]][], board: Board, config: BotConfig): Promise<void> {
         this.curBoard = board;
         this.boardData = boardData;
         this.config = config;

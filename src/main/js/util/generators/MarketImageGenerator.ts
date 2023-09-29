@@ -86,7 +86,7 @@ export class MarketImageGenerator {
      * @param userSellOrders
      * @param config - Used to get strings, paths, and other information
      */
-    public updateInfo(
+    public async updateInfo(
         itemPricing: {
             id: string,
             type: string,
@@ -110,7 +110,7 @@ export class MarketImageGenerator {
             lastSells: [number, number, string]
         }[],
         config: BotConfig
-    ): void {
+    ): Promise<void> {
         this.itemPricing = itemPricing;
         this.userBuyOrders = userBuyOrders;
         this.userSellOrders = userSellOrders;
@@ -398,11 +398,11 @@ export class MarketImageGenerator {
         let isSpecial = false;
         const isSell = page >= this.userBuyOrders.length;
 
-        if (!claimText.includes(strConfig.emptySelect) && orderInfo.type === 'boars') {
+        if (!claimText.includes(strConfig.emptySelect) && orderInfo.type === 'boars' && !isSell) {
             const rarity = BoarUtils.findRarity(orderInfo.id, this.config);
             rarityColor = colorConfig['rarity' + rarity[0]];
             isSpecial = rarity[1].name === 'Special' && rarity[0] !== 0;
-        } else if (!claimText.includes(strConfig.emptySelect) && orderInfo.type === 'powerup') {
+        } else if (!claimText.includes(strConfig.emptySelect) && orderInfo.type === 'powerup' && !isSell) {
             rarityColor = colorConfig.powerup;
         } else if (claimText.includes('$')) {
             rarityColor = colorConfig.bucks;

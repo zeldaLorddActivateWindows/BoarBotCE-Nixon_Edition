@@ -108,7 +108,7 @@ export default class SetupSubcommand implements Subcommand {
      */
     private async handleCollect(inter: StringSelectMenuInteraction | ButtonInteraction): Promise<void> {
         try {
-            const canInteract = await CollectorUtils.canInteract(this.timerVars, inter);
+            const canInteract = await CollectorUtils.canInteract(this.timerVars, Date.now(), inter);
             if (!canInteract) return;
 
             if (!inter.isMessageComponent()) return;
@@ -471,7 +471,7 @@ export default class SetupSubcommand implements Subcommand {
             }
 
             // Updates the cooldown to interact again
-            const canInteract = await CollectorUtils.canInteract(this.timerVars);
+            const canInteract = await CollectorUtils.canInteract(this.timerVars, Date.now());
 
             if (!canInteract) {
                 this.endModalListener(submittedModal.client);

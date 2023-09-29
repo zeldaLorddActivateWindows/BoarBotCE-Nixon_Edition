@@ -311,7 +311,7 @@ export class BoarUser {
         const numMiraclesActive = this.itemCollection.powerups.miracle.numActive as number;
 
         for (let i=0; i<numMiraclesActive; i++) {
-            visualMulti += Math.min(Math.ceil(visualMulti * 0.05), config.numberConfig.miracleIncreaseMax);
+            visualMulti += Math.min(Math.ceil(visualMulti * 0.1), config.numberConfig.miracleIncreaseMax);
         }
 
         this.stats.general.highestMulti = Math.max(visualMulti, this.stats.general.highestMulti);

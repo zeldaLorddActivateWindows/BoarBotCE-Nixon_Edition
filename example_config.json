@@ -2604,8 +2604,8 @@
         "blacklisted": false
       },
       "sphere": {
-        "name": "Boarb",
-        "pluralName": "Boarbs",
+        "name": "Crystal Boarb",
+        "pluralName": "Crystal Boarbs",
         "file": "Boarb.gif",
         "staticFile": "BoarbSTATIC.png",
         "description": "This boar inside this orb is said to have time-warping abilities. Encased in crystals, its powers are limited to telling others their future.",

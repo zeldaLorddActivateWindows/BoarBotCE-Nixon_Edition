@@ -211,7 +211,7 @@ export default class CollectionSubcommand implements Subcommand {
      */
     private async handleCollect(inter: ButtonInteraction): Promise<void> {
         try {
-            const canInteract = await CollectorUtils.canInteract(this.timerVars, inter);
+            const canInteract = await CollectorUtils.canInteract(this.timerVars, Date.now(), inter);
             if (!canInteract) return;
 
             if (!inter.isMessageComponent()) return;
@@ -282,7 +282,7 @@ export default class CollectionSubcommand implements Subcommand {
                 // User wants to refresh data
                 case collComponents.refresh.customId: {
                     await this.getUserInfo();
-                    this.collectionImage.updateInfo(this.boarUser, this.allBoars, this.config);
+                    await this.collectionImage.updateInfo(this.boarUser, this.allBoars, this.config);
                     break;
                 }
 
@@ -418,6 +418,8 @@ export default class CollectionSubcommand implements Subcommand {
             return;
         }
 
+        this.enhanceStage--;
+
         const questData = DataHandlers.getGlobalData(DataHandlers.GlobalFile.Quest) as QuestData;
 
         // The boar user will get if transmutation is successful
@@ -492,7 +494,7 @@ export default class CollectionSubcommand implements Subcommand {
             );
 
             await this.getUserInfo();
-            this.collectionImage.updateInfo(this.boarUser, this.allBoars, this.config);
+            await this.collectionImage.updateInfo(this.boarUser, this.allBoars, this.config);
 
             return;
         }
@@ -529,7 +531,7 @@ export default class CollectionSubcommand implements Subcommand {
         }
 
         await this.getUserInfo();
-        this.collectionImage.updateInfo(this.boarUser, this.allBoars, this.config);
+        await this.collectionImage.updateInfo(this.boarUser, this.allBoars, this.config);
     }
 
     /**
@@ -566,6 +568,8 @@ export default class CollectionSubcommand implements Subcommand {
             );
             return;
         }
+
+        this.giftStage--;
 
         // Edits a user's collection and sends out the gift message
         await Queue.addQueue(async () => {
@@ -621,7 +625,7 @@ export default class CollectionSubcommand implements Subcommand {
 
             // Gets blessing value after using miracle charms
             for (let i=0; i<miraclesActivated; i++) {
-                multiplier += Math.min(Math.ceil(multiplier * 0.05), this.config.numberConfig.miracleIncreaseMax);
+                multiplier += Math.min(Math.ceil(multiplier * 0.1), this.config.numberConfig.miracleIncreaseMax);
             }
 
             // Sends confirmation message
@@ -640,6 +644,8 @@ export default class CollectionSubcommand implements Subcommand {
 
             return;
         }
+
+        this.miracleStage--;
 
         LogDebug.log(
             `Activating ${this.boarUser.itemCollection.powerups.miracle.numTotal} miracles`,
@@ -672,7 +678,7 @@ export default class CollectionSubcommand implements Subcommand {
         );
 
         await this.getUserInfo();
-        this.collectionImage.updateInfo(this.boarUser, this.allBoars, this.config);
+        await this.collectionImage.updateInfo(this.boarUser, this.allBoars, this.config);
     }
 
     /**
@@ -706,6 +712,8 @@ export default class CollectionSubcommand implements Subcommand {
 
             return;
         }
+
+        this.cloneStage--;
 
         const randVal = Math.random(); // Value used to determine clone success
         const cloneSuccess = randVal < 1 / this.allBoars[this.curPage].rarity[1].avgClones;
@@ -753,7 +761,7 @@ export default class CollectionSubcommand implements Subcommand {
             );
 
             await this.getUserInfo();
-            this.collectionImage.updateInfo(this.boarUser, this.allBoars, this.config);
+            await this.collectionImage.updateInfo(this.boarUser, this.allBoars, this.config);
 
             return;
         }
@@ -789,7 +797,7 @@ export default class CollectionSubcommand implements Subcommand {
         }
 
         await this.getUserInfo();
-        this.collectionImage.updateInfo(this.boarUser, this.allBoars, this.config);
+        await this.collectionImage.updateInfo(this.boarUser, this.allBoars, this.config);
     }
 
     /**
@@ -829,7 +837,7 @@ export default class CollectionSubcommand implements Subcommand {
                 return;
             }
 
-            const canInteract = await CollectorUtils.canInteract(this.timerVars);
+            const canInteract = await CollectorUtils.canInteract(this.timerVars, Date.now());
             if (!canInteract) {
                 this.endModalListener(submittedModal.client);
                 return;

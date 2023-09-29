@@ -76,7 +76,7 @@ export class CollectionImageGenerator {
      * @param boars - All boars and information about those boars that a user has
      * @param config - Used to get strings, paths, and other information
      */
-    public updateInfo(
+    public async updateInfo(
         boarUser: BoarUser,
         boars: {
             id: string,
@@ -94,7 +94,7 @@ export class CollectionImageGenerator {
             isSB: boolean
         }[],
         config: BotConfig
-    ): void {
+    ): Promise<void> {
         this.boarUser = boarUser;
         this.config = config;
         this.allBoars = boars;
@@ -540,7 +540,7 @@ export class CollectionImageGenerator {
         if (powerupItemsData.miracle.numActive as number > 0) {
             for (let i=0; i<(powerupItemsData.miracle.numActive as number); i++) {
                 multiplier += Math.min(
-                    Math.ceil(multiplier * 0.05), this.config.numberConfig.miracleIncreaseMax
+                    Math.ceil(multiplier * 0.1), this.config.numberConfig.miracleIncreaseMax
                 );
             }
 

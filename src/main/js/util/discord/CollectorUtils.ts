@@ -51,16 +51,16 @@ export class CollectorUtils {
      * Determines whether the interaction should be processed
      *
      * @param timerVars - Information regarding component cooldown
+     * @param startTime - The starting time of the interaction
      * @param inter - Used if the interaction should be dumped
      */
     public static async canInteract(
-        timerVars: { timeUntilNextCollect: number, updateTime: NodeJS.Timer },
+        timerVars: { timeUntilNextCollect: number, updateTime: NodeJS.Timeout },
+        startTime: number,
         inter?: ButtonInteraction | StringSelectMenuInteraction,
     ): Promise<boolean> {
-        const startTime = Date.now();
-
         // If the collection attempt was too quick, cancel it
-        if (inter && startTime <= timerVars.timeUntilNextCollect) {
+        if (inter && (startTime <= timerVars.timeUntilNextCollect || inter.component.disabled)) {
             await inter.deferUpdate();
             return false;
         }
@@ -68,6 +68,8 @@ export class CollectorUtils {
         if (startTime <= timerVars.timeUntilNextCollect) {
             return false;
         }
+
+        clearInterval(timerVars.updateTime);
 
         // Updates time to collect every 100ms, preventing users from clicking too fast
 

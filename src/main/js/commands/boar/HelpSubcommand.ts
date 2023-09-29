@@ -117,7 +117,7 @@ export default class HelpSubcommand implements Subcommand {
      */
     private async handleCollect(inter: ButtonInteraction | StringSelectMenuInteraction): Promise<void> {
         try {
-            const canInteract = await CollectorUtils.canInteract(this.timerVars, inter);
+            const canInteract = await CollectorUtils.canInteract(this.timerVars, Date.now(), inter);
             if (!canInteract) return;
 
             if (!inter.isMessageComponent()) return;

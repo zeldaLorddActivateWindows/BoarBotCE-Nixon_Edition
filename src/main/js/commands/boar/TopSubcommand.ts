@@ -169,7 +169,7 @@ export default class TopSubcommand implements Subcommand {
      */
     private async handleCollect(inter: ButtonInteraction | StringSelectMenuInteraction): Promise<void> {
         try {
-            const canInteract = await CollectorUtils.canInteract(this.timerVars, inter);
+            const canInteract = await CollectorUtils.canInteract(this.timerVars, Date.now(), inter);
             if (!canInteract) return;
 
             if (!inter.isMessageComponent()) return;
@@ -240,7 +240,7 @@ export default class TopSubcommand implements Subcommand {
                     this.maxPage = Math.ceil(
                         this.curBoardData.length / this.config.numberConfig.leaderboardNumPlayers
                     ) - 1;
-                    this.imageGen.updateInfo(this.curBoardData, this.curBoard, this.config);
+                    await this.imageGen.updateInfo(this.curBoardData, this.curBoard, this.config);
 
                     break;
                 }
@@ -266,7 +266,7 @@ export default class TopSubcommand implements Subcommand {
                     this.maxPage = Math.ceil(
                         this.curBoardData.length / this.config.numberConfig.leaderboardNumPlayers
                     ) - 1;
-                    this.imageGen.updateInfo(this.curBoardData, this.curBoard, this.config);
+                    await this.imageGen.updateInfo(this.curBoardData, this.curBoard, this.config);
                     this.curPage = 0;
 
                     break;
@@ -353,7 +353,7 @@ export default class TopSubcommand implements Subcommand {
             }
 
             // Updates the cooldown to interact again
-            const canInteract = await CollectorUtils.canInteract(this.timerVars);
+            const canInteract = await CollectorUtils.canInteract(this.timerVars, Date.now());
 
             if (!canInteract) {
                 this.endModalListener(submittedModal.client);

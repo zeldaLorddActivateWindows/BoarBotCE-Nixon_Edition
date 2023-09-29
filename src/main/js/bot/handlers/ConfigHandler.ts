@@ -89,6 +89,12 @@ export class ConfigHandler {
         const collAssets = pathConfig.collAssets;
         const otherAssets = pathConfig.otherAssets;
 
+        const globalFolders = [
+            pathConfig.globalDataFolder,
+            pathConfig.guildDataFolder,
+            pathConfig.userDataFolder
+        ];
+
         const globalFileNames = [
             pathConfig.itemDataFileName,
             pathConfig.leaderboardsFileName,
@@ -97,11 +103,6 @@ export class ConfigHandler {
         ] as string[];
 
         const allPaths = [
-            pathConfig.listeners,
-            pathConfig.commands,
-            pathConfig.guildDataFolder,
-            pathConfig.userDataFolder,
-            pathConfig.globalDataFolder,
             itemAssets + pathConfig.itemOverlay,
             itemAssets + pathConfig.itemUnderlay,
             itemAssets + pathConfig.itemBackplate,
@@ -182,6 +183,13 @@ export class ConfigHandler {
             if (fs.existsSync(path)) continue;
 
             LogDebug.log(`Path '${path}' is invalid`, this.config);
+            passed = false;
+        }
+
+        for (const folder of globalFolders) {
+            if (fs.existsSync(pathConfig.databaseFolder + folder)) continue;
+
+            LogDebug.log(`Path '${pathConfig.databaseFolder + folder}' is invalid`, this.config);
             passed = false;
         }
 

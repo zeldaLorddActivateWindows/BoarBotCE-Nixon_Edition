@@ -316,7 +316,7 @@ export class DataHandlers {
             }
 
             if (sbUniques > 0) {
-                boardsData.uniquesSB.userData[userID] = [username, sbUniques];
+                boardsData.uniquesSB.userData[userID] = [username, uniques + sbUniques];
             } else {
                 delete boardsData.uniquesSB.userData[userID];
             }
@@ -347,7 +347,7 @@ export class DataHandlers {
 
             let multiplier = boarUser.stats.general.multiplier;
             for (let i=0; i<(boarUser.itemCollection.powerups.miracle.numActive as number); i++) {
-                multiplier += Math.min(Math.ceil(multiplier * 0.05), config.numberConfig.miracleIncreaseMax);
+                multiplier += Math.min(Math.ceil(multiplier * 0.1), config.numberConfig.miracleIncreaseMax);
             }
 
             if (multiplier > 0) {

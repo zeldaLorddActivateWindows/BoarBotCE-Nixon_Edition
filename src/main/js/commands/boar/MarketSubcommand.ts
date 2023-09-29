@@ -192,7 +192,7 @@ export default class MarketSubcommand implements Subcommand {
      */
     private async handleCollect(inter: ButtonInteraction | StringSelectMenuInteraction): Promise<void> {
         try {
-            const canInteract = await CollectorUtils.canInteract(this.timerVars, inter);
+            const canInteract = await CollectorUtils.canInteract(this.timerVars, Date.now(), inter);
             if (!canInteract) return;
 
             if (!inter.isMessageComponent()) return;
@@ -320,7 +320,7 @@ export default class MarketSubcommand implements Subcommand {
                 // User wants to refresh the market data
                 case marketComponents.refresh.customId: {
                     await this.getPricingData();
-                    this.imageGen.updateInfo(this.pricingData, this.userBuyOrders, this.userSellOrders, this.config);
+                    await this.imageGen.updateInfo(this.pricingData, this.userBuyOrders, this.userSellOrders, this.config);
                     this.boarUser.refreshUserData();
                     this.curEdition = 0;
                     break;
@@ -481,7 +481,7 @@ export default class MarketSubcommand implements Subcommand {
 
                 DataHandlers.saveGlobalData(itemsData, DataHandlers.GlobalFile.Items);
                 await this.getPricingData();
-                this.imageGen.updateInfo(this.pricingData, this.userBuyOrders, this.userSellOrders, this.config);
+                await this.imageGen.updateInfo(this.pricingData, this.userBuyOrders, this.userSellOrders, this.config);
             } catch (err: unknown) {
                 await LogDebug.handleError(err, this.compInter);
             }
@@ -680,7 +680,7 @@ export default class MarketSubcommand implements Subcommand {
 
                 DataHandlers.saveGlobalData(itemsData, DataHandlers.GlobalFile.Items);
                 await this.getPricingData();
-                this.imageGen.updateInfo(
+                await this.imageGen.updateInfo(
                     this.pricingData, this.userBuyOrders, this.userSellOrders, this.config
                 );
             } catch (err: unknown) {
@@ -1073,7 +1073,7 @@ export default class MarketSubcommand implements Subcommand {
 
                             DataHandlers.saveGlobalData(itemsData, DataHandlers.GlobalFile.Items);
                             await this.getPricingData();
-                            this.imageGen.updateInfo(
+                            await this.imageGen.updateInfo(
                                 this.pricingData, this.userBuyOrders, this.userSellOrders, this.config
                             );
                         } catch (err: unknown) {
@@ -1390,7 +1390,7 @@ export default class MarketSubcommand implements Subcommand {
 
                             DataHandlers.saveGlobalData(itemsData, DataHandlers.GlobalFile.Items);
                             await this.getPricingData();
-                            this.imageGen.updateInfo(
+                            await this.imageGen.updateInfo(
                                 this.pricingData, this.userBuyOrders, this.userSellOrders, this.config
                             );
                         } catch (err: unknown) {
@@ -1563,7 +1563,7 @@ export default class MarketSubcommand implements Subcommand {
 
                             DataHandlers.saveGlobalData(itemsData, DataHandlers.GlobalFile.Items);
                             await this.getPricingData();
-                            this.imageGen.updateInfo(
+                            await this.imageGen.updateInfo(
                                 this.pricingData, this.userBuyOrders, this.userSellOrders, this.config
                             );
                         } catch (err: unknown) {
@@ -1674,7 +1674,7 @@ export default class MarketSubcommand implements Subcommand {
 
                             DataHandlers.saveGlobalData(itemsData, DataHandlers.GlobalFile.Items);
                             await this.getPricingData();
-                            this.imageGen.updateInfo(
+                            await this.imageGen.updateInfo(
                                 this.pricingData, this.userBuyOrders, this.userSellOrders, this.config
                             );
                         } catch (err: unknown) {
@@ -1944,7 +1944,7 @@ export default class MarketSubcommand implements Subcommand {
 
                     DataHandlers.saveGlobalData(itemsData, DataHandlers.GlobalFile.Items);
                     await this.getPricingData();
-                    this.imageGen.updateInfo(
+                    await this.imageGen.updateInfo(
                         this.pricingData, this.userBuyOrders, this.userSellOrders, this.config
                     );
                 } catch (err: unknown) {
@@ -2251,7 +2251,7 @@ export default class MarketSubcommand implements Subcommand {
             this.boarUser.refreshUserData();
 
             await this.getPricingData();
-            this.imageGen.updateInfo(this.pricingData, this.userBuyOrders, this.userSellOrders, this.config);
+            await this.imageGen.updateInfo(this.pricingData, this.userBuyOrders, this.userSellOrders, this.config);
 
             const itemData = this.pricingData[this.curPage];
 
@@ -2393,7 +2393,7 @@ export default class MarketSubcommand implements Subcommand {
             this.boarUser.refreshUserData();
 
             await this.getPricingData();
-            this.imageGen.updateInfo(this.pricingData, this.userBuyOrders, this.userSellOrders, this.config);
+            await this.imageGen.updateInfo(this.pricingData, this.userBuyOrders, this.userSellOrders, this.config);
 
             const itemData = this.pricingData[this.curPage];
 
@@ -2564,7 +2564,7 @@ export default class MarketSubcommand implements Subcommand {
             }
 
             await this.getPricingData();
-            this.imageGen.updateInfo(this.pricingData, this.userBuyOrders, this.userSellOrders, this.config);
+            await this.imageGen.updateInfo(this.pricingData, this.userBuyOrders, this.userSellOrders, this.config);
 
             const itemData = this.pricingData[this.curPage];
 
@@ -2795,7 +2795,7 @@ export default class MarketSubcommand implements Subcommand {
             }
 
             await this.getPricingData();
-            this.imageGen.updateInfo(this.pricingData, this.userBuyOrders, this.userSellOrders, this.config);
+            await this.imageGen.updateInfo(this.pricingData, this.userBuyOrders, this.userSellOrders, this.config);
 
             const itemData = this.pricingData[this.curPage];
 
@@ -2952,7 +2952,7 @@ export default class MarketSubcommand implements Subcommand {
             this.boarUser.refreshUserData();
 
             await this.getPricingData();
-            this.imageGen.updateInfo(this.pricingData, this.userBuyOrders, this.userSellOrders, this.config);
+            await this.imageGen.updateInfo(this.pricingData, this.userBuyOrders, this.userSellOrders, this.config);
 
             const itemData = this.userBuyOrders.concat(this.userSellOrders)[this.curPage];
             const itemRarity = BoarUtils.findRarity(itemData.id, this.config);
@@ -3135,7 +3135,7 @@ export default class MarketSubcommand implements Subcommand {
         }
 
         // Updates the cooldown to interact again
-        const canInteract = await CollectorUtils.canInteract(this.timerVars);
+        const canInteract = await CollectorUtils.canInteract(this.timerVars, Date.now());
 
         if (!canInteract) {
             this.endModalListener(submittedModal.client);
