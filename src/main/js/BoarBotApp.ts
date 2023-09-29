@@ -2,7 +2,7 @@ import {BoarBot} from './bot/BoarBot';
 import {Bot} from './api/bot/Bot';
 import {LogDebug} from './util/logging/LogDebug';
 import fs from 'fs';
-import ftp from 'basic-ftp';
+import * as ftp from 'basic-ftp';
 import dotenv from 'dotenv';
 import {exec} from 'child_process'
 import {BotConfig} from './bot/config/BotConfig';
