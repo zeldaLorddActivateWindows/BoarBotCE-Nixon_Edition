@@ -97,7 +97,7 @@ export class BotConfig {
     /**
      * If debug messages should be sent to logs
      */
-    public readonly debugMode = true as boolean;
+    public debugMode = true as boolean;
 
     /**
      * If the bot is in maintenance mode

@@ -73,6 +73,7 @@ export class BoarBotApp {
         configData.defaultChannel = process.env.DEFAULT_CHANNEL as string;
         configData.unlimitedBoars = false;
         configData.maintenanceMode = true;
+        configData.debugMode = false;
 
         fs.writeFileSync('config.json', JSON.stringify(configData));
 

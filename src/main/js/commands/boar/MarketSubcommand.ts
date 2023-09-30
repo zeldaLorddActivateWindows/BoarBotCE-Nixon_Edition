@@ -2255,7 +2255,7 @@ export default class MarketSubcommand implements Subcommand {
 
             const itemData = this.pricingData[this.curPage];
 
-            const hasNoBoars = itemData.type === 'boars' &&
+            const hasNoBoars = itemData.type === 'boars' && this.boarUser.itemCollection.boars[itemData.id] &&
                 this.boarUser.itemCollection.boars[itemData.id].num < numVal;
             const hasNoPows = itemData.type === 'powerups' &&
                 this.boarUser.itemCollection.powerups[itemData.id].numTotal < numVal;
@@ -2610,7 +2610,8 @@ export default class MarketSubcommand implements Subcommand {
             const isTooExpensive = isBuyOrder && maxBuyVal > 0 && priceVal > maxBuyVal ||
                 !isBuyOrder && maxSellVal > 0 && priceVal > maxSellVal;
 
-            const noBoars = itemData.type === 'boars' && this.boarUser.itemCollection.boars[itemData.id].num < numVal;
+            const noBoars = itemData.type === 'boars' && this.boarUser.itemCollection.boars[itemData.id] &&
+                this.boarUser.itemCollection.boars[itemData.id].num < numVal;
             const noPows = itemData.type === 'powerups' &&
                 this.boarUser.itemCollection.powerups[itemData.id].numTotal < numVal;
 
