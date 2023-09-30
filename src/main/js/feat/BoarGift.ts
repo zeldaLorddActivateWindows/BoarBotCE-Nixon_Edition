@@ -529,7 +529,7 @@ export class BoarGift {
                         true
                     );
 
-                    this.giftedUser.itemCollection.powerups.miracle.numTotal += 2;
+                    this.giftedUser.itemCollection.powerups.miracle.numTotal++;
                 } else {
                     LogDebug.log(
                         `Received Transmutation Charges from ${this.boarUser.user.username} ` +
@@ -557,7 +557,7 @@ export class BoarGift {
                 if (suboutcome === 0) {
                     this.boarUser.itemCollection.powerups.clone.numTotal++;
                 } else if (suboutcome === 1) {
-                    this.boarUser.itemCollection.powerups.miracle.numTotal += 2;
+                    this.boarUser.itemCollection.powerups.miracle.numTotal++;
                 } else {
                     this.boarUser.itemCollection.powerups.enhancer.numTotal++;
                 }

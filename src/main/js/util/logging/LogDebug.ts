@@ -107,7 +107,8 @@ export class LogDebug {
             const onlyLogNoSend = errString && (errString.includes('Unknown interaction') ||
                 errString.includes('Unknown Message') ||
                 errString.includes('Missing Access') ||
-                errString.includes('ChannelNotCached'));
+                errString.includes('ChannelNotCached') ||
+                errString.includes('Cannot send messages to this user'));
 
             if (onlyLogNoSend) {
                 LogDebug.log(errString, config);
@@ -184,35 +185,35 @@ export class LogDebug {
      * @private
      */
     private static writeToLogFile(completeString: string, config: BotConfig): void {
-        if (BoarBotApp.getBot().getClient().isReady()) {
-            const curTime = Date.now();
-            const curFolderName = new Date(curTime).toLocaleDateString().replaceAll('/','-');
-            const oldFolderName = new Date(
-                curTime - config.numberConfig.oneDay
-            ).toLocaleDateString().replaceAll('/','-');
+        if (!BoarBotApp.getBot().getConfig().logChannel) return;
 
-            if (!fs.existsSync(config.pathConfig.logsFolder)) {
-                fs.mkdirSync(config.pathConfig.logsFolder);
-            }
+        const curTime = Date.now();
+        const curFolderName = new Date(curTime).toLocaleDateString().replaceAll('/','-');
+        const oldFolderName = new Date(
+            curTime - config.numberConfig.oneDay
+        ).toLocaleDateString().replaceAll('/','-');
 
-            if (fs.existsSync(config.pathConfig.logsFolder + oldFolderName)) {
-                const zip = new AdmZip();
-                zip.addLocalFolder(config.pathConfig.logsFolder + oldFolderName);
-                zip.writeZip(config.pathConfig.logsFolder + oldFolderName + '.zip');
-                fs.rmSync(config.pathConfig.logsFolder + oldFolderName, { recursive: true });
-            }
-
-            if (!fs.existsSync(config.pathConfig.logsFolder + curFolderName)) {
-                fs.mkdirSync(config.pathConfig.logsFolder + curFolderName);
-            }
-
-            fs.appendFileSync(
-                config.pathConfig.logsFolder + curFolderName + '/' + BoarBotApp.getBot().getClient().readyTimestamp +
-                    '.log',
-                completeString.replace(
-                    /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, ''
-                ) + '\n'
-            );
+        if (!fs.existsSync(config.pathConfig.logsFolder)) {
+            fs.mkdirSync(config.pathConfig.logsFolder);
         }
+
+        if (fs.existsSync(config.pathConfig.logsFolder + oldFolderName)) {
+            const zip = new AdmZip();
+            zip.addLocalFolder(config.pathConfig.logsFolder + oldFolderName);
+            zip.writeZip(config.pathConfig.logsFolder + oldFolderName + '.zip');
+            fs.rmSync(config.pathConfig.logsFolder + oldFolderName, { recursive: true });
+        }
+
+        if (!fs.existsSync(config.pathConfig.logsFolder + curFolderName)) {
+            fs.mkdirSync(config.pathConfig.logsFolder + curFolderName);
+        }
+
+        fs.appendFileSync(
+            config.pathConfig.logsFolder + curFolderName + '/' + BoarBotApp.getBot().getClient().readyTimestamp +
+                '.log',
+            completeString.replace(
+                /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, ''
+            ) + '\n'
+        );
     }
 }
