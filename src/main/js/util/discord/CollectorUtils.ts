@@ -71,6 +71,10 @@ export class CollectorUtils {
 
         clearInterval(timerVars.updateTime);
 
+        if (BoarBotApp.getBot().getConfig().maintenanceMode) {
+            return false;
+        }
+
         // Updates time to collect every 100ms, preventing users from clicking too fast
 
         timerVars.timeUntilNextCollect = Date.now() + 300;
