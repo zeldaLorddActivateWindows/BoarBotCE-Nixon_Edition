@@ -1,11 +1,12 @@
 {
   "devs": [
-    "1234567890"
+    "381742479755706368",
+    "627942961723998238"
   ],
-  "logChannel": "1234567890",
-  "reportsChannel": "1234567890",
-  "updatesChannel": "1234567890",
-  "unlimitedBoars": false,
+  "logChannel": "1157781550440652811",
+  "reportsChannel": "1157781550440652811",
+  "updatesChannel": "1157781550440652811",
+  "unlimitedBoars": true,
   "debugMode": true,
   "maintenanceMode": false,
   "marketOpen": true,
@@ -2595,6 +2596,14 @@
         "isSB": false,
         "blacklisted": false
       },
+      "rgb": {
+        "name": "RGBoar",
+        "pluralName": "RGBoars",
+        "file": "RGBBoar.png",
+        "description": "This boar is made out of light and originally looked like the Normal Boar, but it exploded so hard it got seperated into 3 color channels.",
+        "isSB": false,
+        "blacklisted": false
+      },
       "carrot": {
         "name": "Carrot Boar",
         "pluralName": "Carrot Boars",
@@ -2785,7 +2794,8 @@
       "enhancersNeeded": 1,
       "avgClones": 1,
       "boars": [
-        "normal"
+        "normal",
+        "rgb"
       ]
     },
     {
