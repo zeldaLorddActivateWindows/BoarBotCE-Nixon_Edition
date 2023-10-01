@@ -71,7 +71,9 @@ export class CollectorUtils {
 
         clearInterval(timerVars.updateTime);
 
-        if (BoarBotApp.getBot().getConfig().maintenanceMode) {
+        const config = BoarBotApp.getBot().getConfig();
+
+        if (inter && !config.devs.includes(inter.user.id) && config.maintenanceMode) {
             return false;
         }
 
