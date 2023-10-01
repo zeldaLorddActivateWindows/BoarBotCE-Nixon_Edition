@@ -2709,6 +2709,14 @@
         "isSB": false,
         "blacklisted": false
       },
+      "bjoarnir": {
+        "name": "Bjoarnir",
+        "pluralName": "Bjoarnirs",
+        "file": "Bjoarnir.png",
+        "description": "Thor once accidentally threw his hammer into the Boar Realm and it turned into a boar itself. It now spends its time flying around looking cool during thunderstorms.",
+        "isSB": false,
+        "blacklisted": false
+      },
       "rickroll": {
         "name": "Rickroll Boar",
         "pluralName": "Rickroll Boars",
@@ -2947,6 +2955,7 @@
       "avgClones": 200,
       "boars": [
         "rickroll"
+	"bjoarnir"      
       ]
     },
     {
