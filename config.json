@@ -2612,6 +2612,14 @@
         "isSB": false,
         "blacklisted": false
       },
+      "aigenerated": {
+        "name": "AI generated Boar",
+        "pluralName": "AI generated Boars",
+        "file": "aiGeneratedBoar.png",
+        "description": "Nerd boar generated it while it was bored.",
+        "isSB": false,
+        "blacklisted": false
+	    },
       "3dprint": {
         "name": "3D Printed Boar",
         "pluralName": "3D Printed Boars",
