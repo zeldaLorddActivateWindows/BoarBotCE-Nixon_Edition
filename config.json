@@ -2660,7 +2660,7 @@
         "staticFile": "RickrollBoarSTATIC.png",
         "description": "Spreads the word of Creator Boar. He'll never give you up, nor will he let you down. He certainly won't run around and... desert you.",
         "isSB": false,
-        "blacklisted": false
+        "blacklisted": true
       },
       "supernova": {
         "name": "Suboarnova",
@@ -2701,6 +2701,14 @@
         "pluralName": "Boarthletes",
         "file": "Athlete.png",
         "description": "Given to users that are currently #1 on a leaderboard",
+        "isSB": false,
+        "blacklisted": false
+      },
+      "nerd": {
+        "name": "Nerd",
+        "pluralName": "Nerds",
+        "file": "Nerd.png",
+        "description": "Given to users that are nerds",
         "isSB": false,
         "blacklisted": false
       }
