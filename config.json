@@ -2624,7 +2624,7 @@
         "name": "AI generated Boar",
         "pluralName": "AI generated Boars",
         "file": "aiGeneratedBoar.png",
-        "description": "Nerd boar generated it while it was bored.",
+        "description": "This boar was made using ChatGBT, the GBT stands for Generative Boar-trained Transformers, this new technology takes the jobs of many boartists.",
         "isSB": false,
         "blacklisted": false
 	    },
