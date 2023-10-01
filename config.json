@@ -2621,10 +2621,10 @@
         "blacklisted": false
       },
       "largeboarboiler": {
-	"name": "Large Boar Boiler"
-	"pluralName": "Large Boar Boilers"
-	"file": "largeBoarBoiler.png"
-	"description": "A boar used to produce lots of steam. Make sure to feed it water..."
+	"name": "Large Boar Boiler",
+	"pluralName": "Large Boar Boilers",
+	"file": "largeBoarBoiler.png",
+	"description": "A boar used to produce lots of steam. Make sure to feed it water...",
 	"isSB": false,
 	"blacklisted": false
       },
@@ -2937,7 +2937,7 @@
       "avgClones": 10,
       "boars": [
         "creepy",
-	      "aigenerated"
+	"aigenerated"
       ]
     },
     {
@@ -2974,7 +2974,7 @@
       "avgClones": 200,
       "boars": [
         "rickroll",
-	      "bjoarnir"      
+        "bjoarnir"      
       ]
     },
     {
