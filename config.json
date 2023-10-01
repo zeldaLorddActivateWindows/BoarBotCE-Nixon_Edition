@@ -2604,6 +2604,14 @@
         "isSB": false,
         "blacklisted": false
       },
+      "nerd": {
+        "name": "Nerd Boar",
+        "pluralName": "Nerd Boar",
+        "file": "NerdBoar.png",
+        "description": "A quite controversial boar that got banned from the same discord server 6 times. Also a huge nerd.",
+        "isSB": false,
+        "blacklisted": false
+      },
       "carrot": {
         "name": "Carrot Boar",
         "pluralName": "Carrot Boars",
@@ -2796,6 +2804,7 @@
       "boars": [
         "normal",
         "rgb"
+        "nerd"
       ]
     },
     {
