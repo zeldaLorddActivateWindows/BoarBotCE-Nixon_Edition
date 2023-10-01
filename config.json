@@ -1030,7 +1030,7 @@
     "marketRange": 2,
     "orderExpire": 604800000,
     "notificationButtonDelay": 15000,
-    "questFullAmt": 3,
+    "questFullAmt": 2,
     "questImgSize": [
       1127,
       1500
@@ -2513,21 +2513,21 @@
     "powParticipate": {
       "description": "Participate in %@ Powerup Event",
       "descriptionAlt": "Participate in %@ Powerup Events",
-      "lowerReward": "enhancer",
+      "lowerReward": "bucks",
       "higherReward": "enhancer",
       "valType": "number",
       "questVals": [
         [
           2,
-          1
+          25
         ],
         [
           4,
-          1
+          50
         ],
         [
           8,
-          2
+          1
         ],
         [
           16,
@@ -2538,21 +2538,21 @@
     "powFirst": {
       "description": "Get %@ in a Powerup Event",
       "descriptionAlt": "Get %@ in a Powerup Event",
-      "lowerReward": "enhancer",
+      "lowerReward": "bucks",
       "higherReward": "enhancer",
       "valType": "time",
       "questVals": [
         [
           5000,
-          1
+          25
         ],
         [
           3750,
-          1
+          50
         ],
         [
           2500,
-          2
+          1
         ],
         [
           1250,
@@ -2749,7 +2749,7 @@
               },
               {
                 "weight": 45,
-                "name": "+1 Miracle Charms"
+                "name": "+1 Miracle Charm"
               },
               {
                 "weight": 5,
@@ -2817,7 +2817,7 @@
       "baseScore": 25,
       "fromDaily": true,
       "enhancersNeeded": 3,
-      "avgClones": 4,
+      "avgClones": 5,
       "boars": [
         "sphere"
       ]
@@ -2829,7 +2829,7 @@
       "baseScore": 50,
       "fromDaily": true,
       "enhancersNeeded": 5,
-      "avgClones": 8,
+      "avgClones": 10,
       "boars": [
         "creepy"
       ]
@@ -2841,7 +2841,7 @@
       "baseScore": 100,
       "fromDaily": true,
       "enhancersNeeded": 10,
-      "avgClones": 16,
+      "avgClones": 20,
       "boars": [
         "minimumwage"
       ]
@@ -2853,7 +2853,7 @@
       "baseScore": 250,
       "fromDaily": true,
       "enhancersNeeded": 18,
-      "avgClones": 32,
+      "avgClones": 50,
       "boars": [
         "cowboy"
       ]
@@ -2865,7 +2865,7 @@
       "baseScore": 1000,
       "fromDaily": true,
       "enhancersNeeded": 30,
-      "avgClones": 64,
+      "avgClones": 200,
       "boars": [
         "rickroll"
       ]
@@ -2877,7 +2877,7 @@
       "baseScore": 0,
       "fromDaily": false,
       "enhancersNeeded": 0,
-      "avgClones": 128,
+      "avgClones": 500,
       "boars": [
         "creator"
       ]
