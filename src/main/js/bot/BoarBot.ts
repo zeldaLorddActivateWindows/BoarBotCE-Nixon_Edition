@@ -24,7 +24,6 @@ import {InteractionUtils} from '../util/interactions/InteractionUtils';
 import crypto from 'crypto';
 import {BoarUtils} from '../util/boar/BoarUtils';
 import {ItemsData} from './data/global/ItemsData';
-import {QuestData} from './data/global/QuestData';
 import {GitHubData} from './data/global/GitHubData';
 import {GuildData} from './data/global/GuildData';
 
@@ -281,11 +280,7 @@ export class BoarBot implements Bot {
 	 */
 	private startQuestRefreshCron() {
 		new CronJob('59 23 * * 6', async () => {
-			const questData = DataHandlers.getGlobalData(DataHandlers.GlobalFile.Quest) as QuestData;
-
-			if (questData.questsStartTimestamp + this.getConfig().numberConfig.oneDay * 7 < Date.now()) {
-				DataHandlers.updateQuestData(this.getConfig());
-			}
+			DataHandlers.updateQuestData(this.getConfig());
 		}, null, true, 'UTC');
 	}
 
