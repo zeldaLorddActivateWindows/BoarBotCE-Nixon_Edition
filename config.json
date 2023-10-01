@@ -2604,6 +2604,14 @@
         "isSB": false,
         "blacklisted": false
       },
+      "ltb": {
+        "name": "LowTierBoar",
+        "pluralName": "LowTierBoars",
+        "file": "LowTierBoar.jpg",
+        "description": "This boar really wants you to do something, NOW.",
+        "isSB": false,
+        "blacklisted": false
+      },
       "nerd": {
         "name": "Nerd Boar",
         "pluralName": "Nerd Boar",
@@ -2862,7 +2870,8 @@
       "enhancersNeeded": 3,
       "avgClones": 5,
       "boars": [
-        "sphere"
+        "sphere",
+        "ltb"
       ]
     },
     {
