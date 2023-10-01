@@ -2644,6 +2644,30 @@
         "isSB": false,
         "blacklisted": false
       },
+      "fractured": {
+        "name": "Fractured Boar",
+        "pluralName": "Fractured Boars",
+        "file": "FracturedBoar.png",
+        "description": "This boar started out as a dangerous piece of malware called \"The Fractureiser\". However, people managed to defeat it and so now it's just standing there... doing nothing.",
+        "isSB": false,
+        "blacklisted": false
+      },
+      "glitched": {
+        "name": "Glitched Boar",
+        "pluralName": "Glitched Boars",
+        "file": "GlitchedBoar.png",
+        "description": "This boar is a replica of Normal Boar's consciousness, scanned and transfered into a computer. Something has gone wrong in the process, though, so now it's forever destined to remain in this broken state.",
+        "isSB": false,
+        "blacklisted": false
+      },
+      "frozen": {
+        "name": "Frozen Boar",
+        "pluralName": "Frozen Boars",
+        "file": "FrozenBoar.png",
+        "description": "This boar tried to walk across Boarkon alone, but his journey ended abruptly and tragically.",
+        "isSB": false,
+        "blacklisted": false
+      },
       "sphere": {
         "name": "Crystal Boarb",
         "pluralName": "Crystal Boarbs",
@@ -2850,7 +2874,10 @@
       "avgClones": 2,
       "boars": [
         "carrot",
-        "elon"
+        "elon",
+        "fractured",
+        "glitched",
+        "frozen"
       ]
     },
     {
