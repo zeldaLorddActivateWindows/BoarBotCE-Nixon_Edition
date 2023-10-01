@@ -2604,11 +2604,19 @@
         "isSB": false,
         "blacklisted": false
       },
+      "ltb": {
+        "name": "LowTierBoar",
+        "pluralName": "LowTierBoars",
+        "file": "LowTierBoar.jpg",
+        "description": "This boar really wants you to do something, NOW.",
+        "isSB": false,
+        "blacklisted": false
+      },
       "nerd": {
         "name": "Nerd Boar",
         "pluralName": "Nerd Boar",
         "file": "NerdBoar.png",
-        "description": "A quite controversial boar that got banned from the same discord server 4 times. Also a huge GTNH expert.",
+        "description": "A quite controversial boar that got banned from the same discord server 4 times. Also a huge nerd.",
         "isSB": false,
         "blacklisted": false
       },
@@ -2889,7 +2897,8 @@
       "enhancersNeeded": 3,
       "avgClones": 5,
       "boars": [
-        "sphere"
+        "sphere",
+        "ltb"
       ]
     },
     {
