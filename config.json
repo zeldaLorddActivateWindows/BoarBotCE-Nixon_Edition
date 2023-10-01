@@ -2927,7 +2927,8 @@
       "enhancersNeeded": 5,
       "avgClones": 10,
       "boars": [
-        "creepy"
+        "creepy",
+	      "aigenerated"
       ]
     },
     {
