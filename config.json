@@ -2882,6 +2882,14 @@
         "description": "Given to users that are nerds",
         "isSB": false,
         "blacklisted": false
+      },
+       "duck": {
+        "name": "Duck Badge",
+        "pluralName": "Boar Badges",
+        "file": "Duck Badge.png",
+        "description": "Duck.",
+        "isSB": false,
+        "blacklisted": false
       }
     },
     "powerups": {
