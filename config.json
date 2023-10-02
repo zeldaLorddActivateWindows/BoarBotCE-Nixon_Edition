@@ -2664,6 +2664,14 @@
         "isSB": false,
         "blacklisted": false
       },
+      "kinetic": {
+        "name": "Kinetic Boar",
+        "pluralName": "Kinetic Boars",
+        "file": "KineticBoar.png",
+        "description": "This boar works as a part-time mechanic and a part-time builder. He rejects everything related to electricity.",
+        "isSB": false,
+        "blacklisted": false
+      },
       "aigenerated": {
         "name": "AI generated Boar",
         "pluralName": "AI generated Boars",
@@ -3060,6 +3068,7 @@
         "glitched",
         "frozen",
         "largeboarboiler",
+        "kinetic",
         "evil",
         "mathematician",
         "elon"
