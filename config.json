@@ -2668,6 +2668,14 @@
         "isSB": false,
         "blacklisted": false
       },
+      "chef": {
+	"name": "Chef Boar",
+        "pluralName": "Carrot Boars",
+        "file": "CarrotBoar.png",
+        "description": "Its pathetic cooking skills depressed it so much it decided to kill itself by placing a bomb inside its skull and detonating it. Don't ask how it got the bomb in there.",
+        "isSB": false,
+        "blacklisted": false
+      },
       "boarception": {
         "name": "Boarception",
         "pluralName": "Boarceptions",
@@ -2909,7 +2917,8 @@
         "normal",
         "rgb",
         "nerd",
-        "3dprint"
+        "3dprint",
+	"chef"
       ]
     },
     {
