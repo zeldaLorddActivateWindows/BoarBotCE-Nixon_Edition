@@ -2678,8 +2678,8 @@
       },
       "chef": {
 	"name": "Chef Boar",
-        "pluralName": "Carrot Boars",
-        "file": "CarrotBoar.png",
+        "pluralName": "Chef Boars",
+        "file": "chefBoar.png",
         "description": "Its pathetic cooking skills depressed it so much it decided to kill itself by placing a bomb inside its skull and detonating it. Don't ask how it got the bomb in there.",
         "isSB": false,
         "blacklisted": false
