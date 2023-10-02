@@ -2885,7 +2885,7 @@
       },
        "duck": {
         "name": "Duck Badge",
-        "pluralName": "Boar Badges",
+        "pluralName": "Duck Badges",
         "file": "Duck Badge.png",
         "description": "Duck.",
         "isSB": false,
