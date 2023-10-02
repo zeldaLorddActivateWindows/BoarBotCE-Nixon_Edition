@@ -2729,8 +2729,40 @@
       "anime": {
 	"name": "Anime Boar",
         "pluralName": "Anime Boars",
-        "file": "animeboar.png",
+        "file": "animeBoar.png",
         "description": "This boar needs to touch grass ASAP.",
+        "isSB": false,
+        "blacklisted": false
+      },
+	"sans": {
+        "name": "Sans Boar",
+        "pluralName": "Sans Boars",
+        "file": "sansBoar.png",
+        "description": "Hi duggy.",
+        "isSB": false,
+        "blacklisted": false
+      },
+       "mathematician": {
+	"name": "Mathematician Boar",
+        "pluralName": "Mathematician Boars",
+        "file": "mathematicianBoar.png",
+        "description": "Hi duggy.",
+        "isSB": false,
+        "blacklisted": false
+      },
+	"evil": {
+	"name": "Evil Boar",
+        "pluralName": "Evil Boars",
+        "file": "evilBoar.png",
+        "description": "Hi duggy.",
+        "isSB": false,
+        "blacklisted": false
+      },
+	"smorgasboard": {
+	"name": "Smorgasboard Boar",
+        "pluralName": "smorgasboards",
+        "file": "Smorgasboard.png",
+        "description": "Hi duggy.",
         "isSB": false,
         "blacklisted": false
       },
@@ -2970,7 +3002,9 @@
         "fractured",
         "glitched",
         "frozen",
-        "largeboarboiler"
+        "largeboarboiler",
+	"evil",
+	"mathematician"
       ]
     },
     {
@@ -2985,7 +3019,8 @@
         "sphere",
         "ltb",
         "boarception",
-        "bullet"
+        "bullet",
+	"sans"
       ]
     },
     {
@@ -2998,7 +3033,8 @@
       "avgClones": 10,
       "boars": [
         "creepy",
-        "aigenerated"
+        "aigenerated",
+        "anime"
       ]
     },
     {
@@ -3025,7 +3061,7 @@
       "avgClones": 50,
       "boars": [
         "cowboy", 
-        "anime"
+        "Smorgasboard"
       ]
     },
     {
