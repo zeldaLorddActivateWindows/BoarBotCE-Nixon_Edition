@@ -2640,7 +2640,7 @@
         "name": "Scam Boar",
         "pluralName": "Scam Boars",
         "file": "ScamBoar.png",
-        "description": "duggy replace this thank",
+        "description": "This boar makes a living from scamming those less fortunate on the Boarld Wide Web. Its victims include children, elderly, and people that are too naive for their own good.",
         "isSB": false,
         "blacklisted": false
       },
