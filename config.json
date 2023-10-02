@@ -2632,6 +2632,14 @@
         "isSB": false,
         "blacklisted": false
       },
+       "divorce": {
+        "name": "Divorce Boar",
+        "pluralName": "Divorce Boars",
+        "file": "divorce_boar.png",
+        "description": "she took the kids",
+        "isSB": false,
+        "blacklisted": false
+      },
       "fluxrift": {
         "name": "Boar Rift",
         "pluralName": "Boar Rift",
@@ -3100,7 +3108,8 @@
       "boars": [
         "minimumwage",
         "scam",
-        "rich"
+        "rich",
+	"divorce"
       ]
     },
     {
