@@ -2623,6 +2623,14 @@
         "isSB": false,
         "blacklisted": false
       },
+      "oregon": {
+        "name": "Boaregon",
+        "pluralName": "Boaregons",
+        "file": "Boaregon.png",
+        "description": "[Description]",
+        "isSB": false,
+        "blacklisted": false
+      },
       "nerd": {
         "name": "Nerd Boar",
         "pluralName": "Nerd Boars",
@@ -3045,7 +3053,8 @@
         "ltb",
         "boarception",
         "bullet",
-	"sans"
+	"sans",
+	"oregon"
       ]
     },
     {
