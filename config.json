@@ -2671,6 +2671,14 @@
         "isSB": false,
         "blacklisted": false
       },
+      "1984": {
+        "name": "198Boar",
+        "pluralName": "198Boars",
+        "file": "198Boar.png",
+        "description": "[Description not available.] ",
+        "isSB": false,
+        "blacklisted": false
+      }, 
       "carrot": {
         "name": "Carrot Boar",
         "pluralName": "Carrot Boars",
@@ -3020,6 +3028,7 @@
         "nerd",
         "3dprint",
         "chef"
+	"1984"
       ]
     },
     {
