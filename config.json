@@ -2716,6 +2716,14 @@
         "isSB": false,
         "blacklisted": false
       },
+      "anime": {
+	"name": "Anime Boar",
+        "pluralName": "Anime Boars",
+        "file": "animeboar.png",
+        "description": "This boar needs to touch grass ASAP.",
+        "isSB": false,
+        "blacklisted": false
+      },
       "sphere": {
         "name": "Crystal Boarb",
         "pluralName": "Crystal Boarbs",
@@ -2988,7 +2996,8 @@
       "enhancersNeeded": 18,
       "avgClones": 50,
       "boars": [
-        "cowboy"
+        "cowboy", 
+	"anime"
       ]
     },
     {
