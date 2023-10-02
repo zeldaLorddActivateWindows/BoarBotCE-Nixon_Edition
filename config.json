@@ -2604,6 +2604,14 @@
         "isSB": false,
         "blacklisted": false
       },
+      "bullet": {
+        "name": "Bullet Boar",
+        "pluralName": "Bullet Boars",
+        "file": "BulletBoar.png",
+        "description": "One of hundreds of flying, living missiles in King Boarser's army. Soon enough, it will be used in yet another attempt to take over the Boarshroom Kingdom.",
+        "isSB": false,
+        "blacklisted": false
+      },
       "ltb": {
         "name": "LowTierBoar",
         "pluralName": "LowTierBoars",
@@ -2620,14 +2628,30 @@
         "isSB": false,
         "blacklisted": false
       },
+      "largeboarboiler": {
+	"name": "Large Bronze Boarlier",
+	"pluralName": "Large Bronze Boarliers",
+	"file": "largeBoarBoiler.png",
+	"description": "A boar used to produce lots of steam. Make sure to feed it water...",
+	"isSB": false,
+	"blacklisted": false
+      },
       "aigenerated": {
         "name": "AI generated Boar",
         "pluralName": "AI generated Boars",
         "file": "aiGeneratedBoar.png",
-        "description": "Nerd boar generated it while it was bored.",
+        "description": "This boar was made using ChatGBT, the GBT stands for Generative Boar-trained Transformers, this new technology takes the jobs of many boartists.",
         "isSB": false,
         "blacklisted": false
-	    },
+      },
+      "scam": {
+        "name": "Scam Boar",
+        "pluralName": "Scam Boars",
+        "file": "ScamBoar.png",
+        "description": "This boar makes a living from scamming those less fortunate on the Boarld Wide Web. Its victims include children, elderly, and people that are too naive for their own good.",
+        "isSB": false,
+        "blacklisted": false
+      },
       "3dprint": {
         "name": "3D Printed Boar",
         "pluralName": "3D Printed Boars",
@@ -2641,6 +2665,22 @@
         "pluralName": "Carrot Boars",
         "file": "CarrotBoar.png",
         "description": "On the surface, it's indistinguishable from the grass around it. The only being capable of spotting them is Farmer Boar.",
+        "isSB": false,
+        "blacklisted": false
+      },
+      "rich": {
+        "name": "Rich Boar",
+        "pluralName": "Rich Boars",
+        "file": "richBoar.png",
+        "description": "This boar claimed the bounty of the mandible hunt.",
+        "isSB": false,
+        "blacklisted": false
+      },
+      "chef": {
+	"name": "Chef Boar",
+        "pluralName": "Carrot Boars",
+        "file": "CarrotBoar.png",
+        "description": "Its pathetic cooking skills depressed it so much it decided to kill itself by placing a bomb inside its skull and detonating it. Don't ask how it got the bomb in there.",
         "isSB": false,
         "blacklisted": false
       },
@@ -2681,6 +2721,14 @@
         "pluralName": "Frozen Boars",
         "file": "FrozenBoar.png",
         "description": "This boar tried to walk across Boarkon alone, but his journey ended abruptly and tragically.",
+        "isSB": false,
+        "blacklisted": false
+      },
+      "anime": {
+	"name": "Anime Boar",
+        "pluralName": "Anime Boars",
+        "file": "animeboar.png",
+        "description": "This boar needs to touch grass ASAP.",
         "isSB": false,
         "blacklisted": false
       },
@@ -2885,7 +2933,8 @@
         "normal",
         "rgb",
         "nerd",
-        "3dprint"
+        "3dprint",
+	"chef"
       ]
     },
     {
@@ -2901,7 +2950,8 @@
         "elon",
         "fractured",
         "glitched",
-        "frozen"
+        "frozen",
+	"largeboarboiler"
       ]
     },
     {
@@ -2915,7 +2965,8 @@
       "boars": [
         "sphere",
         "ltb",
-        "boarception"
+        "boarception",
+	"bullet"
       ]
     },
     {
@@ -2927,7 +2978,8 @@
       "enhancersNeeded": 5,
       "avgClones": 10,
       "boars": [
-        "creepy"
+        "creepy",
+	"aigenerated"
       ]
     },
     {
@@ -2939,7 +2991,9 @@
       "enhancersNeeded": 10,
       "avgClones": 20,
       "boars": [
-        "minimumwage"
+        "minimumwage",
+	"scam",
+	"rich"
       ]
     },
     {
@@ -2951,7 +3005,8 @@
       "enhancersNeeded": 18,
       "avgClones": 50,
       "boars": [
-        "cowboy"
+        "cowboy", 
+	"anime"
       ]
     },
     {
@@ -2964,7 +3019,7 @@
       "avgClones": 200,
       "boars": [
         "rickroll",
-	      "bjoarnir"      
+        "bjoarnir"      
       ]
     },
     {
