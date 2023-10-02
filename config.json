@@ -2639,6 +2639,22 @@
         "isSB": false,
         "blacklisted": false
       },
+      "fluxrift": {
+        "name": "Boar Rift",
+        "pluralName": "Boar Rift",
+        "file": "boar_rift.png",
+        "description": "What is this and how do i get rid of it?",
+        "isSB": false,
+        "blacklisted": false
+      },
+      "thaum": {
+        "name": "Thaum Boar",
+        "pluralName": "Thaum Boars",
+        "file": "thaum_boar.png",
+        "description": "A magician that uses thaumaturgy for internet points",
+        "isSB": false,
+        "blacklisted": false
+      },
       "largeboarboiler": {
 	"name": "Large Bronze Boarlier",
 	"pluralName": "Large Bronze Boarliers",
