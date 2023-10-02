@@ -2807,7 +2807,7 @@
         "isSB": false,
         "blacklisted": false
       },
-      "gatorade": {
+      "rickroll": {
         "name": "Rickroll Boar",
         "pluralName": "Rickroll Boars",
         "file": "RickrollBoar.gif",
@@ -2816,7 +2816,7 @@
         "isSB": false,
         "blacklisted": true
       },
-      "rickroll": {
+      "gatorade": {
         "name": "gatorade",
         "pluralName": "Gatorades",
         "file": "Gatorade.png",
