@@ -2713,7 +2713,7 @@
         "blacklisted": false
       },
       "chef": {
-	"name": "Boar with a hat",
+	      "name": "Boar with a hat",
         "pluralName": "Boars with a hat",
         "file": "chefBoar.png",
         "description": "Hi duggy.",
@@ -2761,14 +2761,14 @@
         "blacklisted": false
       },
       "anime": {
-	"name": "Anime Boar",
+	      "name": "Anime Boar",
         "pluralName": "Anime Boars",
         "file": "animeBoar.png",
         "description": "This boar needs to touch grass ASAP.",
         "isSB": false,
         "blacklisted": false
       },
-	"sans": {
+	    "sans": {
         "name": "Sans Boar",
         "pluralName": "Sans Boars",
         "file": "sansBoar.png",
@@ -2777,23 +2777,23 @@
         "blacklisted": false
       },
        "mathematician": {
-	"name": "Mathematician Boar",
+	      "name": "Mathematician Boar",
         "pluralName": "Mathematician Boars",
         "file": "mathematicianBoar.png",
         "description": "Hi duggy.",
         "isSB": false,
         "blacklisted": false
       },
-	"evil": {
-	"name": "Evil Boar",
+      "evil": {
+        "name": "Evil Boar",
         "pluralName": "Evil Boars",
         "file": "evilBoar.png",
         "description": "Hi duggy.",
         "isSB": false,
         "blacklisted": false
       },
-	"smorgasboard": {
-	"name": "Smorgasboard Boar",
+      "smorgasboard": {
+        "name": "Smorgasboard Boar",
         "pluralName": "smorgasboards",
         "file": "Smorgasboard.png",
         "description": "Hi duggy.",
@@ -2814,6 +2814,14 @@
         "pluralName": "Creepy Boars",
         "file": "CreepyBoar.png",
         "description": "While it may look strikingly similar to a normal boar at first glance, it's actually a paranormal being that lives inside the skin of recently deceased boars.",
+        "isSB": false,
+        "blacklisted": false
+      },
+      "ironlung": {
+        "name": "Bloody Sea Boar",
+        "pluralName": "Bloody Sea Boars",
+        "file": "IronLungBoar.png",
+        "description": "This is the only photo of the boar we've managed to take. It lives in the bloody oceans of AT-5 and everybody who've encountered it died immediately afterwards.",
         "isSB": false,
         "blacklisted": false
       },
@@ -3121,7 +3129,7 @@
       "avgClones": 50,
       "boars": [
         "cowboy", 
-        "Smorgasboard"
+        "smorgasboard"
       ]
     },
     {
