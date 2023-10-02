@@ -2695,7 +2695,15 @@
         "description": "[Description not available.] ",
         "isSB": false,
         "blacklisted": false
-      }, 
+      },
+      "lego": {
+        "name": "Lego Boar",
+        "pluralName": "Lego Boars",
+        "file": "Lego Boar.png",
+        "description": "A crude image of a Normal Boar made with everybody's favorite Lego Boaricks. ",
+        "isSB": false,
+        "blacklisted": false
+      },     
       "carrot": {
         "name": "Carrot Boar",
         "pluralName": "Carrot Boars",
@@ -3043,7 +3051,8 @@
         "rgb",
         "nerd",
         "3dprint",
-	      "1984"
+	      "1984",
+	      "lego"
       ]
     },
     {
