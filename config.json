@@ -2668,6 +2668,14 @@
         "isSB": false,
         "blacklisted": false
       },
+      "rich": {
+        "name": "Rich Boar",
+        "pluralName": "Rich Boars",
+        "file": "richBoar.png",
+        "description": "This boar claimed the bounty of the mandible hunt.",
+        "isSB": false,
+        "blacklisted": false
+      },
       "chef": {
 	"name": "Chef Boar",
         "pluralName": "Carrot Boars",
@@ -2984,7 +2992,8 @@
       "avgClones": 20,
       "boars": [
         "minimumwage",
-	"scam"
+	"scam",
+	"rich"
       ]
     },
     {
