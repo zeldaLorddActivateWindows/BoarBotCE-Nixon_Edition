@@ -2604,6 +2604,14 @@
         "isSB": false,
         "blacklisted": false
       },
+      "bullet": {
+        "name": "Bullet Boar",
+        "pluralName": "Bullet Boars",
+        "file": "BulletBoar.png",
+        "description": "One of hundreds of flying, living missiles in King Boarser's army. Soon enough, it will be used in yet another attempt to take over the Boarshroom Kingdom.",
+        "isSB": false,
+        "blacklisted": false
+      },
       "ltb": {
         "name": "LowTierBoar",
         "pluralName": "LowTierBoars",
@@ -2932,7 +2940,8 @@
       "boars": [
         "sphere",
         "ltb",
-        "boarception"
+        "boarception",
+	"bullet"
       ]
     },
     {
