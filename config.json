@@ -2785,8 +2785,8 @@
         "blacklisted": false
       },
       "smorgasboard": {
-        "name": "Smorgasboard Boar",
-        "pluralName": "smorgasboards",
+        "name": "SmorgasBOARd",
+        "pluralName": "SmorgasBOARds",
         "file": "Smorgasboard.png",
         "description": "Hi duggy.",
         "isSB": false,
