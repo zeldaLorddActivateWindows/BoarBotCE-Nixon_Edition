@@ -3024,10 +3024,9 @@
       "avgClones": 2,
       "boars": [
         "carrot",
-        "elon",
         "fractured",
         "glitched",
-        "frozen",
+        "frozen0",
         "largeboarboiler",
 	"evil",
 	"mathematician"
@@ -3074,7 +3073,8 @@
       "boars": [
         "minimumwage",
         "scam",
-        "rich"
+        "rich",
+        "elon",
       ]
     },
     {
