@@ -1084,9 +1084,9 @@
     ]
   },
   "commandConfigs": {
-    "boar": {
-      "name": "boar",
-      "description": "Commands to play and interact with BoarBot",
+    "boarce": {
+      "name": "boarce",
+      "description": "Commands to play and interact with BoarBot CE",
       "help": {
         "name": "help",
         "description": "See all boar command information",
