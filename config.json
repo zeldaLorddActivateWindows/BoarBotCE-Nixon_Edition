@@ -2790,6 +2790,15 @@
         "isSB": false,
         "blacklisted": false
       },
+      "boargutory": {
+        "name": "Boargutory",
+        "pluralName": "Boargutories",
+        "file": "Boargutory.gif",
+        "staticFile": "BoargutorySTATIC.png",
+        "description": "This place is where boars go after they die. Coincidentally, it is in itself a living organism, much resembling a boar!",
+        "isSB": false,
+        "blacklisted": false
+      },
       "bacteria": {
         "name": "Boarcterium",
         "pluralName": "Boarcteria",
@@ -2934,7 +2943,7 @@
         "rgb",
         "nerd",
         "3dprint",
-	"chef"
+        "chef"
       ]
     },
     {
@@ -2951,7 +2960,7 @@
         "fractured",
         "glitched",
         "frozen",
-	"largeboarboiler"
+        "largeboarboiler"
       ]
     },
     {
@@ -2966,7 +2975,7 @@
         "sphere",
         "ltb",
         "boarception",
-	"bullet"
+        "bullet"
       ]
     },
     {
@@ -2979,7 +2988,7 @@
       "avgClones": 10,
       "boars": [
         "creepy",
-	"aigenerated"
+        "aigenerated"
       ]
     },
     {
@@ -2992,8 +3001,8 @@
       "avgClones": 20,
       "boars": [
         "minimumwage",
-	"scam",
-	"rich"
+        "scam",
+        "rich"
       ]
     },
     {
@@ -3006,7 +3015,7 @@
       "avgClones": 50,
       "boars": [
         "cowboy", 
-	"anime"
+        "anime"
       ]
     },
     {
@@ -3031,7 +3040,8 @@
       "enhancersNeeded": 0,
       "avgClones": 500,
       "boars": [
-        "creator"
+        "supernova",
+        "boargutory"
       ]
     },
     {
