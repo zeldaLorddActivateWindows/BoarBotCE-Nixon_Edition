@@ -2619,7 +2619,7 @@
       "ltb": {
         "name": "LowTierBoar",
         "pluralName": "LowTierBoars",
-        "file": "LowTierBoar.jpg",
+        "file": "LowTierBoar.png",
         "description": "This boar really wants you to do something, NOW.",
         "isSB": false,
         "blacklisted": false
