@@ -2801,6 +2801,14 @@
         "isSB": false,
         "blacklisted": false
       },
+      "duck": {
+        "name": "Duck",
+        "pluralName": "Ducks",
+        "file": "Duck.png",
+        "description": "Quack.",
+        "isSB": false,
+        "blacklisted": false
+      },
       "bacteria": {
         "name": "Boarcterium",
         "pluralName": "Boarcterias",
