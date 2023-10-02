@@ -2682,7 +2682,7 @@
 	"name": "Boar with a hat",
         "pluralName": "Boars with a hat",
         "file": "chefBoar.png",
-        "description": "Hi duggy",
+        "description": "Hi duggy.",
         "isSB": false,
         "blacklisted": false
       },
