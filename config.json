@@ -1,8 +1,9 @@
 {
   "devs": [
     "381742479755706368",
-    "627942961723998238"
-    "802734672064151562"
+    "627942961723998238",
+    "802734672064151562",
+    "494893219797008386"
   ],
   "logChannel": "1157781550440652811",
   "reportsChannel": "1157781550440652811",
@@ -2681,7 +2682,7 @@
 	"name": "Chef Boar",
         "pluralName": "Chef Boars",
         "file": "chefBoar.png",
-        "description": "Its pathetic cooking skills depressed it so much it decided to kill itself by placing a bomb inside its skull and detonating it. Don't ask how it got the bomb in there.",
+        "description": "Insert lore here lol",
         "isSB": false,
         "blacklisted": false
       },
@@ -2694,7 +2695,7 @@
         "blacklisted": false
       },
       "elon": {
-        "name": "Elon Boarsk",
+        "name": "Boarlon Tusk",
         "pluralName": "Elon Boarsks",
         "file": "ElonBoarsk.png",
         "description": "This boar was once praised as a visionary and a great inventor. However, a couple of child labour scandals later, he is mostly known as a clown that uses Boartter too much.",
