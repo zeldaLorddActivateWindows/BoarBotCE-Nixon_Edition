@@ -2671,6 +2671,14 @@
         "isSB": false,
         "blacklisted": false
       },
+      "1984": {
+        "name": "198Boar",
+        "pluralName": "198Boars",
+        "file": "198Boar.png",
+        "description": "[Description not available.] ",
+        "isSB": false,
+        "blacklisted": false
+      }, 
       "carrot": {
         "name": "Carrot Boar",
         "pluralName": "Carrot Boars",
@@ -2878,11 +2886,10 @@
         "name": "Unobtainaboar",
         "pluralName": "Unobtainaboars",
         "file": "Unobtainaboar.png",
-        "description": "A very secretive boar. Not many people know of its existence or its plans. If you ever see one out in the wild, experts advise you to stay away and report it to the boarthorities at once.
-",
+        "description": "A very secretive boar. Not many people know of its existence or its plans. If you ever see one out in the wild, experts advise you to stay away and report it to the boarthorities at once.",
         "isSB": false,
         "blacklisted": false
-      },
+      }
     },
     "badges": {
       "hunter": {
@@ -3020,6 +3027,7 @@
         "nerd",
         "3dprint",
         "chef"
+	"1984"
       ]
     },
     {
@@ -3034,10 +3042,11 @@
         "carrot",
         "fractured",
         "glitched",
-        "frozen0",
+        "frozen",
         "largeboarboiler",
-	"evil",
-	"mathematician"
+        "evil",
+        "mathematician",
+        "elon"
       ]
     },
     {
@@ -3053,8 +3062,8 @@
         "ltb",
         "boarception",
         "bullet",
-	"sans",
-	"oregon"
+        "sans",
+        "oregon"
       ]
     },
     {
@@ -3082,8 +3091,7 @@
       "boars": [
         "minimumwage",
         "scam",
-        "rich",
-        "elon",
+        "rich"
       ]
     },
     {
@@ -3110,7 +3118,7 @@
       "boars": [
         "rickroll",
         "bjoarnir",
-	"gatorade"
+	      "gatorade"
       ]
     },
     {
@@ -3124,7 +3132,7 @@
       "boars": [
         "supernova",
         "boargatory",
-	"duck"
+	      "duck"
       ]
     },
     {
