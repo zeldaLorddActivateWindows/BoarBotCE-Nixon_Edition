@@ -3,7 +3,8 @@
     "381742479755706368",
     "627942961723998238",
     "802734672064151562",
-    "494893219797008386"
+    "494893219797008386",
+    "413933250558296067"
   ],
   "logChannel": "1157781550440652811",
   "reportsChannel": "1157781550440652811",
@@ -2816,6 +2817,14 @@
         "isSB": false,
         "blacklisted": true
       },
+      "gatorade": {
+        "name": "gatorade",
+        "pluralName": "Gatorades",
+        "file": "Gatorade.png",
+        "description": "its gatorade",
+        "isSB": false,
+        "blacklisted": true
+      },
       "supernova": {
         "name": "Suboarnova",
         "pluralName": "Suboarnovas",
@@ -2856,7 +2865,16 @@
         "description": "Children all around the world are disappointed when they open a gift excitedly just to get this boar. It appears as though it's been worn.",
         "isSB": false,
         "blacklisted": false
-      }
+      },
+      "unobtainable": {
+        "name": "Unobtainaboar",
+        "pluralName": "Unobtainaboars",
+        "file": "Unobtainaboar.png",
+        "description": "A very secretive boar. Not many people know of its existence or its plans. If you ever see one out in the wild, experts advise you to stay away and report it to the boarthorities at once.
+",
+        "isSB": false,
+        "blacklisted": false
+      },
     },
     "badges": {
       "hunter": {
@@ -3082,7 +3100,8 @@
       "avgClones": 200,
       "boars": [
         "rickroll",
-        "bjoarnir"      
+        "bjoarnir",
+	"gatorade"
       ]
     },
     {
@@ -3107,7 +3126,8 @@
       "enhancersNeeded": 0,
       "boars": [
         "bacteria",
-        "underwear"
+        "underwear",
+        "unobtainable"
       ]
     }
   ],
