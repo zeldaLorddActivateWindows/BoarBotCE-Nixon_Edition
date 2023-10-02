@@ -2624,7 +2624,7 @@
       },
       "nerd": {
         "name": "Nerd Boar",
-        "pluralName": "Nerd Boar",
+        "pluralName": "Nerd Boars",
         "file": "NerdBoar.png",
         "description": "A quite controversial boar that got banned from the same discord server 4 times. Also a huge nerd.",
         "isSB": false,
@@ -2679,8 +2679,8 @@
         "blacklisted": false
       },
       "chef": {
-	"name": "Chef Boar",
-        "pluralName": "Chef Boars",
+	"name": "Boar with a hat",
+        "pluralName": "Boars with a hat",
         "file": "chefBoar.png",
         "description": "Insert lore here lol",
         "isSB": false,
@@ -2696,7 +2696,7 @@
       },
       "elon": {
         "name": "Boarlon Tusk",
-        "pluralName": "Boarlon Tusk",
+        "pluralName": "Boarlon Tusks",
         "file": "ElonBoarsk.png",
         "description": "This boar was once praised as a visionary and a great inventor. However, a couple of child labour scandals later, he is mostly known as a clown that uses Boartter too much.",
         "isSB": false,
@@ -2803,7 +2803,7 @@
       },
       "bacteria": {
         "name": "Boarcterium",
-        "pluralName": "Boarcteria",
+        "pluralName": "Boarcterias",
         "file": "Boarcterium.png",
         "description": "The first boar ever created by Creator Boar. Catching a cold from this boar results in explosive symptoms.",
         "isSB": false,
@@ -2811,7 +2811,7 @@
       },
       "underwear": {
         "name": "Boarnderwear",
-        "pluralName": "Boarnderwear",
+        "pluralName": "Boarnderwears",
         "file": "Boarnderwear.png",
         "description": "Children all around the world are disappointed when they open a gift excitedly just to get this boar. It appears as though it's been worn.",
         "isSB": false,
