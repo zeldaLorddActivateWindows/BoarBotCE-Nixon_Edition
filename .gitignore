@@ -9,6 +9,7 @@ src/main/resources/unused
 /build
 /database
 *.txt
+!requirements.txt
 /website
 package-lock.json
 *.cjs
