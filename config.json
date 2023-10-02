@@ -2636,6 +2636,14 @@
         "isSB": false,
         "blacklisted": false
       },
+      "scam": {
+        "name": "Scam Boar",
+        "pluralName": "Scam Boars",
+        "file": "ScamBoar.png",
+        "description": "duggy replace this thank",
+        "isSB": false,
+        "blacklisted": false
+      },
       "3dprint": {
         "name": "3D Printed Boar",
         "pluralName": "3D Printed Boars",
@@ -2949,7 +2957,8 @@
       "enhancersNeeded": 10,
       "avgClones": 20,
       "boars": [
-        "minimumwage"
+        "minimumwage",
+	"scam"
       ]
     },
     {
