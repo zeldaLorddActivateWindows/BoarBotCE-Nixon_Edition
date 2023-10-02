@@ -2816,6 +2816,14 @@
         "isSB": false,
         "blacklisted": true
       },
+      "rickroll": {
+        "name": "gatorade",
+        "pluralName": "Gatorades",
+        "file": "Gatorade.png",
+        "description": "its gatorade",
+        "isSB": false,
+        "blacklisted": true
+      },
       "supernova": {
         "name": "Suboarnova",
         "pluralName": "Suboarnovas",
@@ -3082,7 +3090,8 @@
       "avgClones": 200,
       "boars": [
         "rickroll",
-        "bjoarnir"      
+        "bjoarnir" 
+	"gatorade"
       ]
     },
     {
