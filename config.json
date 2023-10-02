@@ -2712,14 +2712,6 @@
         "isSB": false,
         "blacklisted": false
       },
-      "chef": {
-	      "name": "Boar with a hat",
-        "pluralName": "Boars with a hat",
-        "file": "chefBoar.png",
-        "description": "Hi duggy.",
-        "isSB": false,
-        "blacklisted": false
-      },
       "boarception": {
         "name": "Boarception",
         "pluralName": "Boarceptions",
@@ -3051,7 +3043,6 @@
         "rgb",
         "nerd",
         "3dprint",
-        "chef",
 	      "1984"
       ]
     },
@@ -3143,7 +3134,6 @@
       "enhancersNeeded": 30,
       "avgClones": 200,
       "boars": [
-        "rickroll",
         "bjoarnir",
 	      "gatorade"
       ]
