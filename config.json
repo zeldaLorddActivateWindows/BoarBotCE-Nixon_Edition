@@ -4,7 +4,8 @@
     "627942961723998238",
     "802734672064151562",
     "494893219797008386",
-    "413933250558296067"
+    "413933250558296067",
+    "317745407599968257"
   ],
   "logChannel": "1157781550440652811",
   "reportsChannel": "1157781550440652811",
@@ -1492,7 +1493,7 @@
                 ]
               }
             ]
-          } 
+          }
         ]
       },
       "market": {
@@ -2181,21 +2182,6 @@
             "Average",
             "Ordinary"
           ]
-        },
-        "gregtech": {
-          "name": "Gregtech Trivia",
-          "rightStyle": 1,
-          "wrongStyle": 1,
-          "normal1": {
-            "name": "Red Alloy",
-            "description": "What's the chemical formula of Red Alloy?",
-            "choices": [
-              "(((Fe5C)W5)CrMo2V)6CoMnSi",
-              "Cu(Si(FeS2)5(CrAl2O3)Hg3)4",
-              "((Fe5C)CSi)C(MgFeSi2O8)",
-              "CuSn"
-            ]
-          }
         }
       },
       "fast": {
@@ -2638,7 +2624,7 @@
         "isSB": false,
         "blacklisted": false
       },
-           "oregon": {
+      "oregon": {
         "name": "Boaregon",
         "pluralName": "Boaregons",
         "file": "Boaregon.png",
@@ -2702,6 +2688,14 @@
         "isSB": false,
         "blacklisted": false
       },
+      "1984": {
+        "name": "198Boar",
+        "pluralName": "198Boars",
+        "file": "198Boar.png",
+        "description": "[Description not available.] ",
+        "isSB": false,
+        "blacklisted": false
+      }, 
       "carrot": {
         "name": "Carrot Boar",
         "pluralName": "Carrot Boars",
@@ -2857,7 +2851,7 @@
         "blacklisted": true
       },
       "gatorade": {
-        "name": "gatorade",
+        "name": "Gatorade",
         "pluralName": "Gatorades",
         "file": "Gatorade.png",
         "description": "its gatorade",
@@ -2878,15 +2872,6 @@
         "file": "Boargatory.gif",
         "staticFile": "BoargatorySTATIC.png",
         "description": "Anguished cries echo from beyond the abyss.",
-        "isSB": false,
-        "blacklisted": false
-      },
-      "supersaiyajin": {
-        "name": "Super Saiyajin Boar ",
-        "pluralName": "Super Saiyajin Boars ",
-        "file": "superSaiyajinBoar.gif",
-        "staticFile": "SuperSaiyajinBoarSTATIC.png",
-        "description": "Hi duggy.",
         "isSB": false,
         "blacklisted": false
       },
@@ -3058,7 +3043,8 @@
         "rgb",
         "nerd",
         "3dprint",
-        "chef"
+        "chef",
+	      "1984"
       ]
     },
     {
@@ -3071,13 +3057,13 @@
       "avgClones": 2,
       "boars": [
         "carrot",
-        "elon",
         "fractured",
         "glitched",
         "frozen",
         "largeboarboiler",
-	      "evil",
-	      "mathematician"
+        "evil",
+        "mathematician",
+        "elon"
       ]
     },
     {
@@ -3093,7 +3079,8 @@
         "ltb",
         "boarception",
         "bullet",
-	      "sans"
+        "sans",
+        "oregon"
       ]
     },
     {
@@ -3107,8 +3094,7 @@
       "boars": [
         "creepy",
         "aigenerated",
-        "anime",
-        "supersaiyajin"
+        "anime"
       ]
     },
     {
