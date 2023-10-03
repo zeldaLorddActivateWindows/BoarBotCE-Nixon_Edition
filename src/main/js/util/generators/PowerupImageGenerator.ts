@@ -1,7 +1,7 @@
 import {PromptTypeConfig} from '../../bot/config/prompts/PromptTypeConfig';
 import {PromptConfig} from '../../bot/config/prompts/PromptConfig';
 import {BotConfig} from '../../bot/config/BotConfig';
-import Canvas from 'canvas';
+import Canvas from '@napi-rs/canvas';
 import {CanvasUtils} from './CanvasUtils';
 import {AttachmentBuilder} from 'discord.js';
 import {BoarBotApp} from '../../BoarBotApp';
@@ -61,7 +61,9 @@ export class PowerupImageGenerator {
             [config.colorConfig.silver]
         );
 
-        return new AttachmentBuilder(canvas.toBuffer(), { name: `${config.stringConfig.defaultImageName}.png` });
+        return new AttachmentBuilder(
+            canvas.toBuffer('image/png'), { name: `${config.stringConfig.defaultImageName}.png` }
+        );
     }
 
     /**
@@ -159,11 +161,13 @@ export class PowerupImageGenerator {
             );
         }
 
-        return new AttachmentBuilder(canvas.toBuffer(), { name: `${config.stringConfig.defaultImageName}.png` });
+        return new AttachmentBuilder(
+            canvas.toBuffer('image/png'), { name: `${config.stringConfig.defaultImageName}.png` }
+        );
     }
 
     private static async makeBaseHeaderFooter(
-        ctx: Canvas.CanvasRenderingContext2D, powerupTypeID: string, title: string, config: BotConfig
+        ctx: Canvas.SKRSContext2D, powerupTypeID: string, title: string, config: BotConfig
     ): Promise<void> {
         const strConfig = config.stringConfig;
         const pathConfig = config.pathConfig;

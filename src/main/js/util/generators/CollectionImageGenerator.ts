@@ -1,4 +1,4 @@
-import Canvas from 'canvas';
+import Canvas from '@napi-rs/canvas';
 import {BotConfig} from '../../bot/config/BotConfig';
 import {BoarUtils} from '../boar/BoarUtils';
 import {CanvasUtils} from './CanvasUtils';
@@ -173,7 +173,7 @@ export class CollectionImageGenerator {
         );
         await CanvasUtils.drawText(ctx, lastDailyString, nums.collLastDailyPos, bigFont, 'center', colorConfig.font);
 
-        this.normalBase = canvas.toBuffer();
+        this.normalBase = canvas.toBuffer('image/png');
     }
 
     /**
@@ -281,7 +281,7 @@ export class CollectionImageGenerator {
                 : colorConfig['rarity' + lastBoarRarity[0]]
         );
 
-        return new AttachmentBuilder(canvas.toBuffer(), { name:`${strConfig.defaultImageName}.png` });
+        return new AttachmentBuilder(canvas.toBuffer('image/png'), { name:`${strConfig.defaultImageName}.png` });
     }
 
     /**
@@ -323,7 +323,7 @@ export class CollectionImageGenerator {
             ctx, strConfig.collDescriptionLabel, nums.collDescriptionLabelPos, mediumFont, 'center', colorConfig.font
         );
 
-        this.detailedBase = canvas.toBuffer();
+        this.detailedBase = canvas.toBuffer('image/png');
     }
 
     /**
@@ -423,7 +423,7 @@ export class CollectionImageGenerator {
 
         ctx.drawImage(await Canvas.loadImage(collectionOverlay), ...nums.originPos, ...nums.collImageSize);
 
-        return new AttachmentBuilder(canvas.toBuffer(), { name:`${strConfig.defaultImageName}.png` });
+        return new AttachmentBuilder(canvas.toBuffer('image/png'), { name:`${strConfig.defaultImageName}.png` });
     }
 
     /**
@@ -596,7 +596,7 @@ export class CollectionImageGenerator {
         ctx.drawImage(await Canvas.loadImage(cellImagePath), ...nums.collCellPos, ...nums.collCellSize);
         await CanvasUtils.drawText(ctx, chargeStr, nums.collChargePos, mediumFont, 'center', chargeColor);
 
-        this.powerupsBase = canvas.toBuffer();
+        this.powerupsBase = canvas.toBuffer('image/png');
     }
 
     /**
@@ -679,7 +679,7 @@ export class CollectionImageGenerator {
         );
         await CanvasUtils.drawText(ctx, giftsMost, nums.collMostGiftsPos, smallMedium, 'center', colorConfig.font);
 
-        this.powerupsBase = canvas.toBuffer();
+        this.powerupsBase = canvas.toBuffer('image/png');
     }
 
     /**
@@ -774,7 +774,7 @@ export class CollectionImageGenerator {
             );
         }
 
-        this.powerupsBase = canvas.toBuffer();
+        this.powerupsBase = canvas.toBuffer('image/png');
     }
 
     /**
@@ -799,7 +799,9 @@ export class CollectionImageGenerator {
 
         ctx.drawImage(await Canvas.loadImage(collectionOverlay), ...nums.originPos, ...nums.collImageSize);
 
-        return new AttachmentBuilder(canvas.toBuffer(), { name:`${this.config.stringConfig.defaultImageName}.png` });
+        return new AttachmentBuilder(
+            canvas.toBuffer('image/png'), { name:`${this.config.stringConfig.defaultImageName}.png` }
+        );
     }
 
     /**
@@ -807,7 +809,7 @@ export class CollectionImageGenerator {
      *
      * @param ctx - CanvasRenderingContext2D
      */
-    public async drawTopBar(ctx: Canvas.CanvasRenderingContext2D): Promise<void> {
+    public async drawTopBar(ctx: Canvas.SKRSContext2D): Promise<void> {
         const strConfig = this.config.stringConfig;
         const pathConfig = this.config.pathConfig;
         const nums = this.config.numberConfig;
@@ -916,7 +918,9 @@ export class CollectionImageGenerator {
             [this.allBoars[page].color, nextRarityColor, colorConfig.bucks, colorConfig.powerup]
         );
 
-        return new AttachmentBuilder(canvas.toBuffer(), { name:`${this.config.stringConfig.defaultImageName}.png` });
+        return new AttachmentBuilder(
+            canvas.toBuffer('image/png'), { name:`${this.config.stringConfig.defaultImageName}.png` }
+        );
     }
 
     /**
@@ -946,6 +950,8 @@ export class CollectionImageGenerator {
             nums.giftFromWidth
         );
 
-        return new AttachmentBuilder(canvas.toBuffer(), { name:`${this.config.stringConfig.defaultImageName}.png` });
+        return new AttachmentBuilder(
+            canvas.toBuffer('image/png'), { name:`${this.config.stringConfig.defaultImageName}.png` }
+        );
     }
 }

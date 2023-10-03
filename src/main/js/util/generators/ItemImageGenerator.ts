@@ -1,4 +1,4 @@
-import Canvas from 'canvas';
+import Canvas from '@napi-rs/canvas';
 import {BotConfig} from '../../bot/config/BotConfig';
 import {BoarUtils} from '../boar/BoarUtils';
 import {PythonShell} from 'python-shell';
@@ -196,7 +196,7 @@ export class ItemImageGenerator {
         CanvasUtils.drawRect(ctx, origin, imageSize, colorConfig[this.colorKey]);
         ctx.globalCompositeOperation = 'destination-in';
         ctx.drawImage(await Canvas.loadImage(underlayPath), ...origin, ...imageSize);
-        ctx.globalCompositeOperation = 'normal';
+        ctx.globalCompositeOperation = 'source-atop';
 
         ctx.drawImage(await Canvas.loadImage(backplatePath), ...origin);
         if (makeWithBoar) {
@@ -218,7 +218,7 @@ export class ItemImageGenerator {
             [colorConfig[this.colorKey]]
         );
 
-        this.buffer = canvas.toBuffer();
+        this.buffer = canvas.toBuffer('image/png');
     }
 
     /**
@@ -406,6 +406,6 @@ export class ItemImageGenerator {
             );
         }
 
-        this.buffer = canvas.toBuffer();
+        this.buffer = canvas.toBuffer('image/png');
     }
 }

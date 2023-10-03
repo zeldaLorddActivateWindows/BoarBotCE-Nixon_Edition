@@ -1,4 +1,4 @@
-import Canvas from 'canvas';
+import Canvas from '@napi-rs/canvas';
 import {BotConfig} from '../../bot/config/BotConfig';
 import {AttachmentBuilder} from 'discord.js';
 import {CanvasUtils} from './CanvasUtils';
@@ -211,7 +211,7 @@ export class MarketImageGenerator {
             );
         }
 
-        return new AttachmentBuilder(canvas.toBuffer(), { name: `${strConfig.defaultImageName}.png` });
+        return new AttachmentBuilder(canvas.toBuffer('image/png'), { name: `${strConfig.defaultImageName}.png` });
     }
 
     public async makeBuySellImage(page: number, edition: number) {
@@ -362,7 +362,7 @@ export class MarketImageGenerator {
 
         ctx.drawImage(await Canvas.loadImage(overlay), ...nums.originPos);
 
-        return new AttachmentBuilder(canvas.toBuffer(), { name: `${strConfig.defaultImageName}.png` });
+        return new AttachmentBuilder(canvas.toBuffer('image/png'), { name: `${strConfig.defaultImageName}.png` });
     }
 
     public async makeOrdersImage(page: number) {
@@ -490,6 +490,6 @@ export class MarketImageGenerator {
             ctx, claimText, nums.marketOrdClaimPos, smallMediumFont, 'center', rarityColor, nums.marketOrdClaimWidth
         );
 
-        return new AttachmentBuilder(canvas.toBuffer(), { name: `${strConfig.defaultImageName}.png` });
+        return new AttachmentBuilder(canvas.toBuffer('image/png'), { name: `${strConfig.defaultImageName}.png` });
     }
 }
