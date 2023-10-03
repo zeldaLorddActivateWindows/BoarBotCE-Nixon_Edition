@@ -3004,6 +3004,14 @@
         "isSB": false,
         "blacklisted": false
       },
+      "badtime": {
+        "name": "Bad Time'd Boar",
+        "pluralName": "Bad Time'd Boars",
+        "file": "bad_timed_boar.png",
+        "description": "bad time simulator went wrong",
+        "isSB": false,
+        "blacklisted": false
+      },
       "nerd": {
         "name": "Nerd",
         "pluralName": "Nerds",
@@ -3191,7 +3199,8 @@
         "minimumwage",
         "scam",
         "rich",
-	"divorce"
+	"divorce",
+	"badtime"
       ]
     },
     {
