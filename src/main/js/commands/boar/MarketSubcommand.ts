@@ -2027,10 +2027,14 @@ export default class MarketSubcommand implements Subcommand {
                     lastSells: itemsData[itemType][itemID].lastSells
                 });
 
-                this.pricingDataSearchArr.push([
-                    this.config.itemConfigs[itemType][itemID].name.toLowerCase().replace(/\s+/g, ''),
-                    this.pricingData.length
-                ]);
+                try {
+                    this.pricingDataSearchArr.push([
+                        this.config.itemConfigs[itemType][itemID].name.toLowerCase().replace(/\s+/g, ''),
+                        this.pricingData.length
+                    ]);
+                } catch(e) {
+                    console.log(itemID)
+                }
             }
         }
 
