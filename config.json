@@ -2767,9 +2767,9 @@
         "blacklisted": false
       },
 	"oracle": {
-        "name": "Boarcle",
-        "pluralName": "Boarcles",
-        "file": "Boarcle.png",
+        "name": "Boaracle",
+        "pluralName": "Boaracles",
+        "file": "Boaracle.png",
         "description": "Description coming soon.... ",
         "isSB": false,
         "blacklisted": false
