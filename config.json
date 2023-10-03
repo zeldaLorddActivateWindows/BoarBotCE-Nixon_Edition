@@ -2679,7 +2679,15 @@
         "description": "This boar was made using ChatGBT, the GBT stands for Generative Boar-trained Transformers, this new technology takes the jobs of many boartists.",
         "isSB": false,
         "blacklisted": false
-      },
+      }
+        "glass": {
+        "name": "Stained Glass Boar",
+        "pluralName": "Stained Glass Boars",
+        "file": "StainedGlassBoar.png",
+        "description": "Description",
+        "isSB": false,
+        "blacklisted": false
+      }
       "scam": {
         "name": "Scam Boar",
         "pluralName": "Scam Boars",
@@ -3122,6 +3130,7 @@
         "aigenerated",
         "anime",
 	      "thaum"
+	      "glass"
       ]
     },
     {
