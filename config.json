@@ -2848,6 +2848,14 @@
         "description": "This boar has unparalleled skill when it comes to lassoing and piloting horses. It also refuses to touch any modern technology.",
         "isSB": false,
         "blacklisted": false
+      }
+        "dinosaur": {
+        "name": "Dinoboar",
+        "pluralName": "Dinoboars",
+        "file": "Dinoboar.png",
+        "description": "Description",
+        "isSB": false,
+        "blacklisted": false
       },
       "bjoarnir": {
         "name": "Bjoarnir",
@@ -3142,6 +3150,7 @@
       "boars": [
         "cowboy", 
         "smorgasboard"
+	"dinosaur"
       ]
     },
     {
