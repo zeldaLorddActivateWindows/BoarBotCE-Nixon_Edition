@@ -2649,7 +2649,7 @@
        "divorce": {
         "name": "Divorce Boar",
         "pluralName": "Divorce Boars",
-        "file": "divorce_boar.png",
+        "file": "DivorceBoar.png",
         "description": "she took the kids",
         "isSB": false,
         "blacklisted": false
@@ -2665,7 +2665,7 @@
       "thaum": {
         "name": "Thaum Boar",
         "pluralName": "Thaum Boars",
-        "file": "thaum_boar.png",
+        "file": "ThaumBoar.png",
         "description": "A magician boar that uses thaumaturgy for internet points",
         "isSB": false,
         "blacklisted": false
@@ -2673,7 +2673,7 @@
       "largeboarboiler": {
         "name": "Large Bronze Boarlier",
         "pluralName": "Large Bronze Boarliers",
-        "file": "largeBoarBoiler.png",
+        "file": "LargeBronzeBoarlier.png",
         "description": "A boar used to produce lots of steam. Make sure to feed it water...",
         "isSB": false,
         "blacklisted": false
@@ -2721,7 +2721,7 @@
       "nineteeneightyfour": {
         "name": "Nineteen Eighty-Boar",
         "pluralName": "Nineteen Eighty-Boars",
-        "file": "198Boar.png",
+        "file": "NineteenEightyBoar.png",
         "description": "[Description not available.] ",
         "isSB": false,
         "blacklisted": false
@@ -2729,7 +2729,7 @@
       "lego": {
         "name": "Lego Boar",
         "pluralName": "Lego Boars",
-        "file": "Lego Boar.png",
+        "file": "LegoBoar.png",
         "description": "A crude image of a Normal Boar made with everybody's favorite Lego Boaricks. ",
         "isSB": false,
         "blacklisted": false
