@@ -2698,7 +2698,7 @@
         "name": "Stained Glass Boar",
         "pluralName": "Stained Glass Boars",
         "file": "StainedGlassBoar.png",
-        "description": "A breathtaking piece of artwork adorning the halls of Creator Boar's house of worship. Naturally, it was designed in the likeness of the original model.",
+        "description": "A breathtaking piece of artwork adorning the halls of Creator Boar's house of worship. Naturally, it was designed in the likeness of its original and favorite creation.",
         "isSB": false,
         "blacklisted": false
       },
@@ -2718,14 +2718,22 @@
         "isSB": false,
         "blacklisted": false
       },
-      "1984": {
-        "name": "198Boar",
-        "pluralName": "198Boars",
+      "nineteeneightyfour": {
+        "name": "Nineteen Eighty-Boar",
+        "pluralName": "Nineteen Eighty-Boars",
         "file": "198Boar.png",
         "description": "[Description not available.] ",
         "isSB": false,
         "blacklisted": false
-      }, 
+      },
+      "lego": {
+        "name": "Lego Boar",
+        "pluralName": "Lego Boars",
+        "file": "Lego Boar.png",
+        "description": "A crude image of a Normal Boar made with everybody's favorite Lego Boaricks. ",
+        "isSB": false,
+        "blacklisted": false
+      },     
       "carrot": {
         "name": "Carrot Boar",
         "pluralName": "Carrot Boars",
@@ -2758,7 +2766,7 @@
         "isSB": false,
         "blacklisted": false
       },
-	"oppenheimer": {
+	"oracle": {
         "name": "Boarcle",
         "pluralName": "Boarcles",
         "file": "Boarcle.png",
@@ -3114,8 +3122,8 @@
         "rgb",
         "nerd",
         "3dprint",
-        "chef",
-	      "1984"
+	"nineteeneightyfour",
+	"lego"
       ]
     },
     {
@@ -3134,8 +3142,7 @@
         "frozen",
         "largeboarboiler",
         "evil",
-        "mathematician",
-        "elon"
+        "mathematician"
       ]
     },
     {
@@ -3151,7 +3158,8 @@
         "boarception",
         "bullet",
         "sans",
-        "oregon"
+        "oregon",
+	"explorer"
       ]
     },
     {
@@ -3166,7 +3174,9 @@
         "creepy",
         "ironlung",
         "aigenerated",
-        "anime"
+        "anime",
+	"glass",
+	"oracle"
       ]
     },
     {
@@ -3196,7 +3206,7 @@
         "cowboy", 
         "smorgasboard",
 	"dinosaur",
-	"Boarbenheimer"
+	"oppenheimer"
       ]
     },
     {
