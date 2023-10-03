@@ -3179,7 +3179,16 @@
       "enhancersNeeded": 0,
       "boars": [
         "bacteria",
-        "underwear",
+        "underwear"
+      ]
+    }
+  ]
+      "name": "Very Special",
+      "weight": 0,
+      "baseScore": 0,
+      "fromDaily": false,
+      "enhancersNeeded": 0,
+      "boars": [
         "unobtainable"
       ]
     }
@@ -3207,5 +3216,6 @@
     "rarity7": "#00FFFB",
     "rarity8": "#ff6666,#ffb566,#fffa66,#74ff66,#666bff,#b966ff",
     "rarity9": "#BC2326,#FF3136,#BC2326"
+    "rarity10": "#912426,#5D0000,#912426"
   }
 }
