@@ -2736,6 +2736,30 @@
         "isSB": false,
         "blacklisted": false
       },
+	"explorer": {
+        "name": "Boarxplorer",
+        "pluralName": "Boarxplorers",
+        "file": "Boarxplorer.png",
+        "description": "Hi duggy. ",
+        "isSB": false,
+        "blacklisted": false
+      },
+	"oppenheimer": {
+        "name": "Boarbenheimer",
+        "pluralName": "Boarbenheimers",
+        "file": "Boarbenheimer.png",
+        "description": "Hi duggy. ",
+        "isSB": false,
+        "blacklisted": false
+      },
+	"oppenheimer": {
+        "name": "Boarcle",
+        "pluralName": "Boarcles",
+        "file": "Boarcle.png",
+        "description": "Hi duggy. ",
+        "isSB": false,
+        "blacklisted": false
+      },
       "boarception": {
         "name": "Boarception",
         "pluralName": "Boarceptions",
@@ -3075,8 +3099,8 @@
         "rgb",
         "nerd",
         "3dprint",
-	      "1984",
-	      "lego"
+	"1984",
+	"lego"
       ]
     },
     {
@@ -3096,7 +3120,8 @@
         "kinetic",
         "evil",
         "mathematician",
-        "elon"
+        "elon",
+	"Boarcle"
       ]
     },
     {
@@ -3113,7 +3138,8 @@
         "bullet",
         "sans",
         "oregon",
-	      "fluxrift"
+	"fluxrift",
+	"Boarexplorer"
       ]
     },
     {
@@ -3129,8 +3155,8 @@
         "ironlung",
         "aigenerated",
         "anime",
-	      "thaum"
-	      "glass"
+	"thaum",
+	"glass"
       ]
     },
     {
@@ -3158,8 +3184,9 @@
       "avgClones": 50,
       "boars": [
         "cowboy", 
-        "smorgasboard"
-	"dinosaur"
+        "smorgasboard",
+	"dinosaur",
+	"Boarbenheimer"
       ]
     },
     {
