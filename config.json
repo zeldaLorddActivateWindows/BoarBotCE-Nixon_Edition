@@ -2649,7 +2649,7 @@
        "divorce": {
         "name": "Divorce Boar",
         "pluralName": "Divorce Boars",
-        "file": "DivorceBoar.png",
+        "file": "Divorce.png",
         "description": "she took the kids",
         "isSB": false,
         "blacklisted": false
