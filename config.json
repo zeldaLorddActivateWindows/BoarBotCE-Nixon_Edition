@@ -2630,7 +2630,15 @@
         "isSB": false,
         "blacklisted": false
       },
-      "oregon": {
+      "ltb": {
+        "name": "LowTierBoar",
+        "pluralName": "LowTierBoars",
+        "file": "LowTierBoar.jpg",
+        "description": "This boar really wants you to do something, NOW.",
+        "isSB": false,
+        "blacklisted": false
+      },
+           "oregon": {
         "name": "Boaregon",
         "pluralName": "Boaregons",
         "file": "Boaregon.png",
@@ -2642,15 +2650,7 @@
         "name": "Nerd Boar",
         "pluralName": "Nerd Boars",
         "file": "NerdBoar.png",
-        "description": "A quite controversial boar that got banned from the same discord server 4 times. Also a huge GT:NH expert.",
-        "isSB": false,
-        "blacklisted": false
-      },
-       "divorce": {
-        "name": "Divorce Boar",
-        "pluralName": "Divorce Boars",
-        "file": "divorce_boar.png",
-        "description": "she took the kids",
+        "description": "A quite controversial boar that got banned from the same discord server 4 times. Also a huge nerd.",
         "isSB": false,
         "blacklisted": false
       },
@@ -2666,39 +2666,23 @@
         "name": "Thaum Boar",
         "pluralName": "Thaum Boars",
         "file": "thaum_boar.png",
-        "description": "A magician boar that uses thaumaturgy for internet points",
+        "description": "A magician that uses thaumaturgy for internet points",
         "isSB": false,
         "blacklisted": false
       },
       "largeboarboiler": {
-        "name": "Large Bronze Boarlier",
-        "pluralName": "Large Bronze Boarliers",
-        "file": "largeBoarBoiler.png",
-        "description": "A boar used to produce lots of steam. Make sure to feed it water...",
-        "isSB": false,
-        "blacklisted": false
-      },
-      "kinetic": {
-        "name": "Kinetic Boar",
-        "pluralName": "Kinetic Boars",
-        "file": "KineticBoar.png",
-        "description": "This boar works as a part-time mechanic and a part-time builder. He rejects everything related to electricity.",
-        "isSB": false,
-        "blacklisted": false
+	"name": "Large Bronze Boarlier",
+	"pluralName": "Large Bronze Boarliers",
+	"file": "largeBoarBoiler.png",
+	"description": "A boar used to produce lots of steam. Make sure to feed it water...",
+	"isSB": false,
+	"blacklisted": false
       },
       "aigenerated": {
         "name": "AI generated Boar",
         "pluralName": "AI generated Boars",
         "file": "aiGeneratedBoar.png",
         "description": "This boar was made using ChatGBT, the GBT stands for Generative Boar-trained Transformers, this new technology takes the jobs of many boartists.",
-        "isSB": false,
-        "blacklisted": false
-      },
-        "glass": {
-        "name": "Stained Glass Boar",
-        "pluralName": "Stained Glass Boars",
-        "file": "StainedGlassBoar.png",
-        "description": "A breathtaking piece of artwork adorning the halls of Creator Boar's house of worship. Naturally, it was designed in the likeness of the original model.",
         "isSB": false,
         "blacklisted": false
       },
@@ -2718,14 +2702,6 @@
         "isSB": false,
         "blacklisted": false
       },
-      "1984": {
-        "name": "198Boar",
-        "pluralName": "198Boars",
-        "file": "198Boar.png",
-        "description": "[Description not available.] ",
-        "isSB": false,
-        "blacklisted": false
-      }, 
       "carrot": {
         "name": "Carrot Boar",
         "pluralName": "Carrot Boars",
@@ -2738,31 +2714,15 @@
         "name": "Rich Boar",
         "pluralName": "Rich Boars",
         "file": "richBoar.png",
-        "description": "This boar claimed the bounty of the mandible hunt. Apparently it networth lies at around 5-4 Boarbillion boar bucks. ",
+        "description": "This boar claimed the bounty of the mandible hunt.",
         "isSB": false,
         "blacklisted": false
       },
-	"explorer": {
-        "name": "Boarxplorer",
-        "pluralName": "Boarxplorers",
-        "file": "Boarxplorer.png",
-        "description": "Hi duggy. ",
-        "isSB": false,
-        "blacklisted": false
-      },
-	"oppenheimer": {
-        "name": "Boarbenheimer",
-        "pluralName": "Boarbenheimers",
-        "file": "Boarbenheimer.png",
-        "description": "Hi duggy. ",
-        "isSB": false,
-        "blacklisted": false
-      },
-	"oppenheimer": {
-        "name": "Boarcle",
-        "pluralName": "Boarcles",
-        "file": "Boarcle.png",
-        "description": "Hi duggy. ",
+      "chef": {
+	"name": "Boar with a hat",
+        "pluralName": "Boars with a hat",
+        "file": "chefBoar.png",
+        "description": "Hi duggy.",
         "isSB": false,
         "blacklisted": false
       },
@@ -2778,7 +2738,7 @@
         "name": "Boarlon Tusk",
         "pluralName": "Boarlon Tusks",
         "file": "ElonBoarsk.png",
-        "description": "This boar was once praised as a visionary and a great inventor. However, a couple of boar child labour scandals later, he is mostly known as a clown that uses Boartter too much.",
+        "description": "This boar was once praised as a visionary and a great inventor. However, a couple of child labour scandals later, he is mostly known as a clown that uses Boartter too much.",
         "isSB": false,
         "blacklisted": false
       },
@@ -2807,14 +2767,14 @@
         "blacklisted": false
       },
       "anime": {
-	      "name": "Anime Boar",
+	"name": "Anime Boar",
         "pluralName": "Anime Boars",
         "file": "animeBoar.png",
         "description": "This boar needs to touch grass ASAP.",
         "isSB": false,
         "blacklisted": false
       },
-	    "sans": {
+	"sans": {
         "name": "Sans Boar",
         "pluralName": "Sans Boars",
         "file": "sansBoar.png",
@@ -2823,24 +2783,24 @@
         "blacklisted": false
       },
        "mathematician": {
-	      "name": "Mathematician Boar",
+	"name": "Mathematician Boar",
         "pluralName": "Mathematician Boars",
         "file": "mathematicianBoar.png",
         "description": "Hi duggy.",
         "isSB": false,
         "blacklisted": false
       },
-      "evil": {
-        "name": "Evil Boar",
+	"evil": {
+	"name": "Evil Boar",
         "pluralName": "Evil Boars",
         "file": "evilBoar.png",
         "description": "Hi duggy.",
         "isSB": false,
         "blacklisted": false
       },
-      "smorgasboard": {
-        "name": "SmorgasBOARd",
-        "pluralName": "SmorgasBOARds",
+	"smorgasboard": {
+	"name": "Smorgasboard Boar",
+        "pluralName": "smorgasboards",
         "file": "Smorgasboard.png",
         "description": "Hi duggy.",
         "isSB": false,
@@ -2863,14 +2823,6 @@
         "isSB": false,
         "blacklisted": false
       },
-      "ironlung": {
-        "name": "Bloody Sea Boar",
-        "pluralName": "Bloody Sea Boars",
-        "file": "IronLungBoar.png",
-        "description": "This is the only photo of the boar we've managed to take. It lives in the bloody oceans of AT-5 and everybody who've encountered it died immediately afterwards.",
-        "isSB": false,
-        "blacklisted": false
-      },
       "minimumwage": {
         "name": "Minimum Wage Boar",
         "pluralName": "Minimum Wage Boars",
@@ -2884,14 +2836,6 @@
         "pluralName": "Cowboars",
         "file": "CowboyBoar.png",
         "description": "This boar has unparalleled skill when it comes to lassoing and piloting horses. It also refuses to touch any modern technology.",
-        "isSB": false,
-        "blacklisted": false
-      },
-        "dinosaur": {
-        "name": "Dinoboar",
-        "pluralName": "Dinoboars",
-        "file": "Dinoboar.png",
-        "description": "A prime example of boar wildlife during the Boartaceous era. Despite its fierce(?) appearance, its diet consists exclusively of plants.",
         "isSB": false,
         "blacklisted": false
       },
@@ -3114,8 +3058,7 @@
         "rgb",
         "nerd",
         "3dprint",
-        "chef",
-	      "1984"
+        "chef"
       ]
     },
     {
@@ -3133,9 +3076,8 @@
         "glitched",
         "frozen",
         "largeboarboiler",
-        "evil",
-        "mathematician",
-        "elon"
+	      "evil",
+	      "mathematician"
       ]
     },
     {
@@ -3148,10 +3090,10 @@
       "avgClones": 5,
       "boars": [
         "sphere",
+        "ltb",
         "boarception",
         "bullet",
-        "sans",
-        "oregon"
+	      "sans"
       ]
     },
     {
@@ -3164,9 +3106,9 @@
       "avgClones": 10,
       "boars": [
         "creepy",
-        "ironlung",
         "aigenerated",
-        "anime"
+        "anime",
+        "supersaiyajin"
       ]
     },
     {
@@ -3180,8 +3122,7 @@
       "boars": [
         "minimumwage",
         "scam",
-        "rich",
-	"divorce"
+        "rich"
       ]
     },
     {
@@ -3194,9 +3135,7 @@
       "avgClones": 50,
       "boars": [
         "cowboy", 
-        "smorgasboard",
-	"dinosaur",
-	"Boarbenheimer"
+        "Smorgasboard"
       ]
     },
     {
@@ -3208,6 +3147,7 @@
       "enhancersNeeded": 30,
       "avgClones": 200,
       "boars": [
+        "rickroll",
         "bjoarnir",
 	      "gatorade"
       ]
@@ -3234,16 +3174,7 @@
       "enhancersNeeded": 0,
       "boars": [
         "bacteria",
-        "underwear"
-      ]
-    },
-    {
-      "name": "Very Special",
-      "weight": 0,
-      "baseScore": 0,
-      "fromDaily": false,
-      "enhancersNeeded": 0,
-      "boars": [
+        "underwear",
         "unobtainable"
       ]
     }
@@ -3270,7 +3201,6 @@
     "rarity6": "#F300FF",
     "rarity7": "#00FFFB",
     "rarity8": "#ff6666,#ffb566,#fffa66,#74ff66,#666bff,#b966ff",
-    "rarity9": "#BC2326,#FF3136,#BC2326",
-    "rarity10": "#912426,#5D0000,#912426"
+    "rarity9": "#BC2326,#FF3136,#BC2326"
   }
 }
