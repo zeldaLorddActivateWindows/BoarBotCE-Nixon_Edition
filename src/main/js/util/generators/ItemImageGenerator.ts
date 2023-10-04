@@ -196,7 +196,7 @@ export class ItemImageGenerator {
         CanvasUtils.drawRect(ctx, origin, imageSize, colorConfig[this.colorKey]);
         ctx.globalCompositeOperation = 'destination-in';
         ctx.drawImage(await Canvas.loadImage(underlayPath), ...origin, ...imageSize);
-        ctx.globalCompositeOperation = 'source-atop';
+        ctx.globalCompositeOperation = 'source-over';
 
         ctx.drawImage(await Canvas.loadImage(backplatePath), ...origin);
         if (makeWithBoar) {
