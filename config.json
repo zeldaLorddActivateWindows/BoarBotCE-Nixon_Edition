@@ -2097,6 +2097,10 @@
             "description": "Duration of ban in hours"
           }
         ]
+      },
+      "reboot": {
+        "name": "reboot",
+        "description": "Reboots BoarBotCE"
       }
     }
   },

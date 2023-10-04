@@ -41,7 +41,9 @@ export default class BoarDevCommand implements Command {
                 .setDescription(this.commandInfo.ban.args[1].description)
                 .setRequired(InteractionUtils.toBoolean(this.commandInfo.ban.args[1].required))
             )
-        );
+        )
+        .addSubcommand(sub => sub.setName(this.commandInfo.reboot.name)
+            .setDescription(this.commandInfo.reboot.description));
 
     public async execute(interaction: AutocompleteInteraction | ChatInputCommandInteraction): Promise<void> {
         InteractionUtils.executeSubcommand(interaction);
