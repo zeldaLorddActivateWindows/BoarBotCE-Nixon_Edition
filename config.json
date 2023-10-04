@@ -2630,6 +2630,14 @@
         "isSB": false,
         "blacklisted": false
       },
+      "businessman": {
+        "name": "Businessboar",
+        "pluralName": "Businessboars",
+        "file": "businessboar.png",
+        "description": "Minimum Wage Boar's older brother.",
+        "isSB": false,
+        "blacklisted": false
+      },
       "oregon": {
         "name": "Boaregon",
         "pluralName": "Boaregons",
@@ -3197,6 +3205,7 @@
       "avgClones": 20,
       "boars": [
         "minimumwage",
+	"businessman",
         "scam",
         "rich",
 	"divorce",
