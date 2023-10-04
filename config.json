@@ -2622,7 +2622,7 @@
         "name": "RGBoar",
         "pluralName": "RGBoars",
         "file": "RGBBoar.png",
-        "description": "This boar is made out of light and originally looked like the Normal Boar, but it exploded so hard it got seperated into 3 color channels.",
+        "description": "The standard factory image used for the color-correction and caliboaration of computer monitors.",
         "isSB": false,
         "blacklisted": false
       },
@@ -2638,7 +2638,7 @@
         "name": "Businessboar",
         "pluralName": "Businessboars",
         "file": "businessboar.png",
-        "description": "Minimum Wage Boar's older brother.",
+        "description": "This boar has tried many times to convince Minimum Wage Boar, his younger brother, to apply himself and get a real job. Unfortunately, it never seemed to have an effect.",
         "isSB": false,
         "blacklisted": false
       },
@@ -2654,7 +2654,7 @@
         "name": "Nerd Boar",
         "pluralName": "Nerd Boars",
         "file": "NerdBoar.png",
-        "description": "A quite controversial boar that got banned from the same discord server 4 times. Also a huge GT:NH expert.",
+        "description": "This boar is regarded to be quite controversial and got banned from the same Discord server 4 times. It's also a veritable GT:NH expert.",
         "isSB": false,
         "blacklisted": false
       },
@@ -2662,15 +2662,15 @@
         "name": "Divorce Boar",
         "pluralName": "Divorce Boars",
         "file": "Divorce.png",
-        "description": "she took the kids",
+        "description": "After getting scammed online for a miniscule amount, this boar's husband began to fear for his wealth and immediately divorced her. She's not taking it very well...",
         "isSB": false,
         "blacklisted": false
       },
       "fluxrift": {
-        "name": "Boar Rift",
-        "pluralName": "Boar Rift",
+        "name": "Flux Boarift",
+        "pluralName": "Flux Boarifts",
         "file": "boar_rift.png",
-        "description": "What is this and how do i get rid of it?",
+        "description": "What is this, and how do I get rid of it?",
         "isSB": false,
         "blacklisted": false
       },
@@ -2678,7 +2678,7 @@
         "name": "Thaum Boar",
         "pluralName": "Thaum Boars",
         "file": "ThaumBoar.png",
-        "description": "A magician boar that uses thaumaturgy for internet points",
+        "description": "A boargician that uses thaumaturgy for internet points.",
         "isSB": false,
         "blacklisted": false
       },
@@ -2686,7 +2686,7 @@
         "name": "Large Bronze Boarlier",
         "pluralName": "Large Bronze Boarliers",
         "file": "LargeBronzeBoarlier.png",
-        "description": "A boar used to produce lots of steam. Make sure to feed it water...",
+        "description": "This boar is used to produce lots of steam. Make sure to feed it water!",
         "isSB": false,
         "blacklisted": false
       },
@@ -2694,15 +2694,15 @@
         "name": "Kinetic Boar",
         "pluralName": "Kinetic Boars",
         "file": "KineticBoar.png",
-        "description": "This boar works as a part-time mechanic and a part-time builder. He rejects everything related to electricity.",
+        "description": "This boar works as a part-time mechanic and a part-time builder. It rejects everything related to electricity.",
         "isSB": false,
         "blacklisted": false
       },
       "aigenerated": {
-        "name": "AI generated Boar",
-        "pluralName": "AI generated Boars",
+        "name": "AI-Generated Boar",
+        "pluralName": "AI-Generated Boars",
         "file": "aiGeneratedBoar.png",
-        "description": "This boar was made using ChatGBT, the GBT stands for Generative Boar-trained Transformers, this new technology takes the jobs of many boartists.",
+        "description": "This boar was made using ChatGBT (Chat Generative Boar-trained Transformers). Experts predict that this new technology will soon take the jobs of many aspiring boartists.",
         "isSB": false,
         "blacklisted": false
       },
@@ -2710,7 +2710,7 @@
         "name": "Stained Glass Boar",
         "pluralName": "Stained Glass Boars",
         "file": "StainedGlassBoar.png",
-        "description": "A breathtaking piece of artwork adorning the halls of Creator Boar's house of worship. Naturally, it was designed in the likeness of its original and favorite creation.",
+        "description": "A breathtaking piece of artwork adorning every window in the house of Creator Boarship. Naturally, it was designed in the likeness of Creator Boar's original and favorite creation.",
         "isSB": false,
         "blacklisted": false
       },
@@ -2718,15 +2718,15 @@
         "name": "Scam Boar",
         "pluralName": "Scam Boars",
         "file": "ScamBoar.png",
-        "description": "This boar makes a living from scamming those less fortunate on the Boarld Wide Web. Its victims include children, elderly, and people that are too naive for their own good.",
+        "description": "This boar makes a living from scamming others on the Boarld Wide Web. Its victims include children, elderly, and people that are too naive for their own good.",
         "isSB": false,
         "blacklisted": false
       },
       "3dprint": {
-        "name": "3D Printed Boar",
-        "pluralName": "3D Printed Boars",
+        "name": "3D-Printed Boar",
+        "pluralName": "3D-Printed Boars",
         "file": "3DPrinted.png",
-        "description": "One of Boartist's projects, a 3D printed version of the Normal Boar. ",
+        "description": "A 3D-printed sculpture made in the image of a Normal Boar. While there's a definite resemblance, it still feels a somewhat disconcerting.",
         "isSB": false,
         "blacklisted": false
       },
@@ -2734,7 +2734,7 @@
         "name": "Nineteen Eighty-Boar",
         "pluralName": "Nineteen Eighty-Boars",
         "file": "NineteenEightyBoar.png",
-        "description": "[Description not available.] ",
+        "description": "[Description not available.]",
         "isSB": false,
         "blacklisted": false
       },
@@ -2742,7 +2742,7 @@
         "name": "Lego Boar",
         "pluralName": "Lego Boars",
         "file": "LegoBoar.png",
-        "description": "A crude image of a Normal Boar made with everybody's favorite Lego Boaricks. ",
+        "description": "A crude image of a Normal Boar made with everybody's favorite Lego Boaricks.",
         "isSB": false,
         "blacklisted": false
       },     
@@ -2750,7 +2750,7 @@
         "name": "Carrot Boar",
         "pluralName": "Carrot Boars",
         "file": "CarrotBoar.png",
-        "description": "On the surface, it's indistinguishable from the grass around it. The only being capable of spotting them is Farmer Boar.",
+        "description": "This boar can commonly be found growing in ideal conditions. They can be prepared in a variety of dishes and taste quite good!",
         "isSB": false,
         "blacklisted": false
       },
@@ -2758,7 +2758,7 @@
         "name": "Rich Boar",
         "pluralName": "Rich Boars",
         "file": "richBoar.png",
-        "description": "This boar claimed the bounty of the mandible hunt. Apparently it networth lies at around 5-4 Boarbillion boar bucks. ",
+        "description": "This boar claimed the bounty of the mandible hunt. Apparently, its networth lies at around 5-4 Boarbillion Boar Bucks.",
         "isSB": false,
         "blacklisted": false
       },
@@ -2766,7 +2766,7 @@
         "name": "Boarxplorer",
         "pluralName": "Boarxplorers",
         "file": "Boarxplorer.png",
-        "description": "Description coming soon.... ",
+        "description": "This boar finally completed its dream of crossing the entire Boarctic on its own. Unfortunately, it doesn't appear to notice that a Polar Boar is rapidly approaching...",
         "isSB": false,
         "blacklisted": false
       },
@@ -2774,7 +2774,7 @@
         "name": "Boarbenheimer",
         "pluralName": "Boarbenheimers",
         "file": "Boarbenheimer.png",
-        "description": "Description coming soon.... ",
+        "description": "Description coming soon...",
         "isSB": false,
         "blacklisted": false
       },
@@ -2790,7 +2790,7 @@
         "name": "Boarception",
         "pluralName": "Boarceptions",
         "file": "Boarception.png",
-        "description": "A mad scientist boar who wanted to explore the multiverse. Because its portal was flawed, it competely changed its physical form leaving it like this.",
+        "description": "This boar used to be a mad scientist that wanted to explore the multiverse. Unfortunately, its portal was deeply flawed and instead infused their body with multiversal energy, transforming it into what it is now.",
         "isSB": false,
         "blacklisted": false
       },
@@ -2798,7 +2798,7 @@
         "name": "Boarlon Tusk",
         "pluralName": "Boarlon Tusks",
         "file": "ElonBoarsk.png",
-        "description": "This boar was once praised as a visionary and a great inventor. However, a couple of boar child labour scandals later, he is mostly known as a clown that uses Boartter too much.",
+        "description": "This boar was once praised as a visionary and a great inventor. A couple of child laboar scandals later, and it's now mostly known as a clown that uses Boartter too much.",
         "isSB": false,
         "blacklisted": false
       },
@@ -2806,7 +2806,7 @@
         "name": "Fractured Boar",
         "pluralName": "Fractured Boars",
         "file": "FracturedBoar.png",
-        "description": "This boar started out as a dangerous piece of malware called \"The Fractureiser\". However, people managed to defeat it and so now it's just standing there... doing nothing.",
+        "description": "This boar started out as a dangerous piece of malware called \"The Fractureiser\". However, people managed to defeat it, so now it's just standing there... doing nothing.",
         "isSB": false,
         "blacklisted": false
       },
@@ -2814,7 +2814,7 @@
         "name": "Glitched Boar",
         "pluralName": "Glitched Boars",
         "file": "GlitchedBoar.png",
-        "description": "This boar is a replica of Normal Boar's consciousness, scanned and transfered into a computer. Something has gone wrong in the process, though, so now it's forever destined to remain in this broken state.",
+        "description": "Rouge boar scientists once tried to transport a Normal Boar's consciousness into a computer. Something went horribly wrong, though, and now what's left of it is forever destined to remain in this broken state.",
         "isSB": false,
         "blacklisted": false
       },
@@ -2822,7 +2822,7 @@
         "name": "Frozen Boar",
         "pluralName": "Frozen Boars",
         "file": "FrozenBoar.png",
-        "description": "This boar tried to walk across Boarkon alone, but his journey ended abruptly and tragically.",
+        "description": "This boar decided to take a nap right before an ice age occured. It awoke many of years later to find that its body fused with the ice itself, somehow granting it ice-themed superpowers in the process. Yay...?",
         "isSB": false,
         "blacklisted": false
       },
@@ -2838,15 +2838,15 @@
         "name": "Sans Boar",
         "pluralName": "Sans Boars",
         "file": "sansBoar.png",
-        "description": "Description coming soon....",
+        "description": "Description coming soon...",
         "isSB": false,
         "blacklisted": false
       },
        "mathematician": {
-	      "name": "Mathematician Boar",
-        "pluralName": "Mathematician Boars",
+	      "name": "Alboart Einstein",
+        "pluralName": "Alboart Einsteins",
         "file": "mathematicianBoar.png",
-        "description": "Description coming soon....",
+        "description": "A famous theoritical physicist that made several signifigant scientific advancements. The most well-known one was their "Theory of Boaritivity", more commenly known as B=oa^r.",
         "isSB": false,
         "blacklisted": false
       },
@@ -2854,7 +2854,7 @@
         "name": "Evil Boar",
         "pluralName": "Evil Boars",
         "file": "evilBoar.png",
-        "description": "Description coming soon....",
+        "description": "A strange, negative version of a Normal Boar from a parallel reality. It gained entry to our realm when a certain mad scientist's portal failed.",
         "isSB": false,
         "blacklisted": false
       },
@@ -2862,7 +2862,7 @@
         "name": "SmorgasBOARd",
         "pluralName": "SmorgasBOARds",
         "file": "Smorgasboard.png",
-        "description": "Description coming soon....",
+        "description": "Description coming soon...",
         "isSB": false,
         "blacklisted": false
       },
@@ -2871,7 +2871,7 @@
         "pluralName": "Crystal Boarbs",
         "file": "Boarb.gif",
         "staticFile": "BoarbSTATIC.png",
-        "description": "This boar inside this orb is said to have time-warping abilities. Encased in crystals, its powers are limited to telling others their future.",
+        "description": "The boar inside this orb is said to have time-warping abilities. Encased in crystals, its powers are limited to telling others their future.",
         "isSB": false,
         "blacklisted": false
       },
@@ -2887,7 +2887,7 @@
         "name": "Bloody Sea Boar",
         "pluralName": "Bloody Sea Boars",
         "file": "IronLungBoar.png",
-        "description": "This is the only photo of the boar we've managed to take. It lives in the bloody oceans of AT-5 and everybody who've encountered it died immediately afterwards.",
+        "description": "This is the only photo of this boar that anybody has managed to take. It lives in the bloody oceans of AT-5 and reports say that anyone who encountered it died immediately afterwards.",
         "isSB": false,
         "blacklisted": false
       },
@@ -2928,7 +2928,7 @@
         "pluralName": "Rickroll Boars",
         "file": "RickrollBoar.gif",
         "staticFile": "RickrollBoarSTATIC.png",
-        "description": "Spreads the word of Creator Boar. He'll never give you up, nor will he let you down. He certainly won't run around and... desert you.",
+        "description": "This boar will never give you up, nor will he let you down. He certainly won't run around and... desert you.",
         "isSB": false,
         "blacklisted": true
       },
@@ -2936,7 +2936,7 @@
         "name": "gatorade",
         "pluralName": "Gatorades",
         "file": "Gatorade.png",
-        "description": "its gatorade",
+        "description": "A cold, refreshing bottle of Cool Blue™ Gatorade®. You can practically feel your thirst being quenched already...",
         "isSB": false,
         "blacklisted": true
       },
@@ -2962,7 +2962,7 @@
         "pluralName": "Super Saiyajin Boars ",
         "file": "superSaiyajinBoar.gif",
         "staticFile": "SuperSaiyajinBoarSTATIC.png",
-        "description": "Description coming soon....",
+        "description": "Description coming soon...",
         "isSB": false,
         "blacklisted": false
       },
@@ -2978,7 +2978,7 @@
         "name": "Boarcterium",
         "pluralName": "Boarcterias",
         "file": "Boarcterium.png",
-        "description": "The first boar ever created by Creator Boar. Catching a cold from this boar results in explosive symptoms.",
+        "description": "A strange, familiarly-shaped microbe found on only the first of every kind of boar. Nobody's quite sure where it comes from.",
         "isSB": false,
         "blacklisted": false
       },
@@ -3002,7 +3002,7 @@
         "name": "Bad Time'd Boar",
         "pluralName": "Bad Time'd Boars",
         "file": "bad_timed_boar.png",
-        "description": "bad time simulator went wrong",
+        "description": "This boar looks like it's in for a bad time.",
         "isSB": false,
         "blacklisted": false
       }
