@@ -153,7 +153,7 @@ export class DataHandlers {
 
                     for (const boarID of Object.keys(data.boars)) {
                         if (!config.itemConfigs.boars[boarID]) {
-                            delete data.powerups[boarID];
+                            delete data.boars[boarID];
                         }
                     }
 
