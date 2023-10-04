@@ -2782,8 +2782,7 @@
         "name": "Boaracle",
         "pluralName": "Boaracles",
         "file": "Boaracle.png",
-        "description": "This boar makes money by telling others' fortune using the Crystal Boarb, which it stole from Boarea 51. The only downside of this lifelstyle is that it's forever on the run and constantly moving from place to place.
-",
+        "description": "This boar makes money by telling others' fortune using the Crystal Boarb, which it stole from Boarea 51. The only downside of this lifelstyle is that it's forever on the run and constantly moving from place to place.",
         "isSB": false,
         "blacklisted": false
       },
