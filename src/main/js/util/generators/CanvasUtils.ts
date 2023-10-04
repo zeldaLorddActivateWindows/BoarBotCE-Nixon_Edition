@@ -280,7 +280,7 @@ export class CanvasUtils {
 
     private static applyTextGradient(
         ctx: Canvas.SKRSContext2D, text: string, pos: [number, number], color: string
-    ) {
+    ): void {
         if (text.length === 0) return;
 
         if (!color.includes(',')) {

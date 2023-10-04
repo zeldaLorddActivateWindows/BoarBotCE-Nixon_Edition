@@ -133,10 +133,10 @@ export class DataHandlers {
                             const powItemData = data.powerups[powerupID];
                             for (const buyOrder of powItemData.buyers) {
                                 const boarUser = new BoarUser({id: buyOrder.userID} as User);
-                                boarUser.itemCollection.powerups[powerupID].numTotal +=
-                                    buyOrder.filledAmount - buyOrder.claimedAmount;
-                                boarUser.stats.general.boarScore +=
-                                    (buyOrder.num - buyOrder.filledAmount) * buyOrder.price;
+                                boarUser.itemCollection.powerups[powerupID].numTotal += buyOrder.filledAmount -
+                                    buyOrder.claimedAmount;
+                                boarUser.stats.general.boarScore += (buyOrder.num - buyOrder.filledAmount) *
+                                    buyOrder.price;
                                 boarUser.updateUserData();
                             }
                             for (const sellOrder of data.powerups[powerupID].sellers) {
@@ -148,6 +148,12 @@ export class DataHandlers {
                                 boarUser.updateUserData();
                             }
                             delete data.powerups[powerupID];
+                        }
+                    }
+
+                    for (const boarID of Object.keys(data.boars)) {
+                        if (!config.itemConfigs.boars[boarID]) {
+                            delete data.powerups[boarID];
                         }
                     }
 
