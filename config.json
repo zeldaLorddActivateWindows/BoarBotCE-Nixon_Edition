@@ -2949,6 +2949,14 @@
         "isSB": false,
         "blacklisted": true
       },
+      "bor": {
+        "name": "bor",
+        "pluralName": "bors",
+        "file": "bor.png",
+        "description": "This boar has evolved to a level so great that others can hardly comprehend it.",
+        "isSB": false,
+        "blacklisted": true
+      },
       "supernova": {
         "name": "Suboarnova",
         "pluralName": "Suboarnovas",
@@ -2963,6 +2971,14 @@
         "file": "Boargatory.gif",
         "staticFile": "BoargatorySTATIC.png",
         "description": "Anguished cries echo from beyond the abyss.",
+        "isSB": false,
+        "blacklisted": false
+      },
+      "br": {
+        "name": "br",
+        "pluralName": "brs",
+        "file": "br.png",
+        "description": "A bor that went further than all the others. While it may seem like it has devolved severely, in reality it has reached a plane so abstract that none can comprehend its true nature.",
         "isSB": false,
         "blacklisted": false
       },
@@ -3237,7 +3253,8 @@
       "avgClones": 200,
       "boars": [
         "bjoarnir",
-	      "gatorade"
+	      "gatorade",
+        "bor"
       ]
     },
     {
@@ -3251,7 +3268,8 @@
       "boars": [
         "supernova",
         "purgatory",
-	      "duck"
+	      "br",
+        "duck"
       ]
     },
     {
