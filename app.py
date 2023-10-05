@@ -1,3 +1,3 @@
-from subprocess import Popen
+from subprocess import run
 
-Popen("npx tsc -p . && node dist/BoarBotApp.js deploy-commands", shell=True)
+run("npx tsc -p . && node dist/BoarBotApp.js deploy-commands", shell=True)
