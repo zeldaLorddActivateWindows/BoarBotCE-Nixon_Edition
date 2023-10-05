@@ -2759,7 +2759,7 @@
         "name": "Detective Boar",
         "pluralName": "Detective Boar",
         "file": "DetectiveBoar.png",
-        "description": "This boar just read a little too much Boarlock Holmes and thinks it can be a proper detective.",
+        "description": "This boar just read a little too much Boarlock Holmes and thinks it can be a proper detective. Its sleuthing abilities leave a lot to be desired.",
         "isSB": false,
         "blacklisted": false
       },
