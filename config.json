@@ -2637,7 +2637,7 @@
       "businessman": {
         "name": "Businessboar",
         "pluralName": "Businessboars",
-        "file": "businessboar.png",
+        "file": "BusinessBoar.png",
         "description": "This boar has tried many times to convince Minimum Wage Boar, his younger brother, to apply himself and get a real job. Unfortunately, it never seemed to have an effect.",
         "isSB": false,
         "blacklisted": false
@@ -2661,7 +2661,7 @@
        "divorce": {
         "name": "Divorce Boar",
         "pluralName": "Divorce Boars",
-        "file": "Divorce.png",
+        "file": "DivorceBoar.png",
         "description": "After getting scammed online for a miniscule amount, this boar's husband began to fear for his wealth and immediately divorced her. She's not taking it very well...",
         "isSB": false,
         "blacklisted": false
@@ -2669,7 +2669,7 @@
       "fluxrift": {
         "name": "Flux Boarift",
         "pluralName": "Flux Boarifts",
-        "file": "boar_rift.png",
+        "file": "BoarRift.png",
         "description": "What is this, and how do I get rid of it?",
         "isSB": false,
         "blacklisted": false
@@ -2701,7 +2701,7 @@
       "aigenerated": {
         "name": "AI-Generated Boar",
         "pluralName": "AI-Generated Boars",
-        "file": "aiGeneratedBoar.png",
+        "file": "AIGeneratedBoar.png",
         "description": "This boar was made using ChatGBT (Chat Generative Boar-trained Transformers). Experts predict that this new technology will soon take the jobs of many aspiring boartists.",
         "isSB": false,
         "blacklisted": false
@@ -2725,7 +2725,7 @@
       "3dprint": {
         "name": "3D-Printed Boar",
         "pluralName": "3D-Printed Boars",
-        "file": "3DPrinted.png",
+        "file": "3DPrintedBoar.png",
         "description": "A 3D-printed sculpture made in the image of a Normal Boar. While there's a definite resemblance, it still feels a somewhat disconcerting.",
         "isSB": false,
         "blacklisted": false
@@ -2757,7 +2757,7 @@
       "rich": {
         "name": "Rich Boar",
         "pluralName": "Rich Boars",
-        "file": "richBoar.png",
+        "file": "RichBoar.png",
         "description": "This boar claimed the bounty of the mandible hunt. Apparently, its networth lies at around 5-4 Boarbillion Boar Bucks.",
         "isSB": false,
         "blacklisted": false
@@ -2829,7 +2829,7 @@
       "anime": {
 	      "name": "Anime Boar",
         "pluralName": "Anime Boars",
-        "file": "animeBoar.png",
+        "file": "AnimeBoar.png",
         "description": "This boar needs to touch grass ASAP.",
         "isSB": false,
         "blacklisted": false
@@ -2837,7 +2837,7 @@
 	    "sans": {
         "name": "Sans Boar",
         "pluralName": "Sans Boars",
-        "file": "sansBoar.png",
+        "file": "SansBoar.png",
         "description": "Description coming soon...",
         "isSB": false,
         "blacklisted": false
@@ -2845,7 +2845,7 @@
        "mathematician": {
 	      "name": "Alboart Einstein",
         "pluralName": "Alboart Einsteins",
-        "file": "mathematicianBoar.png",
+        "file": "EinsteinBoar.png",
         "description": "A famous theoritical physicist that made several signifigant scientific advancements. The most well-known one was their "Theory of Boaritivity", more commenly known as B=oa^r.",
         "isSB": false,
         "blacklisted": false
@@ -2853,7 +2853,7 @@
       "evil": {
         "name": "Evil Boar",
         "pluralName": "Evil Boars",
-        "file": "evilBoar.png",
+        "file": "EvilBoar.png",
         "description": "A strange, negative version of a Normal Boar from a parallel reality. It gained entry to our realm when a certain mad scientist's portal failed.",
         "isSB": false,
         "blacklisted": false
@@ -2960,7 +2960,7 @@
       "supersaiyajin": {
         "name": "Super Saiyajin Boar ",
         "pluralName": "Super Saiyajin Boars ",
-        "file": "superSaiyajinBoar.gif",
+        "file": "SuperSaiyajinBoar.gif",
         "staticFile": "SuperSaiyajinBoarSTATIC.png",
         "description": "Description coming soon...",
         "isSB": false,
@@ -3001,7 +3001,7 @@
       "badtime": {
         "name": "Bad Time'd Boar",
         "pluralName": "Bad Time'd Boars",
-        "file": "bad_timed_boar.png",
+        "file": "BadTimedBoar.png",
         "description": "This boar looks like it's in for a bad time.",
         "isSB": false,
         "blacklisted": false
