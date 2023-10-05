@@ -1,7 +1,4 @@
 {
-  "scripts": {
-    "dev": "npx tsc -p . && node dist/BoarBotApp.js deploy-commands"
-  },
   "dependencies": {
     "@types/adm-zip": "^0.5.0",
     "adm-zip": "^0.5.10",

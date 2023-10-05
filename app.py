@@ -1,3 +1,3 @@
 from subprocess import Popen
 
-Popen(["npm", "run", "dev"])
+Popen("npx tsc -p . && node dist/BoarBotApp.js deploy-commands", shell=True)
