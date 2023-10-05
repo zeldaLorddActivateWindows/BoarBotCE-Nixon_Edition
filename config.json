@@ -2659,6 +2659,22 @@
         "isSB": false,
         "blacklisted": false
       },
+      "watermark": {
+        "name": "Watermarked Boar",
+        "pluralName": "Watermarked Boars",
+        "file": "WatermarkedBoar.png",
+        "description": "Description coming soon...",
+        "isSB": false,
+        "blacklisted": false
+      },
+      "pig": {
+        "name": "Boar...?",
+        "pluralName": "Boars...?",
+        "file": "PigBoar.png",
+        "description": "Description coming soon...",
+        "isSB": false,
+        "blacklisted": false
+      },
       "carrot": {
         "name": "Carrot Boar",
         "pluralName": "Carrot Boars",
@@ -2796,6 +2812,14 @@
         "isSB": false,
         "blacklisted": false
       },
+      "doctor": {
+        "name": "DocBoar",
+        "pluralName": "DocBoars",
+        "file": "DocterBoar.png",
+        "description": "Description coming soon...",
+        "isSB": false,
+        "blacklisted": false
+      },
       "creepy": {
         "name": "Creepy Boar",
         "pluralName": "Creepy Boars",
@@ -2858,6 +2882,14 @@
         "pluralName": "Thaum Boars",
         "file": "ThaumBoar.png",
         "description": "A boargician that uses thaumaturgy for internet points.",
+        "isSB": false,
+        "blacklisted": false
+      },
+      "radioactive": {
+        "name": "Radioactive Boar",
+        "pluralName": "Radioactive Boars",
+        "file": "RadioactiveBoar.png",
+        "description": "Description coming soon...",
         "isSB": false,
         "blacklisted": false
       },
@@ -2937,6 +2969,14 @@
         "name": "Boarbenheimer",
         "pluralName": "Boarbenheimers",
         "file": "Boarbenheimer.png",
+        "description": "Description coming soon...",
+        "isSB": false,
+        "blacklisted": false
+      },
+      "planet": {
+        "name": "Planet Boar",
+        "pluralName": "Planet Boars",
+        "file": "PlanetBoars.png",
         "description": "Description coming soon...",
         "isSB": false,
         "blacklisted": false
@@ -3159,7 +3199,9 @@
         "nerd",
         "3dprinted",
 	      "nineteeneightyfour",
-	      "lego"
+	      "lego",
+        "watermark",
+        "pig"
       ]
     },
     {
@@ -3198,7 +3240,8 @@
         "sans",
         "oregon",
 	      "explorer",
-        "fluxrift"
+        "fluxrift",
+        "doctor"
       ]
     },
     {
@@ -3217,7 +3260,8 @@
 	      "glass",
 	      "oracle",
         "supersaiyajin",
-        "thaum"
+        "thaum",
+        "radioactive"
       ]
     },
     {
@@ -3249,7 +3293,8 @@
         "cowboy", 
         "smorgasboard",
 	      "dinosaur",
-	      "oppenheimer"
+	      "oppenheimer",
+        "planet"
       ]
     },
     {
