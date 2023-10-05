@@ -2977,7 +2977,7 @@
         "name": "Boar Prime",
         "pluralName": "Boar Primes",
         "file": "BoarPrime.png",
-        "description": "A Boar with a nuclear kick, Can teleport.",
+        "description": "A boar with a nuclear kick. Can teleport.",
         "isSB": false,
         "blacklisted": false
       },
