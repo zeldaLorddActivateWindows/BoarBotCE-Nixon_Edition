@@ -3029,14 +3029,14 @@
         "isSB": false,
         "blacklisted": false
       },
-      "pissboar": {
+      "piss": {
         "name": "Piss Boar",
         "pluralName": "Piss Boars",
         "file": "pissBoar.png",
-        "description": "Everyone expects something good from transmutating a divine, but no, This one's just piss.",
+        "description": "Everyone expects something good from transmutating a divine, but nope. This one's just piss.",
         "isSB": false,
         "blacklisted": false
-      }
+      },
       "purgatory": {
         "name": "Boargatory",
         "pluralName": "Boargutories",
