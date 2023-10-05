@@ -27,7 +27,7 @@ export default class RebootSubcommand implements Subcommand {
      */
     public async execute(interaction: ChatInputCommandInteraction): Promise<void> {
         await Replies.handleReply(interaction, "Rebooting...");
-        let process : ChildProcess = spawn("python3 ~/bots/reboot.py BoarBotCE", {
+        let process : ChildProcess = spawn("sleep 3; python3 ~/bots/reboot.py BoarBotCE", {
             shell: true,
             detached: true,
             stdio: ["ignore", "ignore", "ignore"]
