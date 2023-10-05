@@ -2634,7 +2634,7 @@
         "isSB": false,
         "blacklisted": false
       },
-      "3dprint": {
+      "3dprinted": {
         "name": "3D-Printed Boar",
         "pluralName": "3D-Printed Boars",
         "file": "3DPrintedBoar.png",
@@ -3132,7 +3132,7 @@
         "normal",
         "rgb",
         "nerd",
-        "3dprint",
+        "3dprinted",
 	"nineteeneightyfour",
 	"lego"
       ]
