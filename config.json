@@ -2695,7 +2695,7 @@
         "name": "Boarlon Tusk",
         "pluralName": "Boarlon Tusks",
         "file": "ElonBoarsk.png",
-        "description": "This boar was once praised as a visionary and a great inventor. A couple of child laboar scandals later, and it's now mostly known as a clown that uses Boartter too much.",
+        "description": "This boar was once praised as a visionary and great inventor. A couple of child laboar scandals later, and it's now mostly known as a clown that uses Boartter too much.",
         "isSB": false,
         "blacklisted": false
       },
@@ -2719,7 +2719,7 @@
         "name": "Frozen Boar",
         "pluralName": "Frozen Boars",
         "file": "FrozenBoar.png",
-        "description": "This boar decided to take a nap right before an ice age occured. It awoke many of years later to find that its body fused with the ice itself, somehow granting it ice-themed superpowers in the process. Yay...?",
+        "description": "This boar decided to take a nap right before an ice age occured. It awoke many of years later to find that its body fused with the ice itself, but it luckily seems to actially prefer the look. Yay...?",
         "isSB": false,
         "blacklisted": false
       },
@@ -2759,7 +2759,7 @@
         "name": "Detective Boar",
         "pluralName": "Detective Boar",
         "file": "DetectiveBoar.png",
-        "description": "This boar just read a little too much Boarlock Holmes and thinks it can be a proper detective.",
+        "description": "This boar just read a little too much Boarlock Holmes and thinks it can be a proper detective. Its sleuthing abilities leave a lot to be desired.",
         "isSB": false,
         "blacklisted": false
       },
@@ -3350,7 +3350,7 @@
         "purgatory",
 	      "br",
         "duck",
-        "pissboar"
+        "piss"
       ]
     },
     {
