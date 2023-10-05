@@ -2889,7 +2889,7 @@
         "name": "Radioactive Boar",
         "pluralName": "Radioactive Boars",
         "file": "RadioactiveBoar.png",
-        "description": "Description coming soon...",
+        "description": "This boar covered itself in a radioactive substance in order to get superpowers. Unfortunately, all it recieved was terminal cancer.",
         "isSB": false,
         "blacklisted": false
       },
