@@ -3032,7 +3032,7 @@
       "piss": {
         "name": "Piss Boar",
         "pluralName": "Piss Boars",
-        "file": "pissBoar.png",
+        "file": "PissBoar.png",
         "description": "Everyone expects something good from transmutating a divine, but nope. This one's just piss.",
         "isSB": false,
         "blacklisted": false
