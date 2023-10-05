@@ -2671,7 +2671,7 @@
         "name": "Boar...?",
         "pluralName": "Boars...?",
         "file": "PigBoar.png",
-        "description": "Description coming soon...",
+        "description": "This creature claims to be a boar, but everyone's a bit unsure.",
         "isSB": false,
         "blacklisted": false
       },
