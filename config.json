@@ -2731,6 +2731,14 @@
         "isSB": false,
         "blacklisted": false
       },
+      "sherlock": {
+        "name": "Boarlock Holmes",
+        "pluralName": "Boarlock Holmes",
+        "file": "SherlockBoar.png",
+        "description": "Description coming soon...",
+        "isSB": false,
+        "blacklisted": false
+      },
       "sphere": {
         "name": "Crystal Boarb",
         "pluralName": "Crystal Boarbs",
@@ -3150,8 +3158,8 @@
         "rgb",
         "nerd",
         "3dprinted",
-	"nineteeneightyfour",
-	"lego"
+	      "nineteeneightyfour",
+	      "lego"
       ]
     },
     {
@@ -3171,7 +3179,8 @@
         "largeboarboiler",
         "evil",
         "einstein",
-        "kinetic"
+        "kinetic",
+        "sherlock"
       ]
     },
     {
@@ -3188,8 +3197,8 @@
         "bullet",
         "sans",
         "oregon",
-	"explorer",
-  "fluxrift"
+	      "explorer",
+        "fluxrift"
       ]
     },
     {
@@ -3205,10 +3214,10 @@
         "ironlung",
         "aigenerated",
         "anime",
-	"glass",
-	"oracle",
-  "supersaiyajin",
-  "thaum"
+	      "glass",
+	      "oracle",
+        "supersaiyajin",
+        "thaum"
       ]
     },
     {
@@ -3221,11 +3230,11 @@
       "avgClones": 20,
       "boars": [
         "minimumwage",
-	"businessman",
+	      "businessman",
         "scam",
         "rich",
-	"divorce",
-	"badtime"
+	      "divorce",
+	      "badtime"
       ]
     },
     {
@@ -3239,8 +3248,8 @@
       "boars": [
         "cowboy", 
         "smorgasboard",
-	"dinosaur",
-	"oppenheimer"
+	      "dinosaur",
+	      "oppenheimer"
       ]
     },
     {
