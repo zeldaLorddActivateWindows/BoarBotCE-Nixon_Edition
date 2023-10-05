@@ -1907,7 +1907,7 @@
       }
     },
     "boarManage": {
-      "name": "boar-manage",
+      "name": "boarce-manage",
       "perms": 32,
       "description": "Commands to manage BoarBot",
       "setup": {
@@ -2064,7 +2064,7 @@
       }
     },
     "boarDev": {
-      "name": "boar-dev",
+      "name": "boarce-dev",
       "perms": 0,
       "description": "Commands exclusive to developers of BoarBot",
       "give": {

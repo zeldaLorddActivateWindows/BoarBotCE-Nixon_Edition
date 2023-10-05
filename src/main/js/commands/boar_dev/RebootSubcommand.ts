@@ -26,7 +26,7 @@ export default class RebootSubcommand implements Subcommand {
      * @param interaction - The interaction that called the subcommand
      */
     public async execute(interaction: ChatInputCommandInteraction): Promise<void> {
-        await Replies.handleReply(interaction, "Rebooting...")
-        exec("python ~/bots/reboot.py BoarBotCE")
+        await Replies.handleReply(interaction, "Rebooting...");
+        exec("python3 ~/bots/reboot.py BoarBotCE", (err, stdout, sderr) => {console.log(stdout)});
     }
 }
