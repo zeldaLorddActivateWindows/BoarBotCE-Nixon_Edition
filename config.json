@@ -2627,7 +2627,7 @@
         "isSB": false,
         "blacklisted": false
       },
-      "stackofboars": {
+      "stack": {
         "name": "Stack of Boars",
         "pluralName": "Stacks of Boars",
         "file": "StackOfBoars.png",
@@ -3212,7 +3212,7 @@
       "boars": [
         "normal",
         "rgb",
-	"stackofboars",
+	      "stack",
         "nerd",
         "3dprinted",
 	      "nineteeneightyfour",
