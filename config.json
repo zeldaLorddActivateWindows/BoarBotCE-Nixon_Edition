@@ -2187,19 +2187,19 @@
           ]
         },
         "gregtech": {
-          "name": "Gregtech Trivia",
+          "name": "Gregic Trivia",
           "rightStyle": 1,
           "wrongStyle": 1,
           "normal1": {
             "name": "Red Alloy",
             "description": "What's the chemical formula of Red Alloy?",
             "choices": [
-              "(((Fe5C)W5)CrMo2V)6CoMnSi",
               "Cu(Si(FeS2)5(CrAl2O3)Hg3)4",
+              "(((Fe5C)W5)CrMo2V)6CoMnSi",
               "((Fe5C)CSi)C(MgFeSi2O8)",
-              "CuSn"
+              "HeLiCOPTeR"
             ]
-          }
+          },
         }
       },
       "fast": {
