@@ -2957,7 +2957,7 @@
         "isSB": false,
         "blacklisted": false
       },
-      "boargatory": {
+      "purgatory": {
         "name": "Boargatory",
         "pluralName": "Boargutories",
         "file": "Boargatory.gif",
@@ -3250,7 +3250,7 @@
       "avgClones": 500,
       "boars": [
         "supernova",
-        "boargatory",
+        "purgatory",
 	      "duck"
       ]
     },
