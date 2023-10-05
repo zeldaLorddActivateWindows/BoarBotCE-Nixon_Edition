@@ -2634,7 +2634,7 @@
         "isSB": false,
         "blacklisted": false
       },
-      "3dprint": {
+      "3dprinted": {
         "name": "3D-Printed Boar",
         "pluralName": "3D-Printed Boars",
         "file": "3DPrintedBoar.png",
@@ -2772,8 +2772,8 @@
         "blacklisted": false
       },
       "explorer": {
-        "name": "Boarxplorer",
-        "pluralName": "Boarxplorers",
+        "name": "Exbloarer",
+        "pluralName": "Exbloarers",
         "file": "Boarxplorer.png",
         "description": "This boar finally completed its dream of crossing the entire Boarctic on its own. Unfortunately, it doesn't appear to notice that a Polar Boar is rapidly approaching...",
         "isSB": false,
@@ -3132,7 +3132,7 @@
         "normal",
         "rgb",
         "nerd",
-        "3dprint",
+        "3dprinted",
 	"nineteeneightyfour",
 	"lego"
       ]
