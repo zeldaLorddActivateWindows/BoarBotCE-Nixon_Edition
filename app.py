@@ -1,3 +1,3 @@
-from os import system
+from subprocess import run
 
-system("npm run dev")
+run("npm run dev", shell=True)
