@@ -4,7 +4,7 @@ import {
 import {BoarBotApp} from '../../BoarBotApp';
 import {Subcommand} from '../../api/commands/Subcommand';
 import {Replies} from '../../util/interactions/Replies';
-import { exec } from 'child_process';
+import { exec, spawn } from 'child_process';
 
 /**
  * {@link RebootSubcommand RebootSubcommand.ts}
@@ -27,6 +27,6 @@ export default class RebootSubcommand implements Subcommand {
      */
     public async execute(interaction: ChatInputCommandInteraction): Promise<void> {
         await Replies.handleReply(interaction, "Rebooting...");
-        exec("python3 ~/bots/reboot.py BoarBotCE", (err, stdout, sderr) => {console.log(stdout)});
+        spawn("python3", ["~/bots/reboot.py", "BoarBotCE"]);
     }
 }
