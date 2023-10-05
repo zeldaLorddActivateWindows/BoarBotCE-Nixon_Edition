@@ -2755,11 +2755,11 @@
         "isSB": false,
         "blacklisted": false
       },
-      "sherlock": {
-        "name": "Boarlock Holmes",
-        "pluralName": "Boarlock Holmes",
-        "file": "SherlockBoar.png",
-        "description": "Description coming soon...",
+      "detective": {
+        "name": "Detective Boar",
+        "pluralName": "Detective Boar",
+        "file": "DetectiveBoar.png",
+        "description": "This boar just read a little too much Boarlock Holmes and thinks it can be a proper detective.",
         "isSB": false,
         "blacklisted": false
       },
@@ -3247,7 +3247,7 @@
         "evil",
         "einstein",
         "kinetic",
-        "sherlock"
+        "detective"
       ]
     },
     {
