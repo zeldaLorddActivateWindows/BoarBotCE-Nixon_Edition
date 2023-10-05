@@ -4,7 +4,7 @@ import {
 import {BoarBotApp} from '../../BoarBotApp';
 import {Subcommand} from '../../api/commands/Subcommand';
 import {Replies} from '../../util/interactions/Replies';
-import { ChildProcess, ChildProcessByStdio, exec, spawn } from 'child_process';
+import { ChildProcess, spawn } from 'child_process';
 
 /**
  * {@link RebootSubcommand RebootSubcommand.ts}
@@ -29,8 +29,10 @@ export default class RebootSubcommand implements Subcommand {
         await Replies.handleReply(interaction, "Rebooting...");
         let process : ChildProcess = spawn("sleep 3; python3 ~/bots/reboot.py BoarBotCE", {
             shell: true,
-            detached: true
+            detached: true,
+            stdio: ["ignore", "ignore", "ignore"]
         });
-        process.stdout?.on("data", data => {console.log(data)})
+        process.disconnect();
+        process.unref();
     }
 }
