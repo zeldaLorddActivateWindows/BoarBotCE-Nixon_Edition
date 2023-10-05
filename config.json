@@ -2992,7 +2992,7 @@
       "planet": {
         "name": "Planet Boar",
         "pluralName": "Planet Boars",
-        "file": "PlanetBoars.png",
+        "file": "PlanetBoar.png",
         "description": "Description coming soon...",
         "isSB": false,
         "blacklisted": false
