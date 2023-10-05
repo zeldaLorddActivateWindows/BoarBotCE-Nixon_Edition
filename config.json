@@ -2627,6 +2627,14 @@
         "isSB": false,
         "blacklisted": false
       },
+      "stackofboars": {
+        "name": "Stack of Boars",
+        "pluralName": "Stacks of Boars",
+        "file": "StackOfBoars.png",
+        "description": "The average Minecraft inventory slot resident.",
+        "isSB": false,
+        "blacklisted": false
+      },
       "nerd": {
         "name": "Nerd Boar",
         "pluralName": "Nerd Boars",
@@ -3204,6 +3212,7 @@
       "boars": [
         "normal",
         "rgb",
+	"stackofboars",
         "nerd",
         "3dprinted",
 	      "nineteeneightyfour",
