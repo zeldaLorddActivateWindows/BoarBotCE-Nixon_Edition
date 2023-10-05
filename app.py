@@ -1,3 +1,3 @@
-from subprocess import run
+from subprocess import Popen
 
-run("npm run dev", shell=True)
+Popen(["npm", "run", "dev"])
