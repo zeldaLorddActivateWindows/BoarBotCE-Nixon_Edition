@@ -2973,6 +2973,14 @@
         "isSB": false,
         "blacklisted": false
       },
+      "minosprime": {
+        "name": "Boar Prime",
+        "pluralName": "Boar Primes",
+        "file": "BoarPrime.png",
+        "description": "A Boar with a nuclear kick, Can teleport.",
+        "isSB": false,
+        "blacklisted": false
+      },
       "planet": {
         "name": "Planet Boar",
         "pluralName": "Planet Boars",
@@ -3294,6 +3302,7 @@
         "smorgasboard",
 	      "dinosaur",
 	      "oppenheimer",
+	      "minosprime",
         "planet"
       ]
     },
