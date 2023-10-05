@@ -32,7 +32,6 @@ export default class RebootSubcommand implements Subcommand {
             detached: true,
             stdio: ["ignore", "ignore", "ignore"]
         });
-        process.disconnect();
         process.unref();
     }
 }
