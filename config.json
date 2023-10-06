@@ -2719,7 +2719,7 @@
         "name": "Frozen Boar",
         "pluralName": "Frozen Boars",
         "file": "FrozenBoar.png",
-        "description": "This boar decided to take a nap right before an ice age occured. It awoke many of years later to find that its body fused with the ice itself, but it luckily seems to actially prefer the look. Yay...?",
+        "description": "This boar decided to take a nap right before an ice age occured. It woke many of years later to find that its had body fused with the ice itself, but it luckily seems to actially prefer the look. Yay...?",
         "isSB": false,
         "blacklisted": false
       },
@@ -2743,7 +2743,7 @@
 	      "name": "Alboart Einstein",
         "pluralName": "Alboart Einsteins",
         "file": "EinsteinBoar.png",
-        "description": "A famous theoritical physicist that made several signifigant scientific advancements. The most well-known one was their Theory of Boaritivity, more commonly known as B = oa^r.",
+        "description": "A famous theoritical physicist that made several signifigant scientific advancements. One of the most well-known was their Theory of Boaritivity, more commonly known as B = oa^r.",
         "isSB": false,
         "blacklisted": false
       },
@@ -2776,7 +2776,7 @@
         "name": "Boarception",
         "pluralName": "Boarceptions",
         "file": "Boarception.png",
-        "description": "This boar used to be a mad scientist that wanted to explore the multiverse. Unfortunately, its portal was deeply flawed and instead infused their body with multiversal energy, transforming it into what it is now.",
+        "description": "A former mad scientist that wanted to explore the multiverse. The portal it built was was deeply flawed and instead infused their body with multiversal energy, transforming it into what it is now.",
         "isSB": false,
         "blacklisted": false
       },
@@ -2785,14 +2785,6 @@
         "pluralName": "Bullet Boars",
         "file": "BulletBoar.png",
         "description": "One of hundreds of flying, living missiles in King Boarser's army. Soon enough, it will be used in yet another attempt to take over the Boarshroom Kingdom.",
-        "isSB": false,
-        "blacklisted": false
-      },
-      "sans": {
-        "name": "Sans Boar",
-        "pluralName": "Sans Boars",
-        "file": "SansBoar.png",
-        "description": "Description coming soon...",
         "isSB": false,
         "blacklisted": false
       },
@@ -2897,7 +2889,7 @@
         "name": "Radioactive Boar",
         "pluralName": "Radioactive Boars",
         "file": "RadioactiveBoar.png",
-        "description": "This boar covered itself in a radioactive substance in order to get superpowers. Unfortunately, all it recieved was terminal cancer.",
+        "description": "This boar covered itself in a radioactive substance in an foolish attempt to get superpowers. Unfortunately, all it recieved was terminal cancer.",
         "isSB": false,
         "blacklisted": false
       },
@@ -3270,7 +3262,6 @@
         "sphere",
         "boarception",
         "bullet",
-        "sans",
         "oregon",
 	      "explorer",
         "fluxrift",
