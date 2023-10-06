@@ -1,4 +1,4 @@
-import Canvas from 'canvas';
+import Canvas from '@napi-rs/canvas';
 import {BotConfig} from '../../bot/config/BotConfig';
 import {CanvasUtils} from './CanvasUtils';
 import {
@@ -221,6 +221,6 @@ export class LeaderboardImageGenerator {
             );
         }
 
-        return new AttachmentBuilder(canvas.toBuffer(), { name: `${strConfig.defaultImageName}.png` })
+        return new AttachmentBuilder(canvas.toBuffer('image/png'), { name: `${strConfig.defaultImageName}.png` })
     }
 }

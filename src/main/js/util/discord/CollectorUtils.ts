@@ -71,6 +71,12 @@ export class CollectorUtils {
 
         clearInterval(timerVars.updateTime);
 
+        const config = BoarBotApp.getBot().getConfig();
+
+        if (inter && !config.devs.includes(inter.user.id) && config.maintenanceMode) {
+            return false;
+        }
+
         // Updates time to collect every 100ms, preventing users from clicking too fast
 
         timerVars.timeUntilNextCollect = Date.now() + 300;

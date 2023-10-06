@@ -235,25 +235,28 @@ export class PowerupEvent {
 
                     }
 
-                    const powMsg = { msg: {} as Message };
-
-                    collector.on('collect', async (inter: ButtonInteraction) => {
-                        await this.handleCollect(inter, powMsg.msg, this.config);
-                    });
-
-                    collector.on('end', async (_, reason) => {
-                        await this.handleEndCollect(reason, powMsg.msg, this.config);
-                    });
+                    const powMsg = {
+                        msg: {} as Message,
+                        time: Date.now() + this.config.numberConfig.powDurationMillis
+                    };
 
                     try {
                         powMsg.msg = await channel.send({
                             files: [powerupSpawnImage],
                             components: rows
                         });
+                        powMsg.time = Date.now();
                     } catch (err: unknown) {
-                        collector.stop(CollectorUtils.Reasons.Error);
                         return;
                     }
+
+                    collector.on('collect', async (inter: ButtonInteraction) => {
+                        await this.handleCollect(inter, powMsg.time, this.config);
+                    });
+
+                    collector.on('end', async (_, reason: string) => {
+                        await this.handleEndCollect(reason, powMsg.msg, this.config);
+                    });
 
                     this.numMsgs++;
                     this.numNotFinished++;
@@ -275,12 +278,18 @@ export class PowerupEvent {
      * responds depending on correctness and attempt status
      *
      * @param inter - The interaction made by the user
-     * @param powMsg - Used to get accurate timing of interaction speed
+     * @param powMsgTime - The time the powerup message was sent
      * @param config - Used to get config info
      * @private
      */
-    private async handleCollect(inter: ButtonInteraction, powMsg: Message, config: BotConfig): Promise<void> {
+    private async handleCollect(
+        inter: ButtonInteraction,
+        powMsgTime: number,
+        config: BotConfig
+    ): Promise<void> {
         try {
+            const interTime = Date.now();
+
             await inter.deferUpdate();
 
             const hasClaimed = this.claimers.has(inter.user.id);
@@ -301,7 +310,7 @@ export class PowerupEvent {
                     (this.powerupType.rewardAmt as number > 1
                         ? this.powerupType.pluralName
                         : this.powerupType.name);
-                const timeToClaim = inter.createdTimestamp - powMsg.createdTimestamp;
+                const timeToClaim = interTime - powMsgTime;
 
                 this.claimers.set(inter.user.id, timeToClaim);
                 this.interactions.push(inter);
@@ -718,7 +727,7 @@ export class PowerupEvent {
 
                     if (!userTime) {
                         await LogDebug.handleError('Failed to find user\'s powerup data.', interaction);
-                        return;
+                        continue;
                     }
 
                     await Queue.addQueue(async () => {
