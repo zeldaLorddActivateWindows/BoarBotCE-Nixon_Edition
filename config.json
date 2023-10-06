@@ -2997,6 +2997,14 @@
         "isSB": false,
         "blacklisted": false
       },
+      "omega": {
+        "name": "Boarmega Supreme",
+        "pluralName": "Boarmega Supremes",
+        "file": "OmegaSupremeBoar.png",
+        "description": "One of the Auotoboars' strongest warriors, this boar suffers from a truamatic past it'd rather not talk about. It can also convert into a mobile rocket base, featuring a rocket, control center, and a tank.",
+        "isSB": false,
+        "blacklisted": false
+      },
       "bjoarnir": {
         "name": "Bjoarnir",
         "pluralName": "Bjoarnirs",
@@ -3320,7 +3328,8 @@
 	      "dinosaur",
 	      "oppenheimer",
 	      "minosprime",
-        "planet"
+        "planet",
+        "omega"
       ]
     },
     {
