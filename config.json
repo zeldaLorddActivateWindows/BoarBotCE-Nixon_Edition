@@ -2799,7 +2799,7 @@
       "explorer": {
         "name": "Exbloarer",
         "pluralName": "Exbloarers",
-        "file": "Exbloarer.png",
+        "file": "ExplorerBoar.png",
         "description": "This boar finally completed its dream of crossing the entire Boarctic on its own. Unfortunately, it doesn't appear to notice that a Polar Boar is rapidly approaching...",
         "isSB": false,
         "blacklisted": false
