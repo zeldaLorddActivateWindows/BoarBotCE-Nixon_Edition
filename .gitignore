@@ -2,6 +2,7 @@
 .idea
 /dist
 /node_modules
+bun.lockb
 /env
 src/main/resources/photoshop
 src/main/resources/temp_items/*

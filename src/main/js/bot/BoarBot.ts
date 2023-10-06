@@ -179,7 +179,7 @@ export class BoarBot implements Bot {
 			(this.client.user as ClientUser).setPresence({
 				activities: [{
 					name: "Info",
-					state: "/boar help | boarbot.dev",
+					state: "/boarce help",
 					type: 4
 				}]
 			});
