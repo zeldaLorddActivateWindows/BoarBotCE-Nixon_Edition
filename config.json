@@ -2723,10 +2723,10 @@
         "isSB": false,
         "blacklisted": false
       },
-      "largeboarboiler": {
+      "boiler": {
         "name": "Large Bronze Boarlier",
         "pluralName": "Large Bronze Boarliers",
-        "file": "LargeBronzeBoarlier.png",
+        "file": "BoilerBoar.png",
         "description": "This boar is used to produce lots of steam. Make sure to feed it water!",
         "isSB": false,
         "blacklisted": false
@@ -3243,7 +3243,7 @@
         "fractured",
         "glitched",
         "frozen",
-        "largeboarboiler",
+        "boiler",
         "evil",
         "einstein",
         "kinetic",
