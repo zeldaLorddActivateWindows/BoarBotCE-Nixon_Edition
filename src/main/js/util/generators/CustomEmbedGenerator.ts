@@ -1,5 +1,5 @@
 import {BotConfig} from '../../bot/config/BotConfig';
-import Canvas from 'canvas';
+import Canvas from '@napi-rs/canvas';
 import {CanvasUtils} from './CanvasUtils';
 import {AttachmentBuilder} from 'discord.js';
 
@@ -31,7 +31,7 @@ export class CustomEmbedGenerator {
 
         const font = `${nums.fontBig}px ${strConfig.fontName}`;
 
-        const canvas = Canvas.createCanvas(0, nums.embedMinHeight);
+        const canvas = Canvas.createCanvas(1, nums.embedMinHeight);
         const ctx = canvas.getContext('2d');
 
         let fullString = str;
@@ -83,6 +83,6 @@ export class CustomEmbedGenerator {
             secondaryColors
         );
 
-        return new AttachmentBuilder(canvas.toBuffer(), { name: `${strConfig.defaultImageName}.png` });
+        return new AttachmentBuilder(canvas.toBuffer('image/png'), { name: `${strConfig.defaultImageName}.png` });
     }
 }

@@ -1,4 +1,4 @@
-import Canvas from 'canvas';
+import Canvas from '@napi-rs/canvas';
 
 /**
  * {@link CanvasUtils CanvasUtils.ts}
@@ -25,7 +25,7 @@ export class CanvasUtils {
      * @param width - Width to wrap/shrink at
      */
     public static drawText(
-        ctx: Canvas.CanvasRenderingContext2D,
+        ctx: Canvas.SKRSContext2D,
         text: string,
         pos: [number, number],
         font: string,
@@ -167,7 +167,7 @@ export class CanvasUtils {
      * @private
      */
     private static drawColoredText(
-        ctx: Canvas.CanvasRenderingContext2D,
+        ctx: Canvas.SKRSContext2D,
         text: string,
         align: string,
         pos: [number, number],
@@ -279,8 +279,8 @@ export class CanvasUtils {
     }
 
     private static applyTextGradient(
-        ctx: Canvas.CanvasRenderingContext2D, text: string, pos: [number, number], color: string
-    ) {
+        ctx: Canvas.SKRSContext2D, text: string, pos: [number, number], color: string
+    ): void {
         if (text.length === 0) return;
 
         if (!color.includes(',')) {
@@ -329,7 +329,7 @@ export class CanvasUtils {
             (ctx.measureText('Sp').actualBoundingBoxAscent + ctx.measureText('Sp').actualBoundingBoxDescent)
         );
 
-        Canvas.loadImage(canvas.toBuffer()).then((img) => {
+        Canvas.loadImage(canvas.toBuffer('image/png')).then((img) => {
             ctx.drawImage(img, 0, 0);
         });
     }
@@ -343,7 +343,7 @@ export class CanvasUtils {
      * @param diameter - Diameter of circle
      */
     public static drawCircleImage(
-        ctx: Canvas.CanvasRenderingContext2D,
+        ctx: Canvas.SKRSContext2D,
         img: Canvas.Image,
         pos: number[],
         diameter: number
@@ -369,7 +369,7 @@ export class CanvasUtils {
      * @param color - Color of the line
      */
     public static drawLine(
-        ctx: Canvas.CanvasRenderingContext2D,
+        ctx: Canvas.SKRSContext2D,
         pos1: [number, number],
         pos2: [number, number],
         width: number,
@@ -402,7 +402,7 @@ export class CanvasUtils {
      * @param color - Color of rectangle
      */
     public static drawRect(
-        ctx: Canvas.CanvasRenderingContext2D,
+        ctx: Canvas.SKRSContext2D,
         pos: [number, number],
         size: [number, number],
         color: string
