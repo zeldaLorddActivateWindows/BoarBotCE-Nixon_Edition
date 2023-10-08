@@ -2757,9 +2757,17 @@
       },
       "detective": {
         "name": "Detective Boar",
-        "pluralName": "Detective Boar",
+        "pluralName": "Detective Boars",
         "file": "DetectiveBoar.png",
         "description": "This boar just read a little too much Boarlock Holmes and thinks it can be a proper detective. Its sleuthing abilities leave a lot to be desired.",
+        "isSB": false,
+        "blacklisted": false
+      },
+      "isaac": {
+        "name": "Boarsaac",
+        "pluralName": "Boarsaacs",
+        "file": "DetectiveBoar.png",
+        "description": "Boarsaac and his mother lived alone in a small house on a hill. Boarsaac kept to himself, drawing pictures, and playing with his toys, as his mom watched christian broadcasts on the television.",
         "isSB": false,
         "blacklisted": false
       },
