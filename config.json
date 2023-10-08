@@ -2766,7 +2766,7 @@
       "isaac": {
         "name": "Boarsaac",
         "pluralName": "Boarsaacs",
-        "file": "DetectiveBoar.png",
+        "file": "IsaacBoar.png",
         "description": "Boarsaac and his mother lived alone in a small house on a hill. Boarsaac kept to himself, drawing pictures, and playing with his toys, as his mom watched christian broadcasts on the television.",
         "isSB": false,
         "blacklisted": false
@@ -2825,6 +2825,14 @@
         "pluralName": "DocBoars",
         "file": "DocterBoar.png",
         "description": "Description coming soon...",
+        "isSB": false,
+        "blacklisted": false
+      },
+      "antimatter": {
+        "name": "raoB lamroN",
+        "pluralName": "sraoB lamroN",
+        "file": "AntimatterBoar.png",
+        "description": "This boar consumed so much antimatter, that all of the atoms composing his body got flipped and he turned into an anti-boar.",
         "isSB": false,
         "blacklisted": false
       },
@@ -3255,7 +3263,8 @@
         "evil",
         "einstein",
         "kinetic",
-        "detective"
+        "detective",
+        "isaac"
       ]
     },
     {
@@ -3273,7 +3282,8 @@
         "oregon",
 	      "explorer",
         "fluxrift",
-        "doctor"
+        "doctor",
+        "antimatter"
       ]
     },
     {
