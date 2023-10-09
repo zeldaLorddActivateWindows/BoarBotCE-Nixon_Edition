@@ -2893,6 +2893,14 @@
         "isSB": false,
         "blacklisted": false
       },
+       "ebf": {
+        "name": "Electric Boar Furnace ",
+        "pluralName": "Electric Boar Furnaces ",
+        "staticFile": "electricBoarFurnace.png",
+        "description": "Used to smelt BoAr ingots for BV machinery.",
+        "isSB": false,
+        "blacklisted": false
+      },
       "thaum": {
         "name": "Thaum Boar",
         "pluralName": "Thaum Boars",
