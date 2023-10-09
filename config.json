@@ -3053,6 +3053,14 @@
         "isSB": false,
         "blacklisted": false
       },
+	"nixon": {
+        "name": "Nixonboar",
+        "pluralName": "Nixons",
+        "file": "Nixonboar.png",
+        "description": "Best president in the TNO-Boar Submod. ndld approves",
+        "isSB": false,
+        "blacklisted": false
+      },
       "piss": {
         "name": "Piss Boar",
         "pluralName": "Piss Boars",
@@ -3341,7 +3349,8 @@
       "enhancersNeeded": 18,
       "avgClones": 50,
       "boars": [
-        "cowboy", 
+        "cowboy",
+	"nixon",
         "smorgasboard",
 	      "dinosaur",
 	      "oppenheimer",
