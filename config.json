@@ -2803,6 +2803,14 @@
         "description": "One of the fifty states in the United States of Boarmerica. Primarily famous for the Boaris and Boark Expedition.",
         "isSB": false,
         "blacklisted": false
+	            },
+      "greg": {
+        "name": "Greg",
+        "pluralName": "Gregs",
+        "file": "Greg.png",
+        "description": "This isn't a boar. It's Greg.",
+        "isSB": false,
+        "blacklisted": false
       },
       "explorer": {
         "name": "Exbloarer",
